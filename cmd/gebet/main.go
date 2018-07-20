@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	configFile string
+	configFile   string
+	featuresPath string
 )
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 	app.HelpFlag.Short('h')
 
 	app.Flag("config.file", "gebet configuration file path.").Short('c').Default("gebet.yml").StringVar(&configFile)
+	app.Flag("features.path", "gebet features folder path.").Short('f').Default("features").StringVar(&featuresPath)
 
 	_, err := app.Parse(os.Args[1:])
 	if err != nil {
@@ -48,7 +50,7 @@ func main() {
 		godog.RunWithOptions("godogs", handler.New(resourceManager), godog.Options{
 			StopOnFailure: true,
 			Output:        colors.Colored(os.Stdout),
-			Paths:         []string{"examples/features"},
+			Paths:         strings.Split(featuresPath, ","),
 			Format:        "progress",
 			Randomize:     time.Now().UTC().UnixNano(), // randomize scenario execution order
 		}),
