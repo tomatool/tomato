@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/gebet/common/cmp"
 	"github.com/alileza/gebet/resource"
 	rhttp "github.com/alileza/gebet/resource/http"
 )
@@ -25,6 +23,8 @@ func New(r *resource.Manager) func(s *godog.Suite) {
 		s.Step(`^"([^"]*)" send request to "([^"]*)" with body$`, h.sendRequestToWithBody)
 		s.Step(`^"([^"]*)" response code should be (\d+)$`, h.responseCodeShouldBe)
 		s.Step(`^"([^"]*)" response body should be$`, h.responseBodyShouldBe)
+		s.Step(`^set "([^"]*)" table "([^"]*)" list of content$`, h.setTableListOfContent)
+		s.Step(`^"([^"]*)" table "([^"]*)" should look like$`, h.tableShouldLookLike)
 	}
 }
 
@@ -61,52 +61,4 @@ func (e *ErrMismatch) Error() string {
 		msg += fmt.Sprintf("\nmetadata\t:\t%s", e.metadata)
 	}
 	return msg
-}
-
-func (h *Handler) responseCodeShouldBe(name string, code int) error {
-	resource, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	httpClient := resource.(*rhttp.Client)
-
-	res := httpClient.LastResponse()
-	if res == nil {
-		return errors.New("unexpected nil LastResponse")
-	}
-
-	if res.Code != code {
-		return &ErrMismatch{"response code", code, res.Code, string(res.Body)}
-	}
-
-	return nil
-}
-
-func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) error {
-	r, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	httpClient := resource.HTTP(r)
-
-	res := httpClient.LastResponse()
-	if res == nil {
-		return errors.New("unexpected nil LastResponse")
-	}
-
-	gotResponse := make(map[string]interface{})
-	if err := json.Unmarshal(res.Body, &gotResponse); err != nil {
-		return err
-	}
-
-	expectedResponse := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(body.Content), &expectedResponse); err != nil {
-		return err
-	}
-
-	if err := cmp.Map(expectedResponse, gotResponse); err != nil {
-		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(res.Body), err.Error())
-	}
-
-	return nil
 }
