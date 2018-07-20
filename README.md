@@ -1,8 +1,8 @@
-# gebet
+# gebet - behavioral testing tools
 
-Behavior Driven Development tools, built on top of (https://github.com/DATA-DOG/godog)
+Behavior Driven Development tools, built on top of (https://github.com/DATA-DOG/godog). To simplify adding BDD to your application without writing any code.
 
-## example
+## Example
 ```sh
 $ gebet -c examples/config.yaml -f examples/features/
 .F- 3
