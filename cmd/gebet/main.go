@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -15,6 +12,7 @@ import (
 	"github.com/alileza/gebet/config"
 	"github.com/alileza/gebet/handler"
 	"github.com/alileza/gebet/resource"
+	"github.com/alileza/gebet/util/version"
 	"github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -26,7 +24,7 @@ var (
 
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "gebet bdd tools")
-	app.Version(printVersion())
+	app.Version(version.Print())
 	app.HelpFlag.Short('h')
 
 	app.Flag("config.file", "gebet configuration file path.").Short('c').Default("gebet.yml").StringVar(&configFile)
@@ -55,39 +53,4 @@ func main() {
 			Randomize:     time.Now().UTC().UnixNano(), // randomize scenario execution order
 		}),
 	)
-}
-
-var (
-	Version   string
-	Revision  string
-	Branch    string
-	BuildUser string
-	BuildDate string
-	GoVersion = runtime.Version()
-)
-
-var versionInfoTmpl = `
-{{.program}}, version {{.version}} (branch: {{.branch}}, revision: {{.revision}})
-  build user:       {{.buildUser}}
-  build date:       {{.buildDate}}
-  go version:       {{.goVersion}}
-`
-
-func printVersion() string {
-	m := map[string]string{
-		"program":   "gebet",
-		"version":   Version,
-		"revision":  Revision,
-		"branch":    Branch,
-		"buildUser": BuildUser,
-		"buildDate": BuildDate,
-		"goVersion": GoVersion,
-	}
-	t := template.Must(template.New("version").Parse(versionInfoTmpl))
-
-	var buf bytes.Buffer
-	if err := t.ExecuteTemplate(&buf, "version", m); err != nil {
-		panic(err)
-	}
-	return strings.TrimSpace(buf.String())
 }
