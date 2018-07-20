@@ -6,6 +6,8 @@ import (
 
 	"github.com/alileza/gebet/config"
 	"github.com/alileza/gebet/resource/http"
+	"github.com/alileza/gebet/resource/sqldb"
+
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +21,9 @@ type Resource interface{}
 
 func HTTP(i Resource) *http.Client {
 	return i.(*http.Client)
+}
+func SQLDB(i Resource) *sqldb.Client {
+	return i.(*sqldb.Client)
 }
 
 type Manager struct {
@@ -41,6 +46,8 @@ func (mgr *Manager) Get(name string) (Resource, error) {
 			switch resource.Type {
 			case "http":
 				return mgr.http(resource)
+			case "sqldb":
+				return mgr.sqldb(resource)
 			default:
 				return nil, ErrInvalidType
 			}
@@ -70,4 +77,24 @@ func (mgr *Manager) http(cfg *config.Resource) (interface{}, error) {
 	mgr.cache.Store(cfg, client)
 
 	return client, nil
+}
+
+func (mgr *Manager) sqldb(cfg *config.Resource) (interface{}, error) {
+	driver, ok := cfg.Params["driver"]
+	if !ok {
+		return nil, errors.New(driver + ": invalid driver")
+	}
+	datasource, ok := cfg.Params["datasource"]
+	if !ok {
+		return nil, errors.New("datasource is required")
+	}
+
+	db := sqldb.New(&sqldb.Options{
+		Driver:     driver,
+		Datasource: datasource,
+	})
+
+	mgr.cache.Store(cfg, db)
+
+	return db, nil
 }
