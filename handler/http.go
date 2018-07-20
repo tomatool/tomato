@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/gebet/common/cmp"
 	"github.com/alileza/gebet/resource"
+	"github.com/alileza/gebet/util/cmp"
 )
 
 func (h *Handler) responseCodeShouldBe(name string, code int) error {

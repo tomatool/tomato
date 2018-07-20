@@ -8,7 +8,8 @@ pwd = $(shell pwd)
 build_dir ?= bin/
 
 pkgs          = ./...
-ldflags := "-X main.Version=$(version) -X main.Branch=$(branch) -X main.Revision=$(revision) -X main.BuildUser=$(build_user) -X main.BuildDate=$(build_date)"
+version_pkg= github.com/alileza/gebet/util/version
+ldflags := "-X $(version_pkg).Version=$(version) -X $(version_pkg).Branch=$(branch) -X $(version_pkg).Revision=$(revision) -X $(version_pkg).BuildUser=$(build_user) -X $(version_pkg).BuildDate=$(build_date)"
 
 
 deps:

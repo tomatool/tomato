@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	ErrInvalidType   = errors.New("invaid type")
-	ErrNotFound      = errors.New("not")
-	ErrInvalidParams = errors.New("invalid")
+	ErrInvalidType   = errors.New("invalid resource type")
+	ErrNotFound      = errors.New("resource not found")
+	ErrInvalidParams = errors.New("invalid resource params")
 )
 
 type Resource interface{}
