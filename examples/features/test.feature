@@ -1,21 +1,12 @@
 Feature: test feature
 
-  Scenario: Send test request
-    Given "http" send request to "DELETE /api/v1/selection" with body
+  Scenario: Delete user feature
+    Given set "db1" table "user" list of content
+      | user_id |
+      | 1       |
+    Given "http" send request to "DELETE /api/v1/users/1" with body
     """
-    {
-      "country":"DE",
-      "subscriptionId":123,
-      "interval":"2018-W01",
-      "selection":"1-2-3",
-      "customerId":321,
-      "productSku":"uyeah"
-    }
     """
-    Then "http" response code should be 400
-    Then "http" response body should be
-    """
-      {
-        "test":"yeah"
-      }
-    """
+    Then "http" response code should be 200
+    Given "db1" table "user" should look like
+      | user_id |
