@@ -1,12 +1,15 @@
 Feature: test feature
 
   Scenario: Delete user feature
-    Given set "db1" table "user" list of content
-      | user_id |
-      | 1       |
-    Given "http" send request to "DELETE /api/v1/users/1" with body
-    """
-    """
-    Then "http" response code should be 200
-    Given "db1" table "user" should look like
-      | user_id |
+    Given set "service-a" response code to 202 and response body
+      """
+        {"status":"OK"}
+      """
+    Given "http" send request to "GET /" with body
+      """
+      """
+    Then "http" response code should be 202
+    Then "http" response body should be
+      """
+        {"status":"OK "}
+      """

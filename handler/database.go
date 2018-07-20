@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/gebet/resource"
+	"github.com/alileza/gebet/resource/sqldb"
 	"github.com/alileza/gebet/util/conv"
 )
 
@@ -11,7 +11,7 @@ func (h *Handler) setTableListOfContent(name, table string, content *gherkin.Dat
 	if err != nil {
 		return err
 	}
-	dbClient := resource.SQLDB(r)
+	dbClient := sqldb.T(r)
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
 	if err != nil {
@@ -26,7 +26,7 @@ func (h *Handler) tableShouldLookLike(name, table string, content *gherkin.DataT
 	if err != nil {
 		return err
 	}
-	dbClient := resource.SQLDB(r)
+	dbClient := sqldb.T(r)
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
 	if err != nil {

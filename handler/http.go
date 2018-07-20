@@ -6,7 +6,8 @@ import (
 	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/gebet/resource"
+	"github.com/alileza/gebet/resource/http/client"
+	"github.com/alileza/gebet/resource/http/server"
 	"github.com/alileza/gebet/util/cmp"
 )
 
@@ -15,7 +16,7 @@ func (h *Handler) responseCodeShouldBe(name string, code int) error {
 	if err != nil {
 		return err
 	}
-	httpClient := resource.HTTP(r)
+	httpClient := client.T(r)
 
 	res := httpClient.LastResponse()
 	if res == nil {
@@ -34,7 +35,7 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 	if err != nil {
 		return err
 	}
-	httpClient := resource.HTTP(r)
+	httpClient := client.T(r)
 
 	res := httpClient.LastResponse()
 	if res == nil {
@@ -54,6 +55,22 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 	if err := cmp.Map(expectedResponse, gotResponse); err != nil {
 		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(res.Body), err.Error())
 	}
+
+	if err := cmp.Map(gotResponse, expectedResponse); err != nil {
+		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(res.Body), err.Error())
+	}
+
+	return nil
+}
+
+func (h *Handler) setResponseCodeToAndResponseBody(name string, code int, body *gherkin.DocString) error {
+	r, err := h.resource.Get(name)
+	if err != nil {
+		return err
+	}
+	httpServer := server.T(r)
+
+	httpServer.SetResponse(code, []byte(body.Content))
 
 	return nil
 }

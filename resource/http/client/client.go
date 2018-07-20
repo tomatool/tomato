@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"io/ioutil"
@@ -13,27 +13,40 @@ type Response struct {
 }
 
 type Client struct {
-	options      *Options
 	httpClient   *http.Client
+	baseURL      string
 	lastResponse *Response
 }
 
-type Options struct {
-	BaseURL string
-	Timeout time.Duration
+func T(i interface{}) *Client {
+	return i.(*Client)
 }
 
-func New(o *Options) *Client {
-	client := new(http.Client)
-	if o != nil {
-		client.Timeout = o.Timeout
+func New(params map[string]string) *Client {
+	client := &Client{new(http.Client), "", nil}
+
+	for key, val := range params {
+		switch key {
+		case "base_url":
+			client.baseURL = val
+		case "timeout":
+			timeout, err := time.ParseDuration(val)
+			if err != nil {
+				panic("timeout: get http client, invalid params value : " + err.Error())
+			}
+			client.httpClient.Timeout = timeout
+		default:
+			panic(key + ": invalid params")
+		}
 	}
-	return &Client{o, client, nil}
+	return client
 }
+
+func (c *Client) Close() {}
 
 func (c *Client) Do(req *http.Request) error {
-	if c.options.BaseURL != "" {
-		baseURL, err := url.Parse(c.options.BaseURL)
+	if c.baseURL != "" {
+		baseURL, err := url.Parse(c.baseURL)
 		if err != nil {
 			return err
 		}

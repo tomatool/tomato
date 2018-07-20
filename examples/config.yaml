@@ -2,12 +2,16 @@
 
 resources:
   - name: http
-    type: http
+    type: http/client
     params:
-      base_url: http://localhost:9090
+      base_url: http://localhost:8093
       timeout: 5s
   - name: db1
     type: sqldb
     params:
       driver: postgres
       datasource: postgres://user:pass@localhost:5432/my_awesome_service?sslmode=disable
+  - name: service-a
+    type: http/server
+    params:
+      port: ":8093"

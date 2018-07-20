@@ -2,10 +2,10 @@ package resource
 
 import (
 	"sync"
-	"time"
 
 	"github.com/alileza/gebet/config"
-	"github.com/alileza/gebet/resource/http"
+	"github.com/alileza/gebet/resource/http/client"
+	"github.com/alileza/gebet/resource/http/server"
 	"github.com/alileza/gebet/resource/sqldb"
 
 	"github.com/pkg/errors"
@@ -17,13 +17,8 @@ var (
 	ErrInvalidParams = errors.New("invalid resource params")
 )
 
-type Resource interface{}
-
-func HTTP(i Resource) *http.Client {
-	return i.(*http.Client)
-}
-func SQLDB(i Resource) *sqldb.Client {
-	return i.(*sqldb.Client)
+type Resource interface {
+	Close()
 }
 
 type Manager struct {
@@ -35,66 +30,36 @@ func NewManager(cfgs []*config.Resource) *Manager {
 	return &Manager{resources: cfgs}
 }
 
+func (mgr *Manager) Close() {
+	mgr.cache.Range(func(key interface{}, r interface{}) bool {
+		r.(Resource).Close()
+		return true
+	})
+}
+
 func (mgr *Manager) Get(name string) (Resource, error) {
-	for _, resource := range mgr.resources {
-		if resource.Name == name {
-			client, ok := mgr.cache.Load(resource)
+	for _, resourceCfg := range mgr.resources {
+		if resourceCfg.Name == name {
+			cache, ok := mgr.cache.Load(resourceCfg)
 			if ok {
-				return client, nil
+				return cache.(Resource), nil
 			}
 
-			switch resource.Type {
-			case "http":
-				return mgr.http(resource)
+			var r Resource
+			switch resourceCfg.Type {
+			case "http/client":
+				r = client.New(resourceCfg.Params)
 			case "sqldb":
-				return mgr.sqldb(resource)
+				r = sqldb.New(resourceCfg.Params)
+			case "http/server":
+				r = server.New(resourceCfg.Params)
 			default:
 				return nil, ErrInvalidType
 			}
+			mgr.cache.Store(resourceCfg, r)
+
+			return r, nil
 		}
 	}
-	return nil, ErrNotFound
-}
-
-func (mgr *Manager) http(cfg *config.Resource) (interface{}, error) {
-	opts := &http.Options{}
-	for key, val := range cfg.Params {
-		switch key {
-		case "base_url":
-			opts.BaseURL = val
-		case "timeout":
-			timeout, err := time.ParseDuration(val)
-			if err != nil {
-				return nil, errors.Wrap(err, "timeout: get http client, invalid params value")
-			}
-			opts.Timeout = timeout
-		default:
-			return nil, errors.New(key + ": invalid params")
-		}
-	}
-	client := http.New(opts)
-
-	mgr.cache.Store(cfg, client)
-
-	return client, nil
-}
-
-func (mgr *Manager) sqldb(cfg *config.Resource) (interface{}, error) {
-	driver, ok := cfg.Params["driver"]
-	if !ok {
-		return nil, errors.New(driver + ": invalid driver")
-	}
-	datasource, ok := cfg.Params["datasource"]
-	if !ok {
-		return nil, errors.New("datasource is required")
-	}
-
-	db := sqldb.New(&sqldb.Options{
-		Driver:     driver,
-		Datasource: datasource,
-	})
-
-	mgr.cache.Store(cfg, db)
-
-	return db, nil
+	return nil, errors.WithMessage(ErrNotFound, "resource:"+name)
 }

@@ -1,6 +1,7 @@
 package sqldb
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,26 +11,42 @@ import (
 )
 
 type Client struct {
-	options *Options
+	options map[string]string
 	conn    *sqlx.DB
 }
 
-type Options struct {
-	Driver     string
-	Datasource string
+func T(i interface{}) *Client {
+	return i.(*Client)
 }
 
-func New(o *Options) *Client {
-	return &Client{o, nil}
+func New(cfg map[string]string) *Client {
+	return &Client{cfg, nil}
 }
 
 func (c *Client) db() (*sqlx.DB, error) {
 	if c.conn != nil {
 		return c.conn, nil
 	}
+
+	driver, ok := c.options["driver"]
+	if !ok {
+		return nil, errors.New(driver + ": invalid driver")
+	}
+	datasource, ok := c.options["datasource"]
+	if !ok {
+		return nil, errors.New("datasource is required")
+	}
+
 	var err error
-	c.conn, err = sqlx.Open(c.options.Driver, c.options.Datasource)
+	c.conn, err = sqlx.Open(driver, datasource)
 	return c.conn, err
+}
+
+func (c *Client) Close() {
+	if c.conn == nil {
+		return
+	}
+	c.conn.Close()
 }
 
 func (c *Client) Clear(table string) error {
@@ -38,7 +55,7 @@ func (c *Client) Clear(table string) error {
 		return err
 	}
 
-	_, err = conn.DB.Exec("TRUNCATE TABLE " + table + " RESTART IDENTITY CASCADE")
+	_, err = conn.DB.Exec(`TRUNCATE TABLE "` + table + `" RESTART IDENTITY CASCADE`)
 	return err
 }
 
@@ -76,13 +93,16 @@ func (c *Client) Set(table string, rows []map[string]string) error {
 			counter++
 		}
 
-		query := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table, strings.Join(keys, ","), strings.Join(valctr, ","))
+		query := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`, table, strings.Join(keys, ","), strings.Join(valctr, ","))
 		if _, err := tx.Exec(query, vals...); err != nil {
+			panic(err)
 			return err
 		}
 	}
-
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Client) Cmp(table string, rows []map[string]string) error {
@@ -92,7 +112,7 @@ func (c *Client) Cmp(table string, rows []map[string]string) error {
 	}
 
 	var rowCount int
-	if err := conn.Get(&rowCount, fmt.Sprintf("SELECT COUNT(*) FROM %s", table)); err != nil {
+	if err := conn.Get(&rowCount, fmt.Sprintf(`SELECT COUNT(*) FROM "%s"`, table)); err != nil {
 		return err
 	}
 

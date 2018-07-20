@@ -10,7 +10,7 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/gebet/resource"
-	rhttp "github.com/alileza/gebet/resource/http"
+	"github.com/alileza/gebet/resource/http/client"
 )
 
 type Handler struct {
@@ -25,6 +25,7 @@ func New(r *resource.Manager) func(s *godog.Suite) {
 		s.Step(`^"([^"]*)" response body should be$`, h.responseBodyShouldBe)
 		s.Step(`^set "([^"]*)" table "([^"]*)" list of content$`, h.setTableListOfContent)
 		s.Step(`^"([^"]*)" table "([^"]*)" should look like$`, h.tableShouldLookLike)
+		s.Step(`^set "([^"]*)" response code to (\d+) and response body$`, h.setResponseCodeToAndResponseBody)
 	}
 }
 
@@ -33,7 +34,7 @@ func (h *Handler) sendRequestToWithBody(name, endpoint string, payload *gherkin.
 	if err != nil {
 		return err
 	}
-	httpClient := resource.(*rhttp.Client)
+	httpClient := client.T(resource)
 
 	e := strings.Split(endpoint, " ")
 	if len(e) < 2 {
