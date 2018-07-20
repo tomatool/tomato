@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const Name = "http/client"
+
 type Response struct {
 	Code int
 	Body []byte

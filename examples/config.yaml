@@ -7,7 +7,7 @@ resources:
       base_url: http://localhost:8093
       timeout: 5s
   - name: db1
-    type: sqldb
+    type: db/sql
     params:
       driver: postgres
       datasource: postgres://user:pass@localhost:5432/my_awesome_service?sslmode=disable

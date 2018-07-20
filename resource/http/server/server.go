@@ -4,6 +4,8 @@ import (
 	"net/http"
 )
 
+const Name = "http/server"
+
 type Client struct {
 	port string
 	srv  *http.Server

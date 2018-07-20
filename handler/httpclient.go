@@ -7,7 +7,6 @@ import (
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/gebet/resource/http/client"
-	"github.com/alileza/gebet/resource/http/server"
 	"github.com/alileza/gebet/util/cmp"
 )
 
@@ -59,18 +58,6 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 	if err := cmp.Map(gotResponse, expectedResponse); err != nil {
 		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(res.Body), err.Error())
 	}
-
-	return nil
-}
-
-func (h *Handler) setResponseCodeToAndResponseBody(name string, code int, body *gherkin.DocString) error {
-	r, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	httpServer := server.T(r)
-
-	httpServer.SetResponse(code, []byte(body.Content))
 
 	return nil
 }

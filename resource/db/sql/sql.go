@@ -1,4 +1,4 @@
-package sqldb
+package sql
 
 import (
 	"errors"
@@ -9,6 +9,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
+
+const Name = "db/sql"
 
 type Client struct {
 	options map[string]string

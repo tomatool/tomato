@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/alileza/gebet/config"
+	"github.com/alileza/gebet/resource/db/sql"
 	"github.com/alileza/gebet/resource/http/client"
 	"github.com/alileza/gebet/resource/http/server"
-	"github.com/alileza/gebet/resource/sqldb"
 
 	"github.com/pkg/errors"
 )
@@ -47,11 +47,11 @@ func (mgr *Manager) Get(name string) (Resource, error) {
 
 			var r Resource
 			switch resourceCfg.Type {
-			case "http/client":
+			case client.Name:
 				r = client.New(resourceCfg.Params)
-			case "sqldb":
-				r = sqldb.New(resourceCfg.Params)
-			case "http/server":
+			case sql.Name:
+				r = sql.New(resourceCfg.Params)
+			case server.Name:
 				r = server.New(resourceCfg.Params)
 			default:
 				return nil, ErrInvalidType
