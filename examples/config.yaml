@@ -1,0 +1,8 @@
+---
+
+resources:
+  - name: http
+    type: http
+    params:
+      base_url: http://localhost:9090
+      timeout: 5s
