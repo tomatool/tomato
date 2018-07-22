@@ -19,4 +19,4 @@ deps:
 
 build:
 	@echo ">> building binaries"
-	@go build -ldflags $(ldflags) -o $(build_dir)/gebet cmd/gebet/main.go
+	@go build -ldflags $(ldflags) -o $(build_dir)/gebet main.go

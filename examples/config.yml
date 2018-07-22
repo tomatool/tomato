@@ -1,0 +1,17 @@
+---
+
+resources:
+  - name: httpcli
+    type: http/client
+    params:
+      base_url: http://localhost:9090
+      timeout: 5s
+  - name: maindb
+    type: db/sql
+    params:
+      driver: postgres
+      datasource: postgres://box_content_service:box_content_service@localhost:5432/box_content_service?sslmode=disable
+  - name: external
+    type: http/server
+    params:
+      port: ":9091"
