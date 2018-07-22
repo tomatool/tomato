@@ -33,5 +33,5 @@ func (h *Handler) tableShouldLookLike(name, table string, content *gherkin.DataT
 		return err
 	}
 
-	return dbClient.Cmp(table, rows)
+	return dbClient.Compare(table, rows)
 }

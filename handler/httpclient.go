@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
@@ -17,13 +16,9 @@ func (h *Handler) responseCodeShouldBe(name string, code int) error {
 	}
 	httpClient := client.T(r)
 
-	res := httpClient.LastResponse()
-	if res == nil {
-		return errors.New("unexpected nil LastResponse")
-	}
-
-	if res.Code != code {
-		return &ErrMismatch{"response code", code, res.Code, string(res.Body)}
+	responseCode, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
+	if responseCode != code {
+		return &ErrMismatch{"response code", code, responseCode, string(responseBody)}
 	}
 
 	return nil
@@ -36,13 +31,10 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 	}
 	httpClient := client.T(r)
 
-	res := httpClient.LastResponse()
-	if res == nil {
-		return errors.New("unexpected nil LastResponse")
-	}
+	_, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 
 	gotResponse := make(map[string]interface{})
-	if err := json.Unmarshal(res.Body, &gotResponse); err != nil {
+	if err := json.Unmarshal(responseBody, &gotResponse); err != nil {
 		return err
 	}
 
@@ -52,11 +44,11 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 	}
 
 	if err := cmp.Map(expectedResponse, gotResponse); err != nil {
-		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(res.Body), err.Error())
+		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(responseBody), err.Error())
 	}
 
 	if err := cmp.Map(gotResponse, expectedResponse); err != nil {
-		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(res.Body), err.Error())
+		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(responseBody), err.Error())
 	}
 
 	return nil
