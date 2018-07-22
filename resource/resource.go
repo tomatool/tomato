@@ -7,6 +7,7 @@ import (
 	"github.com/alileza/gebet/resource/db/sql"
 	"github.com/alileza/gebet/resource/http/client"
 	"github.com/alileza/gebet/resource/http/server"
+	"github.com/alileza/gebet/resource/queue"
 
 	"github.com/pkg/errors"
 )
@@ -30,7 +31,7 @@ func NewManager(cfgs []*config.Resource) *Manager {
 
 func (mgr *Manager) Close() {
 	mgr.cache.Range(func(key interface{}, r interface{}) bool {
-		// r.(Resource).Close()
+
 		return true
 	})
 }
@@ -51,6 +52,8 @@ func (mgr *Manager) Get(name string) (Resource, error) {
 				r = sql.New(resourceCfg.Params)
 			case server.Name:
 				r = server.New(resourceCfg.Params)
+			case queue.Name:
+				r = queue.New(resourceCfg.Params)
 			default:
 				return nil, ErrInvalidType
 			}
