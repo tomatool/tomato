@@ -10,7 +10,16 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const Name = "db/sql"
+const (
+	Name = "db/sql"
+
+	DriverPostgres = "postgres"
+	DriverMySQL    = "mysql"
+)
+
+var (
+	ErrInvalidDriver = errors.New("invalid driver")
+)
 
 type Client struct {
 	options map[string]string
@@ -57,8 +66,30 @@ func (c *Client) Clear(table string) error {
 		return err
 	}
 
-	_, err = conn.DB.Exec(`TRUNCATE TABLE "` + table + `" RESTART IDENTITY CASCADE`)
-	return err
+	switch conn.DriverName() {
+	case DriverMySQL:
+		tx, err := conn.Begin()
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		_, err = tx.Exec(`TRUNCATE TABLE ` + table)
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec(`ALTER TABLE ` + table + ` AUTO_INCREMENT = 1`)
+		if err != nil {
+			return err
+		}
+
+		return tx.Commit()
+	case DriverPostgres:
+		_, err := conn.Exec(`TRUNCATE TABLE "` + table + `" RESTART IDENTITY CASCADE`)
+		return err
+	}
+
+	return ErrInvalidDriver
 }
 
 func (c *Client) Set(table string, rows []map[string]string) error {
@@ -66,6 +97,7 @@ func (c *Client) Set(table string, rows []map[string]string) error {
 	if err != nil {
 		return err
 	}
+	driverName := conn.DriverName()
 
 	if err := c.Clear(table); err != nil {
 		return err
@@ -95,9 +127,20 @@ func (c *Client) Set(table string, rows []map[string]string) error {
 			counter++
 		}
 
-		query := fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`, table, strings.Join(keys, ","), strings.Join(valctr, ","))
+		var query string
+		switch driverName {
+		case DriverPostgres:
+			query = fmt.Sprintf(`INSERT INTO "%s" (%s) VALUES (%s)`, table, strings.Join(keys, ","), strings.Join(valctr, ","))
+		case DriverMySQL:
+			for i := range valctr {
+				valctr[i] = "?"
+			}
+			query = fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, table, strings.Join(keys, ","), strings.Join(valctr, ","))
+		default:
+			return ErrInvalidDriver
+		}
+
 		if _, err := tx.Exec(query, vals...); err != nil {
-			panic(err)
 			return err
 		}
 	}
@@ -114,7 +157,7 @@ func (c *Client) Cmp(table string, rows []map[string]string) error {
 	}
 
 	var rowCount int
-	if err := conn.Get(&rowCount, fmt.Sprintf(`SELECT COUNT(*) FROM "%s"`, table)); err != nil {
+	if err := conn.Get(&rowCount, countQuery(conn.DriverName(), table, nil)); err != nil {
 		return err
 	}
 
@@ -150,7 +193,7 @@ func (c *Client) Cmp(table string, rows []map[string]string) error {
 			counter++
 		}
 
-		query := fmt.Sprintf("\n\n\nSELECT COUNT(*) FROM %s WHERE %s", table, strings.Join(keys, " AND "))
+		query := countQuery(conn.DriverName(), table, keys)
 		if err := conn.Get(&rowCount, query, vals...); err != nil {
 			return err
 		}
@@ -161,4 +204,25 @@ func (c *Client) Cmp(table string, rows []map[string]string) error {
 	}
 
 	return nil
+}
+
+func countQuery(driver string, table string, keys []string) string {
+	switch driver {
+	case DriverPostgres:
+		q := fmt.Sprintf(`SELECT COUNT(*) FROM "%s"`, table)
+		if len(keys) > 0 {
+			q += fmt.Sprintf("WHERE %s", strings.Join(keys, " AND "))
+		}
+		return q
+	case DriverMySQL:
+		for i, val := range keys {
+			keys[i] = strings.Replace(val, fmt.Sprintf("=$%d", i+1), "=?", -1)
+		}
+		q := fmt.Sprintf("SELECT COUNT(*) FROM `%s`", table)
+		if len(keys) > 0 {
+			q += fmt.Sprintf("WHERE %s", strings.Join(keys, " AND "))
+		}
+		return q
+	}
+	return ErrInvalidDriver.Error()
 }

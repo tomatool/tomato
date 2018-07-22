@@ -16,7 +16,7 @@ Resource are the objects that are going to be used for steps in the scenario. Th
 
 **Available functions**
 
-1) **Set**
+1. **Set**
 
       Set database values, example:
       
@@ -84,7 +84,7 @@ standard http server, for mocking external server response
 
 **Available functions**
 
-1 **Set Response**
+1. **Set Response**
 
   Send request with body, example:
   
