@@ -1,11 +1,36 @@
 package cmp
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 )
 
-func Map(expectedResponse, gotResponse map[string]interface{}) error {
+func JSON(a []byte, b []byte, exact bool) error {
+	mapA := make(map[string]interface{})
+	if err := json.Unmarshal(a, &mapA); err != nil {
+		return err
+	}
+
+	mapB := make(map[string]interface{})
+	if err := json.Unmarshal(b, &mapB); err != nil {
+		return err
+	}
+
+	if err := compareMap(mapA, mapB); err != nil {
+		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", string(a), string(b), err.Error())
+	}
+
+	if exact {
+		if err := compareMap(mapB, mapA); err != nil {
+			return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", string(a), string(b), err.Error())
+		}
+	}
+
+	return nil
+}
+
+func compareMap(expectedResponse, gotResponse map[string]interface{}) error {
 	for key := range expectedResponse {
 		expectedVal, ok1 := expectedResponse[key]
 		gotVal, ok2 := gotResponse[key]
@@ -13,14 +38,14 @@ func Map(expectedResponse, gotResponse map[string]interface{}) error {
 			return fmt.Errorf("mismatch field key='%s' expected='%v' got='%v'", key, ok1, ok2)
 		}
 
-		if err := Val(expectedVal, gotVal); err != nil {
+		if err := compareVal(expectedVal, gotVal); err != nil {
 			return fmt.Errorf("[%s] %s", key, err.Error())
 		}
 	}
 	return nil
 }
 
-func Val(expectedVal, gotVal interface{}) error {
+func compareVal(expectedVal, gotVal interface{}) error {
 	expectedType := reflect.TypeOf(expectedVal)
 	if expectedType != nil &&
 		expectedType.Kind() == reflect.String &&
@@ -37,7 +62,7 @@ func Val(expectedVal, gotVal interface{}) error {
 	}
 
 	if expectedType.Kind() == reflect.Slice {
-		if err := Slice(
+		if err := compareSlice(
 			expectedVal.([]interface{}),
 			gotVal.([]interface{}),
 		); err != nil {
@@ -47,7 +72,7 @@ func Val(expectedVal, gotVal interface{}) error {
 	}
 
 	if expectedType.Kind() == reflect.Map {
-		if err := Map(
+		if err := compareMap(
 			expectedVal.(map[string]interface{}),
 			gotVal.(map[string]interface{}),
 		); err != nil {
@@ -62,13 +87,13 @@ func Val(expectedVal, gotVal interface{}) error {
 	return nil
 }
 
-func Slice(expectedResponse, gotResponse []interface{}) error {
+func compareSlice(expectedResponse, gotResponse []interface{}) error {
 	if len(expectedResponse) != len(gotResponse) {
 		return fmt.Errorf("mismatch slice length expected='%v' got='%v'", len(expectedResponse), len(gotResponse))
 	}
 
 	for index := range expectedResponse {
-		if err := Val(expectedResponse[index], gotResponse[index]); err != nil {
+		if err := compareVal(expectedResponse[index], gotResponse[index]); err != nil {
 			return err
 		}
 	}

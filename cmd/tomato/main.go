@@ -9,10 +9,10 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
-	"github.com/alileza/gebet/config"
-	"github.com/alileza/gebet/handler"
-	"github.com/alileza/gebet/resource"
-	"github.com/alileza/gebet/util/version"
+	"github.com/alileza/tomato/config"
+	"github.com/alileza/tomato/handler"
+	"github.com/alileza/tomato/resource"
+	"github.com/alileza/tomato/util/version"
 	"github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -23,16 +23,16 @@ var (
 )
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "gebet bdd tools")
+	app := kingpin.New(filepath.Base(os.Args[0]), "tomato bdd tools")
 	app.Version(version.Print())
 	app.HelpFlag.Short('h')
 
-	app.Flag("config.file", "gebet configuration file path.").Short('c').Default("gebet.yml").StringVar(&configFile)
-	app.Flag("features.path", "gebet features folder path.").Short('f').Default("features").StringVar(&featuresPath)
+	app.Flag("config.file", "tomato configuration file path.").Short('c').Default("tomato.yml").StringVar(&configFile)
+	app.Flag("features.path", "tomato features folder path.").Short('f').Default("features").StringVar(&featuresPath)
 
 	_, err := app.Parse(os.Args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error retrieving config"))
+		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing flag"))
 		os.Exit(1)
 	}
 

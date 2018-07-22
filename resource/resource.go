@@ -3,11 +3,11 @@ package resource
 import (
 	"sync"
 
-	"github.com/alileza/gebet/config"
-	"github.com/alileza/gebet/resource/db/sql"
-	"github.com/alileza/gebet/resource/http/client"
-	"github.com/alileza/gebet/resource/http/server"
-	"github.com/alileza/gebet/resource/queue"
+	"github.com/alileza/tomato/config"
+	"github.com/alileza/tomato/resource/db/sql"
+	"github.com/alileza/tomato/resource/http/client"
+	"github.com/alileza/tomato/resource/http/server"
+	"github.com/alileza/tomato/resource/queue"
 
 	"github.com/pkg/errors"
 )
@@ -31,7 +31,6 @@ func NewManager(cfgs []*config.Resource) *Manager {
 
 func (mgr *Manager) Close() {
 	mgr.cache.Range(func(key interface{}, r interface{}) bool {
-
 		return true
 	})
 }

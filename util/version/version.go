@@ -25,7 +25,7 @@ var versionInfoTmpl = `
 
 func Print() string {
 	m := map[string]string{
-		"program":   "gebet",
+		"program":   "tomato",
 		"version":   Version,
 		"revision":  Revision,
 		"branch":    Branch,

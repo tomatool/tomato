@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/gebet/resource/queue"
-	"github.com/alileza/gebet/util/cmp"
+	"github.com/alileza/tomato/resource/queue"
+	"github.com/alileza/tomato/util/cmp"
 )
 
 func (h *Handler) publishMessageToTargetWithPayload(name, target string, payload *gherkin.DocString) error {
@@ -46,28 +45,10 @@ func (h *Handler) messageFromTargetShouldLookLike(name, target string, body *ghe
 	}
 	mqClient := queue.Cast(r)
 
-	b := mqClient.Consume(target)
-	if b == nil {
+	consumedMessage := mqClient.Consume(target)
+	if consumedMessage == nil {
 		return fmt.Errorf("no message to consume `%s`", target)
 	}
 
-	consumedMessage := make(map[string]interface{})
-	if err := json.Unmarshal(b, &consumedMessage); err != nil {
-		return err
-	}
-
-	expectedMessage := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(body.Content), &expectedMessage); err != nil {
-		return err
-	}
-
-	if err := cmp.Map(expectedMessage, consumedMessage); err != nil {
-		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(b), err.Error())
-	}
-
-	if err := cmp.Map(consumedMessage, expectedMessage); err != nil {
-		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", body.Content, string(b), err.Error())
-	}
-
-	return nil
+	return cmp.JSON(consumedMessage, []byte(body.Content), false)
 }

@@ -1,6 +1,6 @@
 package queue
 
-import "github.com/alileza/gebet/resource/queue/rabbitmq"
+import "github.com/alileza/tomato/resource/queue/rabbitmq"
 
 const Name = "queue"
 
