@@ -56,7 +56,9 @@ func (c *Client) Do(req *http.Request) error {
 		req.URL.Host = baseURL.Host
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	if req.Method != http.MethodGet {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
