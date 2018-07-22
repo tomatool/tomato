@@ -1,3 +1,4 @@
+project_name = gebet
 branch = $(shell git symbolic-ref HEAD 2>/dev/null)
 version = 0.1.0
 revision = $(shell git log -1 --pretty=format:"%H")
@@ -19,4 +20,4 @@ deps:
 
 build:
 	@echo ">> building binaries"
-	@go build -ldflags $(ldflags) -o $(build_dir)/gebet main.go
+	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) cmd/$(project_name)/main.go
