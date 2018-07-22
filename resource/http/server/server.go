@@ -6,7 +6,7 @@ import (
 
 const Name = "http/server"
 
-type Client struct {
+type client struct {
 	port string
 	srv  *http.Server
 
@@ -14,20 +14,20 @@ type Client struct {
 	responseBody []byte
 }
 
-func T(i interface{}) *Client {
-	return i.(*Client)
+func T(i interface{}) *client {
+	return i.(*client)
 }
 
-func New(params map[string]string) *Client {
+func New(params map[string]string) *client {
 	port, ok := params["port"]
 	if !ok {
 		panic("http/server: port is required")
 	}
 
-	return &Client{port: port}
+	return &client{port: port}
 }
 
-func (c *Client) serve() {
+func (c *client) serve() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(c.responseCode)
@@ -44,7 +44,7 @@ func (c *Client) serve() {
 	}
 }
 
-func (c *Client) SetResponse(code int, body []byte) {
+func (c *client) SetResponse(code int, body []byte) {
 	if c.srv == nil {
 		go c.serve()
 	}
@@ -52,6 +52,6 @@ func (c *Client) SetResponse(code int, body []byte) {
 	c.responseBody = body
 }
 
-func (c *Client) Close() {
+func (c *client) Close() {
 	c.srv.Close()
 }

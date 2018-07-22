@@ -9,23 +9,23 @@ import (
 
 const Name = "http/client"
 
-type Response struct {
+type response struct {
 	Code int
 	Body []byte
 }
 
-type Client struct {
+type client struct {
 	httpClient   *http.Client
 	baseURL      string
-	lastResponse *Response
+	lastResponse *response
 }
 
-func T(i interface{}) *Client {
-	return i.(*Client)
+func T(i interface{}) *client {
+	return i.(*client)
 }
 
-func New(params map[string]string) *Client {
-	client := &Client{new(http.Client), "", nil}
+func New(params map[string]string) *client {
+	client := &client{new(http.Client), "", nil}
 
 	for key, val := range params {
 		switch key {
@@ -44,9 +44,9 @@ func New(params map[string]string) *Client {
 	return client
 }
 
-func (c *Client) Close() {}
+func (c *client) Close() {}
 
-func (c *Client) Do(req *http.Request) error {
+func (c *client) Do(req *http.Request) error {
 	if c.baseURL != "" {
 		baseURL, err := url.Parse(c.baseURL)
 		if err != nil {
@@ -71,10 +71,14 @@ func (c *Client) Do(req *http.Request) error {
 		return err
 	}
 
-	c.lastResponse = &Response{resp.StatusCode, body}
+	c.lastResponse = &response{resp.StatusCode, body}
 	return nil
 }
 
-func (c *Client) LastResponse() *Response {
-	return c.lastResponse
+func (c *client) ResponseCode() int {
+	return c.lastResponse.Code
+}
+
+func (c *client) ResponseBody() []byte {
+	return c.lastResponse.Body
 }
