@@ -9,6 +9,16 @@ import (
 
 const Name = "http/client"
 
+type Client interface {
+	Do(req *http.Request) error
+	ResponseCode() int
+	ResponseBody() []byte
+}
+
+func Cast(r interface{}) Client {
+	return r.(Client)
+}
+
 type response struct {
 	Code int
 	Body []byte
@@ -20,13 +30,8 @@ type client struct {
 	lastResponse *response
 }
 
-func T(i interface{}) *client {
-	return i.(*client)
-}
-
-func New(params map[string]string) *client {
+func New(params map[string]string) Client {
 	client := &client{new(http.Client), "", nil}
-
 	for key, val := range params {
 		switch key {
 		case "base_url":
@@ -43,8 +48,6 @@ func New(params map[string]string) *client {
 	}
 	return client
 }
-
-func (c *client) Close() {}
 
 func (c *client) Do(req *http.Request) error {
 	if c.baseURL != "" {

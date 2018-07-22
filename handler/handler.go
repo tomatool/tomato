@@ -34,7 +34,7 @@ func (h *Handler) sendRequestToWithBody(name, endpoint string, payload *gherkin.
 	if err != nil {
 		return err
 	}
-	httpClient := client.T(resource)
+	httpClient := client.Cast(resource)
 
 	e := strings.Split(endpoint, " ")
 	if len(e) < 2 {

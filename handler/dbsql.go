@@ -11,7 +11,7 @@ func (h *Handler) setTableListOfContent(name, table string, content *gherkin.Dat
 	if err != nil {
 		return err
 	}
-	dbClient := sql.T(r)
+	dbClient := sql.Cast(r)
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
 	if err != nil {
@@ -26,7 +26,7 @@ func (h *Handler) tableShouldLookLike(name, table string, content *gherkin.DataT
 	if err != nil {
 		return err
 	}
-	dbClient := sql.T(r)
+	dbClient := sql.Cast(r)
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
 	if err != nil {

@@ -17,6 +17,10 @@ func (c *postgres) Clear(tableName string) error {
 }
 
 func (c *postgres) Set(tableName string, rows []map[string]string) error {
+	if err := c.Clear(tableName); err != nil {
+		return err
+	}
+
 	tx, err := c.db.Begin()
 	if err != nil {
 		return err
@@ -49,6 +53,7 @@ func (c *postgres) Set(tableName string, rows []map[string]string) error {
 
 	return tx.Commit()
 }
+
 func (c *postgres) Compare(tableName string, rows []map[string]string) error {
 	var rowCount int
 	if err := c.db.Get(&rowCount, fmt.Sprintf(`SELECT COUNT(*) FROM "%s"`, tableName)); err != nil {

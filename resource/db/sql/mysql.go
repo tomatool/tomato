@@ -30,6 +30,10 @@ func (c *mysql) Clear(tableName string) error {
 	return tx.Commit()
 }
 func (c *mysql) Set(tableName string, rows []map[string]string) error {
+	if err := c.Clear(tableName); err != nil {
+		return err
+	}
+
 	tx, err := c.db.Begin()
 	if err != nil {
 		return err

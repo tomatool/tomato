@@ -10,7 +10,7 @@ func (h *Handler) setResponseCodeToAndResponseBody(name string, code int, body *
 	if err != nil {
 		return err
 	}
-	httpServer := server.T(r)
+	httpServer := server.Cast(r)
 
 	httpServer.SetResponse(code, []byte(body.Content))
 

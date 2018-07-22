@@ -17,9 +17,7 @@ var (
 	ErrInvalidParams = errors.New("invalid resource params")
 )
 
-type Resource interface {
-	Close()
-}
+type Resource interface{}
 
 type Manager struct {
 	resources []*config.Resource
@@ -32,7 +30,7 @@ func NewManager(cfgs []*config.Resource) *Manager {
 
 func (mgr *Manager) Close() {
 	mgr.cache.Range(func(key interface{}, r interface{}) bool {
-		r.(Resource).Close()
+		// r.(Resource).Close()
 		return true
 	})
 }

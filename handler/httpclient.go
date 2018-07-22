@@ -14,7 +14,7 @@ func (h *Handler) responseCodeShouldBe(name string, code int) error {
 	if err != nil {
 		return err
 	}
-	httpClient := client.T(r)
+	httpClient := client.Cast(r)
 
 	responseCode, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 	if responseCode != code {
@@ -29,7 +29,7 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 	if err != nil {
 		return err
 	}
-	httpClient := client.T(r)
+	httpClient := client.Cast(r)
 
 	_, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 
