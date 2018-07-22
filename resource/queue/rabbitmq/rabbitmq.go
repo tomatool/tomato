@@ -130,7 +130,7 @@ func (c *RabbitMQ) Count(target string, count int) error {
 	return fmt.Errorf("queue/rabbitmq: mismatch count for target `%s`, expecting=%d got=%d", target, count, o)
 }
 
-func (c *RabbitMQ) Message(target string) []byte {
+func (c *RabbitMQ) Consume(target string) []byte {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
@@ -140,7 +140,9 @@ func (c *RabbitMQ) Message(target string) []byte {
 	}
 
 	msg := msgs[0]
-	msgs = msgs[1:]
+
+	// removing read messaged
+	c.consumedMessage[target] = msgs[1:]
 
 	return msg
 }

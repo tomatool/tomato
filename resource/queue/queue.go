@@ -8,7 +8,7 @@ type Client interface {
 	Listen(target string) error
 	Count(target string, count int) error
 	Publish(target string, payload []byte) error
-	Message(target string) []byte
+	Consume(target string) []byte
 }
 
 func Cast(i interface{}) Client {

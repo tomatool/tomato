@@ -46,7 +46,7 @@ func (h *Handler) messageFromTargetShouldLookLike(name, target string, body *ghe
 	}
 	mqClient := queue.Cast(r)
 
-	b := mqClient.Message(target)
+	b := mqClient.Consume(target)
 	if b == nil {
 		return fmt.Errorf("no message to consume `%s`", target)
 	}
