@@ -9,10 +9,15 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const (
+	DefaultWaitDuration = time.Millisecond * 50
+)
+
 type RabbitMQ struct {
 	mtx             sync.Mutex
 	conn            *amqp.Connection
 	consumedMessage map[string][][]byte
+	waitDuration    time.Duration
 }
 
 func New(params map[string]string) *RabbitMQ {
@@ -21,11 +26,16 @@ func New(params map[string]string) *RabbitMQ {
 		panic("queue/rabbitmq: datasource is required")
 	}
 
+	waitDuration, err := time.ParseDuration(params["wait_duration"])
+	if err != nil {
+		waitDuration = DefaultWaitDuration
+	}
+
 	conn, err := amqp.Dial(datasource)
 	if err != nil {
 		panic("queue/rabbitmq: failed to connect > " + err.Error())
 	}
-	return &RabbitMQ{conn: conn}
+	return &RabbitMQ{conn: conn, waitDuration: waitDuration}
 }
 
 func (c *RabbitMQ) target(target string) (string, string) {
@@ -105,7 +115,7 @@ func (c *RabbitMQ) Publish(target string, payload []byte) error {
 		return err
 	}
 
-	return ch.Publish(
+	err = ch.Publish(
 		exchange,
 		key,
 		true,  // mandatory
@@ -117,10 +127,15 @@ func (c *RabbitMQ) Publish(target string, payload []byte) error {
 			Timestamp:    time.Now(),
 		},
 	)
+	if err != nil {
+		return err
+	}
+	time.Sleep(c.waitDuration)
+	return nil
 }
 
 func (c *RabbitMQ) Count(target string, count int) error {
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(c.waitDuration)
 
 	o := len(c.consumedMessage[target])
 	if o == count {
