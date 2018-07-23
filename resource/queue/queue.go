@@ -6,7 +6,7 @@ const Name = "queue"
 
 type Client interface {
 	Listen(target string) error
-	Count(target string, count int) error
+	Count(target string) (int, error)
 	Publish(target string, payload []byte) error
 	Consume(target string) []byte
 }

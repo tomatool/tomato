@@ -15,6 +15,10 @@ func (mgr *resourceManagerMock) Get(name string) (resource.Resource, error) {
 		return resourceSQL, nil
 	case "httpcli-resource":
 		return resourceHTTPClient, nil
+	case "httpsrv-resource":
+		return resourceHTTPServer, nil
+	case "queue-resource":
+		return resourceQueue, nil
 	}
 
 	return nil, nil
