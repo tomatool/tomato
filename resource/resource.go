@@ -20,22 +20,20 @@ var (
 
 type Resource interface{}
 
-type Manager struct {
+type Manager interface {
+	Get(name string) (Resource, error)
+}
+
+type manager struct {
 	resources []*config.Resource
 	cache     sync.Map
 }
 
-func NewManager(cfgs []*config.Resource) *Manager {
-	return &Manager{resources: cfgs}
+func NewManager(cfgs []*config.Resource) *manager {
+	return &manager{resources: cfgs}
 }
 
-func (mgr *Manager) Close() {
-	mgr.cache.Range(func(key interface{}, r interface{}) bool {
-		return true
-	})
-}
-
-func (mgr *Manager) Get(name string) (Resource, error) {
+func (mgr *manager) Get(name string) (Resource, error) {
 	for _, resourceCfg := range mgr.resources {
 		if resourceCfg.Name == name {
 			cache, ok := mgr.cache.Load(resourceCfg)

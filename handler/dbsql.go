@@ -8,12 +8,17 @@ import (
 	"github.com/alileza/tomato/util/conv"
 )
 
-func (h *Handler) setTableListOfContent(name, table string, content *gherkin.DataTable) error {
+func (h *Handler) getResourceDB(name string) sql.SQL {
 	r, err := h.resource.Get(name)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	dbClient := sql.Cast(r)
+
+	return sql.Cast(r)
+}
+
+func (h *Handler) setTableListOfContent(name, table string, content *gherkin.DataTable) error {
+	dbClient := h.getResourceDB(name)
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
 	if err != nil {
@@ -24,11 +29,7 @@ func (h *Handler) setTableListOfContent(name, table string, content *gherkin.Dat
 }
 
 func (h *Handler) tableShouldLookLike(name, tableName string, content *gherkin.DataTable) error {
-	r, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	dbClient := sql.Cast(r)
+	dbClient := h.getResourceDB(name)
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
 	if err != nil {
