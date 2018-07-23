@@ -149,13 +149,13 @@ func (c *RabbitMQ) Consume(target string) []byte {
 
 func exchangeDeclare(ch *amqp.Channel, name string) error {
 	return ch.ExchangeDeclare(
-		name,     // name of the exchange
-		"direct", // type
-		true,     // durable
-		false,    // delete when complete
-		false,    // internal
-		false,    // noWait
-		nil,      // arguments
+		name,    // name of the exchange
+		"topic", // type
+		true,    // durable
+		false,   // delete when complete
+		false,   // internal
+		false,   // noWait
+		nil,     // arguments
 	)
 }
 
