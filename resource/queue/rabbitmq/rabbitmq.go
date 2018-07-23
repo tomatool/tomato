@@ -1,7 +1,6 @@
 package rabbitmq
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -134,15 +133,9 @@ func (c *RabbitMQ) Publish(target string, payload []byte) error {
 	return nil
 }
 
-func (c *RabbitMQ) Count(target string, count int) error {
+func (c *RabbitMQ) Count(target string) (int, error) {
 	time.Sleep(c.waitDuration)
-
-	o := len(c.consumedMessage[target])
-	if o == count {
-		return nil
-	}
-
-	return fmt.Errorf("queue/rabbitmq: mismatch count for target `%s`, expecting=%d got=%d", target, count, o)
+	return len(c.consumedMessage[target]), nil
 }
 
 func (c *RabbitMQ) Consume(target string) []byte {

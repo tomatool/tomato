@@ -35,7 +35,16 @@ func (h *Handler) messageFromTargetCountShouldBe(name, target string, count int)
 	}
 	mqClient := queue.Cast(r)
 
-	return mqClient.Count(target, count)
+	messageCount, err := mqClient.Count(target)
+	if err != nil {
+		return err
+	}
+
+	if messageCount != count {
+		return fmt.Errorf("queue/rabbitmq: mismatch count for target `%s`, expecting=%d got=%d", target, count, messageCount)
+	}
+
+	return nil
 }
 
 func (h *Handler) messageFromTargetShouldLookLike(name, target string, body *gherkin.DocString) error {
