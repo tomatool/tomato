@@ -40,7 +40,7 @@ List of available resource:
 
 
       **Notes**: missing fields will be compromised
-      
+
 ---
 
 # HTTP
@@ -114,6 +114,9 @@ consume & publish from message queue. target stands for `[exchange]:[key]`
 **Required parameters**
 - driver: in the meantime it only support `rabbitmq`
 - datasource: queue source name
+
+**Optional parameters**
+- wait_duration: wait duration after publish message or before consume message (Default: 50ms)
 
 **Available functions**
 
