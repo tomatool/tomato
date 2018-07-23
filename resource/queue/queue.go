@@ -9,6 +9,8 @@ type Client interface {
 	Count(target string) (int, error)
 	Publish(target string, payload []byte) error
 	Consume(target string) []byte
+	Ready() error
+	Close() error
 }
 
 func Cast(i interface{}) Client {

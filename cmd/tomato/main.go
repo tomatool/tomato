@@ -44,6 +44,8 @@ func main() {
 
 	resourceManager := resource.NewManager(cfg.Resources)
 
+	defer resourceManager.Close()
+
 	os.Exit(
 		godog.RunWithOptions("godogs", handler.New(resourceManager), godog.Options{
 			StopOnFailure: true,

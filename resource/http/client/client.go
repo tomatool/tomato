@@ -30,7 +30,7 @@ type client struct {
 	lastResponse *response
 }
 
-func New(params map[string]string) Client {
+func New(params map[string]string) *client {
 	client := &client{new(http.Client), "", nil}
 	for key, val := range params {
 		switch key {
@@ -47,6 +47,14 @@ func New(params map[string]string) Client {
 		}
 	}
 	return client
+}
+
+func (c *client) Ready() error {
+	return nil
+}
+
+func (c *client) Close() error {
+	return nil
 }
 
 func (c *client) Do(req *http.Request) error {

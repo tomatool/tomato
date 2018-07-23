@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"log"
 	"sync"
 
 	"github.com/alileza/tomato/config"
@@ -18,15 +19,23 @@ var (
 	ErrInvalidParams = errors.New("invalid resource params")
 )
 
-type Resource interface{}
+type Resource interface {
+	// Ready returns nil, if resource is ready to be use.
+	Ready() error
+
+	// Close returns nil, if resource successfully terminated.
+	Close() error
+}
 
 type Manager interface {
 	Get(name string) (Resource, error)
+	Close()
 }
 
 type manager struct {
 	resources []*config.Resource
 	cache     sync.Map
+	log       log.Logger
 }
 
 func NewManager(cfgs []*config.Resource) *manager {
@@ -60,4 +69,16 @@ func (mgr *manager) Get(name string) (Resource, error) {
 		}
 	}
 	return nil, errors.WithMessage(ErrNotFound, "resource:"+name)
+}
+
+func (mgr *manager) Close() {
+	mgr.cache.Range(func(resourceCfg interface{}, resource interface{}) bool {
+		cfg := resource.(*config.Resource)
+		r := resource.(Resource)
+		if err := r.Close(); err != nil {
+			mgr.log.Printf("[ERR] %s: failed to terminate resource : %v\n", cfg.Key(), err)
+			return false
+		}
+		return true
+	})
 }

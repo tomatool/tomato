@@ -17,6 +17,9 @@ type resourceQueueMock struct {
 	listen    string
 }
 
+func (mgr *resourceQueueMock) Ready() error { return nil }
+func (mgr *resourceQueueMock) Close() error { return nil }
+
 func (c *resourceQueueMock) Listen(target string) error {
 	c.listen = target
 	return nil

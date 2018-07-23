@@ -32,7 +32,7 @@ func Cast(r interface{}) SQL {
 	return r.(SQL)
 }
 
-func New(params map[string]string) SQL {
+func New(params map[string]string) *client {
 	driver, ok := params["driver"]
 	if !ok {
 		panic("db/sql: driver is required")
@@ -52,6 +52,14 @@ func New(params map[string]string) SQL {
 
 type client struct {
 	db *sqlx.DB
+}
+
+func (c *client) Ready() error {
+	return nil
+}
+
+func (c *client) Close() error {
+	return c.db.Close()
 }
 
 func (c *client) Clear(tableName string) error {

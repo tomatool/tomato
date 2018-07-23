@@ -26,7 +26,7 @@ type server struct {
 	responses map[string]response
 }
 
-func New(params map[string]string) Server {
+func New(params map[string]string) *server {
 	port, ok := params["port"]
 	if !ok {
 		panic("http/server: port is required")
@@ -38,6 +38,14 @@ func New(params map[string]string) Server {
 	}
 	go c.serve()
 	return c
+}
+
+func (c *server) Ready() error {
+	return nil
+}
+
+func (c *server) Close() error {
+	return c.srv.Close()
 }
 
 const defaultResponseKey = ""

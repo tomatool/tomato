@@ -12,14 +12,14 @@ const (
 	DefaultWaitDuration = time.Millisecond * 50
 )
 
-type RabbitMQ struct {
+type rabbitMQ struct {
 	mtx             sync.Mutex
 	conn            *amqp.Connection
 	consumedMessage map[string][][]byte
 	waitDuration    time.Duration
 }
 
-func New(params map[string]string) *RabbitMQ {
+func New(params map[string]string) *rabbitMQ {
 	datasource, ok := params["datasource"]
 	if !ok {
 		panic("queue/rabbitmq: datasource is required")
@@ -34,10 +34,10 @@ func New(params map[string]string) *RabbitMQ {
 	if err != nil {
 		panic("queue/rabbitmq: failed to connect > " + err.Error())
 	}
-	return &RabbitMQ{conn: conn, waitDuration: waitDuration}
+	return &rabbitMQ{conn: conn, waitDuration: waitDuration}
 }
 
-func (c *RabbitMQ) target(target string) (string, string) {
+func (c *rabbitMQ) target(target string) (string, string) {
 	result := strings.Split(target, ":")
 	if len(result) < 2 {
 		panic("queue/rabbitmq: invalid target format")
@@ -45,7 +45,15 @@ func (c *RabbitMQ) target(target string) (string, string) {
 	return result[0], result[1]
 }
 
-func (c *RabbitMQ) Listen(target string) error {
+func (c *rabbitMQ) Ready() error {
+	return nil
+}
+
+func (c *rabbitMQ) Close() error {
+	return c.conn.Close()
+}
+
+func (c *rabbitMQ) Listen(target string) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return err
@@ -85,14 +93,14 @@ func (c *RabbitMQ) Listen(target string) error {
 	return nil
 }
 
-func (c *RabbitMQ) clear(target string) {
+func (c *rabbitMQ) clear(target string) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
 	c.consumedMessage[target] = [][]byte{}
 }
 
-func (c *RabbitMQ) consume(target string, payload []byte) {
+func (c *rabbitMQ) consume(target string, payload []byte) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
@@ -103,7 +111,7 @@ func (c *RabbitMQ) consume(target string, payload []byte) {
 	c.consumedMessage[target] = append(c.consumedMessage[target], payload)
 }
 
-func (c *RabbitMQ) Publish(target string, payload []byte) error {
+func (c *rabbitMQ) Publish(target string, payload []byte) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return err
@@ -133,12 +141,12 @@ func (c *RabbitMQ) Publish(target string, payload []byte) error {
 	return nil
 }
 
-func (c *RabbitMQ) Count(target string) (int, error) {
+func (c *rabbitMQ) Count(target string) (int, error) {
 	time.Sleep(c.waitDuration)
 	return len(c.consumedMessage[target]), nil
 }
 
-func (c *RabbitMQ) Consume(target string) []byte {
+func (c *rabbitMQ) Consume(target string) []byte {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 

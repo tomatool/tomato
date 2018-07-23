@@ -17,6 +17,9 @@ type resourceHTTPServerMock struct {
 	body []byte
 }
 
+func (mgr *resourceHTTPServerMock) Ready() error { return nil }
+func (mgr *resourceHTTPServerMock) Close() error { return nil }
+
 func (c *resourceHTTPServerMock) SetResponsePath(uri string, code int, body []byte) {
 	c.uri = uri
 	c.code = code

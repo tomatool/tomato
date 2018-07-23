@@ -15,6 +15,9 @@ type resourceHTTPClientMock struct {
 	requestSent *http.Request
 }
 
+func (mgr *resourceHTTPClientMock) Ready() error { return nil }
+func (mgr *resourceHTTPClientMock) Close() error { return nil }
+
 func (c *resourceHTTPClientMock) Do(req *http.Request) error {
 	c.requestSent = req
 	return nil

@@ -15,6 +15,9 @@ type resourceSQLMock struct {
 	inserted map[string][]map[string]string
 }
 
+func (mgr *resourceSQLMock) Ready() error { return nil }
+func (mgr *resourceSQLMock) Close() error { return nil }
+
 func (mgr *resourceSQLMock) Clear(tableName string) error { return nil }
 func (mgr *resourceSQLMock) Set(tableName string, rows []map[string]string) error {
 	mgr.inserted[tableName] = rows
