@@ -59,5 +59,5 @@ func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) err
 
 	_, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 
-	return cmp.JSON(responseBody, []byte(body.Content), false)
+	return cmp.JSON([]byte(body.Content), responseBody, false)
 }

@@ -50,5 +50,5 @@ func (h *Handler) messageFromTargetShouldLookLike(name, target string, body *ghe
 		return fmt.Errorf("no message to consume `%s`", target)
 	}
 
-	return cmp.JSON(consumedMessage, []byte(body.Content), false)
+	return cmp.JSON([]byte(body.Content), consumedMessage, false)
 }
