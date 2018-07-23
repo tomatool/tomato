@@ -11,16 +11,21 @@ import (
 	"github.com/alileza/tomato/util/cmp"
 )
 
+func (h *Handler) getResourceHTTPClient(name string) client.Client {
+	r, err := h.resource.Get(name)
+	if err != nil {
+		panic(err)
+	}
+
+	return client.Cast(r)
+}
+
 func (h *Handler) sendRequestTo(name, endpoint string) error {
 	return h.sendRequestToWithBody(name, endpoint, &gherkin.DocString{})
 }
 
 func (h *Handler) sendRequestToWithBody(name, endpoint string, payload *gherkin.DocString) error {
-	resource, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	httpClient := client.Cast(resource)
+	httpClient := h.getResourceHTTPClient(name)
 
 	e := strings.Split(endpoint, " ")
 	if len(e) < 2 {
@@ -36,11 +41,7 @@ func (h *Handler) sendRequestToWithBody(name, endpoint string, payload *gherkin.
 }
 
 func (h *Handler) responseCodeShouldBe(name string, code int) error {
-	r, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	httpClient := client.Cast(r)
+	httpClient := h.getResourceHTTPClient(name)
 
 	responseCode, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 	if responseCode != code {
@@ -51,11 +52,7 @@ func (h *Handler) responseCodeShouldBe(name string, code int) error {
 }
 
 func (h *Handler) responseBodyShouldBe(name string, body *gherkin.DocString) error {
-	r, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	httpClient := client.Cast(r)
+	httpClient := h.getResourceHTTPClient(name)
 
 	_, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 
