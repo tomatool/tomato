@@ -10,7 +10,8 @@ Feature: http feature example
     Given set "tomato-http-server" with path "/status?fail" response code to 500 and response body
         """
           {
-                "status":"NOT OK"
+                "status":"NOT OK",
+                "timestamp": "2018-01-05 00:39:33"
           }
         """
     Given "tomato-http-client" send request to "GET /status"
@@ -26,6 +27,7 @@ Feature: http feature example
     Then "tomato-http-client" response body should be
         """
             {
-                "status":"NOT OK"
+                "status":"NOT OK",
+                "timestamp": "*"
             }
         """

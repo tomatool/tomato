@@ -23,7 +23,7 @@ var (
 )
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "tomato bdd tools")
+	app := kingpin.New(filepath.Base(os.Args[0]), "tomato - behavioral testing tools")
 	app.Version(version.Print())
 	app.HelpFlag.Short('h')
 

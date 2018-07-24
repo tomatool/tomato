@@ -23,7 +23,8 @@ Feature: queue features example
         """
             {
                 "country":"id",
-                "name":"cebre"
+                "name":"cebre",
+                "timestamp":"2018-04-03 08:38:23"
             }
         """
     Then message from "tomato-queue" target "customers:created" count should be 2
@@ -39,6 +40,7 @@ Feature: queue features example
         """
             {
                 "country":"id",
-                "name":"cebre"
+                "name":"cebre",
+                "timestamp":"*"
             }
         """
