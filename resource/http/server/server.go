@@ -61,11 +61,6 @@ func (c *server) getResponse(path string) response {
 		return resp
 	}
 
-	// if default is not set, and path not found
-	// get any responses exist on response list
-	for key := range c.responses {
-		return c.responses[key]
-	}
 	return response{502, []byte("response unavailable")}
 }
 
