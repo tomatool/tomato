@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
 )
 
@@ -46,6 +47,9 @@ func (c *rabbitMQ) target(target string) (string, string) {
 }
 
 func (c *rabbitMQ) Ready() error {
+	if err := c.Publish("test:test", []byte("")); err != nil {
+		return errors.Wrapf(err, "queue: rabbitmq is not ready")
+	}
 	return nil
 }
 

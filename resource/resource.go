@@ -30,6 +30,9 @@ type Resource interface {
 type Manager interface {
 	Get(name string) (Resource, error)
 	Close()
+
+	// Ready returns nil, if all resources is ready to be use.
+	Ready() error
 }
 
 type manager struct {
@@ -81,4 +84,17 @@ func (mgr *manager) Close() {
 		}
 		return true
 	})
+}
+
+func (mgr *manager) Ready() error {
+	for _, cfg := range mgr.resources {
+		r, err := mgr.Get(cfg.Name)
+		if err != nil {
+			return err
+		}
+		if err := r.Ready(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

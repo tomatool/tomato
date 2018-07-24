@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -43,6 +44,9 @@ func New(params map[string]string) *server {
 }
 
 func (c *server) Ready() error {
+	if c.srv == nil {
+		return fmt.Errorf("http/server: port %s is not running", c.port)
+	}
 	return nil
 }
 
@@ -85,6 +89,7 @@ func (c *server) serve() {
 	}
 
 	if err := c.srv.ListenAndServe(); err != nil {
+		c.srv = nil
 		panic(err)
 	}
 }

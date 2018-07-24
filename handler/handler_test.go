@@ -9,7 +9,8 @@ var (
 
 type resourceManagerMock struct{}
 
-func (mgr *resourceManagerMock) Close() {}
+func (mgr *resourceManagerMock) Close()       {}
+func (mgr *resourceManagerMock) Ready() error { return nil }
 func (mgr *resourceManagerMock) Get(name string) (resource.Resource, error) {
 	switch name {
 	case "sql-resource":
