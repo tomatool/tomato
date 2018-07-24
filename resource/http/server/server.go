@@ -1,7 +1,9 @@
 package server
 
 import (
+	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 const Name = "http/server"
@@ -85,7 +87,43 @@ func (c *server) serve() {
 	}
 }
 
+func jsonizePath(path string) string {
+	splited := strings.Split(path, "?")
+	if len(splited) < 2 {
+		return path
+	}
+	left, right := splited[0], strings.Join(splited[1:], "?")
+
+	tmp := make(map[string]string)
+	for _, param := range strings.Split(right, "&") {
+		var (
+			key   string
+			value string
+		)
+		for i, v := range strings.Split(param, "=") {
+			if i == 0 {
+				key = v
+			}
+			if i == 1 {
+				value = v
+			}
+			if i > 1 {
+				value += ("=" + v)
+			}
+		}
+		tmp[key] = value
+	}
+	b, err := json.Marshal(tmp)
+	if err != nil {
+		return path
+	}
+
+	return left + "?" + string(b)
+}
+
 func (c *server) SetResponsePath(path string, code int, body []byte) {
+	path = jsonizePath(path)
+
 	if path == "" {
 		path = defaultResponseKey
 	}
