@@ -53,6 +53,8 @@ func (c *server) Close() error {
 const defaultResponseKey = ""
 
 func (c *server) getResponse(path string) response {
+	path = jsonizePath(path)
+
 	resp, ok := c.responses[path]
 	if ok {
 		return resp
