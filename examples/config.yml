@@ -6,3 +6,8 @@ resources:
       params:
         driver: postgres
         datasource: postgres://tomato:potato@localhost:5432/tomato?sslmode=disable
+    - name: tomato-mysql
+      type: db/sql
+      params:
+        driver: mysql
+        datasource: root:potato@tcp(localhost:3306)/tomato

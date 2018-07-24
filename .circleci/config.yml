@@ -13,6 +13,12 @@ jobs:
           POSTGRES_USER: tomato
           POSTGRES_PASSWORD: potato
           POSTGRES_DB: tomato
+      
+      - image: mysql:5.6.34
+        environment:
+            - MYSQL_ROOT_PASSWORD=potato
+            - MYSQL_DATABASE=tomato
+            
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -50,9 +56,20 @@ jobs:
             done
             echo Failed waiting for Postgres && exit 1
       - run:
+          name: waiting for mysql to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 3306 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for MySQL && exit 1
+      - run:
           name: run database migration
           command: |
             goose -dir examples/db/postgres/ postgres "user=tomato password=potato dbname=tomato sslmode=disable" up
+            goose -dir examples/db/mysql/ mysql "root:potato@/tomato?parseTime=true" up
       - run:
           name: run integration test
           command: |
