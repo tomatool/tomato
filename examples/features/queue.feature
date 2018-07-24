@@ -1,29 +1,44 @@
 Feature: queue features example
 
   Scenario: Publish and consume message
-    Then listen message from "my-awesome-queue" target "customers:uyeah"
-    Then publish message to "my-awesome-queue" target "customers:uyeah" with payload
+    # This message should be ignored by the next step, because tomato haven't listen to this target yet.
+    Given publish message to "tomato-queue" target "customers:created" with payload
+      """
+          {
+              "country":"us",
+              "name":"cembri"
+          }
+      """
+  
+    Then listen message from "tomato-queue" target "customers:created"
+    Then listen message from "tomato-queue" target "customers:deleted"
+    Then publish message to "tomato-queue" target "customers:created" with payload
         """
             {
-                "test":"OK"
+                "country":"us",
+                "name":"cembri"
             }
         """
-    Then publish message to "my-awesome-queue" target "customers:uyeah" with payload
+    Then publish message to "tomato-queue" target "customers:created" with payload
         """
             {
-                "test":"NOT OK"
+                "country":"id",
+                "name":"cebre"
             }
         """
-    Then message from "my-awesome-queue" target "customers:uyeah" count should be 2
-    Then message from "my-awesome-queue" target "customers:uyeah" should look like
+    Then message from "tomato-queue" target "customers:created" count should be 2
+    Then message from "tomato-queue" target "customers:deleted" count should be 0
+    Then message from "tomato-queue" target "customers:created" should look like
         """
             {
-                "test":"OK"
+                "country":"us",
+                "name":"cembri"
             }
         """
-    Then message from "my-awesome-queue" target "customers:uyeah" should look like
+    Then message from "tomato-queue" target "customers:created" should look like
         """
             {
-                "test":"NOT OK"
+                "country":"id",
+                "name":"cebre"
             }
         """

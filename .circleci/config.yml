@@ -19,6 +19,8 @@ jobs:
             - MYSQL_ROOT_PASSWORD=potato
             - MYSQL_DATABASE=tomato
             
+      - image: rabbitmq:3.6.1-management
+            
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -46,7 +48,7 @@ jobs:
           name: installing database migration tools
           command: go get -u github.com/pressly/goose/cmd/goose
       - run:
-          name: waiting for postgres to be ready
+          name: waiting for PostgreSQL to be ready
           command: |
             for i in `seq 1 10`;
             do
@@ -54,9 +56,9 @@ jobs:
               echo -n .
               sleep 1
             done
-            echo Failed waiting for Postgres && exit 1
+            echo Failed waiting for PostgreSQL && exit 1
       - run:
-          name: waiting for mysql to be ready
+          name: waiting for MySQL to be ready
           command: |
             for i in `seq 1 10`;
             do
@@ -70,7 +72,20 @@ jobs:
           command: |
             goose -dir examples/db/postgres/ postgres "user=tomato password=potato dbname=tomato sslmode=disable" up
             goose -dir examples/db/mysql/ mysql "root:potato@/tomato?parseTime=true" up
+    
+      - run:
+          name: waiting for RabbitMQ to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5672 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for RabbitMQ && exit 1
+            
       - run:
           name: run integration test
           command: |
             ./bin/tomato -c examples/config.yml -f examples/features/database.feature
+            ./bin/tomato -c examples/config.yml -f examples/features/queue.feature
