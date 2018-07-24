@@ -11,8 +11,18 @@ resources:
       params:
         driver: mysql
         datasource: root:potato@tcp(localhost:3306)/tomato
+        
     - name: tomato-queue
       type: queue
       params:
         driver: rabbitmq
         datasource: amqp://guest:guest@localhost:5672
+        
+    - name: tomato-http-server
+      type: http/server
+      params:
+        port: :8092
+    - name: tomato-http-client
+      type: http/client
+      params:
+        base_url: http://localhost:8092
