@@ -77,3 +77,7 @@ tomato -c tomato.yml -f example.feature
 ```
 
 Have fun! 🍅
+
+## Integrating with your continous integration
+
+[Documentation CI Integration](https://alileza.github.io/tomato/ci-integration)
