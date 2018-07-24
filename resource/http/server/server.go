@@ -77,6 +77,9 @@ func (c *server) serve() {
 		w.Write(resp.body)
 	}))
 
+	if c.port[0] != ':' {
+		c.port = ":" + c.port
+	}
 	c.srv = &http.Server{
 		Addr:    c.port,
 		Handler: mux,
