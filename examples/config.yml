@@ -1,27 +1,8 @@
 ---
 
 resources:
-  - name: httpcli
-    type: http/client
-    params:
-      base_url: http://localhost:9091
-      timeout: 5s
-  - name: mockserver
-    type: http/server
-    params:
-      port: ":9091"
-  - name: my-awesome-postgres-db
-    type: db/sql
-    params:
-      driver: postgres
-      datasource: postgres://user:pass@localhost:5432/customers?sslmode=disable
-  - name: my-awesome-mysql-db
-    type: db/sql
-    params:
-        driver: mysql
-        datasource: root:pass@tcp(localhost:3306)/dbname
-  - name: my-awesome-queue
-    type: queue
-    params:
-      driver: rabbitmq
-      datasource: amqp://guest:guest@localhost:5672
+    - name: tomato-psql
+      type: db/sql
+      params:
+        driver: postgres
+        datasource: postgres://tomato:potato@localhost:5432/tomato?sslmode=disable

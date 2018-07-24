@@ -7,7 +7,12 @@ jobs:
     docker:
       # specify the version
       - image: circleci/golang:1.10
-
+      
+      - image: circleci/postgres:9.6-alpine
+        environment:
+          POSTGRES_USER: tomato
+          POSTGRES_PASSWORD: potato
+          POSTGRES_DB: tomato
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -20,11 +25,35 @@ jobs:
     working_directory: /go/src/github.com/alileza/tomato
     steps:
       - checkout
-
-      # specify any bash command here prefixed with `run: `
+      
       - run: curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
       - run: dep ensure
       - run: go get -u github.com/go-playground/overalls
       - run: overalls -project=github.com/alileza/tomato -covermode=atomic -debug -- -race -v
       - run: mv overalls.coverprofile coverage.txt
       - run: bash <(curl -s https://codecov.io/bash)
+      
+      - run:
+          name: building tomato binaries
+          command: make build
+      - run:
+          name: installing database migration tools
+          command: go get -u github.com/pressly/goose/cmd/goose
+      - run:
+          name: waiting for postgres to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 1
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
+          name: run database migration
+          command: |
+            goose -dir examples/db/postgres/ postgres "user=tomato password=potato dbname=tomato sslmode=disable" up
+      - run:
+          name: run integration test
+          command: |
+            ./bin/tomato -c examples/config.yml -f examples/features/database.feature
