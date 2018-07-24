@@ -1,8 +1,10 @@
 package sql
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/alileza/tomato/util/sqlutil"
 	_ "github.com/go-sql-driver/mysql"
@@ -55,7 +57,10 @@ type client struct {
 }
 
 func (c *client) Ready() error {
-	if _, err := c.db.Exec("SELECT 1"); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	if err := c.db.PingContext(ctx); err != nil {
 		return errors.Wrapf(err, "db/sql: driver %s is not ready", c.db.DriverName())
 	}
 	return nil
