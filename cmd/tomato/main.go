@@ -77,13 +77,21 @@ func main() {
 		os.Exit(0)
 	}
 
+	opts := godog.Options{
+		Output: colors.Colored(os.Stdout),
+		Paths:  strings.Split(featuresPath, ","),
+		Format: "progress",
+	}
+
+	if cfg.Randomize {
+		opts.Randomize = time.Now().UTC().UnixNano()
+	}
+
+	if cfg.StopOnFailure {
+		opts.StopOnFailure = cfg.StopOnFailure
+	}
+
 	os.Exit(
-		godog.RunWithOptions("godogs", handler.New(resourceManager), godog.Options{
-			StopOnFailure: true,
-			Output:        colors.Colored(os.Stdout),
-			Paths:         strings.Split(featuresPath, ","),
-			Format:        "progress",
-			Randomize:     time.Now().UTC().UnixNano(), // randomize scenario execution order
-		}),
+		godog.RunWithOptions("godogs", handler.New(resourceManager), opts),
 	)
 }
