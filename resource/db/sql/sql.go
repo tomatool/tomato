@@ -117,24 +117,10 @@ func (c *client) Count(tableName string, conditions map[string]string) (int, err
 	var count int
 	query := sqlutil.NewQueryBuilder(c.db.DriverName(), "SELECT COUNT(*) FROM "+tableName)
 	for key, val := range conditions {
-		query.Where(key, "=", val)
-	}
-	if err := c.db.Get(
-		&count,
-		query.Query(),
-		query.Arguments()...,
-	); err != nil {
-		return 0, err
-	}
-	return count, nil
-}
-
-func (c *client) count(tableName string, conditions map[string]string) (int, error) {
-	tableName = c.t(tableName)
-
-	var count int
-	query := sqlutil.NewQueryBuilder(c.db.DriverName(), "SELECT COUNT(*) FROM "+tableName)
-	for key, val := range conditions {
+		if strings.ToLower(val) == "null" {
+			query.Where(key, "IS", nil)
+			continue
+		}
 		query.Where(key, "=", val)
 	}
 	if err := c.db.Get(
