@@ -29,7 +29,7 @@ func (mgr *resourceSQLMock) Count(tableName string, condition map[string]string)
 			return 1, nil
 		}
 	}
-	return 0, nil
+	return len(mgr.inserted[tableName]), nil
 }
 
 func TestSetTableListOfContent(t *testing.T) {

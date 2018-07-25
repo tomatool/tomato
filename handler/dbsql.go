@@ -36,6 +36,15 @@ func (h *Handler) tableShouldLookLike(name, tableName string, content *gherkin.D
 		return err
 	}
 
+	rowsCount, err := dbClient.Count(tableName, nil)
+	if err != nil {
+		return err
+	}
+
+	if rowsCount != len(rows) {
+		return fmt.Errorf("expecting row count to be %d, got %d", len(rows), rowsCount)
+	}
+
 	for _, row := range rows {
 		count, err := dbClient.Count(tableName, row)
 		if err != nil {
