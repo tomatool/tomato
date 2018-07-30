@@ -82,6 +82,9 @@ func (c *rabbitMQ) Listen(target string) error {
 	if _, err := ch.QueuePurge(q.Name, false); err != nil {
 		return err
 	}
+	if _, ok := c.consumedMessage[target]; ok {
+		c.consumedMessage[target] = make([][]byte, 0)
+	}
 
 	msgs, err := consume(ch, q.Name)
 	if err != nil {
