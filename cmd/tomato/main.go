@@ -81,6 +81,7 @@ func main() {
 		Output: colors.Colored(os.Stdout),
 		Paths:  strings.Split(featuresPath, ","),
 		Format: "progress",
+		Strict: true,
 	}
 
 	if cfg.Randomize {
