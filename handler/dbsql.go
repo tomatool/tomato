@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/resource/db/sql"
@@ -17,6 +18,21 @@ func (h *Handler) getResourceDB(name string) sql.SQL {
 	return sql.Cast(r)
 }
 
+func (h *Handler) setTableToEmpty(name, tables string) error {
+	dbClient := h.getResourceDB(name)
+
+	for _, table := range strings.Split(tables, ",") {
+		if table == "*" {
+			return dbClient.TruncateAll()
+		}
+
+		if err := dbClient.Set(table, make([]map[string]string, 0)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 func (h *Handler) setTableListOfContent(name, table string, content *gherkin.DataTable) error {
 	dbClient := h.getResourceDB(name)
 

@@ -18,7 +18,8 @@ type resourceSQLMock struct {
 func (mgr *resourceSQLMock) Ready() error { return nil }
 func (mgr *resourceSQLMock) Close() error { return nil }
 
-func (mgr *resourceSQLMock) Clear(tableName string) error { return nil }
+func (mgr *resourceSQLMock) TruncateAll() error              { return nil }
+func (mgr *resourceSQLMock) Truncate(tableName string) error { return nil }
 func (mgr *resourceSQLMock) Set(tableName string, rows []map[string]string) error {
 	mgr.inserted[tableName] = rows
 	return nil

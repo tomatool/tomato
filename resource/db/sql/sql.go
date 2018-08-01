@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/alileza/tomato/util/sqlutil"
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -25,7 +25,8 @@ var (
 )
 
 type SQL interface {
-	Clear(tableName string) error
+	TruncateAll() error
+	Truncate(tableName string) error
 	Set(tableName string, rows []map[string]string) error
 	Count(tableName string, condition map[string]string) (int, error)
 }
@@ -70,23 +71,68 @@ func (c *client) Close() error {
 	return c.db.Close()
 }
 
-func (c *client) Clear(tableName string) error {
-	tableName = c.t(tableName)
-	query := `TRUNCATE TABLE ` + tableName
+func (c *client) TruncateAll() error {
+	var (
+		tables []string
+		query  string
+	)
+
 	switch c.db.DriverName() {
 	case DriverMySQL:
-		query = `TRUNCATE TABLE ` + tableName
+		query = `SELECT table_name FROM information_schema.tables WHERE table_type = 'base table'`
 	case DriverPostgres:
-		query = `TRUNCATE TABLE ` + tableName + ` RESTART IDENTITY CASCADE`
+		query = `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`
 	}
-	_, err := c.db.Exec(query)
-	return err
+	if err := c.db.Select(&tables, query); err != nil {
+		return err
+	}
+
+	for _, table := range tables {
+		if err := c.Truncate(table); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *client) Truncate(tableName string) error {
+	tx, err := c.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	tableName = c.t(tableName)
+
+	switch c.db.DriverName() {
+	case DriverMySQL:
+		if _, err := tx.Exec("SET FOREIGN_KEY_CHECKS=0"); err != nil {
+			return err
+		}
+		if _, err := tx.Exec("TRUNCATE TABLE " + tableName); err != nil {
+			e, ok := err.(*mysql.MySQLError)
+			if ok && e.Number == 1146 {
+				return nil
+			}
+			return err
+		}
+		if _, err := tx.Exec("SET FOREIGN_KEY_CHECKS=1"); err != nil {
+			return err
+		}
+	case DriverPostgres:
+		if _, err := tx.Exec(`TRUNCATE TABLE ` + tableName + ` RESTART IDENTITY CASCADE`); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (c *client) Set(tableName string, rows []map[string]string) error {
 	tableName = c.t(tableName)
 
-	if err := c.Clear(tableName); err != nil {
+	if err := c.Truncate(tableName); err != nil {
 		return err
 	}
 
