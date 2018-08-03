@@ -21,6 +21,8 @@ func (mgr *resourceManagerMock) Get(name string) (resource.Resource, error) {
 		return resourceHTTPServer, nil
 	case "queue-resource":
 		return resourceQueue, nil
+	case "filestore-resource":
+		return resourceFilestoreClient, nil
 	}
 
 	return nil, nil

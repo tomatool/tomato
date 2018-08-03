@@ -14,6 +14,7 @@ type Handler struct {
 func New(r resource.Manager) func(s *godog.Suite) {
 	h := &Handler{r}
 	return func(s *godog.Suite) {
+		// httpclient
 		s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequestTo)
 		s.Step(`^"([^"]*)" send request to "([^"]*)" with body$`, h.sendRequestToWithBody)
 		s.Step(`^"([^"]*)" response code should be (\d+)$`, h.responseCodeShouldBe)
@@ -27,5 +28,9 @@ func New(r resource.Manager) func(s *godog.Suite) {
 		s.Step(`^listen message from "([^"]*)" target "([^"]*)"$`, h.listenMessageFromTarget)
 		s.Step(`^message from "([^"]*)" target "([^"]*)" count should be (\d+)$`, h.messageFromTargetCountShouldBe)
 		s.Step(`^message from "([^"]*)" target "([^"]*)" should look like$`, h.messageFromTargetShouldLookLike)
+
+		// filestore
+		s.Step(`^download file from the folder "([^"]*)" with the file name "([^"]*)" and save as "([^"]*)"$`, h.downloadFileFromTheFolderWithTheFileNameAndSaveAs)
+
 	}
 }

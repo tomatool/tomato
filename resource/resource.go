@@ -6,6 +6,7 @@ import (
 
 	"github.com/alileza/tomato/config"
 	"github.com/alileza/tomato/resource/db/sql"
+	"github.com/alileza/tomato/resource/filestore"
 	"github.com/alileza/tomato/resource/http/client"
 	"github.com/alileza/tomato/resource/http/server"
 	"github.com/alileza/tomato/resource/queue"
@@ -66,6 +67,8 @@ func (mgr *manager) Get(name string) (Resource, error) {
 				r, err = server.Open(resourceCfg.Params)
 			case queue.Name:
 				r, err = queue.Open(resourceCfg.Params)
+			case filestore.Name:
+				r, err = filestore.Open(resourceCfg.Params)
 			default:
 				return nil, ErrInvalidType
 			}
