@@ -42,6 +42,9 @@ jobs:
       - run: bash <(curl -s https://codecov.io/bash)
       
       - run:
+          name: generating handler
+          command: go run cmd/gen/main.go
+      - run:
           name: building tomato binaries
           command: make build
       - run:
