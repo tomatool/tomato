@@ -20,10 +20,10 @@ type rabbitMQ struct {
 	waitDuration    time.Duration
 }
 
-func New(params map[string]string) *rabbitMQ {
+func Open(params map[string]string) (*rabbitMQ, error) {
 	datasource, ok := params["datasource"]
 	if !ok {
-		panic("queue/rabbitmq: datasource is required")
+		return nil, errors.New("queue/rabbitmq: datasource is required")
 	}
 
 	waitDuration, err := time.ParseDuration(params["wait_duration"])
@@ -33,15 +33,16 @@ func New(params map[string]string) *rabbitMQ {
 
 	conn, err := amqp.Dial(datasource)
 	if err != nil {
-		panic("queue/rabbitmq: failed to connect > " + err.Error())
+		return nil, errors.New("queue/rabbitmq: failed to connect > " + err.Error())
 	}
-	return &rabbitMQ{conn: conn, waitDuration: waitDuration}
+
+	return &rabbitMQ{conn: conn, waitDuration: waitDuration}, nil
 }
 
 func (c *rabbitMQ) target(target string) (string, string) {
 	result := strings.Split(target, ":")
 	if len(result) < 2 {
-		panic("queue/rabbitmq: invalid target format")
+		return result[0], ""
 	}
 	return result[0], result[1]
 }

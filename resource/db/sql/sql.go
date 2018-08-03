@@ -35,22 +35,22 @@ func Cast(r interface{}) SQL {
 	return r.(SQL)
 }
 
-func New(params map[string]string) *client {
+func Open(params map[string]string) (*client, error) {
 	driver, ok := params["driver"]
 	if !ok {
-		panic("db/sql: driver is required")
+		return nil, errors.New("db/sql: parameter driver is required")
 	}
 	datasource, ok := params["datasource"]
 	if !ok {
-		panic("db/sql: datasource is required")
+		return nil, errors.New("db/sql: parameter datasource is required")
 	}
 
 	db, err := sqlx.Open(driver, datasource)
 	if err != nil {
-		panic("db/sql: " + driver + ":" + datasource + " > " + err.Error())
+		return nil, errors.New("db/sql: " + driver + ":" + datasource + " > " + err.Error())
 	}
 
-	return &client{db}
+	return &client{db}, nil
 }
 
 type client struct {
