@@ -53,18 +53,24 @@ func (mgr *manager) Get(name string) (Resource, error) {
 				return cache.(Resource), nil
 			}
 
-			var r Resource
+			var (
+				r   Resource
+				err error
+			)
 			switch resourceCfg.Type {
 			case client.Name:
-				r = client.New(resourceCfg.Params)
+				r, err = client.Open(resourceCfg.Params)
 			case sql.Name:
-				r = sql.New(resourceCfg.Params)
+				r, err = sql.Open(resourceCfg.Params)
 			case server.Name:
-				r = server.New(resourceCfg.Params)
+				r, err = server.Open(resourceCfg.Params)
 			case queue.Name:
-				r = queue.New(resourceCfg.Params)
+				r, err = queue.Open(resourceCfg.Params)
 			default:
 				return nil, ErrInvalidType
+			}
+			if err != nil {
+				return nil, err
 			}
 			mgr.cache.Store(resourceCfg, r)
 

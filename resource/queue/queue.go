@@ -1,6 +1,10 @@
 package queue
 
-import "github.com/alileza/tomato/resource/queue/rabbitmq"
+import (
+	"errors"
+
+	"github.com/alileza/tomato/resource/queue/rabbitmq"
+)
 
 const Name = "queue"
 
@@ -17,14 +21,14 @@ func Cast(i interface{}) Client {
 	return i.(Client)
 }
 
-func New(params map[string]string) Client {
+func Open(params map[string]string) (Client, error) {
 	driver, ok := params["driver"]
 	if !ok {
-		panic("queue: driver is required")
+		return nil, errors.New("queue: driver is required")
 	}
 	switch driver {
 	case "rabbitmq":
-		return rabbitmq.New(params)
+		return rabbitmq.Open(params)
 	}
-	panic("queue: invalid driver > " + driver)
+	return nil, errors.New("queue: invalid driver > " + driver)
 }

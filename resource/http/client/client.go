@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -30,7 +31,7 @@ type client struct {
 	lastResponse *response
 }
 
-func New(params map[string]string) *client {
+func Open(params map[string]string) (*client, error) {
 	client := &client{new(http.Client), "", nil}
 	for key, val := range params {
 		switch key {
@@ -39,14 +40,14 @@ func New(params map[string]string) *client {
 		case "timeout":
 			timeout, err := time.ParseDuration(val)
 			if err != nil {
-				panic("timeout: get http client, invalid params value : " + err.Error())
+				return nil, errors.New("timeout: get http client, invalid params value : " + err.Error())
 			}
 			client.httpClient.Timeout = timeout
 		default:
-			panic(key + ": invalid params")
+			return nil, errors.New(key + ": invalid params")
 		}
 	}
-	return client
+	return client, nil
 }
 
 func (c *client) Ready() error {

@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -29,10 +30,10 @@ type server struct {
 	responses map[string]response
 }
 
-func New(params map[string]string) *server {
+func Open(params map[string]string) (*server, error) {
 	port, ok := params["port"]
 	if !ok {
-		panic("http/server: port is required")
+		return nil, errors.New("http/server: port is required")
 	}
 
 	c := &server{
@@ -40,7 +41,8 @@ func New(params map[string]string) *server {
 		responses: make(map[string]response),
 	}
 	go c.serve()
-	return c
+
+	return c, nil
 }
 
 func (c *server) Ready() error {
