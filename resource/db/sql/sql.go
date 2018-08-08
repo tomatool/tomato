@@ -163,6 +163,9 @@ func (c *client) Count(tableName string, conditions map[string]string) (int, err
 	var count int
 	query := sqlutil.NewQueryBuilder(c.db.DriverName(), "SELECT COUNT(*) FROM "+tableName)
 	for key, val := range conditions {
+		if val == "*" {
+			continue
+		}
 		if strings.ToLower(val) == "null" {
 			query.Where(key, "IS", nil)
 			continue
