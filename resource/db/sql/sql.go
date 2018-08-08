@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -83,6 +84,7 @@ func (c *client) TruncateAll() error {
 	case DriverPostgres:
 		query = `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`
 	}
+	logrus.WithFields(logrus.Fields{"query": query}).Debug("Getting list of tables to truncate from information schema.")
 	if err := c.db.Select(&tables, query); err != nil {
 		return err
 	}
@@ -107,9 +109,13 @@ func (c *client) Truncate(tableName string) error {
 
 	switch c.db.DriverName() {
 	case DriverMySQL:
+
+		logrus.WithFields(logrus.Fields{"query": "SET FOREIGN_KEY_CHECKS=0"}).Debug("Ignoring foreign key checks.")
 		if _, err := tx.Exec("SET FOREIGN_KEY_CHECKS=0"); err != nil {
 			return err
 		}
+
+		logrus.WithFields(logrus.Fields{"query": "TRUNCATE TABLE " + tableName}).Debug("Truncating table.")
 		if _, err := tx.Exec("TRUNCATE TABLE " + tableName); err != nil {
 			e, ok := err.(*mysql.MySQLError)
 			if ok && e.Number == 1146 {
@@ -117,10 +123,13 @@ func (c *client) Truncate(tableName string) error {
 			}
 			return err
 		}
+
+		logrus.WithFields(logrus.Fields{"query": "SET FOREIGN_KEY_CHECKS=1"}).Debug("Enabling foreign key checks.")
 		if _, err := tx.Exec("SET FOREIGN_KEY_CHECKS=1"); err != nil {
 			return err
 		}
 	case DriverPostgres:
+		logrus.WithFields(logrus.Fields{"query": `TRUNCATE TABLE ` + tableName + ` RESTART IDENTITY CASCADE`}).Debug("Truncating table.")
 		if _, err := tx.Exec(`TRUNCATE TABLE ` + tableName + ` RESTART IDENTITY CASCADE`); err != nil {
 			return err
 		}
@@ -150,6 +159,7 @@ func (c *client) Set(tableName string, rows []map[string]string) error {
 			}
 			query.Value(key, val)
 		}
+		logrus.WithFields(logrus.Fields{"query": query.Query(), "arguments": query.Arguments()}).Debug("Inserting row.")
 		if _, err := tx.Exec(query.Query(), query.Arguments()...); err != nil {
 			return err
 		}
@@ -172,6 +182,7 @@ func (c *client) Count(tableName string, conditions map[string]string) (int, err
 		}
 		query.Where(key, "=", val)
 	}
+	logrus.WithFields(logrus.Fields{"query": query.Query(), "arguments": query.Arguments()}).Debug("Retrieving row count.")
 	if err := c.db.Get(
 		&count,
 		query.Query(),

@@ -9,6 +9,7 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/resource/http/client"
 	"github.com/alileza/tomato/util/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func (h *Handler) getResourceHTTPClient(name string) client.Client {
@@ -45,9 +46,12 @@ func (h *Handler) responseCodeShouldBe(name string, code int) error {
 
 	responseCode, responseBody := httpClient.ResponseCode(), httpClient.ResponseBody()
 	if responseCode != code {
+		logrus.WithFields(logrus.Fields{
+			"Received:": responseCode,
+			"Expected:": code,
+		}).Errorf("Unexpected response code")
 		return &ErrMismatch{"response code", code, responseCode, string(responseBody)}
 	}
-
 	return nil
 }
 

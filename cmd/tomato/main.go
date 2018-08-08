@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +12,6 @@ import (
 	"github.com/alileza/tomato/handler"
 	"github.com/alileza/tomato/resource"
 	"github.com/alileza/tomato/util/version"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -39,13 +37,13 @@ func main() {
 
 	_, err := app.Parse(os.Args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing flag"))
+		logrus.WithField("Error", err).Fatalf("Error parsing flag")
 		os.Exit(1)
 	}
 
 	cfg, err := config.Retrieve(configFile)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error retrieving config"))
+		logrus.WithField("Error", err).Fatalf("Error retrieving config")
 		os.Exit(1)
 	}
 
@@ -62,7 +60,7 @@ func main() {
 		for {
 			err := resourceManager.Ready()
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				logrus.WithField("Error", err).Warn("Waiting for resource...")
 				time.Sleep(time.Second)
 				continue
 			}
@@ -75,9 +73,9 @@ func main() {
 
 	select {
 	case <-readyChan:
-		fmt.Fprintln(os.Stdout, "all resources ready!")
+		logrus.Info("All resources are ready!")
 	case <-time.After(resourcesTimeout):
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "resource is not ready, giving up"))
+		logrus.Info("Resources not ready, timeout exceeded")
 		os.Exit(1)
 	}
 	if resourcesCheck {
