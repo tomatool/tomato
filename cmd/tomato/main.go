@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +12,7 @@ import (
 	"github.com/alileza/tomato/handler"
 	"github.com/alileza/tomato/resource"
 	"github.com/alileza/tomato/util/version"
-	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -22,6 +21,7 @@ var (
 	featuresPath     string
 	resourcesTimeout time.Duration
 	resourcesCheck   bool
+	debug            bool
 )
 
 func main() {
@@ -33,17 +33,22 @@ func main() {
 	app.Flag("features.path", "tomato features folder path.").Short('f').Default("features").StringVar(&featuresPath)
 	app.Flag("resources.timeout", "tomato will automatically wait for resource to be ready, and at some out it giving up.").Short('t').Default("10s").DurationVar(&resourcesTimeout)
 	app.Flag("resources.check", "tomato only check if the resources is all ready, and exit without executing the tests.").Short('e').Default("false").BoolVar(&resourcesCheck)
+	app.Flag("debug", "run in debug mode").Short('d').BoolVar(&debug)
 
 	_, err := app.Parse(os.Args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error parsing flag"))
+		logrus.WithField("Error", err).Fatalf("Error parsing flag")
 		os.Exit(1)
 	}
 
 	cfg, err := config.Retrieve(configFile)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error retrieving config"))
+		logrus.WithField("Error", err).Fatalf("Error retrieving config")
 		os.Exit(1)
+	}
+
+	if debug {
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 
 	resourceManager := resource.NewManager(cfg.Resources)
@@ -55,7 +60,7 @@ func main() {
 		for {
 			err := resourceManager.Ready()
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
+				logrus.WithField("Error", err).Warn("Waiting for resource...")
 				time.Sleep(time.Second)
 				continue
 			}
@@ -68,9 +73,9 @@ func main() {
 
 	select {
 	case <-readyChan:
-		fmt.Fprintln(os.Stdout, "all resources ready!")
+		logrus.Info("All resources are ready!")
 	case <-time.After(resourcesTimeout):
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "resource is not ready, giving up"))
+		logrus.Info("Resources not ready, timeout exceeded")
 		os.Exit(1)
 	}
 	if resourcesCheck {
