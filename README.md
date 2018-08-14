@@ -1,23 +1,27 @@
-# 🍅 tomato - behavioral testing tools
+# 🍅 tomato - behavioral testing tool suite
 ![CircleCI](https://circleci.com/gh/alileza/tomato/tree/master.svg?style=shield)
 [![Go Report Card](https://goreportcard.com/badge/github.com/alileza/tomato)](https://goreportcard.com/report/github.com/alileza/tomato)
 [![GoDoc](https://godoc.org/github.com/alileza/tomato?status.svg)](https://godoc.org/github.com/alileza/tomato)
 [![codecov.io](https://codecov.io/github/alileza/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/alileza/tomato)
- 
-Behavior Driven Development tools, built on top of (https://github.com/DATA-DOG/godog). To simplify adding Integration Test to your application without writing any code.
 
-tomato uses yaml config file to specify [resources](#resources)
+Built on top of [godog](https://github.com/DATA-DOG/godog), tomato is a language agnostic tool suite that simplifies adding behavioral tests to your application without writing any additional code.
+
+# Overview
+
+Tomato uses a yaml file to specify [resources](#resources). Resources are then used in the [gherkin](https://docs.cucumber.io/gherkin/reference/) documents that both you and your team write to test the behavior of your application against real dependencies.
 
 [Documentation](https://alileza.github.io/tomato/)
 
-# Getting started
+# Installation
 
-Install tomato by untar latest stable [release](https://github.com/alileza/tomato/releases/latest), or get from latest master by
+Install the latest stable release from [here](https://github.com/alileza/tomato/releases/latest), or from master using go get
 ```
 go get -u github.com/alileza/tomato/cmd/tomato
 ```
 
-Prepare your `tomato.yml` with your resources. For example :
+# Quickstart
+
+Prepare your `tomato.yml` in your project by configuring your required resources ([supported resources](http://alileza.github.io/tomato/resources)). For example:
 
 ```yaml
 ---
@@ -33,32 +37,31 @@ resources:
     params:
       driver: rabbitmq
       datasource: amqp://guest:guest@localhost:5672
-      
 ```
 
-[List of available resources](http://alileza.github.io/tomato/resources)
-
-Once you're ready with all your resources you needed, you're good to start writing your features. You can find some of examples [here](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
+Once your tomato.yml is set up with all the resources your application requires, you can begin writing features. Features are pre-defined behavior tests that are run against your resources to determine if the application performs as expected. You can find some examples [here](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
 
 `example.feature`
 ```gherkin
-Feature: behavior test example
+Feature: Customer removal via an HTTP API request
 
-  Scenario: Delete customer on DELETE http request
-    Given listen message from "my-awesome-queue" target "customers:deleted"
-    Given set "my-awesome-postgres-db" table "customers" list of content
-        | name    | country |
-        | cembri  | id      |
-    Given "httpcli" send request to "DELETE /api/v1/customers" with body
+  # Set the stage for the test
+  Background:
+    Given the table "customers" in "my-awesome-postgres-db" with content
+      | name    | country |
+      | cembri  | id      |
+
+  Scenario: Remove cembri when a rabbitmq delete message is received
+    Given a message received from "my-awesome-queue" target "customers:deleted"
+    When the "httpcli" sends a DELETE request to "/api/v1/customers" with body
         """
             {
                 "name":"cembri"
             }
         """
-    Then "my-awesome-postgres-db" table "customers" should look like
-        | customer_id | name    |
-    Then message from "my-awesome-queue" target "customers:deleted" count should be 1
-    Then message from "my-awesome-queue" target "customers:deleted" should look like
+    Then the table "customers" in "my-awesome-postgres-db" should not have a "name" cembri
+    And the number of messages in "my-awesome-queue" target "customers:deleted" should be 1
+    And the message from "my-awesome-queue" target "customers:deleted" should look like
         """
             {
                 "country":"id",
@@ -70,7 +73,7 @@ Feature: behavior test example
 
 ## Executing your test
 
-You need to make sure that all your resources and application you're going to test is ready before executing tomato.
+Before beginning, ensure all resources your application is going to test against are ready before executing tomato.
 
 ```sh
 tomato -c tomato.yml -f example.feature
