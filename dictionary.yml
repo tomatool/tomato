@@ -1,19 +1,20 @@
 ---
-    
+
 expression_map:
     string: '"([^"]*)"'
     number: '(\d+)'
     duration: '(["]*)'
     json: '$'
     table: '$'
-    
+
 resources:
     parameters:
         - name: resource
           description: selected resource that is going to be use
           type: string
     list:
-        - name: http/client
+        - name: client
+          group: http
           description: http client that can be use for sending http request, and compare the response.
           options:
               - name: base_url
@@ -32,7 +33,7 @@ resources:
                     - name: target
                       description: http target endpoint, it has to be space separated between request method and URL
                       type: string
-                      
+
               - name: send_body
                 description: send a normal http request without request body
                 handle: sendRequestToWithBody
@@ -45,7 +46,7 @@ resources:
                     - name: body
                       description: http request body payload
                       type: json
-                      
+
               - name: response_code
                 description: check resposne code
                 handle: responseCodeShouldBe
@@ -55,7 +56,7 @@ resources:
                     - name: code
                       description: http response code
                       type: number
-                      
+
               - name: response_body
                 description: check resposne body
                 handle: responseBodyShouldBe
@@ -65,8 +66,9 @@ resources:
                     - name: body
                       description: http response body
                       type: json
-                      
-        - name: http/server
+
+        - name: server
+          group: http
           description: http server that can be use for having a mock external http server.
           options:
               - name: port
@@ -85,7 +87,7 @@ resources:
                     - name: body
                       description: server response body
                       type: json
-                      
+
               - name: response_path
                 description: set a response for a given path for the http/server
                 handle: setWithPathResponseCodeToAndResponseBody
@@ -101,8 +103,9 @@ resources:
                     - name: body
                       description: server response body
                       type: json
-                      
-        - name: db/sql
+
+        - name: sql
+          group: db
           description: sql database
           options:
               - name: driver
@@ -124,7 +127,7 @@ resources:
                     - name: content
                       description: table content
                       type: table
-                      
+
               - name: check
                 description: compare table content
                 handle: tableShouldLookLike
@@ -137,7 +140,7 @@ resources:
                     - name: content
                       description: table content
                       type: table
-                      
+
               - name: empty
                 description: truncate table
                 handle: setTableToEmpty
@@ -147,8 +150,9 @@ resources:
                     - name: table
                       description: table name
                       type: string
-                      
+
         - name: queue
+          group: queue
           description: message queue
           options:
             - name: driver
@@ -170,7 +174,7 @@ resources:
                   - name: payload
                     description: message payload
                     type: json
-                    
+
             - name: listen
               description: listen to message
               handle: listenMessageFromTarget
@@ -180,7 +184,7 @@ resources:
                   - name: target
                     description: table name
                     type: string
-                    
+
             - name: count
               description: count message on taarget
               handle: messageFromTargetCountShouldBe
@@ -193,7 +197,7 @@ resources:
                   - name: count
                     description: table name
                     type: number
-                    
+
             - name: compare
               description: compare message payload
               handle: messageFromTargetShouldLookLike
