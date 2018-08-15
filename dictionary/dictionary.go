@@ -34,6 +34,7 @@ type Action struct {
 	Description string      `yaml:"description"`
 	Expressions []string    `yaml:"expressions"`
 	Parameters  []Parameter `yaml:"parameters"`
+	Examples    []string    `yaml:"examples"`
 }
 
 func (a *Action) Expr() []string {
@@ -77,6 +78,7 @@ func (a *Action) Param(name string) *Parameter {
 
 type Resource struct {
 	Name        string   `yaml:"name"`
+	Group       string   `yaml:"group"`
 	Description string   `yaml:"description"`
 	Options     []Option `yaml:"options"`
 	Actions     []Action `yaml:"actions"`

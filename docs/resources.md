@@ -1,158 +1,100 @@
 # Resources
 
-Resource are the objects that are going to be used for steps in the scenario. They are listed under the resources key in the pipeline configuration.
+Resources are objects that are going to be used for step evaluations in the cucumber scenario. They are listed under the resources key in the pipeline configuration.
 
-List of available resource:
+Supported resources:
 
-* database
-    - [sql](#sql)
+* db
+   - [sql](#db/sql)
+  
 * http
-    - [client](#httpclient)
-    - [server](#httpserver)
-* [queue](#queue)
-
+   - [client](#http/client)
+   - [server](#http/server)
+  
+* queue
+   - [queue](#queue/queue)
+  
 ---
 
-# Database
-## SQL
-**Required parameters**
-- driver: either `postgres` or `mysql`
-- datasource: database source name
-
+# db
+## sql
+**Parameters**
+  
+    - driver:   
+    - datasource:   
 **Available functions**
 
-1. **Set**
-
-      Set database values, example:
-
-        Given set "db1" table "customers" list of content
-          | name    | country |
-          | cembri  | us      |
-
-
-2. **Compare**
-
-      Compare database values, example:
-
-        Then "db1" table "customers" should look like
-          | name    |
-          | cembri  |
-
-
-      **Notes**: missing fields will be compromised
-
----
-
-# HTTP
-## Client
-
-standard http client, for sending http request
-
-**Optional parameters**
-- base_url: base url for all request using this http client
-- timeout: set timeout for request using this client, passing timeout will cause test to fail
-
+  1. **set**
+    set table content    
+      set $resource table $table list of content $content
+        
+  1. **check**
+    compare table content    
+      $resource table $table should look like $content
+        
+  1. **empty**
+    truncate table    
+      set $resource table $table to empty
+        
+# http
+## client
+**Parameters**
+  
+    - base_url: base url for the http client, it will automatically appended as a base target url.  
+    - timeout: timeout for the request roundtrip.  
 **Available functions**
 
-1. **Send request**
-
-      Send request with body, example:
-
-        Then "httpcli" send request to "POST /api/v1/customers" with body
-            """
-                {
-                    "name": "ali",
-                    "country": "id"
-                }
-            """
-    **Notes**: adding `base_url` as params, will make this task send request to `$(base_url)/api/v1/customers`
-
-2. **Check Response Code**
-
-      Compare response code, example:
-
-        Then "httpcli" response code should be 201
-
-3. **Check Response Body**
-
-    Compare response code, example:
-
-        Then "httpcli" response body should be
-          """
-            {"status":"OK"}
-          """
-    **Notes**: missing fields will be compromised
-
-## Server
-
-
-standard http server, for mocking external server response
-
-**Required parameters**
-- port: address that going to be used to be the server, example `:8001`
-
+  1. **send**
+    send a normal http request without request body    
+      $resource send request to $target
+        
+  1. **send_body**
+    send a normal http request without request body    
+      $resource send request to $target with body $body
+        
+  1. **response_code**
+    check resposne code    
+      $resource response code should be $code
+        
+  1. **response_body**
+    check resposne body    
+      $resource response body should be $body
+        
+## server
+**Parameters**
+  
+    - port: http server port to expose  
 **Available functions**
 
-1. **Set Response**
-
-  Send request with body, example:
-
-    Given set "external-service-a" response code to 200 and response body
-        """
-            {
-                "country": "id",
-                "status": "ok"
-            }
-        """
-
----
-
-# Queue
-
-consume & publish from message queue. target stands for `[exchange]:[key]`
-
-**Required parameters**
-- driver: in the meantime it only support `rabbitmq`
-- datasource: queue source name
-
-**Optional parameters**
-- wait_duration: wait duration after publish message or before consume message (Default: 50ms)
-
+  1. **response**
+    set a response for any request that come to the http/server    
+      set $resource response code to $code and response body $body
+        
+  1. **response_path**
+    set a response for a given path for the http/server    
+      set $resource with path $path response code to $code and response body $body
+        
+# queue
+## queue
+**Parameters**
+  
+    - driver:   
+    - datasource:   
 **Available functions**
 
-1. **Listen**
-
-      Listen to some queue, that you want to check in the future steps
-
-          Then listen message from "my-awesome-queue" target "customers:uyeah"
-
-
-  **Notes**: Listen will also purged all message in the queue before start listening.
-2. **Publish**
-
-      Publish queue
-
-        Then publish message to "my-awesome-queue" target "customers:uyeah" with payload
-            """
-                {
-                    "test":"OK"
-                }
-            """
-
-3. **Count**
-
-      Count message in the queue
-
-        Then message from "my-awesome-queue" target "customers:uyeah" count should be 2
-
-
-4. **Compare**
-
-      Compare consumed message from the queue
-
-        Then message from "my-awesome-queue" target "customers:uyeah" should look like
-            """
-                {
-                    "test":"OK"
-                }
-            """
+  1. **publish**
+    publish message    
+      publish message to $resource target $target with payload $payload
+        
+  1. **listen**
+    listen to message    
+      listen message from $resource target $target
+        
+  1. **count**
+    count message on taarget    
+      message from $resource target $target count should be $count
+        
+  1. **compare**
+    compare message payload    
+      message from $resource target $target should look like $payload
+        
