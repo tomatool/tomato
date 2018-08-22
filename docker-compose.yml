@@ -1,0 +1,45 @@
+version: '3'
+services:
+    tomato:
+        build:
+          context: .
+          dockerfile: Dockerfile.test
+        volumes:
+          - postgres-initdb:/db/postgres/
+          - mysql-initdb:/db/mysql/
+        environment:
+            PSQL_DATASOURCE: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
+            MYSQL_DATASOURCE: "root:potato@tcp(mysql:3306)/tomato"
+            RABBITMQ_DATASOURCE: "amqp://guest:guest@rabbit:5672"
+            HTTP_SERVER_PORT: ":8092"
+            HTTP_CLIENT_BASE_URL: "http://tomato:8092"
+
+
+    rabbit:
+        image: rabbitmq:3.6.1-management
+        expose:
+            - "5672"
+
+    postgres:
+        image: postgres:9.5
+        expose:
+            - "5432"
+        environment:
+            POSTGRES_USER: tomato
+            POSTGRES_PASSWORD: potato
+            POSTGRES_DB: tomato
+        volumes:
+            - postgres-initdb:/docker-entrypoint-initdb.d/
+
+    mysql:
+        image: mysql:5.6.34
+        expose:
+            - "3306"
+        environment:
+            - MYSQL_ROOT_PASSWORD=potato
+            - MYSQL_DATABASE=tomato
+        volumes:
+            - mysql-initdb:/docker-entrypoint-initdb.d/
+volumes:
+  postgres-initdb: {}
+  mysql-initdb: {}

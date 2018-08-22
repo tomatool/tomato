@@ -1,5 +1,9 @@
 Feature: database features example
 
+  Background:
+    Then set "tomato-mysql" table "customers" to empty
+    Then set "tomato-psql" table "customers" to empty
+
   Scenario: Set and compare table using PostgreSQL database driver
     Then "tomato-psql" table "customers" should look like
         | customer_id | name    |

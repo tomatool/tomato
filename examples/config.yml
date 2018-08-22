@@ -5,24 +5,25 @@ resources:
       type: db/sql
       params:
         driver: postgres
-        datasource: postgres://tomato:potato@localhost:5432/tomato?sslmode=disable
+        datasource: {{ .PSQL_DATASOURCE }}
     - name: tomato-mysql
       type: db/sql
       params:
         driver: mysql
-        datasource: root:potato@tcp(localhost:3306)/tomato
-        
+        datasource: {{ .MYSQL_DATASOURCE }}
+
     - name: tomato-queue
       type: queue
       params:
         driver: rabbitmq
-        datasource: amqp://guest:guest@localhost:5672
-        
+        datasource: {{ .RABBITMQ_DATASOURCE }}
+
     - name: tomato-http-server
       type: http/server
       params:
-        port: :8092
+        port: {{ .HTTP_SERVER_PORT }}
+
     - name: tomato-http-client
       type: http/client
       params:
-        base_url: http://localhost:8092
+        base_url: {{ .HTTP_CLIENT_BASE_URL }}

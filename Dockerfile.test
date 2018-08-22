@@ -12,6 +12,7 @@ RUN make build
 FROM alpine
 
 COPY --from=builder /go/src/github.com/alileza/tomato/bin/tomato /bin/tomato
+COPY --from=builder /go/src/github.com/alileza/tomato/examples/ /
 
 ENTRYPOINT  [ "/bin/tomato" ]
 CMD         [ "--config.file=/config.yml", \

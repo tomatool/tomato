@@ -1,4 +1,3 @@
--- +goose Up
 CREATE TABLE `customers` (
   `customer_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `country` char(2) NOT NULL,
@@ -6,6 +5,3 @@ CREATE TABLE `customers` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`customer_id`)
 );
-
--- +goose Down
-drop table customers;
