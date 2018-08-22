@@ -18,90 +18,336 @@ Supported resources:
 
 # db
 ## sql
-**Parameters**
-  
-    - driver:   
-    - datasource:   
-**Available functions**
 
-  1. **set**
-    set table content    
-      set $resource table $table list of content $content
-        
-  1. **check**
-    compare table content    
-      $resource table $table should look like $content
-        
-  1. **empty**
-    truncate table    
-      set $resource table $table to empty
-        
+database driver to interact with sql database
+
+### resource parameters
+
+1. **driver** *(string)*
+
+   sql driver (postgres or mysql)
+
+1. **datasource** *(string)*
+
+   sql database source name (e.g: postgres://user:pass@host:port/dbname?sslmode=disable)
+
+
+## actions
+
+### **set**
+
+   set table content (it will truncate table before set the value)
+
+   **expressions**
+	 
+   - set $resource table $table list of content $content
+	 
+
+   **parameters**
+	 
+   - table *(string)*
+
+     table name
+	 
+   - content *(table)*
+
+     table content
+	 
+
+
+### **check**
+
+   compare table content
+
+   **expressions**
+	 
+   - $resource table $table should look like $content
+	 
+
+   **parameters**
+	 
+   - table *(string)*
+
+     table name
+	 
+   - content *(table)*
+
+     table content
+	 
+
+
+### **empty**
+
+   truncate table and reset auto increment
+
+   **expressions**
+	 
+   - set $resource table $table to empty
+	 
+
+   **parameters**
+	 
+   - table *(string)*
+
+     table name
+	 
+
+---
+
+
 # http
 ## client
-**Parameters**
-  
-    - base_url: base url for the http client, it will automatically appended as a base target url.  
-    - timeout: timeout for the request roundtrip.  
-**Available functions**
 
-  1. **send**
-    send a normal http request without request body    
-      $resource send request to $target
-        
-      Given "httpcli" send request to "DELETE /api/v1/customers" with body
-"""
-    {
-        "name":"cembri"
-    }
-"""
-    
-  1. **send_body**
-    send a normal http request without request body    
-      $resource send request to $target with body $body
-        
-  1. **response_code**
-    check resposne code    
-      $resource response code should be $code
-        
-  1. **response_body**
-    check resposne body    
-      $resource response body should be $body
-        
+http client that can be use for sending http request, and compare the response.
+
+### resource parameters
+
+1. **base_url** *(string)*
+
+   base url for the http client, it will automatically appended as a base target url.
+
+1. **timeout** *(duration)*
+
+   timeout for the request roundtrip.
+
+
+## actions
+
+### **send**
+
+   send a normal http request without request body
+
+   **expressions**
+	 
+   - $resource send request to $target
+	 
+
+   **parameters**
+	 
+   - target *(string)*
+
+     http target endpoint, it has to be space separated between request method and URL
+	 
+
+
+### **send_body**
+
+   send a normal http request with request body
+
+   **expressions**
+	 
+   - $resource send request to $target with body $body
+	 
+   - $resource send request to $target with payload $body
+	 
+
+   **parameters**
+	 
+   - target *(string)*
+
+     http target endpoint, it has to be space separated between request method and URL
+	 
+   - body *(json)*
+
+     http request body payload
+	 
+
+
+### **response_code**
+
+   check response code
+
+   **expressions**
+	 
+   - $resource response code should be $code
+	 
+
+   **parameters**
+	 
+   - code *(number)*
+
+     http response code
+	 
+
+
+### **response_body**
+
+   check response body
+
+   **expressions**
+	 
+   - $resource response body should be $body
+	 
+
+   **parameters**
+	 
+   - body *(json)*
+
+     http response body
+	 
+
+---
+
+
 ## server
-**Parameters**
-  
-    - port: http server port to expose  
-**Available functions**
 
-  1. **response**
-    set a response for any request that come to the http/server    
-      set $resource response code to $code and response body $body
-        
-  1. **response_path**
-    set a response for a given path for the http/server    
-      set $resource with path $path response code to $code and response body $body
-        
+http server that can be use for having a mock external http server.
+
+### resource parameters
+
+1. **port** *(number)*
+
+   http server port to expose
+
+
+## actions
+
+### **response**
+
+   set a response for any request that come to the http/server
+
+   **expressions**
+	 
+   - set $resource response code to $code and response body $body
+	 
+
+   **parameters**
+	 
+   - code *(number)*
+
+     server response code
+	 
+   - body *(json)*
+
+     server response body
+	 
+
+
+### **response_path**
+
+   set a response for a given path for the http/server
+
+   **expressions**
+	 
+   - set $resource with path $path response code to $code and response body $body
+	 
+
+   **parameters**
+	 
+   - path *(string)*
+
+     server endpoint path
+	 
+   - code *(number)*
+
+     server response code
+	 
+   - body *(json)*
+
+     server response body
+	 
+
+---
+
+
 # queue
 ## queue
-**Parameters**
-  
-    - driver:   
-    - datasource:   
-**Available functions**
 
-  1. **publish**
-    publish message    
-      publish message to $resource target $target with payload $payload
-        
-  1. **listen**
-    listen to message    
-      listen message from $resource target $target
-        
-  1. **count**
-    count message on taarget    
-      message from $resource target $target count should be $count
-        
-  1. **compare**
-    compare message payload    
-      message from $resource target $target should look like $payload
-        
+message queue resource to interact with queue
+
+### resource parameters
+
+1. **driver** *(string)*
+
+   queue driver (rabbitmq)
+
+1. **datasource** *(string)*
+
+   queue source name (e.g: amqp://user:pass@host:port/)
+
+
+## actions
+
+### **publish**
+
+   publish a message to message queue
+
+   **expressions**
+	 
+   - publish message to $resource target $target with payload $payload
+	 
+
+   **parameters**
+	 
+   - target *(string)*
+
+     target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+	 
+   - payload *(json)*
+
+     queue message payload
+	 
+
+
+### **listen**
+
+   listen to message queue message, it required to do before the action,
+if you need to compare message that got published from the application
+
+
+   **expressions**
+	 
+   - listen message from $resource target $target
+	 
+
+   **parameters**
+	 
+   - target *(string)*
+
+     target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+	 
+
+
+### **count**
+
+   count message from a given target, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
+
+   **expressions**
+	 
+   - message from $resource target $target count should be $count
+	 
+
+   **parameters**
+	 
+   - target *(string)*
+
+     target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+	 
+   - count *(number)*
+
+     queue message count
+	 
+
+
+### **compare**
+
+   compare message payload, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
+
+   **expressions**
+	 
+   - message from $resource target $target should look like $payload
+	 
+
+   **parameters**
+	 
+   - target *(string)*
+
+     target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+	 
+   - payload *(json)*
+
+     queue message payload
+	 
+
+---
+

@@ -36,17 +36,18 @@ resources:
                 examples:
                     - |
                       Given "httpcli" send request to "DELETE /api/v1/customers" with body
-                      """
-                          {
-                              "name":"cembri"
-                          }
-                      """
+                        """
+                            {
+                                "name":"cembri"
+                            }
+                        """
 
               - name: send_body
-                description: send a normal http request without request body
+                description: send a normal http request with request body
                 handle: sendRequestToWithBody
                 expressions:
                     - $resource send request to $target with body $body
+                    - $resource send request to $target with payload $body
                 parameters:
                     - name: target
                       description: http target endpoint, it has to be space separated between request method and URL
@@ -56,7 +57,7 @@ resources:
                       type: json
 
               - name: response_code
-                description: check resposne code
+                description: check response code
                 handle: responseCodeShouldBe
                 expressions:
                     - $resource response code should be $code
@@ -66,7 +67,7 @@ resources:
                       type: number
 
               - name: response_body
-                description: check resposne body
+                description: check response body
                 handle: responseBodyShouldBe
                 expressions:
                     - $resource response body should be $body
@@ -114,17 +115,17 @@ resources:
 
         - name: sql
           group: db
-          description: sql database
+          description: database driver to interact with sql database
           options:
               - name: driver
-                description: ""
+                description: sql driver (postgres or mysql)
                 type: string
               - name: datasource
-                description: ""
+                description: "sql database source name (e.g: postgres://user:pass@host:port/dbname?sslmode=disable)"
                 type: string
           actions:
               - name: set
-                description: set table content
+                description: set table content (it will truncate table before set the value)
                 handle: setTableListOfContent
                 expressions:
                     - set $resource table $table list of content $content
@@ -150,7 +151,7 @@ resources:
                       type: table
 
               - name: empty
-                description: truncate table
+                description: truncate table and reset auto increment
                 handle: setTableToEmpty
                 expressions:
                     - set $resource table $table to empty
@@ -161,60 +162,62 @@ resources:
 
         - name: queue
           group: queue
-          description: message queue
+          description: message queue resource to interact with queue
           options:
             - name: driver
-              description: ""
+              description: queue driver (rabbitmq)
               type: string
             - name: datasource
-              description: ""
+              description: "queue source name (e.g: amqp://user:pass@host:port/)"
               type: string
           actions:
             - name: publish
-              description: publish message
+              description: publish a message to message queue
               handle: publishMessageToTargetWithPayload
               expressions:
                   - publish message to $resource target $target with payload $payload
               parameters:
                   - name: target
-                    description: table name
+                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
                     type: string
                   - name: payload
-                    description: message payload
+                    description: queue message payload
                     type: json
 
             - name: listen
-              description: listen to message
+              description: |
+                    listen to message queue message, it required to do before the action,
+                    if you need to compare message that got published from the application
               handle: listenMessageFromTarget
               expressions:
                   - listen message from $resource target $target
               parameters:
                   - name: target
-                    description: table name
+                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
                     type: string
 
             - name: count
-              description: count message on taarget
+              description: count message from a given target, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
               handle: messageFromTargetCountShouldBe
               expressions:
                   - message from $resource target $target count should be $count
               parameters:
                   - name: target
-                    description: table name
+                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
                     type: string
                   - name: count
-                    description: table name
+                    description: queue message count
                     type: number
 
             - name: compare
-              description: compare message payload
+              description: compare message payload, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
               handle: messageFromTargetShouldLookLike
               expressions:
                   - message from $resource target $target should look like $payload
               parameters:
                   - name: target
-                    description: queue target
+                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
                     type: string
                   - name: payload
-                    description: payload
+                    description: queue message payload
                     type: json
