@@ -5,18 +5,21 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version
+      - image: circleci/golang:1.10
+
+    working_directory: /go/src/github.com/alileza/tomato
+    steps:
+      - checkout
+
+      - run: go get -u github.com/go-playground/overalls
+      - run: overalls -project=github.com/alileza/tomato -covermode=atomic -debug -- -race -v
+      - run: mv overalls.coverprofile coverage.txt
+      - run: bash <(curl -s https://codecov.io/bash)
+
+  test:
+    docker:
       - image: docker/compose:1.22.0
 
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
     working_directory: /go/src/github.com/alileza/tomato
     steps:
       - checkout
@@ -26,3 +29,10 @@ jobs:
       - run:
           name: run integration test
           command: docker-compose up --exit-code-from tomato
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test
