@@ -33,6 +33,14 @@ resources:
                     - name: target
                       description: http target endpoint, it has to be space separated between request method and URL
                       type: string
+                examples:
+                    - |
+                      Given "httpcli" send request to "DELETE /api/v1/customers" with body
+                      """
+                          {
+                              "name":"cembri"
+                          }
+                      """
 
               - name: send_body
                 description: send a normal http request without request body
