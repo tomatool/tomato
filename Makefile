@@ -34,6 +34,11 @@ build-all:
 			done ; \
 	done
 
+test:
+	@docker-compose down
+	@docker volume ls -q | grep tomato | xargs docker volume rm -f
+	@docker-compose up --build --exit-code-from tomato
+
 package-releases:
 	@echo ">> packaging releases"
 	@rm -rf dist
