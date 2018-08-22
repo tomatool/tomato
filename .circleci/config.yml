@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  codecov:
     docker:
       - image: circleci/golang:1.10
 
@@ -32,7 +32,7 @@ jobs:
 
 workflows:
   version: 2
-  build_and_test:
+  tests:
     jobs:
-      - build
+      - codecov
       - test
