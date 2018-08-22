@@ -48,6 +48,13 @@ Supported resources:
     send a normal http request without request body    
       $resource send request to $target
         
+      Given "httpcli" send request to "DELETE /api/v1/customers" with body
+"""
+    {
+        "name":"cembri"
+    }
+"""
+    
   1. **send_body**
     send a normal http request without request body    
       $resource send request to $target with body $body

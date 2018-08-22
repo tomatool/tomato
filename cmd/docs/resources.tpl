@@ -26,7 +26,7 @@ Supported resources:
       {{.}}
     {{end}}\
     {{range .Examples}}
-      {{.}}
+      {{.}}\
     {{end}}\
 {{end}}\
 {{end}}\

@@ -66,16 +66,4 @@ func main() {
 	}
 
 	t.Execute(w, v)
-
-	/*
-		for _, resource := range dict.Resources.List {
-			for _, action := range resource.Actions {
-				for _, expr := range action.Expr() {
-					fmt.Fprintf(steps, step(expr, action.Handle)+"\n")
-				}
-			}
-		}
-
-		fmt.Fprintf(w, fileTmpl, steps.String())
-	*/
 }
