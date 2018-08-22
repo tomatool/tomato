@@ -31,7 +31,7 @@ func main() {
 
 	app.Flag("config.file", "tomato configuration file path.").Short('c').Default("tomato.yml").StringVar(&configFile)
 	app.Flag("features.path", "tomato features folder path.").Short('f').Default("features").StringVar(&featuresPath)
-	app.Flag("resources.timeout", "tomato will automatically wait for resource to be ready, and at some out it giving up.").Short('t').Default("10s").DurationVar(&resourcesTimeout)
+	app.Flag("resources.timeout", "tomato will automatically wait for resource to be ready, and at some out it giving up.").Short('t').Default("30s").DurationVar(&resourcesTimeout)
 	app.Flag("resources.check", "tomato only check if the resources is all ready, and exit without executing the tests.").Short('e').Default("false").BoolVar(&resourcesCheck)
 
 	_, err := app.Parse(os.Args[1:])
