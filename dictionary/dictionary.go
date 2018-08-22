@@ -44,12 +44,11 @@ func (a *Action) Expr() []string {
 	var result []string
 	for _, expr := range a.Expressions {
 		var rendered []string
-		for idx, word := range strings.Split(expr, " ") {
+		for _, word := range strings.Split(expr, " ") {
 			if word[0] == '$' {
 				param := a.Param(word[1:])
 				e := Base.ExpressionMap[param.Type]
 				if e == "$" {
-					rendered[idx-1] += "$"
 					continue
 				}
 				rendered = append(rendered, e)
@@ -57,7 +56,12 @@ func (a *Action) Expr() []string {
 			}
 			rendered = append(rendered, word)
 		}
-		result = append(result, strings.Join(rendered, " "))
+		renderedExpr := strings.Join(rendered, " ")
+		if renderedExpr[len(renderedExpr)-1] != '$' {
+			renderedExpr += "$"
+		}
+
+		result = append(result, renderedExpr)
 	}
 	return result
 }
