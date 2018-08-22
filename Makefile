@@ -20,7 +20,7 @@ deps:
 
 build:
 	@echo ">> building binaries"
-	@go run cmd/gen/main.go
+	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
 	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) cmd/$(project_name)/main.go
 
 build-all:
