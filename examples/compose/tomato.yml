@@ -1,0 +1,12 @@
+---
+
+resources:
+    - name: app-client
+      type: http/client
+      params:
+        base_url: {{ .APP_BASE_URL }}
+    - name: rabbitmq
+      type: queue
+      params:
+        driver: rabbitmq
+        datasource: {{ .QUEUE_DSN }}
