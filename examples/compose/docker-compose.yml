@@ -13,7 +13,7 @@ services:
       sh -c '/util/waitfor sample-app:9000 && tomato'
 
   sample-app:
-    image: quay.io/alileza/sample-app:latest
+    image: alileza/sample-app:latest
     expose:
       - "9000"
     environment:
