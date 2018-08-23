@@ -9,8 +9,8 @@ pwd = $(shell pwd)
 build_dir ?= bin/
 
 pkgs          = ./...
-version_pkg= github.com/alileza/tomato/util/version
-ldflags := "-X $(version_pkg).Version=$(version) -X $(version_pkg).Branch=$(branch) -X $(version_pkg).Revision=$(revision) -X $(version_pkg).BuildUser=$(build_user) -X $(version_pkg).BuildDate=$(build_date)"
+main_pkg= github.com/alileza/tomato
+ldflags := "-X $(main_pkg).Version=$(version) -X $(main_pkg).Branch=$(branch) -X $(main_pkg).Revision=$(revision) -X $(main_pkg).BuildUser=$(build_user) -X $(main_pkg).BuildDate=$(build_date)"
 
 
 deps:
