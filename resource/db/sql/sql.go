@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alileza/tomato/util/sqlutil"
+	"github.com/alileza/tomato/resource/db/sql/sqlutil"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
