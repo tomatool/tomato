@@ -3,81 +3,80 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/alileza/tomato)](https://goreportcard.com/report/github.com/alileza/tomato)
 [![GoDoc](https://godoc.org/github.com/alileza/tomato?status.svg)](https://godoc.org/github.com/alileza/tomato)
 [![codecov.io](https://codecov.io/github/alileza/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/alileza/tomato)
- 
-Behavior Driven Development tools, built on top of (https://github.com/DATA-DOG/godog). To simplify adding Integration Test to your application without writing any code.
 
-tomato uses yaml config file to specify [resources](#resources)
+Integration testing tools, built on top of (https://github.com/DATA-DOG/godog). To simplify adding Integration Test to your application without writing any code.
+
+tomato uses YAML config file to specify [resources](#resources)
 
 [Documentation](https://alileza.github.io/tomato/)
 
-# Getting started
+# Getting started with docker-compose.yml
+Create `docker-compose.yml` file:
+```yml
+version: '3'
+services:
+  tomato:
+    image: alileza/tomato:latest
+    environment:
+      APP_BASE_URL: http://my-application:9000
+      PSQL_DATASOURCE: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
+    volumes:
+      - ./tomato.yml:/config.yml
+      - ./features/:/features/
 
-Install tomato by untar latest stable [release](https://github.com/alileza/tomato/releases/latest), or get from latest master by
+  my-application:
+    build: .
+    expose:
+      - "9000"
+
+  postgres:
+    image: postgres:9.5
+    expose:
+      - "5432"
+    environment:
+            POSTGRES_USER: tomato
+            POSTGRES_PASSWORD: potato
+            POSTGRES_DB: tomato
+    volumes:
+      - ./sqldump/:/docker-entrypoint-initdb.d/
+
 ```
-go get -u github.com/alileza/tomato/cmd/tomato
-```
 
-Prepare your `tomato.yml` with your resources. For example :
-
-```yaml
+Create `tomato.yml` file:
+```yml
 ---
 
 resources:
-  - name: my-awesome-postgres-db
-    type: db/sql
-    params:
-      driver: postgres
-      datasource: postgres://user:pass@localhost:5432/customers?sslmode=disable
-  - name: my-awesome-queue
-    type: queue
-    params:
-      driver: rabbitmq
-      datasource: amqp://guest:guest@localhost:5672
-      
+    - name: psql
+      type: db/sql
+      params:
+        driver: postgres
+        datasource: {{ .PSQL_DATASOURCE }}
+
+    - name: app-client
+      type: http/client
+      params:
+        base_url: {{ .APP_BASE_URL }}
+
 ```
+
+And you can start writing your first feature, try with `check-status.feature` put it inside `features` folder:
+```gherkin
+Feature: check status endpoint
+
+  Scenario: When everything is fine
+    Given "app-client" send request to "GET /status"
+    Then "app-client" response code should be 200
+
+```
+
+Executing your test
+```sh
+docker-compose up --exit-code-from tomato
+```
+
+And that's it !!! 🙌
 
 [List of available resources](http://alileza.github.io/tomato/resources)
 
-Once you're ready with all your resources you needed, you're good to start writing your features. You can find some of examples [here](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
-
-`example.feature`
-```gherkin
-Feature: behavior test example
-
-  Scenario: Delete customer on DELETE http request
-    Given listen message from "my-awesome-queue" target "customers:deleted"
-    Given set "my-awesome-postgres-db" table "customers" list of content
-        | name    | country |
-        | cembri  | id      |
-    Given "httpcli" send request to "DELETE /api/v1/customers" with body
-        """
-            {
-                "name":"cembri"
-            }
-        """
-    Then "my-awesome-postgres-db" table "customers" should look like
-        | customer_id | name    |
-    Then message from "my-awesome-queue" target "customers:deleted" count should be 1
-    Then message from "my-awesome-queue" target "customers:deleted" should look like
-        """
-            {
-                "country":"id",
-                "name":"cembri",
-                "reason":"http-post-request"
-            }
-        """
-```
-
-## Executing your test
-
-You need to make sure that all your resources and application you're going to test is ready before executing tomato.
-
-```sh
-tomato -c tomato.yml -f example.feature
-```
-
-Have fun! 🍅
-
-## Integrating with your continous integration
-
-[Documentation CI Integration](https://alileza.github.io/tomato/ci-integration)
+You can find some of examples [here](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
