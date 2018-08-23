@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/alileza/tomato/cmp"
 	"github.com/alileza/tomato/resource/http/client"
-	"github.com/alileza/tomato/util/cmp"
 )
 
 func (h *Handler) getResourceHTTPClient(name string) client.Client {
