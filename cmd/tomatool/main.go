@@ -1,16 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 
+	"github.com/alecthomas/template"
 	"github.com/alileza/tomato/dictionary"
 	"github.com/alileza/tomato/generate/docs"
 	"github.com/alileza/tomato/generate/handler"
-	"github.com/alileza/tomato/util/version"
 	"github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -22,7 +25,7 @@ var (
 
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "tomatool - tomato tools")
-	app.Version(version.Print())
+	app.Version(printVersion())
 	app.HelpFlag.Short('h')
 
 	generateCmd := app.Command("generate", "generate")
@@ -75,4 +78,34 @@ func GenerateHandler(dictionaryPath, outputPath string) error {
 	}
 
 	return ioutil.WriteFile(outputPath, out.Bytes(), 0755)
+}
+
+// App version information
+var Version, Revision, Branch, BuildUser, BuildDate string
+
+func printVersion() string {
+	var versionInfoTmpl = `
+  {{.program}}, version {{.version}} (branch: {{.branch}}, revision: {{.revision}})
+    build user:       {{.buildUser}}
+    build date:       {{.buildDate}}
+    go version:       {{.goVersion}}
+  `
+
+	m := map[string]string{
+		"program":   "tomatool",
+		"version":   Version,
+		"revision":  Revision,
+		"branch":    Branch,
+		"buildUser": BuildUser,
+		"buildDate": BuildDate,
+		"goVersion": runtime.Version(),
+	}
+
+	t := template.Must(template.New("version").Parse(versionInfoTmpl))
+
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, "version", m); err != nil {
+		panic(err)
+	}
+	return strings.TrimSpace(buf.String())
 }

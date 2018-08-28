@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alileza/tomato/util/sqlutil"
+	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/alileza/tomato/resource/db/sql/sqlutil"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -27,8 +28,9 @@ var (
 type SQL interface {
 	TruncateAll() error
 	Truncate(tableName string) error
-	Set(tableName string, rows []map[string]string) error
+	Set(tableName string, tabl *gherkin.DataTable) error
 	Count(tableName string, condition map[string]string) (int, error)
+	Contains(tableName string, row *gherkin.TableRow)
 }
 
 func Cast(r interface{}) SQL {
@@ -129,7 +131,7 @@ func (c *client) Truncate(tableName string) error {
 	return tx.Commit()
 }
 
-func (c *client) Set(tableName string, rows []map[string]string) error {
+func (c *client) Set(tableName string, tbl *gherkin.DataTable) error {
 	tableName = c.t(tableName)
 
 	if err := c.Truncate(tableName); err != nil {
@@ -141,6 +143,11 @@ func (c *client) Set(tableName string, rows []map[string]string) error {
 		return err
 	}
 	defer tx.Rollback()
+
+	rows, err := gherkinTableToRows(tbl)
+	if err != nil {
+		return err
+	}
 
 	for _, row := range rows {
 		query := sqlutil.NewQueryBuilder(c.db.DriverName(), "INSERT INTO "+tableName)
@@ -196,4 +203,28 @@ func (c *client) t(tableName string) string {
 		return fmt.Sprintf(`"%s"`, tableName)
 	}
 	return tableName
+}
+
+// TODO: Add Contains(tbl *gherkin.DataTable, *gherkin.TableRow )
+
+func gherkinTableToRows(tbl *gherkin.DataTable) ([]map[string]string, error) {
+	hash := make([]map[string]string, len(tbl.Rows)-1)
+
+	columns := tbl.Rows[0].Cells
+	columnCount := len(columns)
+	for i := 1; i < len(tbl.Rows); i++ {
+		row := tbl.Rows[i]
+		if len(row.Cells) != columnCount {
+			return nil, fmt.Errorf("Invalid cells in row %v", i)
+		}
+
+		rowHash := make(map[string]string, columnCount)
+		for i, cell := range row.Cells {
+			rowHash[columns[i].Value] = cell.Value
+		}
+
+		hash[i-1] = rowHash
+	}
+
+	return hash, nil
 }

@@ -1,18 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
+	"github.com/alecthomas/template"
 	"github.com/alileza/tomato/config"
 	"github.com/alileza/tomato/handler"
 	"github.com/alileza/tomato/resource"
-	"github.com/alileza/tomato/util/version"
 	"github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -26,7 +28,7 @@ var (
 
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "tomato - behavioral testing tools")
-	app.Version(version.Print())
+	app.Version(printVersion())
 	app.HelpFlag.Short('h')
 
 	app.Flag("config.file", "tomato configuration file path.").Short('c').Default("tomato.yml").StringVar(&configFile)
@@ -95,4 +97,34 @@ func main() {
 	os.Exit(
 		godog.RunWithOptions("godogs", handler.New(resourceManager), opts),
 	)
+}
+
+// App version information
+var Version, Revision, Branch, BuildUser, BuildDate string
+
+func printVersion() string {
+	var versionInfoTmpl = `
+  {{.program}}, version {{.version}} (branch: {{.branch}}, revision: {{.revision}})
+    build user:       {{.buildUser}}
+    build date:       {{.buildDate}}
+    go version:       {{.goVersion}}
+  `
+
+	m := map[string]string{
+		"program":   "tomato",
+		"version":   Version,
+		"revision":  Revision,
+		"branch":    Branch,
+		"buildUser": BuildUser,
+		"buildDate": BuildDate,
+		"goVersion": runtime.Version(),
+	}
+
+	t := template.Must(template.New("version").Parse(versionInfoTmpl))
+
+	var buf bytes.Buffer
+	if err := t.ExecuteTemplate(&buf, "version", m); err != nil {
+		panic(err)
+	}
+	return strings.TrimSpace(buf.String())
 }
