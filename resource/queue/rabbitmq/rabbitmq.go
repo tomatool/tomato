@@ -1,10 +1,12 @@
 package rabbitmq
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/alileza/tomato/config"
 	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
 )
@@ -13,14 +15,15 @@ const (
 	DefaultWaitDuration = time.Millisecond * 50
 )
 
-type rabbitMQ struct {
+type RabbitMQ struct {
 	mtx             sync.Mutex
 	conn            *amqp.Connection
 	consumedMessage map[string][][]byte
 	waitDuration    time.Duration
 }
 
-func Open(params map[string]string) (*rabbitMQ, error) {
+func New(cfg *config.Resource) (*RabbitMQ, error) {
+	params := cfg.Params
 	datasource, ok := params["datasource"]
 	if !ok {
 		return nil, errors.New("queue/rabbitmq: datasource is required")
@@ -36,10 +39,14 @@ func Open(params map[string]string) (*rabbitMQ, error) {
 		return nil, errors.New("queue/rabbitmq: failed to connect > " + err.Error())
 	}
 
-	return &rabbitMQ{conn: conn, waitDuration: waitDuration}, nil
+	return &RabbitMQ{
+		conn:            conn,
+		waitDuration:    waitDuration,
+		consumedMessage: make(map[string][][]byte),
+	}, nil
 }
 
-func (c *rabbitMQ) target(target string) (string, string) {
+func (c *RabbitMQ) target(target string) (string, string) {
 	result := strings.Split(target, ":")
 	if len(result) < 2 {
 		return result[0], ""
@@ -47,18 +54,19 @@ func (c *rabbitMQ) target(target string) (string, string) {
 	return result[0], result[1]
 }
 
-func (c *rabbitMQ) Ready() error {
+func (c *RabbitMQ) Ready() error {
 	if err := c.Publish("test:test", []byte("")); err != nil {
 		return errors.Wrapf(err, "queue: rabbitmq is not ready")
 	}
 	return nil
 }
 
-func (c *rabbitMQ) Close() error {
-	return c.conn.Close()
+func (c *RabbitMQ) Reset() error {
+	c.consumedMessage = make(map[string][][]byte)
+	return nil
 }
 
-func (c *rabbitMQ) Listen(target string) error {
+func (c *RabbitMQ) Listen(target string) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return err
@@ -83,9 +91,7 @@ func (c *rabbitMQ) Listen(target string) error {
 	if _, err := ch.QueuePurge(q.Name, false); err != nil {
 		return err
 	}
-	if _, ok := c.consumedMessage[target]; ok {
-		c.consumedMessage[target] = make([][]byte, 0)
-	}
+	c.consumedMessage[target] = make([][]byte, 0)
 
 	msgs, err := consume(ch, q.Name)
 	if err != nil {
@@ -101,29 +107,26 @@ func (c *rabbitMQ) Listen(target string) error {
 	return nil
 }
 
-func (c *rabbitMQ) clear(target string) {
+func (c *RabbitMQ) clear(target string) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
 	c.consumedMessage[target] = [][]byte{}
 }
 
-func (c *rabbitMQ) consume(target string, payload []byte) {
+func (c *RabbitMQ) consume(target string, payload []byte) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-
-	if c.consumedMessage == nil {
-		c.consumedMessage = make(map[string][][]byte)
-	}
 
 	c.consumedMessage[target] = append(c.consumedMessage[target], payload)
 }
 
-func (c *rabbitMQ) Publish(target string, payload []byte) error {
+func (c *RabbitMQ) Publish(target string, payload []byte) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
 		return err
 	}
+	defer ch.Close()
 
 	exchange, key := c.target(target)
 	if err := exchangeDeclare(ch, exchange); err != nil {
@@ -149,26 +152,16 @@ func (c *rabbitMQ) Publish(target string, payload []byte) error {
 	return nil
 }
 
-func (c *rabbitMQ) Count(target string) (int, error) {
-	time.Sleep(c.waitDuration)
-	return len(c.consumedMessage[target]), nil
-}
-
-func (c *rabbitMQ) Consume(target string) []byte {
+func (c *RabbitMQ) Fetch(target string) ([][]byte, error) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
 	msgs, ok := c.consumedMessage[target]
 	if !ok {
-		return nil
+		return nil, fmt.Errorf("queue not exist, please listen to it %s, %+v", target, c.consumedMessage)
 	}
 
-	msg := msgs[0]
-
-	// removing read messaged
-	c.consumedMessage[target] = msgs[1:]
-
-	return msg
+	return msgs, nil
 }
 
 func exchangeDeclare(ch *amqp.Channel, name string) error {

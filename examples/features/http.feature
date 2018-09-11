@@ -1,7 +1,7 @@
 Feature: http feature example
 
   Scenario: Set and compare table
-    Given set "tomato-http-server" response code to 202 and response body
+    Given set "tomato-http-server" with path "/status" response code to 202 and response body
         """
           {
                 "status":"OK"

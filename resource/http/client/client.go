@@ -1,38 +1,31 @@
 package client
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/alileza/tomato/config"
 )
-
-const Name = "http/client"
-
-type Client interface {
-	Do(req *http.Request) error
-	ResponseCode() int
-	ResponseBody() []byte
-}
-
-func Cast(r interface{}) Client {
-	return r.(Client)
-}
 
 type response struct {
 	Code int
 	Body []byte
 }
 
-type client struct {
+type Client struct {
 	httpClient   *http.Client
 	baseURL      string
 	lastResponse *response
 }
 
-func Open(params map[string]string) (*client, error) {
-	client := &client{new(http.Client), "", nil}
+func New(cfg *config.Resource) (*Client, error) {
+	params := cfg.Params
+
+	client := &Client{new(http.Client), "", nil}
 	for key, val := range params {
 		switch key {
 		case "base_url":
@@ -50,15 +43,28 @@ func Open(params map[string]string) (*client, error) {
 	return client, nil
 }
 
-func (c *client) Ready() error {
+func (c *Client) Ready() error {
 	return nil
 }
 
-func (c *client) Close() error {
+func (c *Client) Reset() error {
+	c.lastResponse = nil
 	return nil
 }
 
-func (c *client) Do(req *http.Request) error {
+func (c *Client) Response() (int, []byte, error) {
+	if c.lastResponse == nil {
+		return 0, nil, errors.New("no request has been sent, please send request before checking response")
+	}
+	return c.lastResponse.Code, c.lastResponse.Body, nil
+}
+
+func (c *Client) Request(method, path string, body []byte) error {
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
 	if c.baseURL != "" {
 		baseURL, err := url.Parse(c.baseURL)
 		if err != nil {
@@ -78,19 +84,11 @@ func (c *client) Do(req *http.Request) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
 	c.lastResponse = &response{resp.StatusCode, body}
 	return nil
-}
-
-func (c *client) ResponseCode() int {
-	return c.lastResponse.Code
-}
-
-func (c *client) ResponseBody() []byte {
-	return c.lastResponse.Body
 }

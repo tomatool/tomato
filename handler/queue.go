@@ -1,63 +1,72 @@
 package handler
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/resource/queue"
-	"github.com/alileza/tomato/util/cmp"
+	"github.com/alileza/tomato/compare"
 )
 
-func (h *Handler) publishMessageToTargetWithPayload(name, target string, payload *gherkin.DocString) error {
-	r, err := h.resource.Get(name)
+func (h *Handler) publishMessage(resourceName, target string, payload *gherkin.DocString) error {
+	r, err := h.resource.GetQueue(resourceName)
 	if err != nil {
 		return err
 	}
-	mqClient := queue.Cast(r)
 
-	return mqClient.Publish(target, []byte(payload.Content))
+	return r.Publish(target, []byte(payload.Content))
 }
 
-func (h *Handler) listenMessageFromTarget(name, target string) error {
-	r, err := h.resource.Get(name)
+func (h *Handler) listenMessage(resourceName, target string) error {
+	r, err := h.resource.GetQueue(resourceName)
 	if err != nil {
 		return err
 	}
-	mqClient := queue.Cast(r)
 
-	return mqClient.Listen(target)
+	return r.Listen(target)
 }
 
-func (h *Handler) messageFromTargetCountShouldBe(name, target string, count int) error {
-	r, err := h.resource.Get(name)
-	if err != nil {
-		return err
-	}
-	mqClient := queue.Cast(r)
-
-	messageCount, err := mqClient.Count(target)
+func (h *Handler) countMessage(resourceName, target string, expectedCount int) error {
+	r, err := h.resource.GetQueue(resourceName)
 	if err != nil {
 		return err
 	}
 
-	if messageCount != count {
-		return fmt.Errorf("queue/rabbitmq: mismatch count for target `%s`, expecting=%d got=%d", target, count, messageCount)
+	messages, err := r.Fetch(target)
+	if err != nil {
+		return err
+	}
+
+	if len(messages) != expectedCount {
+		return errors.New("m")
 	}
 
 	return nil
 }
 
-func (h *Handler) messageFromTargetShouldLookLike(name, target string, body *gherkin.DocString) error {
-	r, err := h.resource.Get(name)
+func (h *Handler) messageCompare(resourceName, target string, expectedMessage *gherkin.DocString) error {
+	r, err := h.resource.GetQueue(resourceName)
 	if err != nil {
 		return err
 	}
-	mqClient := queue.Cast(r)
 
-	consumedMessage := mqClient.Consume(target)
-	if consumedMessage == nil {
-		return fmt.Errorf("no message to consume `%s`", target)
+	messages, err := r.Fetch(target)
+	if err != nil {
+		return err
 	}
 
-	return cmp.JSON([]byte(body.Content), consumedMessage, false)
+	if len(messages) == 0 {
+		return errors.New("no message on queue")
+	}
+
+	for _, msg := range messages {
+		if err := compare.JSON(
+			[]byte(expectedMessage.Content),
+			msg,
+			false,
+		); err == nil {
+			return nil
+		}
+	}
+
+	return errors.New("couldn't find : " + expectedMessage.Content)
 }
