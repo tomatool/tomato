@@ -6,37 +6,33 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/alileza/tomato/config"
 )
 
 const Name = "http/server"
-
-type Server interface {
-	SetResponsePath(uri string, code int, body []byte)
-}
-
-func Cast(r interface{}) Server {
-	return r.(Server)
-}
 
 type response struct {
 	code int
 	body []byte
 }
 
-type server struct {
+type Server struct {
 	port string
 	srv  *http.Server
 
 	responses map[string]response
 }
 
-func Open(params map[string]string) (*server, error) {
+func New(cfg *config.Resource) (*Server, error) {
+	params := cfg.Params
+
 	port, ok := params["port"]
 	if !ok {
 		return nil, errors.New("http/server: port is required")
 	}
 
-	c := &server{
+	c := &Server{
 		port:      port,
 		responses: make(map[string]response),
 	}
@@ -45,20 +41,20 @@ func Open(params map[string]string) (*server, error) {
 	return c, nil
 }
 
-func (c *server) Ready() error {
+func (c *Server) Ready() error {
 	if c.srv == nil {
 		return fmt.Errorf("http/server: port %s is not running", c.port)
 	}
 	return nil
 }
 
-func (c *server) Close() error {
-	return c.srv.Close()
+func (c *Server) Reset() error {
+	return nil
 }
 
 const defaultResponseKey = ""
 
-func (c *server) getResponse(path string) response {
+func (c *Server) getResponse(path string) response {
 	path = jsonizePath(path)
 
 	resp, ok := c.responses[path]
@@ -74,7 +70,7 @@ func (c *server) getResponse(path string) response {
 	return response{502, []byte("response unavailable")}
 }
 
-func (c *server) serve() {
+func (c *Server) serve() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := c.getResponse(r.URL.RequestURI())
@@ -130,7 +126,7 @@ func jsonizePath(path string) string {
 	return left + "?" + string(b)
 }
 
-func (c *server) SetResponsePath(path string, code int, body []byte) {
+func (c *Server) SetResponse(path string, code int, body []byte) error {
 	path = jsonizePath(path)
 
 	if path == "" {
@@ -138,4 +134,5 @@ func (c *server) SetResponsePath(path string, code int, body []byte) {
 	}
 
 	c.responses[path] = response{code, body}
+	return nil
 }
