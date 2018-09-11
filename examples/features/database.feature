@@ -29,7 +29,6 @@ Feature: database features example
     Then "tomato-mysql" table "customers" should look like
         | customer_id | name    | country |
         | 1           | cembri  | us      |
-        | 2           | cembre  | id      |
-        | 3           | cembra  | de      |
-    Then "tomato-mysql" table "customers" should look like
-        | customer_id | name    |
+        | 2           | cembri  | us      |
+        | 3           | cembre  | id      |
+        | 4           | cembra  | de      |

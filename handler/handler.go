@@ -17,6 +17,7 @@ func New(r *resource.Manager) func(s *godog.Suite) {
 		s.BeforeScenario(func(_ interface{}) {
 			h.resource.Reset()
 		})
+
 		s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequest)
 		s.Step(`^"([^"]*)" send request to "([^"]*)" with body$`, h.sendRequestWithBody)
 		s.Step(`^"([^"]*)" response code should be (\d+)$`, h.checkResponseCode)

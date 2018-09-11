@@ -30,13 +30,14 @@ func (m *Manager) GetDatabaseSQL(resourceName string) (DatabaseSQL, error) {
 	}
 
 	var (
-		err error
+		conn Resource
+		err  error
 	)
 	switch r.config.Params["driver"] {
 	case "postgres":
-		r.cache, err = postgres.New(r.config)
+		conn, err = postgres.New(r.config)
 	case "mysql":
-		r.cache, err = mysql.New(r.config)
+		conn, err = mysql.New(r.config)
 	default:
 		err = errors.New("driver not found")
 	}
@@ -44,6 +45,7 @@ func (m *Manager) GetDatabaseSQL(resourceName string) (DatabaseSQL, error) {
 		return nil, err
 	}
 
+	r.cache = conn
 	m.resources[resourceName] = r
 
 	return r.cache.(DatabaseSQL), nil

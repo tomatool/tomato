@@ -29,11 +29,12 @@ func (m *Manager) GetQueue(resourceName string) (Queue, error) {
 	}
 
 	var (
-		err error
+		conn Resource
+		err  error
 	)
 	switch r.config.Params["driver"] {
 	case "rabbitmq":
-		r.cache, err = rabbitmq.New(r.config)
+		conn, err = rabbitmq.New(r.config)
 	default:
 		err = errors.New("driver not found")
 	}
@@ -41,6 +42,7 @@ func (m *Manager) GetQueue(resourceName string) (Queue, error) {
 		return nil, err
 	}
 
+	r.cache = conn
 	m.resources[resourceName] = r
 
 	return r.cache.(Queue), nil

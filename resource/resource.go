@@ -37,9 +37,26 @@ func NewManager(cfg []*config.Resource) *Manager {
 
 func (m *Manager) Reset() {
 	for _, r := range m.resources {
-		if r.cache == nil {
-			continue
+		var (
+			rr  Resource
+			err error
+		)
+
+		switch r.config.Type {
+		case "database/sql":
+			rr, err = m.GetDatabaseSQL(r.config.Name)
+		case "queue":
+			rr, err = m.GetQueue(r.config.Name)
+		case "http/server":
+			rr, err = m.GetHTTPServer(r.config.Name)
+		case "http/client":
+			rr, err = m.GetHTTPClient(r.config.Name)
+		default:
+			err = errors.New("he")
 		}
-		r.cache.Reset()
+		if err != nil {
+			return
+		}
+		rr.Reset()
 	}
 }

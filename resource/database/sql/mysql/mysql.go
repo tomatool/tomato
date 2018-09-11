@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"errors"
-	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/alileza/tomato/config"
@@ -12,7 +12,8 @@ import (
 )
 
 type MySQL struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	dbname string
 }
 
 func New(cfg *config.Resource) (*MySQL, error) {
@@ -21,12 +22,17 @@ func New(cfg *config.Resource) (*MySQL, error) {
 		return nil, errors.New("datasource is required")
 	}
 
+	u, err := url.Parse("mysql://" + datasource + "?uyeah")
+	if err != nil {
+		return nil, err
+	}
+
 	db, err := sqlx.Open("mysql", datasource)
 	if err != nil {
 		return nil, err
 	}
 
-	return &MySQL{db: db}, nil
+	return &MySQL{db: db, dbname: strings.Replace(u.Path, "/", "", -1)}, nil
 }
 
 func (d *MySQL) Ready() error {
@@ -38,7 +44,7 @@ func (d *MySQL) Reset() error {
 		tables []string
 	)
 
-	query := `SELECT table_name FROM information_schema.tables WHERE table_type = 'base table'`
+	query := `SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_schema='` + d.dbname + `'`
 	if err := d.db.Select(&tables, query); err != nil {
 		return err
 	}
@@ -84,7 +90,7 @@ func (d *MySQL) Select(tableName string, condition map[string]string) ([]map[str
 		}
 		z := make(map[string]string)
 		for key, v := range r {
-			z[key] = fmt.Sprintf("%v", v)
+			z[key] = string(v.([]byte))
 		}
 		result = append(result, z)
 	}

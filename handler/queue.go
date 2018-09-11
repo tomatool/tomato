@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/DATA-DOG/godog/gherkin"
@@ -58,12 +59,18 @@ func (h *Handler) messageCompare(resourceName, target string, expectedMessage *g
 		return errors.New("no message on queue")
 	}
 
+	expected := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(expectedMessage.Content), &expected); err != nil {
+		return err
+	}
+
 	for _, msg := range messages {
-		if err := compare.JSON(
-			[]byte(expectedMessage.Content),
-			msg,
-			false,
-		); err == nil {
+		actual := make(map[string]interface{})
+		if err := json.Unmarshal(msg, &actual); err != nil {
+			return err
+		}
+
+		if compare.Value(expected, actual) {
 			return nil
 		}
 	}
