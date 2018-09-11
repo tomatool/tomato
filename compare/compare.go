@@ -1,102 +1,130 @@
 package compare
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
+
+	"github.com/olekukonko/tablewriter"
 )
 
-func JSON(a []byte, b []byte, exact bool) error {
-	mapA := make(map[string]interface{})
-	if err := json.Unmarshal(a, &mapA); err != nil {
-		return err
+func Value(a, b interface{}) bool {
+	ta := reflect.TypeOf(a)
+	tb := reflect.TypeOf(b)
+
+	if ta != tb {
+		return false
 	}
 
-	mapB := make(map[string]interface{})
-	if err := json.Unmarshal(b, &mapB); err != nil {
-		return err
+	if a == nil {
+		return true
 	}
 
-	if err := Map(mapA, mapB); err != nil {
-		return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", string(a), string(b), err.Error())
-	}
+	if ta.Kind() == reflect.Map {
+		va := reflect.ValueOf(a)
+		vb := reflect.ValueOf(b)
 
-	if exact {
-		if err := Map(mapB, mapA); err != nil {
-			return fmt.Errorf("expectedResponse=%s\n\nactualResponse=%s\n\n%s", string(a), string(b), err.Error())
+		if va.Len() != vb.Len() {
+			return false
 		}
+
+		ma := make(map[interface{}]interface{})
+		for _, key := range va.MapKeys() {
+			ma[key.Interface()] = va.MapIndex(key).Interface()
+		}
+
+		mb := make(map[interface{}]interface{})
+		for _, key := range vb.MapKeys() {
+			mb[key.Interface()] = vb.MapIndex(key).Interface()
+		}
+
+		for key, va := range ma {
+			vb, ok := mb[key]
+			if !ok {
+				return false
+			}
+			if !Value(va, vb) {
+				return false
+			}
+		}
+
+		return true
 	}
 
-	return nil
+	if ta.Kind() == reflect.Slice {
+		va := reflect.ValueOf(a)
+		vb := reflect.ValueOf(b)
+
+		if va.Len() != vb.Len() {
+			return false
+		}
+
+		for i := 0; i < va.Len(); i++ {
+			if !Value(
+				va.Index(i).Interface(),
+				vb.Index(i).Interface(),
+			) {
+				return false
+			}
+		}
+		return true
+	}
+
+	av, ok := a.(string)
+	if ok && av == "*" {
+		return true
+	}
+	bv, ok := b.(string)
+	if ok && bv == "*" {
+		return true
+	}
+
+	if a != b {
+		return false
+	}
+	return true
 }
 
-func Map(expectedResponse, gotResponse map[string]interface{}) error {
-	for key := range expectedResponse {
-		expectedVal, ok1 := expectedResponse[key]
-		gotVal, ok2 := gotResponse[key]
-		if ok1 != ok2 {
-			return fmt.Errorf("mismatch field key='%s' expected='%v' got='%v'", key, ok1, ok2)
+func Print(t *tablewriter.Table, key string, A interface{}, B interface{}) {
+	ta := reflect.TypeOf(A)
+	if ta.Kind() == reflect.Slice {
+		va := reflect.ValueOf(A)
+		vb := reflect.ValueOf(B)
+
+		for i := 0; i < va.Len(); i++ {
+			Print(
+				t,
+				fmt.Sprintf("%d", i),
+				va.Index(i).Interface(),
+				vb.Index(i).Interface(),
+			)
+		}
+		return
+	}
+	if ta.Kind() == reflect.Map {
+		va := reflect.ValueOf(A)
+		vb := reflect.ValueOf(B)
+
+		ma := make(map[interface{}]interface{})
+		for _, key := range va.MapKeys() {
+			ma[key.Interface()] = va.MapIndex(key).Interface()
 		}
 
-		if err := Val(expectedVal, gotVal); err != nil {
-			return fmt.Errorf("[%s] %s", key, err.Error())
+		mb := make(map[interface{}]interface{})
+		for _, key := range vb.MapKeys() {
+			mb[key.Interface()] = vb.MapIndex(key).Interface()
 		}
-	}
-	return nil
-}
 
-func Val(expectedVal, gotVal interface{}) error {
-	expectedType := reflect.TypeOf(expectedVal)
-	if expectedType != nil &&
-		expectedType.Kind() == reflect.String &&
-		expectedVal.(string) == "*" {
-		return nil
-	}
-
-	gotType := reflect.TypeOf(gotVal)
-	if expectedType != gotType {
-		return fmt.Errorf("mismatch value type expected='%v' got='%v'", expectedType, gotType)
-	}
-	if expectedType == nil {
-		return nil
-	}
-
-	if expectedType.Kind() == reflect.Slice {
-		if err := Slice(
-			expectedVal.([]interface{}),
-			gotVal.([]interface{}),
-		); err != nil {
-			return err
+		for key := range ma {
+			Print(t, key.(string), ma[key], mb[key])
 		}
-		return nil
+		return
 	}
-
-	if expectedType.Kind() == reflect.Map {
-		if err := Map(
-			expectedVal.(map[string]interface{}),
-			gotVal.(map[string]interface{}),
-		); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	if expectedVal != gotVal {
-		return fmt.Errorf("mismatch value expected='%v' got='%v'", expectedVal, gotVal)
-	}
-	return nil
-}
-
-func Slice(expectedResponse, gotResponse []interface{}) error {
-	if len(expectedResponse) != len(gotResponse) {
-		return fmt.Errorf("mismatch slice length expected='%v' got='%v'", len(expectedResponse), len(gotResponse))
-	}
-
-	for index := range expectedResponse {
-		if err := Val(expectedResponse[index], gotResponse[index]); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	t.SetHeader([]string{
+		"key", "actual", "expected",
+	})
+	t.Append([]string{
+		fmt.Sprintf("%s", key),
+		fmt.Sprintf("%+v", A),
+		fmt.Sprintf("%+v", B),
+	})
 }
