@@ -40,3 +40,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/streadway/amqp"
+
+[[constraint]]
+  name = "github.com/bitly/go-nsq"
+  version = "1.0.7"
