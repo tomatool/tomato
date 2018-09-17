@@ -3,6 +3,7 @@ package queue
 import (
 	"errors"
 
+	"github.com/alileza/tomato/resource/queue/nsq"
 	"github.com/alileza/tomato/resource/queue/rabbitmq"
 )
 
@@ -29,6 +30,8 @@ func Open(params map[string]string) (Client, error) {
 	switch driver {
 	case "rabbitmq":
 		return rabbitmq.Open(params)
+	case "nsq":
+		return nsq.Open(params)
 	}
 	return nil, errors.New("queue: invalid driver > " + driver)
 }

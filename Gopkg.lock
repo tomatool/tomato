@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:56385add72e14ddd0a33ce971028175fa998b3c8dae9967768683fe392707f23"
+  digest = "1:a459138af96862200653189d419131a8c6ec34f13b7f296a8ac64e9cf0d95d2d"
   name = "github.com/DATA-DOG/godog"
   packages = [
     ".",
@@ -15,7 +15,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1399282ad03ac819f0e8a747c888407c5c98bb497d33821a7047c7bae667ede0"
+  digest = "1:a74730e052a45a3fab1d310fdef2ec17ae3d6af16228421e238320846f2aaec8"
   name = "github.com/alecthomas/template"
   packages = [
     ".",
@@ -33,7 +33,15 @@
   revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
 
 [[projects]]
-  digest = "1:dc876ae7727280d95f97af5320308131278b93d6c6f5cf953065e18cb8c88fd2"
+  digest = "1:7a69f6a3a33929f8b66aa39c93868ad1698f06417fe627ae067559beb94504bd"
+  name = "github.com/bitly/go-nsq"
+  packages = ["."]
+  pruneopts = ""
+  revision = "eee57a3ac4174c55924125bb15eeeda8cffb6e6f"
+  version = "v1.0.7"
+
+[[projects]]
+  digest = "1:c07de423ca37dc2765396d6971599ab652a339538084b9b58c9f7fc533b28525"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = ""
@@ -42,7 +50,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dc8c05d641946bd2f280e77e84fabfd605cb53ababfa3b18dfcb3c600a068fe1"
+  digest = "1:2a5888946cdbc8aa360fd43301f9fc7869d663f60d5eedae7d4e6e5e4f06f2bf"
+  name = "github.com/golang/snappy"
+  packages = ["."]
+  pruneopts = ""
+  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:617ee2434b77e911fa26b678730be9a617f75243b194eadc8201c8ac860844aa"
   name = "github.com/jmoiron/sqlx"
   packages = [
     ".",
@@ -53,7 +69,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6b8e4fbd48235132eb66a4adea7acb0a2bd1271f543d54415d0c3174823efa37"
+  digest = "1:09792d732b079867772cdbabdf7dc54ef9f9d04c998a9ce6226657151fccbb94"
   name = "github.com/lib/pq"
   packages = [
     ".",
@@ -72,14 +88,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0a1f8d01a0191f558910bcbfd7e1dc11a53ac374473d13b68b8fe520f21efb07"
+  digest = "1:4e8f1cae8e6d83af9000d82566efb8823907dae77ba4f1d76ff28fdd197c3c90"
   name = "github.com/streadway/amqp"
   packages = ["."]
   pruneopts = ""
   revision = "e5adc2ada8b8efff032bf61173a233d143e9318e"
 
 [[projects]]
-  digest = "1:eede11c81b63c8f6fd06ef24ba0a640dc077196ec9b7a58ecde03c82eee2f151"
+  digest = "1:c1771ca6060335f9768dff6558108bc5ef6c58506821ad43377ee23ff059e472"
   name = "google.golang.org/appengine"
   packages = ["cloudsql"]
   pruneopts = ""
@@ -87,7 +103,7 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:2840683aa0e9980689f85bf48b2a56ec7a108fd089f12af8ea7d98c172819589"
+  digest = "1:15d017551627c8bb091bde628215b2861bed128855343fdd570c62d08871f6e1"
   name = "gopkg.in/alecthomas/kingpin.v2"
   packages = ["."]
   pruneopts = ""
@@ -109,6 +125,8 @@
     "github.com/DATA-DOG/godog",
     "github.com/DATA-DOG/godog/colors",
     "github.com/DATA-DOG/godog/gherkin",
+    "github.com/alecthomas/template",
+    "github.com/bitly/go-nsq",
     "github.com/go-sql-driver/mysql",
     "github.com/jmoiron/sqlx",
     "github.com/lib/pq",

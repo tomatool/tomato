@@ -41,7 +41,7 @@ func (h *Handler) messageFromTargetCountShouldBe(name, target string, count int)
 	}
 
 	if messageCount != count {
-		return fmt.Errorf("queue/rabbitmq: mismatch count for target `%s`, expecting=%d got=%d", target, count, messageCount)
+		return fmt.Errorf("queue: mismatch count for target `%s`, expecting=%d got=%d", target, count, messageCount)
 	}
 
 	return nil
