@@ -17,6 +17,12 @@ resources:
       params:
         driver: rabbitmq
         datasource: {{ .RABBITMQ_DATASOURCE }}
+        
+    - name: tomato-nsq
+      type: queue
+      params:
+        driver: nsq
+        nsqd: {{ .NSQ_DATASOURCE }}
 
     - name: tomato-http-server
       type: http/server

@@ -44,3 +44,48 @@ Feature: queue features example
                 "timestamp":"*"
             }
         """
+        
+  Scenario: Publish and consume message using nsq
+    # This message should be ignored by the next step, because tomato haven't listen to this target yet.
+    Given publish message to "tomato-nsq" target "customers:created" with payload
+      """
+          {
+              "country":"us",
+              "name":"cembri"
+          }
+      """
+  
+    Then listen message from "tomato-nsq" target "customers:created"
+    Then listen message from "tomato-nsq" target "customers:deleted"
+    Then publish message to "tomato-nsq" target "customers:created" with payload
+        """
+            {
+                "country":"us",
+                "name":"cembri"
+            }
+        """
+    Then publish message to "tomato-nsq" target "customers:created" with payload
+        """
+            {
+                "country":"id",
+                "name":"cebre",
+                "timestamp":"2018-04-03 08:38:23"
+            }
+        """
+    Then message from "tomato-nsq" target "customers:created" count should be 2
+    Then message from "tomato-nsq" target "customers:deleted" count should be 0
+    Then message from "tomato-nsq" target "customers:created" should look like
+        """
+            {
+                "country":"us",
+                "name":"cembri"
+            }
+        """
+    Then message from "tomato-nsq" target "customers:created" should look like
+        """
+            {
+                "country":"id",
+                "name":"cebre",
+                "timestamp":"*"
+            }
+        """
