@@ -18,6 +18,7 @@ import (
 var (
 	dictionaryPath string
 	outputPath     string
+	outputType     string
 )
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 	generateDocsCmd := generateCmd.Command("docs", "generate documentation")
 	generateDocsCmd.Flag("dictionary", "tomato dictionary file path.").Short('d').StringVar(&dictionaryPath)
 	generateDocsCmd.Flag("output", "output of handler.go.").Short('o').Default("docs/resources.md").StringVar(&outputPath)
+	generateDocsCmd.Flag("type", "output type (markdown/html).").Short('t').Default("html").StringVar(&outputType)
 
 	generateHandlerCmd := generateCmd.Command("handler", "generate handler")
 	generateHandlerCmd.Flag("dictionary", "tomato dictionary file path.").Short('d').StringVar(&dictionaryPath)
@@ -39,7 +41,7 @@ func main() {
 	case generateHandlerCmd.FullCommand():
 		err = GenerateHandler(dictionaryPath, outputPath)
 	case generateDocsCmd.FullCommand():
-		err = GenerateDocs(dictionaryPath, outputPath)
+		err = GenerateDocs(dictionaryPath, outputPath, outputType)
 	}
 	if err != nil {
 		log.Println(err)
@@ -47,14 +49,14 @@ func main() {
 	}
 }
 
-func GenerateDocs(dictionaryPath, outputPath string) error {
+func GenerateDocs(dictionaryPath, outputPath, outputType string) error {
 	dict, err := dictionary.Retrieve(dictionaryPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error retrieving config"))
 		os.Exit(1)
 	}
 
-	out, err := docs.Generate(dict, nil)
+	out, err := docs.Generate(dict, &docs.Options{Output: outputType})
 	if err != nil {
 		return err
 	}

@@ -2,63 +2,10 @@ package docs
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/alecthomas/template"
 	"github.com/alileza/tomato/dictionary"
-)
-
-const (
-	markdownTmpl = `# Resources
-
-Resources are objects that are going to be used for step evaluations in the cucumber scenario. They are listed under the resources key in the pipeline configuration.
-
-Supported resources:
-{{range $group, $resource := .Groups}}
-* {{$group}}
-  {{range $resource}}\
- - [{{.Name}}](#{{.Group}}/{{.Name}})
-  {{end}}\
-{{end}}
----
-{{ range $group, $resource := .Groups}}
-# {{$group}}\
-{{range $resource}}
-## {{.Name}}
-
-{{.Description}}
-
-### resource parameters
-{{range .Options}}
-1. **{{.Name}}** *({{.Type}})*
-
-   {{.Description}}
-{{end}}
-
-## actions
-{{range .Actions}}
-### **{{.Name}}**
-
-   {{.Description}}
-
-   **expressions**
-	 {{range $expr := .Expressions}}
-   - {{ $expr }}
-	 {{end}}
-
-   **parameters**
-	 {{range .Parameters}}
-   - {{.Name}} *({{.Type}})*
-
-     {{.Description}}
-	 {{end}}
-
-{{end}}\
-
----
-
-{{end}}\
-{{end}}\
-`
 )
 
 type Options struct {
@@ -67,6 +14,7 @@ type Options struct {
 
 const (
 	OutputMarkdown = "markdown"
+	OutputHTML     = "html"
 )
 
 var DefaultOptions = &Options{
@@ -81,11 +29,17 @@ func Generate(dict *dictionary.Dictionary, opts *Options) (*bytes.Buffer, error)
 	switch opts.Output {
 	case OutputMarkdown:
 		tmplGlob = markdownTmpl
+	case OutputHTML:
+		tmplGlob = htmlTmpl
 	default:
 		tmplGlob = markdownTmpl
 	}
 
-	tmpl, err := template.New("docs").Parse(tmplGlob)
+	tmpl, err := template.New("docs").Funcs(template.FuncMap{
+		"replace": func(str, a, b string) string {
+			return strings.Replace(str, a, b, -1)
+		},
+	}).Parse(tmplGlob)
 	if err != nil {
 		return nil, err
 	}
