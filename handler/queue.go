@@ -44,7 +44,7 @@ func (h *Handler) countMessage(resourceName, target string, expectedCount int) e
 	return nil
 }
 
-func (h *Handler) messageCompare(resourceName, target string, expectedMessage *gherkin.DocString) error {
+func (h *Handler) compareMessage(resourceName, target string, expectedMessage *gherkin.DocString) error {
 	r, err := h.resource.GetQueue(resourceName)
 	if err != nil {
 		return err

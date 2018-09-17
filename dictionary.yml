@@ -26,25 +26,17 @@ resources:
           actions:
               - name: send
                 description: send a normal http request without request body
-                handle: sendRequestTo
+                handle: sendRequest
                 expressions:
                     - $resource send request to $target
                 parameters:
                     - name: target
                       description: http target endpoint, it has to be space separated between request method and URL
                       type: string
-                examples:
-                    - |
-                      Given "httpcli" send request to "DELETE /api/v1/customers" with body
-                        """
-                            {
-                                "name":"cembri"
-                            }
-                        """
 
               - name: send_body
                 description: send a normal http request with request body
-                handle: sendRequestToWithBody
+                handle: sendRequestWithBody
                 expressions:
                     - $resource send request to $target with body $body
                     - $resource send request to $target with payload $body
@@ -58,7 +50,7 @@ resources:
 
               - name: response_code
                 description: check response code
-                handle: responseCodeShouldBe
+                handle: checkResponseCode
                 expressions:
                     - $resource response code should be $code
                 parameters:
@@ -68,7 +60,7 @@ resources:
 
               - name: response_body
                 description: check response body
-                handle: responseBodyShouldBe
+                handle: checkResponseBody
                 expressions:
                     - $resource response body should be $body
                 parameters:
@@ -86,7 +78,7 @@ resources:
           actions:
               - name: response
                 description: set a response for any request that come to the http/server
-                handle: setResponseCodeToAndResponseBody
+                handle: setResponse
                 expressions:
                     - set $resource response code to $code and response body $body
                 parameters:
@@ -99,7 +91,7 @@ resources:
 
               - name: response_path
                 description: set a response for a given path for the http/server
-                handle: setWithPathResponseCodeToAndResponseBody
+                handle: setResponse
                 expressions:
                     - set $resource with path $path response code to $code and response body $body
                 parameters:
@@ -126,7 +118,7 @@ resources:
           actions:
               - name: set
                 description: set table content (it will truncate table before set the value)
-                handle: setTableListOfContent
+                handle: tableInsert
                 expressions:
                     - set $resource table $table list of content $content
                 parameters:
@@ -139,7 +131,7 @@ resources:
 
               - name: check
                 description: compare table content
-                handle: tableShouldLookLike
+                handle: tableCompare
                 expressions:
                     - $resource table $table should look like $content
                 parameters:
@@ -149,16 +141,6 @@ resources:
                     - name: content
                       description: table content
                       type: table
-
-              - name: empty
-                description: truncate table and reset auto increment
-                handle: setTableToEmpty
-                expressions:
-                    - set $resource table $table to empty
-                parameters:
-                    - name: table
-                      description: table name
-                      type: string
 
         - name: queue
           group: queue
@@ -173,7 +155,7 @@ resources:
           actions:
             - name: publish
               description: publish a message to message queue
-              handle: publishMessageToTargetWithPayload
+              handle: publishMessage
               expressions:
                   - publish message to $resource target $target with payload $payload
               parameters:
@@ -188,7 +170,7 @@ resources:
               description: |
                     listen to message queue message, it required to do before the action,
                     if you need to compare message that got published from the application
-              handle: listenMessageFromTarget
+              handle: listenMessage
               expressions:
                   - listen message from $resource target $target
               parameters:
@@ -198,7 +180,7 @@ resources:
 
             - name: count
               description: count message from a given target, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
-              handle: messageFromTargetCountShouldBe
+              handle: countMessage
               expressions:
                   - message from $resource target $target count should be $count
               parameters:
@@ -211,7 +193,7 @@ resources:
 
             - name: compare
               description: compare message payload, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
-              handle: messageFromTargetShouldLookLike
+              handle: compareMessage
               expressions:
                   - message from $resource target $target should look like $payload
               parameters:

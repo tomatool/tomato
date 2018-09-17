@@ -18,12 +18,15 @@ import (
 )
 
 type Handler struct {
-	resource resource.Manager
+	resource *resource.Manager
 }
 
-func New(r resource.Manager) func(s *godog.Suite) {
+func New(r *resource.Manager) func(s *godog.Suite) {
 	h := &Handler{r}
 	return func(s *godog.Suite) {
+		s.BeforeScenario(func(_ interface{}) {
+			h.resource.Reset()
+		})
 %s
     }
 }`
