@@ -63,6 +63,22 @@
   revision = "90697d60dd844d5ef6ff15135d0203f65d2f53b8"
 
 [[projects]]
+  digest = "1:82b912465c1da0668582a7d1117339c278e786c2536b3c3623029a0c7141c2d0"
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  pruneopts = ""
+  revision = "ce7b0b5c7b45a81508558cd1dba6bb1e4ddb51bb"
+  version = "v0.0.3"
+
+[[projects]]
+  branch = "master"
+  digest = "1:993ae7a35bc8d3dc3ec44b0f2930c306c34dd23e3ce984af9fb9243bbbc8c7e3"
+  name = "github.com/olekukonko/tablewriter"
+  packages = ["."]
+  pruneopts = ""
+  revision = "be2c049b30ccd4d3fd795d6bf7dce74e42eeedaa"
+
+[[projects]]
   digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -109,9 +125,11 @@
     "github.com/DATA-DOG/godog",
     "github.com/DATA-DOG/godog/colors",
     "github.com/DATA-DOG/godog/gherkin",
+    "github.com/alecthomas/template",
     "github.com/go-sql-driver/mysql",
     "github.com/jmoiron/sqlx",
     "github.com/lib/pq",
+    "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/streadway/amqp",
     "gopkg.in/alecthomas/kingpin.v2",
