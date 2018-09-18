@@ -2,12 +2,12 @@
 
 resources:
     - name: tomato-psql
-      type: db/sql
+      type: database/sql
       params:
         driver: postgres
         datasource: {{ .PSQL_DATASOURCE }}
     - name: tomato-mysql
-      type: db/sql
+      type: database/sql
       params:
         driver: mysql
         datasource: {{ .MYSQL_DATASOURCE }}
