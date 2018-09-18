@@ -28,7 +28,7 @@ jobs:
 
       - run:
           name: run integration test
-          command: docker-compose up --exit-code-from tomato
+          command: docker-compose up --abort-on-container-exit --build
 
 workflows:
   version: 2
