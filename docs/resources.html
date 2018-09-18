@@ -1,0 +1,101 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+
+<body>
+    <div id="navbar-example" class="bd-example">
+        <div class="row">
+            <div class="col-3">
+                <div style="position:fixed;" id="list-example" class="list-group col-3">
+                    {{range $group, $resource := .Resources}}
+                    <a class="list-group-item list-group-item-action" href="#{{.Name}}">{{.Name}}</a> {{end}}
+                </div>
+            </div>
+            <div class="col-9">
+                <div data-spy="scroll" data-target="#list-example" data-offset="0" class="scrollspy-example">
+                    {{range $group, $resource := .Resources}}
+                    <h4 id="{{.Name}}">{{.Name}}</h4>
+                    <p>{{.Description}}</p>
+                    <strong>resource parameters</strong><br/>
+                    <ol>
+                        {{range .Options}}
+                        <li> **{{.Name}}** *({{.Type}})* {{.Description}}
+                        </li>
+                        {{end}}
+                    </ol>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- <div class="row">
+        <div class="col-md-3">
+            <ul style="position:fixed;" class="nav flex-column">
+                {{range $group, $resource := .Resources}}
+                <li class="nav-item">
+                    <a class="nav-link" href="#{{.Name}}">{{.Name}}</a>
+                </li>
+                {{end}}
+            </ul>
+        </div>
+
+        <div class="col-md-8">
+            <h1>Resources</h1>
+
+            <p>Resources are objects that are going to be used for step evaluations in the cucumber scenario. They are listed under the resources key in the pipeline configuration.</p>
+
+
+            <ol>
+                {{ range $group, $resource := .Resources}}
+                <li id="{{.Group}}/{{.Name}}">
+                    <h3>{{.Name}}</h3><br/>
+
+                    <div>{{.Description}}</div>
+
+                    <strong>resource parameters</strong><br/>
+                    <ol>
+                        {{range .Options}}
+                        <li> **{{.Name}}** *({{.Type}})* {{.Description}}
+                        </li>
+                        {{end}}
+                    </ol>
+
+                    <h3>actions</h3>
+                    <ul>
+                        {{range .Actions}}
+                        <li> <strong>{{.Name}}</strong> {{.Description}}
+                            <div>
+                                <strong>expressions</strong> {{range $expr := .Expressions}} - {{ $expr }} {{end}}
+                            </div>
+                            <div>
+                                <strong>parameters</strong>
+                                <ul>
+                                    {{range .Parameters}}
+                                    <li>
+                                        {{.Name}} <i>({{.Type}})</i> {{.Description}}
+                                    </li>
+                                    {{end}}
+                                </ul>
+                            </div>
+
+                        </li>
+                </li>
+                {{end}}
+                </ul>
+                </li>
+                {{end}}
+            </ol>
+        </div>
+    </div> -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $('body').scrollspy({
+            target: '#navbar-example'
+        })
+    </script>
+</body>
+
+</html>
