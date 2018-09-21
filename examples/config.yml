@@ -3,27 +3,33 @@
 resources:
     - name: tomato-psql
       type: database/sql
+      ready_check: true
       params:
         driver: postgres
         datasource: {{ .PSQL_DATASOURCE }}
+
     - name: tomato-mysql
       type: database/sql
+      ready_check: true
       params:
         driver: mysql
         datasource: {{ .MYSQL_DATASOURCE }}
 
     - name: tomato-queue
       type: queue
+      ready_check: true
       params:
         driver: rabbitmq
         datasource: {{ .RABBITMQ_DATASOURCE }}
 
     - name: tomato-http-server
       type: http/server
+      ready_check: true
       params:
         port: {{ .HTTP_SERVER_PORT }}
 
     - name: tomato-http-client
       type: http/client
+      ready_check: true
       params:
         base_url: {{ .HTTP_CLIENT_BASE_URL }}

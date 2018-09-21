@@ -36,7 +36,7 @@ func New(cfg *config.Resource) (*MySQL, error) {
 }
 
 func (d *MySQL) Ready() error {
-	return nil
+	return d.db.Ping()
 }
 
 func (d *MySQL) Reset() error {

@@ -30,7 +30,7 @@ func New(cfg *config.Resource) (*PostgreSQL, error) {
 }
 
 func (d *PostgreSQL) Ready() error {
-	return nil
+	return d.db.Ping()
 }
 
 func (d *PostgreSQL) Reset() error {

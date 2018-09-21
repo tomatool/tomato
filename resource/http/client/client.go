@@ -44,6 +44,13 @@ func New(cfg *config.Resource) (*Client, error) {
 }
 
 func (c *Client) Ready() error {
+	resp, err := c.httpClient.Get(c.baseURL)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode == http.StatusServiceUnavailable {
+		return errors.New("http/client: server unavailable > " + c.baseURL)
+	}
 	return nil
 }
 

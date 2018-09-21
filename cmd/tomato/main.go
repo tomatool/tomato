@@ -63,6 +63,11 @@ func main() {
 		opts.StopOnFailure = cfg.StopOnFailure
 	}
 
+	if err := resourceManager.Ready(); err != nil {
+		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Resources is not ready"))
+		os.Exit(1)
+	}
+
 	os.Exit(
 		godog.RunWithOptions("godogs", handler.New(resourceManager), opts),
 	)
