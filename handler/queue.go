@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/compare"
@@ -38,7 +39,7 @@ func (h *Handler) countMessage(resourceName, target string, expectedCount int) e
 	}
 
 	if len(messages) != expectedCount {
-		return errors.New("m")
+		return fmt.Errorf("expecting message count to be %d, got %d\n", expectedCount, len(messages))
 	}
 
 	return nil

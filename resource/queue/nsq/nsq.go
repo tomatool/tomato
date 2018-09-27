@@ -1,9 +1,11 @@
 package nsq
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/alileza/tomato/config"
 	"github.com/bitly/go-nsq"
 	"github.com/pkg/errors"
 )
@@ -37,7 +39,7 @@ func (sl silentLogger) Output(calldepth int, s string) error { return nil }
 
 var theSilentLogger = silentLogger(1)
 
-type nsqManager struct {
+type NSQ struct {
 	sync.Mutex
 	nsqd           string
 	producer       *nsq.Producer
@@ -46,29 +48,18 @@ type nsqManager struct {
 	waitDuration   time.Duration
 }
 
-func Open(params map[string]string) (*nsqManager, error) {
-	nsqdAddress, ok := params["nsqd"]
+func New(cfg *config.Resource) (*NSQ, error) {
+	nsqdAddress, ok := cfg.Params["nsqd"]
 	if !ok {
 		return nil, errors.New("queue/nsq: nsqd address is required")
 	}
 
-	waitDuration, err := time.ParseDuration(params["wait_duration"])
+	waitDuration, err := time.ParseDuration(cfg.Params["wait_duration"])
 	if err != nil {
 		waitDuration = DefaultWaitDuration
 	}
 
-	// testing nsqd connection with dummyDelegate
-	nsqdConn := nsq.NewConn(nsqdAddress, nsq.NewConfig(), dummyDelegate(1))
-	if _, err := nsqdConn.Connect(); err != nil {
-		return nil, errors.New("queue/nsq: failed to connect to nsqd")
-	}
-	nsqdConn.Flush()
-	nsqdConn.Close()
-	if !nsqdConn.IsClosing() {
-		return nil, errors.New("queue/nsq: there's problem with nsqd conn")
-	}
-
-	return &nsqManager{
+	return &NSQ{
 		nsqd:           nsqdAddress,
 		waitDuration:   waitDuration,
 		topicReadiness: make(map[string]*nsq.Consumer),
@@ -77,7 +68,7 @@ func Open(params map[string]string) (*nsqManager, error) {
 }
 
 // to connect consumer function to target
-func (nm *nsqManager) connectConsumer(target string) (*nsq.Consumer, error) {
+func (nm *NSQ) connectConsumer(target string) (*nsq.Consumer, error) {
 	cNsq, err := nsq.NewConsumer(target+Ephemeral, "tomato"+Ephemeral, nsq.NewConfig())
 	if err != nil {
 		return nil, err
@@ -104,11 +95,16 @@ func (nm *nsqManager) connectConsumer(target string) (*nsq.Consumer, error) {
 		return nil, err
 	}
 
+	// this needed to clear up messages that got published before queue exist
+	time.Sleep(time.Millisecond * 200)
+	nm.data[target] = make([][]byte, 0)
+
 	return cNsq, nil
 }
 
 // to listen to target, all messages retrieved should be stored temporarily
-func (nm *nsqManager) Listen(target string) error {
+func (nm *NSQ) Listen(target string) error {
+
 	nm.Lock()
 	cNsqCached, exist := nm.topicReadiness[target]
 	nm.Unlock()
@@ -122,7 +118,7 @@ func (nm *nsqManager) Listen(target string) error {
 	if err != nil {
 		return errors.Wrapf(err, "queue/nsq: failed to attach consumer")
 	}
-
+	nm.data[target] = make([][]byte, 0)
 	nm.Lock()
 	nm.topicReadiness[target] = cNsq
 	nm.Unlock()
@@ -130,21 +126,8 @@ func (nm *nsqManager) Listen(target string) error {
 	return nil
 }
 
-// to count number of message already delivered through target
-func (nm *nsqManager) Count(target string) (int, error) {
-	nm.Lock()
-	msgs, exist := nm.data[target]
-	nm.Unlock()
-
-	if !exist {
-		return 0, errors.New("queue/nsq: no consumer registered")
-	}
-
-	return len(msgs), nil
-}
-
 // to initiate producer if hasn't
-func (nm *nsqManager) introduceProducer() error {
+func (nm *NSQ) introduceProducer() error {
 	if nm.producer != nil {
 		return nil
 	}
@@ -160,44 +143,37 @@ func (nm *nsqManager) introduceProducer() error {
 }
 
 // to publish payload to designated target
-func (nm *nsqManager) Publish(target string, payload []byte) error {
+func (nm *NSQ) Publish(target string, payload []byte) error {
 	if err := nm.introduceProducer(); err != nil {
 		return errors.Wrapf(err, "queue/nsq: failed to initiate producer")
 	}
 
-	return nm.producer.Publish(target+Ephemeral, payload)
+	if err := nm.producer.Publish(target+Ephemeral, payload); err != nil {
+		return err
+	}
+	time.Sleep(nm.waitDuration)
+	return nil
 }
 
 // to get the message from target that are stored by nsqManager.Listen()
-func (nm *nsqManager) Consume(target string) []byte {
+func (nm *NSQ) Fetch(target string) ([][]byte, error) {
 	nm.Lock()
-	msgs, exist := nm.data[target]
-	nm.Unlock()
+	defer nm.Unlock()
 
-	if !exist || msgs == nil {
-		return nil
+	msgs, ok := nm.data[target]
+	if !ok {
+		return nil, fmt.Errorf("queue not exist, please listen to it %s, %+v", target, nm.data)
 	}
 
-	if len(msgs) < 1 {
-		return nil
-	}
-
-	msg := msgs[0]
-
-	// removing already read message
-	nm.Lock()
-	nm.data[target] = msgs[1:]
-	nm.Unlock()
-
-	return msg
+	return msgs, nil
 }
 
 // to check whether nsq is ready to be used, both for publishing or consuming.
 // it is intended not to be cached
-func (nm *nsqManager) Ready() error {
+func (nm *NSQ) Ready() error {
 	dummyTarget := "ready_flag"
 
-	err := nm.Publish(dummyTarget, []byte(""))
+	err := nm.Publish(dummyTarget, []byte("test"))
 	if err != nil {
 		return errors.Wrapf(err, "queue/nsq: failed to publish test")
 	}
@@ -207,18 +183,18 @@ func (nm *nsqManager) Ready() error {
 		return errors.Wrapf(err, "queue/nsq: failed to attach testing consumer")
 	}
 
-	res := nm.Consume(dummyTarget)
-	if res == nil {
-		return errors.New("queue/nsq: not ready yet")
-	}
-
 	cNsq.Stop()
 
 	return nil
 }
 
+func (nm *NSQ) Reset() error {
+	nm.data = make(map[string][][]byte)
+	return nil
+}
+
 // to terminate nsq connections
-func (nm *nsqManager) Close() error {
+func (nm *NSQ) Close() error {
 	nm.Lock()
 	for _, v := range nm.topicReadiness {
 		if v != nil {
