@@ -30,6 +30,5 @@ resources:
 
     - name: tomato-http-client
       type: http/client
-      ready_check: true
       params:
         base_url: {{ .HTTP_CLIENT_BASE_URL }}
