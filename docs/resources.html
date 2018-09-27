@@ -1,101 +1,218 @@
 <html>
 
-<head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-</head>
+	<head>
+	    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+		 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.5.0/styles/vs.min.css">
+		<style>
+		.hljs{
+			background:#fafafa !important;
+		}
+		</style>
+	</head>
 
-<body>
-    <div id="navbar-example" class="bd-example">
-        <div class="row">
-            <div class="col-3">
-                <div style="position:fixed;" id="list-example" class="list-group col-3">
-                    {{range $group, $resource := .Resources}}
-                    <a class="list-group-item list-group-item-action" href="#{{.Name}}">{{.Name}}</a> {{end}}
-                </div>
-            </div>
-            <div class="col-9">
-                <div data-spy="scroll" data-target="#list-example" data-offset="0" class="scrollspy-example">
-                    {{range $group, $resource := .Resources}}
-                    <h4 id="{{.Name}}">{{.Name}}</h4>
-                    <p>{{.Description}}</p>
-                    <strong>resource parameters</strong><br/>
-                    <ol>
-                        {{range .Options}}
-                        <li> **{{.Name}}** *({{.Type}})* {{.Description}}
-                        </li>
-                        {{end}}
-                    </ol>
-                    {{end}}
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- <div class="row">
-        <div class="col-md-3">
-            <ul style="position:fixed;" class="nav flex-column">
-                {{range $group, $resource := .Resources}}
-                <li class="nav-item">
-                    <a class="nav-link" href="#{{.Name}}">{{.Name}}</a>
-                </li>
-                {{end}}
-            </ul>
-        </div>
+	<body>
+	<div id="navbar-example" class="bd-example">
+		<div class="row">
+			<div class="col-3">
+				<div style="position:fixed;" id="list-example" class="list-group col-3">
+					
+					<a class="list-group-item list-group-item-action" href="#http-client">http/client</a> 
+					<a class="list-group-item list-group-item-action" href="#http-server">http/server</a> 
+					<a class="list-group-item list-group-item-action" href="#database-sql">database/sql</a> 
+					<a class="list-group-item list-group-item-action" href="#queue">queue</a> 
+				</div>
+			</div>
+			<div class="col-9">
+				<div data-spy="scroll" data-target="#list-example" data-offset="0" class="scrollspy-example">
+					
+					<div>
+					<h4 id="http-client">http/client</h4>
+					<p>http client that can be use for sending http request, and compare the response.</p>
+					<pre><code class="yaml">
+resources:
+    - name: my-awesome-name
+      type: http/client
+      params:
+	  base_url: # (string) base url for the http client, it will automatically appended as a base target url.
+	  timeout: # (duration) timeout for the request roundtrip.
+	  </code></pre>
+					</div>
 
-        <div class="col-md-8">
-            <h1>Resources</h1>
+					<h6>Actions</h6>
+					<ul class="list-unstyled">
+					
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">send</h5>
+					     <i>expressions</i>  - $resource send request to $target 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">send_body</h5>
+					     <i>expressions</i>  - $resource send request to $target with body $body  - $resource send request to $target with payload $body 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">response_code</h5>
+					     <i>expressions</i>  - $resource response code should be $code 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">response_body</h5>
+					     <i>expressions</i>  - $resource response body should be $body 
+					    </div>
+					  </li>
+					  
+					</ul>
 
-            <p>Resources are objects that are going to be used for step evaluations in the cucumber scenario. They are listed under the resources key in the pipeline configuration.</p>
 
 
-            <ol>
-                {{ range $group, $resource := .Resources}}
-                <li id="{{.Group}}/{{.Name}}">
-                    <h3>{{.Name}}</h3><br/>
+					<hr>
+                    
+					<div>
+					<h4 id="http-server">http/server</h4>
+					<p>http server that can be use for having a mock external http server.</p>
+					<pre><code class="yaml">
+resources:
+    - name: my-awesome-name
+      type: http/server
+      params:
+	  port: # (number) http server port to expose
+	  </code></pre>
+					</div>
 
-                    <div>{{.Description}}</div>
+					<h6>Actions</h6>
+					<ul class="list-unstyled">
+					
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">response</h5>
+					     <i>expressions</i>  - set $resource response code to $code and response body $body 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">response_path</h5>
+					     <i>expressions</i>  - set $resource with path $path response code to $code and response body $body 
+					    </div>
+					  </li>
+					  
+					</ul>
 
-                    <strong>resource parameters</strong><br/>
-                    <ol>
-                        {{range .Options}}
-                        <li> **{{.Name}}** *({{.Type}})* {{.Description}}
-                        </li>
-                        {{end}}
-                    </ol>
 
-                    <h3>actions</h3>
-                    <ul>
-                        {{range .Actions}}
-                        <li> <strong>{{.Name}}</strong> {{.Description}}
-                            <div>
-                                <strong>expressions</strong> {{range $expr := .Expressions}} - {{ $expr }} {{end}}
-                            </div>
-                            <div>
-                                <strong>parameters</strong>
-                                <ul>
-                                    {{range .Parameters}}
-                                    <li>
-                                        {{.Name}} <i>({{.Type}})</i> {{.Description}}
-                                    </li>
-                                    {{end}}
-                                </ul>
-                            </div>
 
-                        </li>
-                </li>
-                {{end}}
-                </ul>
-                </li>
-                {{end}}
-            </ol>
-        </div>
-    </div> -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+					<hr>
+                    
+					<div>
+					<h4 id="database-sql">database/sql</h4>
+					<p>database driver to interact with sql database</p>
+					<pre><code class="yaml">
+resources:
+    - name: my-awesome-name
+      type: database/sql
+      params:
+	  driver: # (string) sql driver (postgres or mysql)
+	  datasource: # (string) sql database source name (e.g: postgres://user:pass@host:port/dbname?sslmode=disable)
+	  </code></pre>
+					</div>
+
+					<h6>Actions</h6>
+					<ul class="list-unstyled">
+					
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">set</h5>
+					     <i>expressions</i>  - set $resource table $table list of content $content 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">check</h5>
+					     <i>expressions</i>  - $resource table $table should look like $content 
+					    </div>
+					  </li>
+					  
+					</ul>
+
+
+
+					<hr>
+                    
+					<div>
+					<h4 id="queue">queue</h4>
+					<p>message queue resource to interact with queue</p>
+					<pre><code class="yaml">
+resources:
+    - name: my-awesome-name
+      type: queue
+      params:
+	  driver: # (string) queue driver (rabbitmq)
+	  datasource: # (string) queue source name (e.g: amqp://user:pass@host:port/)
+	  </code></pre>
+					</div>
+
+					<h6>Actions</h6>
+					<ul class="list-unstyled">
+					
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">publish</h5>
+					     <i>expressions</i>  - publish message to $resource target $target with payload $payload 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">listen</h5>
+					     <i>expressions</i>  - listen message from $resource target $target 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">count</h5>
+					     <i>expressions</i>  - message from $resource target $target count should be $count 
+					    </div>
+					  </li>
+					  
+					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
+					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
+					      <h5 class="mt-0 mb-1">compare</h5>
+					     <i>expressions</i>  - message from $resource target $target should look like $payload 
+					    </div>
+					  </li>
+					  
+					</ul>
+
+
+
+					<hr>
+                    
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-    <script type="text/javascript">
+
+
+	<script type="text/javascript">
         $('body').scrollspy({
             target: '#navbar-example'
         })
     </script>
-</body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	</body>
 
-</html>
+	</html>
+
