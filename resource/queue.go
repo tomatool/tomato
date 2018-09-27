@@ -3,6 +3,7 @@ package resource
 import (
 	"errors"
 
+	"github.com/alileza/tomato/resource/queue/nsq"
 	"github.com/alileza/tomato/resource/queue/rabbitmq"
 )
 
@@ -35,6 +36,8 @@ func (m *Manager) GetQueue(resourceName string) (Queue, error) {
 	switch r.config.Params["driver"] {
 	case "rabbitmq":
 		conn, err = rabbitmq.New(r.config)
+	case "nsq":
+		conn, err = nsq.New(r.config)
 	default:
 		err = errors.New("driver not found")
 	}

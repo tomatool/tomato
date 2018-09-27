@@ -41,12 +41,13 @@ services:
             - MYSQL_DATABASE=tomato
         volumes:
             - mysql-initdb:/docker-entrypoint-initdb.d/
-    
+
     nsqd:
         image: nsqio/nsq
         expose:
             - "4150"
-            
+        entrypoint: ["/nsqd"]
+
 volumes:
   postgres-initdb: {}
   mysql-initdb: {}
