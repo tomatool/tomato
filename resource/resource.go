@@ -90,7 +90,7 @@ func (m *Manager) Ready() error {
 			}
 			if err != nil {
 				fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
-				return err
+				continue
 			}
 
 			if err = rr.Ready(); err != nil {
