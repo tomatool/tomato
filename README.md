@@ -16,14 +16,14 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 - Support for MySQL, MariaDB, and PostgreSQL
 - Support for messaging queues (RabbitMQ)
 - Support for mocking HTTP API responses 
-- Additional resources [resources](#resources)
+- Additional resources [resources](https://alileza.github.io/tomato/resources)
 
 ## Getting Started 
 
 ### Set up your tomato configuration
 Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`. 
 
-Create a `tomato.yml` file with your application's required test [resources](#resources):
+Create a `tomato.yml` file with your application's required test [resources](https://alileza.github.io/tomato/resources):
 ```yml
 ---
 
