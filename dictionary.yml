@@ -85,6 +85,7 @@ resources:
                 handle: setResponse
                 expressions:
                     - set $resource response code to $code and response body $body
+                    - $resource responds with a $code status code and a response body of $body
                 parameters:
                     - name: code
                       description: http response code (`404`)
@@ -98,6 +99,7 @@ resources:
                 handle: setResponse
                 expressions:
                     - set $resource with path $path response code to $code and response body $body
+                    - $resource with path $path responds with a $code status code and a response body of $body
                 parameters:
                     - name: path
                       description: server endpoint path (`/status`)
@@ -124,6 +126,8 @@ resources:
                 handle: tableInsert
                 expressions:
                     - set $resource table $table list of content $content
+                    - $resource $table contains the rows $content
+                    - $resource $table contains the row $content
                 parameters:
                     - name: table
                       description: table name
@@ -137,6 +141,8 @@ resources:
                 handle: tableCompare
                 expressions:
                     - $resource table $table should look like $content
+                    - $resource $table should contain the rows $content
+                    - $resource $table should contain the row $content
                 parameters:
                     - name: table
                       description: table name
@@ -160,6 +166,7 @@ resources:
               handle: publishMessage
               expressions:
                   - publish message to $resource target $target with payload $payload
+                  - a message is published to $resource target $target with the payload $payload
               parameters:
                   - name: target
                     description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
@@ -174,6 +181,7 @@ resources:
               handle: listenMessage
               expressions:
                   - listen message from $resource target $target
+                  - a listener is bound to $resource target $target  
               parameters:
                   - name: target
                     description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
@@ -184,6 +192,7 @@ resources:
               handle: countMessage
               expressions:
                   - message from $resource target $target count should be $count
+                  - there should be $count messages in $resource target $target
               parameters:
                   - name: target
                     description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
@@ -197,6 +206,7 @@ resources:
               handle: compareMessage
               expressions:
                   - message from $resource target $target should look like $payload
+                  - the message from $resource target $target should look like $payload
               parameters:
                   - name: target
                     description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`

@@ -44,14 +44,14 @@ resources:
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">send</h5>
-					     <i>expressions</i>  - $resource send request to $target 
+					     <i>expressions</i>  - $resource sends a $method HTTP request to $target 
 					    </div>
 					  </li>
 					  
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">send_body</h5>
-					     <i>expressions</i>  - $resource send request to $target with body $body  - $resource send request to $target with payload $body 
+					     <i>expressions</i>  - $resource sends a $method HTTP request to $target with payload $body  - $resource sends a $method HTTP request to $target with body $body 
 					    </div>
 					  </li>
 					  
@@ -93,14 +93,14 @@ resources:
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">response</h5>
-					     <i>expressions</i>  - set $resource response code to $code and response body $body 
+					     <i>expressions</i>  - set $resource response code to $code and response body $body  - $resource responds with a $code status code and a response body of $body 
 					    </div>
 					  </li>
 					  
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">response_path</h5>
-					     <i>expressions</i>  - set $resource with path $path response code to $code and response body $body 
+					     <i>expressions</i>  - set $resource with path $path response code to $code and response body $body  - $resource with path $path responds with a $code status code and a response body of $body 
 					    </div>
 					  </li>
 					  
@@ -129,14 +129,14 @@ resources:
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">set</h5>
-					     <i>expressions</i>  - set $resource table $table list of content $content 
+					     <i>expressions</i>  - set $resource table $table list of content $content  - $resource $table contains the rows $content  - $resource $table contains the row $content 
 					    </div>
 					  </li>
 					  
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">check</h5>
-					     <i>expressions</i>  - $resource table $table should look like $content 
+					     <i>expressions</i>  - $resource table $table should look like $content  - $resource $table should contain the rows $content  - $resource $table should contain the row $content 
 					    </div>
 					  </li>
 					  
@@ -165,21 +165,21 @@ resources:
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">publish</h5>
-					     <i>expressions</i>  - publish message to $resource target $target with payload $payload 
+					     <i>expressions</i>  - publish message to $resource target $target with payload $payload  - a message is published to $resource target $target with the payload $payload 
 					    </div>
 					  </li>
 					  
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">listen</h5>
-					     <i>expressions</i>  - listen message from $resource target $target 
+					     <i>expressions</i>  - listen message from $resource target $target  - a listener is bound to $resource target $target 
 					    </div>
 					  </li>
 					  
 					  <li style="border-bottom:solid 1px #f7f7f7;padding:10px 0px;" class="media">
 					    <div style="background:#f1f1f1;padding:5px;" class="media-body">
 					      <h5 class="mt-0 mb-1">count</h5>
-					     <i>expressions</i>  - message from $resource target $target count should be $count 
+					     <i>expressions</i>  - message from $resource target $target count should be $count  - there should be $count messages in $resource target $target 
 					    </div>
 					  </li>
 					  
