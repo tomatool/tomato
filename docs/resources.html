@@ -27,14 +27,14 @@
 					
 					<div>
 					<h4 id="http-client">http/client</h4>
-					<p>http client that can be use for sending http request, and compare the response.</p>
+					<p>http client that can be used for sending http requests and comparing the responses</p>
 					<pre><code class="yaml">
 resources:
     - name: my-awesome-name
       type: http/client
       params:
-	  base_url: # (string) base url for the http client, it will automatically appended as a base target url.
-	  timeout: # (duration) timeout for the request roundtrip.
+	  base_url: # (string) base url for the http client that will automatically be prepended to any route in the feature.
+	  timeout: # (duration) timeout for the request round-trip.
 	  </code></pre>
 					</div>
 
@@ -77,7 +77,7 @@ resources:
                     
 					<div>
 					<h4 id="http-server">http/server</h4>
-					<p>http server that can be use for having a mock external http server.</p>
+					<p>http server that mocks API responses</p>
 					<pre><code class="yaml">
 resources:
     - name: my-awesome-name
@@ -112,14 +112,14 @@ resources:
                     
 					<div>
 					<h4 id="database-sql">database/sql</h4>
-					<p>database driver to interact with sql database</p>
+					<p>database driver that interacts with a sql database</p>
 					<pre><code class="yaml">
 resources:
     - name: my-awesome-name
       type: database/sql
       params:
 	  driver: # (string) sql driver (postgres or mysql)
-	  datasource: # (string) sql database source name (e.g: postgres://user:pass@host:port/dbname?sslmode=disable)
+	  datasource: # (string) sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
 	  </code></pre>
 					</div>
 
@@ -148,14 +148,14 @@ resources:
                     
 					<div>
 					<h4 id="queue">queue</h4>
-					<p>message queue resource to interact with queue</p>
+					<p>messaging queue that that publishes and serves messages</p>
 					<pre><code class="yaml">
 resources:
     - name: my-awesome-name
       type: queue
       params:
 	  driver: # (string) queue driver (rabbitmq)
-	  datasource: # (string) queue source name (e.g: amqp://user:pass@host:port/)
+	  datasource: # (string) queue source dsn (`amqp://user:pass@host:port/`)
 	  </code></pre>
 					</div>
 

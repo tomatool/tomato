@@ -10,51 +10,51 @@ expression_map:
 resources:
     parameters:
         - name: resource
-          description: selected resource that is going to be use
+          description: selected resource that is going to be used
           type: string
     list:
         - name: http/client
-          description: http client that can be use for sending http request, and compare the response.
+          description: http client that can be used for sending http requests and comparing the responses
           options:
               - name: base_url
-                description: base url for the http client, it will automatically appended as a base target url.
+                description: base url for the http client that will automatically be prepended to any route in the feature.
                 type: string
               - name: timeout
-                description: timeout for the request roundtrip.
+                description: timeout for the request round-trip.
                 type: duration
           actions:
               - name: send
-                description: send a normal http request without request body
+                description: send an http request without a request body
                 handle: sendRequest
                 expressions:
                     - $resource send request to $target
                 parameters:
                     - name: target
-                      description: http target endpoint, it has to be space separated between request method and URL
+                      description: target endpoint that has to be space separated between request method tpye and URL (`GET /status`)
                       type: string
 
               - name: send_body
-                description: send a normal http request with request body
+                description: send an http request with a request body
                 handle: sendRequestWithBody
                 expressions:
                     - $resource send request to $target with body $body
                     - $resource send request to $target with payload $body
                 parameters:
                     - name: target
-                      description: http target endpoint, it has to be space separated between request method and URL
+                      description: target endpoint that has to be space separated between request method tpye and URL (`POST /user`)
                       type: string
                     - name: body
-                      description: http request body payload
+                      description: request body payload
                       type: json
 
               - name: response_code
-                description: check response code
+                description: check http response code
                 handle: checkResponseCode
                 expressions:
                     - $resource response code should be $code
                 parameters:
                     - name: code
-                      description: http response code
+                      description: http response code (`200`)
                       type: number
 
               - name: response_body
@@ -64,57 +64,57 @@ resources:
                     - $resource response body should be $body
                 parameters:
                     - name: body
-                      description: http response body
+                      description: expected response body
                       type: json
 
         - name: http/server
-          description: http server that can be use for having a mock external http server.
+          description: http server that mocks API responses 
           options:
               - name: port
                 description: http server port to expose
                 type: number
           actions:
               - name: response
-                description: set a response for any request that come to the http/server
+                description: set a response code and body for any request that comes to the http/server target
                 handle: setResponse
                 expressions:
                     - set $resource response code to $code and response body $body
                 parameters:
                     - name: code
-                      description: server response code
+                      description: http response code (`404`)
                       type: number
                     - name: body
                       description: server response body
                       type: json
 
               - name: response_path
-                description: set a response for a given path for the http/server
+                description: set a response code and body for a given path for the http/server
                 handle: setResponse
                 expressions:
                     - set $resource with path $path response code to $code and response body $body
                 parameters:
                     - name: path
-                      description: server endpoint path
+                      description: server endpoint path (`/status`)
                       type: string
                     - name: code
-                      description: server response code
+                      description: server response code (`200`)
                       type: number
                     - name: body
                       description: server response body
                       type: json
 
         - name: database/sql
-          description: database driver to interact with sql database
+          description: database driver that interacts with a sql database
           options:
               - name: driver
                 description: sql driver (postgres or mysql)
                 type: string
               - name: datasource
-                description: "sql database source name (e.g: postgres://user:pass@host:port/dbname?sslmode=disable)"
+                description: sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
                 type: string
           actions:
               - name: set
-                description: set table content (it will truncate table before set the value)
+                description: truncates the target table and sets row results to the passed values 
                 handle: tableInsert
                 expressions:
                     - set $resource table $table list of content $content
@@ -123,11 +123,11 @@ resources:
                       description: table name
                       type: string
                     - name: content
-                      description: table content
+                      description: table row content in Gherkin table syntax
                       type: table
 
               - name: check
-                description: compare table content
+                description: compares table content after an action
                 handle: tableCompare
                 expressions:
                     - $resource table $table should look like $content
@@ -136,17 +136,17 @@ resources:
                       description: table name
                       type: string
                     - name: content
-                      description: table content
+                      description: table row content in Gherkin table syntax
                       type: table
 
         - name: queue
-          description: message queue resource to interact with queue
+          description: messaging queue that that publishes and serves messages
           options:
             - name: driver
               description: queue driver (rabbitmq)
               type: string
             - name: datasource
-              description: "queue source name (e.g: amqp://user:pass@host:port/)"
+              description: queue source dsn (`amqp://user:pass@host:port/`)
               type: string
           actions:
             - name: publish
@@ -156,7 +156,7 @@ resources:
                   - publish message to $resource target $target with payload $payload
               parameters:
                   - name: target
-                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                     type: string
                   - name: payload
                     description: queue message payload
@@ -164,37 +164,36 @@ resources:
 
             - name: listen
               description: |
-                    listen to message queue message, it required to do before the action,
-                    if you need to compare message that got published from the application
+                    listen for messages on a given queue. Declaration should be before the publish action
               handle: listenMessage
               expressions:
                   - listen message from $resource target $target
               parameters:
                   - name: target
-                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                     type: string
 
             - name: count
-              description: count message from a given target, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
+              description: count messages for a given target. Declaration should be before the publish action
               handle: countMessage
               expressions:
                   - message from $resource target $target count should be $count
               parameters:
                   - name: target
-                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                     type: string
                   - name: count
-                    description: queue message count
+                    description: number of expected messages in the queue 
                     type: number
 
             - name: compare
-              description: compare message payload, it required to listen to target before compare it. Otherwise, it would compare to an empty queue.
+              description: compare message payload. Declaration should be before the publish action
               handle: compareMessage
               expressions:
                   - message from $resource target $target should look like $payload
               parameters:
                   - name: target
-                    description: target would be depending on the driver, on rabbitmq driver target consist of `[exchange]:[routing-key]`
+                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                     type: string
                   - name: payload
                     description: queue message payload
