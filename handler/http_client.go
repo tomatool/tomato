@@ -4,30 +4,27 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/compare"
 	"github.com/olekukonko/tablewriter"
 )
 
-func (h *Handler) sendRequest(resourceName, target string) error {
-	return h.sendRequestWithBody(resourceName, target, nil)
+func (h *Handler) sendRequest(resourceName, method, target string) error {
+	return h.sendRequestWithBody(resourceName, method, target, nil)
 }
 
-func (h *Handler) sendRequestWithBody(resourceName, target string, content *gherkin.DocString) error {
+func (h *Handler) sendRequestWithBody(resourceName, method, target string, content *gherkin.DocString) error {
 	r, err := h.resource.GetHTTPClient(resourceName)
 	if err != nil {
 		return err
 	}
 
-	tt := strings.Split(target, " ")
-
 	var requestBody []byte
 	if content != nil {
 		requestBody = []byte(content.Content)
 	}
-	return r.Request(tt[0], tt[1], requestBody)
+	return r.Request(method, target, requestBody)
 }
 
 func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error {

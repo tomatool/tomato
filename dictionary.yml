@@ -27,21 +27,27 @@ resources:
                 description: send an http request without a request body
                 handle: sendRequest
                 expressions:
-                    - $resource send request to $target
+                    - $resource sends a $method HTTP request to $target
                 parameters:
                     - name: target
-                      description: target endpoint that has to be space separated between request method tpye and URL (`GET /status`)
+                      description: HTTP URL route to use when sending the request (`/status`) 
+                      type: string
+                    - name: method
+                      description: HTTP method to use when sending the request (`GET`)
                       type: string
 
               - name: send_body
                 description: send an http request with a request body
                 handle: sendRequestWithBody
                 expressions:
-                    - $resource send request to $target with body $body
-                    - $resource send request to $target with payload $body
+                    - $resource sends a $method HTTP request to $target with payload $body
+                    - $resource sends a $method HTTP request to $target with body $body
                 parameters:
                     - name: target
-                      description: target endpoint that has to be space separated between request method tpye and URL (`POST /user`)
+                      description: HTTP URL route to use when sending the request (`/users`) 
+                      type: string
+                    - name: method
+                      description: HTTP method to use when sending the request (`POST`)
                       type: string
                     - name: body
                       description: request body payload

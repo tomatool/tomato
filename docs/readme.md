@@ -27,7 +27,7 @@ Write your own [Gherkin](https://docs.cucumber.io/gherkin/) feature (or customiz
 Feature: Check my application's status endpoint
 
   Scenario: My application is running and active 
-    Given "your-application-client" send request to "GET /status"
+    Given "your-application-client" sends a "GET" HTTP request to "/status"
     Then "your-application-client" response code should be 200
 ```
 
