@@ -10,7 +10,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func (h *Handler) sendRequest(resourceName, method, target string) error {
+func (h *Handler) sendsAHTTPRequestTo(resourceName, method, target string) error {
 	return h.sendRequestWithBody(resourceName, method, target, nil)
 }
 

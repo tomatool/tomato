@@ -25,7 +25,7 @@ resources:
           actions:
               - name: send
                 description: send an http request without a request body
-                handle: sendRequest
+                handle: sendsAHTTPRequestTo
                 expressions:
                     - $resource sends a $method HTTP request to $target
                 parameters:
