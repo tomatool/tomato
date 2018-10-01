@@ -1,7 +1,7 @@
 # Database/SQL
 
 Initialize resource in `config.yml`:
-```
+```yaml
 - name: # name of the resource
   type: database/sql
   ready_check: true
@@ -11,14 +11,14 @@ Initialize resource in `config.yml`:
 ```
 
 * MySQL
-```
+```yaml
 params:
   driver: mysql
   datasource: root:potato@tcp(127.0.0.1:3306)/tomato
 ```
 
 * Postgres
-```
+```yaml
 params:
   driver: postgres
   datasource: postgres://tomato:potato@localhost:5432/tomato?sslmode=disable
