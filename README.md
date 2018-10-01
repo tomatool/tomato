@@ -12,16 +12,16 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 - [Examples](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
 
 ## Features
-- Cucumber [Gherkin](https://docs.cucumber.io/gherkin/) feature syntax 
+- Cucumber [Gherkin](https://docs.cucumber.io/gherkin/) feature syntax
 - Support for MySQL, MariaDB, and PostgreSQL
-- Support for messaging queues (RabbitMQ)
-- Support for mocking HTTP API responses 
+- Support for messaging queues (RabbitMQ, NSQ)
+- Support for mocking HTTP API responses
 - Additional resources [resources](https://alileza.github.io/tomato/resources)
 
-## Getting Started 
+## Getting Started
 
 ### Set up your tomato configuration
-Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`. 
+Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`.
 
 Create a `tomato.yml` file with your application's required test [resources](https://alileza.github.io/tomato/resources):
 ```yml
@@ -41,18 +41,18 @@ resources:
 ```
 
 ### Write your first feature test
-Write your own [Gherkin](https://docs.cucumber.io/gherkin/) feature (or customize the check-status.feature example below) and place it inside ./features/check-status.feature: 
+Write your own [Gherkin](https://docs.cucumber.io/gherkin/) feature (or customize the check-status.feature example below) and place it inside ./features/check-status.feature:
 
 ```gherkin
 Feature: Check my application's status endpoint
 
-  Scenario: My application is running and active 
+  Scenario: My application is running and active
     Given "your-application-client" send request to "GET /status"
     Then "your-application-client" response code should be 200
 ```
 
-### Run tomato 
-#### Using docker-compose 
+### Run tomato
+#### Using docker-compose
 
 Now that you have your resources configured, you can use docker-compose to run tomato in any Docker environment (great for CI and other build pipelines).
 
@@ -61,10 +61,10 @@ Create a `docker-compose.yml` file, or add tomato and your test dependencies to 
 version: '3'
 services:
   tomato:
-    image: alileza/tomato:latest
+    image: quay.io/alileza/tomato:latest
     environment:
-      APP_BASE_URL: http://your-application:9000
-      PSQL_DATASOURCE: "postgres://user:passport@postgres:5432/test-database?sslmode=disable"
+      APP_BASE_URL: http://my-application:9000
+      PSQL_DATASOURCE: "postgres://user:password@postgres:5432/test-database?sslmode=disable"
     volumes:
       - ./tomato.yml:/config.yml # location of your tomato.yml
       - ./features/:/features/   # location of all of your features
@@ -88,12 +88,12 @@ services:
 
 Execute your tests
 ```sh
-docker-compose up --exit-code-from tomato
+docker-compose up --abort-on-container-exit
 ```
 
 #### Using the binary
 
-Install tomato by grabbing the latest stable [release](https://github.com/alileza/tomato/releases/latest) and placing it in your path, or by using go get 
+Install tomato by grabbing the latest stable [release](https://github.com/alileza/tomato/releases/latest) and placing it in your path, or by using go get
 ```
 go get -u github.com/alileza/tomato/cmd/tomato
 ```
