@@ -1,4 +1,4 @@
-# HTTP Client
+# HTTP Server
 
 Initialize resource in `config.yml`:
 ```yaml
