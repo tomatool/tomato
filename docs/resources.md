@@ -1,6 +1,6 @@
 # Resources
 
-Resources is a
+Resource are the objects that are going to be used for steps in the scenario. They are listed under the resources key in the pipeline configuration.
 
 ## List of available resources
 
