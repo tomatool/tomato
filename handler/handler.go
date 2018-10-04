@@ -30,6 +30,10 @@ func New(r *resource.Manager) func(s *godog.Suite) {
 		s.Step(`^listen message from "([^"]*)" target "([^"]*)"$`, h.listenMessage)
 		s.Step(`^message from "([^"]*)" target "([^"]*)" count should be (\d+)$`, h.countMessage)
 		s.Step(`^message from "([^"]*)" target "([^"]*)" should look like$`, h.compareMessage)
-
-    }
+		s.Step(`^"([^"]*)" execute "([^"]*)"$`, h.execCommand)
+		s.Step(`^"([^"]*)" stdout should contains "([^"]*)"$`, h.checkStdoutContains)
+		s.Step(`^"([^"]*)" stdout should not contains "([^"]*)"$`, h.checkStdoutNotContains)
+		s.Step(`^"([^"]*)" stderr should contains "([^"]*)"$`, h.checkStderrContains)
+		s.Step(`^"([^"]*)" stderr should not contains "([^"]*)"$`, h.checkStderrNotContains)
+	}
 }
