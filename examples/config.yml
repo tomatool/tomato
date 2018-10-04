@@ -39,3 +39,7 @@ resources:
       type: http/client
       params:
         base_url: {{ .HTTP_CLIENT_BASE_URL }}
+
+    - name: shell-cli
+      type: shell
+      ready_check: false
