@@ -12,3 +12,4 @@ Resource are the objects that are going to be used for steps in the scenario. Th
 * [Message Queue](https://alileza.github.io/tomato/resources/message-queue) - to manage (publish/consume/check) message queue
   * [RabbitMQ](https://alileza.github.io/tomato/resources/message-queue)
   * [NSQ](https://alileza.github.io/tomato/resources/message-queue)
+* [Shell](https://alileza.github.io/tomato/resources/shell) - to execute unix shell command-line interface
