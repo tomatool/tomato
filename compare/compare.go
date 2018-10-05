@@ -7,24 +7,30 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func Value(a, b interface{}) bool {
+func Value(a, b interface{}) error {
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)
 
+	if bb, ok := b.(string); ok {
+		if bb == "*" {
+			return nil
+		}
+	}
+
 	if ta != tb {
-		return false
+		return fmt.Errorf("TypeOf: [%v] %v != [%v] %v", ta, a, tb, b)
 	}
 
 	if a == nil {
-		return true
+		return nil
 	}
 
 	if ta.Kind() == reflect.Map {
 		va := reflect.ValueOf(a)
 		vb := reflect.ValueOf(b)
 
-		if va.Len() != vb.Len() {
-			return false
+		if va.Len() < vb.Len() {
+			return fmt.Errorf("SizeOf: [%v] %+v != [%v] %+v", va.Len(), a, vb.Len(), b)
 		}
 
 		ma := make(map[interface{}]interface{})
@@ -37,17 +43,17 @@ func Value(a, b interface{}) bool {
 			mb[key.Interface()] = vb.MapIndex(key).Interface()
 		}
 
-		for key, va := range ma {
-			vb, ok := mb[key]
+		for key, vb := range mb {
+			va, ok := ma[key]
 			if !ok {
-				return false
+				return fmt.Errorf("MissingKey: %s from %+v", key, ma)
 			}
-			if !Value(va, vb) {
-				return false
+			if err := Value(va, vb); err != nil {
+				return err
 			}
 		}
 
-		return true
+		return nil
 	}
 
 	if ta.Kind() == reflect.Slice {
@@ -55,33 +61,33 @@ func Value(a, b interface{}) bool {
 		vb := reflect.ValueOf(b)
 
 		if va.Len() != vb.Len() {
-			return false
+			return fmt.Errorf("SizeOf: [%v] %+v != [%v] %+v", va.Len(), a, vb.Len(), b)
 		}
 
 		for i := 0; i < va.Len(); i++ {
-			if !Value(
+			if err := Value(
 				va.Index(i).Interface(),
 				vb.Index(i).Interface(),
-			) {
-				return false
+			); err != nil {
+				return err
 			}
 		}
-		return true
+		return nil
 	}
 
 	av, ok := a.(string)
 	if ok && av == "*" {
-		return true
+		return nil
 	}
 	bv, ok := b.(string)
 	if ok && bv == "*" {
-		return true
+		return nil
 	}
 
 	if a != b {
-		return false
+		return fmt.Errorf("Mismatch: %+v != %+v", a, b)
 	}
-	return true
+	return nil
 }
 
 func Print(t *tablewriter.Table, key string, A interface{}, B interface{}) {
