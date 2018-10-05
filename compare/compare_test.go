@@ -33,9 +33,18 @@ func TestValue(t *testing.T) {
 		{[]map[string]interface{}{{"name": []interface{}{[]string{"bob", "alice"}, "alice"}}}, []map[string]interface{}{{"name": []interface{}{[]string{"bob", "alice"}, "alice"}}}, true},
 
 		{map[string]interface{}{"name": []interface{}{[]string{"bob", "aice"}, "alice"}}, map[string]interface{}{"name": []interface{}{[]string{"bob", "alice"}, "alice"}}, false},
+
+		{map[string]string{"name": "joni"}, map[string]string{}, true},
+		{map[string]string{"name": "joni"}, map[string]string{"name": "joni"}, true},
+		{map[string]string{}, map[string]string{"name": "joni"}, false},
 	} {
-		if out := Value(test.a, test.b); out != test.out {
-			t.Errorf("%d - expecting %v, got %v", idx, test.out, out)
+		err := Value(test.a, test.b)
+		if err == nil && test.out == false {
+			t.Errorf("%d - expecting %v, got %v", idx, test.out, err)
 		}
+		if err != nil && test.out == true {
+			t.Errorf("%d - expecting %v, got %v", idx, test.out, err)
+		}
+
 	}
 }
