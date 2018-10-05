@@ -4,10 +4,11 @@
 [![GoDoc](https://godoc.org/github.com/alileza/tomato?status.svg)](https://godoc.org/github.com/alileza/tomato)
 [![codecov.io](https://codecov.io/github/alileza/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/alileza/tomato)
 
-Tomato is a language agnostic testing tool kit that simplifies the acceptance testing workflow of your application and its dependencies.
+Tomato is a language agnostic testing tool kit that simplifies the acceptance testing workflow of your application and its dependencies. 
 
 Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucumber.io/gherkin/), tomato makes behavioral tests easier to understand, maintain, and write for developers, QA, and product owners.
 
+- [Background](https://medium.com/@alileza/functional-testing-using-af78a868a1f1)
 - [Documentation](https://alileza.github.io/tomato/)
 - [Examples](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
 
