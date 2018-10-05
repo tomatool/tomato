@@ -153,6 +153,7 @@ func (c *RabbitMQ) Publish(target string, payload []byte) error {
 }
 
 func (c *RabbitMQ) Fetch(target string) ([][]byte, error) {
+	time.Sleep(c.waitDuration)
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 

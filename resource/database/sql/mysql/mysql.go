@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -90,7 +91,10 @@ func (d *MySQL) Select(tableName string, condition map[string]string) ([]map[str
 		}
 		z := make(map[string]string)
 		for key, v := range r {
-			z[key] = string(v.([]byte))
+			if b, ok := v.([]byte); ok {
+				v = string(b)
+			}
+			z[key] = fmt.Sprintf("%v", v)
 		}
 		result = append(result, z)
 	}
