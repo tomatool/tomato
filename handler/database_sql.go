@@ -1,22 +1,14 @@
 package handler
 
 import (
-	"bytes"
-	"errors"
+	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/compare"
 	"github.com/alileza/tomato/util/conv"
-	"github.com/olekukonko/tablewriter"
 )
 
 func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.DataTable) error {
 	r, err := h.resource.GetDatabaseSQL(resourceName)
-	if err != nil {
-		return err
-	}
-
-	tableRows, err := r.Select(tableName, nil)
 	if err != nil {
 		return err
 	}
@@ -26,39 +18,20 @@ func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.
 		return err
 	}
 
-	if len(tableRows) == 0 && len(expectedRows) == 0 {
-		return nil
-	}
-
-	var actualColumns []string
-	for column := range tableRows[0] {
-		actualColumns = append(actualColumns, column)
-	}
-	for _, row := range expectedRows {
-		for _, column := range actualColumns {
-			if _, ok := row[column]; !ok {
-				row[column] = "*"
+	for _, expectedRow := range expectedRows {
+		for k, v := range expectedRow {
+			if v == "*" {
+				delete(expectedRow, k)
 			}
 		}
-	}
-	if len(expectedRows) < len(tableRows) {
-		for i := 0; i < len(tableRows)-len(expectedRows); i++ {
-			row := make(map[string]string)
-			for _, column := range actualColumns {
-				if _, ok := row[column]; !ok {
-					row[column] = "*"
-				}
-			}
-			expectedRows = append(expectedRows, row)
+		out, err := r.Select(tableName, expectedRow)
+		if err != nil {
+			return err
 		}
-	}
-
-	if !compare.Value(tableRows, expectedRows) {
-		b := bytes.NewBufferString("\nTable mismatch\n\n")
-		t := tablewriter.NewWriter(b)
-		compare.Print(t, "", tableRows, expectedRows)
-		t.Render()
-		return errors.New(b.String())
+		if len(out) == 0 {
+			rows, _ := r.Select(tableName, nil)
+			return fmt.Errorf("couldn't find %+v in table \n%+v", expectedRow, rows)
+		}
 	}
 
 	return nil

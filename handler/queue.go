@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/compare"
@@ -65,16 +66,21 @@ func (h *Handler) compareMessage(resourceName, target string, expectedMessage *g
 		return err
 	}
 
+	var consumedMessage []string
 	for _, msg := range messages {
+
 		actual := make(map[string]interface{})
 		if err := json.Unmarshal(msg, &actual); err != nil {
 			return err
 		}
 
-		if compare.Value(expected, actual) {
+		err := compare.Value(actual, expected)
+		if err == nil {
 			return nil
 		}
+
+		consumedMessage = append(consumedMessage, string(msg)+"\n"+err.Error())
 	}
 
-	return errors.New("couldn't find : " + expectedMessage.Content)
+	return fmt.Errorf("expecting message : %+v\nconsumed messages : %+v", expectedMessage.Content, strings.Join(consumedMessage, "\n"))
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
@@ -40,7 +41,7 @@ func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error
 		return err
 	}
 	if code != expectedCode {
-		return errors.New("invalid code")
+		return fmt.Errorf("expecting response code to be %d, got %d", expectedCode, code)
 	}
 
 	return nil
@@ -65,8 +66,8 @@ func (h *Handler) checkResponseBody(resourceName string, expectedBody *gherkin.D
 		return err
 	}
 
-	if !compare.Value(expected, actual) {
-		b := bytes.NewBufferString("\nJSON mismatch\n\n")
+	if err := compare.Value(actual, expected); err != nil {
+		b := bytes.NewBufferString("\nJSON mismatch (" + err.Error() + ")\n\n")
 		t := tablewriter.NewWriter(b)
 		compare.Print(t, "", actual, expected)
 		t.Render()
