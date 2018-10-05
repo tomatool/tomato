@@ -74,6 +74,9 @@ func (d *PostgreSQL) Select(tableName string, condition map[string]string) ([]ma
 		}
 		z := make(map[string]string)
 		for key, v := range r {
+			if b, ok := v.([]byte); ok {
+				v = string(b)
+			}
 			z[key] = fmt.Sprintf("%v", v)
 		}
 		result = append(result, z)
