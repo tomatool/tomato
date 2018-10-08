@@ -68,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	os.Exit(
-		godog.RunWithOptions("godogs", handler.New(resourceManager), opts),
-	)
+	if result := godog.RunWithOptions("godogs", handler.New(resourceManager), opts); result != 0 {
+		os.Exit(result)
+	}
 }

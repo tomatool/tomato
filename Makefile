@@ -23,6 +23,11 @@ build:
 	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
 	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) cmd/$(project_name)/main.go
 
+build-test:
+	@echo ">> building binaries"
+	@go test -coverpkg="./..." github.com/alileza/$(project_name)/cmd/$(project_name) -c -tags testmain -o $(build_dir)/$(project_name).test
+	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
+
 build-all:
 	@echo ">> packaging releases"
 	@rm -rf dist
