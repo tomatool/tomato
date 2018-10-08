@@ -5,15 +5,17 @@ WORKDIR /go/src/github.com/alileza/tomato
 COPY . ./
 
 RUN apk add --update make git
-RUN make build
+RUN make build-test
 
 # ---
 
 FROM alpine
 
-COPY --from=builder /go/src/github.com/alileza/tomato/bin/tomato /bin/tomato
+COPY --from=builder /go/src/github.com/alileza/tomato/bin/tomato.test /bin/tomato
 COPY --from=builder /go/src/github.com/alileza/tomato/examples/ /
 
 ENTRYPOINT  [ "/bin/tomato" ]
-CMD         [ "--config.file=/config.yml", \
+CMD         [ "-test.run=^TestMain$", \
+              "-test.coverprofile=/tmp/coverage.out", \
+              "--config.file=/config.yml", \
               "--features.path=/features/" ]
