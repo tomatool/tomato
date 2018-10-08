@@ -1,9 +1,6 @@
-# Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  codecov:
+  unit-test:
     docker:
       - image: circleci/golang:1.10
 
@@ -16,7 +13,7 @@ jobs:
       - run: mv overalls.coverprofile coverage.txt
       - run: bash <(curl -s https://codecov.io/bash)
 
-  test:
+  tomato-test:
     docker:
       - image: docker/compose:1.22.0
 
@@ -30,9 +27,16 @@ jobs:
           name: run integration test
           command: docker-compose up --abort-on-container-exit --build
 
+      - run: docker-compose start tomato
+      - run: docker cp "$(docker-compose ps -q tomato)":/tmp/coverage.out /tmp/coverage.out
+
+      - run: apk add --update curl bash git
+      - run: curl -s https://codecov.io/bash > codecov.sh
+      - run: bash ./codecov.sh -t ${CODECOV_TOKEN} -e tomatotest -f /tmp/coverage.out
+
 workflows:
   version: 2
   tests:
     jobs:
-      - codecov
-      - test
+      - unit-test
+      - tomato-test

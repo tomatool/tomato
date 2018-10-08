@@ -7,6 +7,7 @@ services:
         volumes:
           - postgres-initdb:/db/postgres/
           - mysql-initdb:/db/mysql/
+          - /tmp/:/tmp/
         environment:
             PSQL_DATASOURCE: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
             MYSQL_DATASOURCE: "root:potato@tcp(mysql:3306)/tomato"
