@@ -7,6 +7,22 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// Comparison records the state of a comparison
+type Comparison struct {
+	output      string
+	errorPrefix string
+}
+
+// ShouldFailStep satisfies behavior of whether or not a step should fail
+func (c Comparison) ShouldFailStep() bool {
+	return c.output != ""
+}
+
+// Error returns the formatter error string with context and error
+func (c Comparison) Error() string {
+	return fmt.Sprintf("%s\n\n%s", c.errorPrefix, c.output)
+}
+
 func Value(a, b interface{}) error {
 	ta := reflect.TypeOf(a)
 	tb := reflect.TypeOf(b)

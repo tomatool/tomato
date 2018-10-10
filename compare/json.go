@@ -7,12 +7,14 @@ import (
 	"github.com/yudai/gojsondiff/formatter"
 )
 
-// JSON compares two json strings, processes them to handle wild cards,
-func JSON(a []byte, b []byte) (string, error) {
+// JSON compares two json strings, processes them to handle wild cards, and returns
+// the prettified JSON string
+func JSON(a []byte, b []byte) (Comparison, error) {
+	c := Comparison{errorPrefix: "JSON: Difference between expected output and received output"}
 	differ := gojsondiff.New()
 	d, err := differ.Compare(a, b)
 	if err != nil {
-		return "", err
+		return c, err
 	}
 
 	// filter the fields we do not want
@@ -28,9 +30,13 @@ func JSON(a []byte, b []byte) (string, error) {
 			ShowArrayIndex: false,
 			Coloring:       false,
 		})
-		return formatter.Format(filteredDiffer)
+
+		var err error
+		if c.output, err = formatter.Format(filteredDiffer); err != nil {
+			return c, err
+		}
 	}
-	return "", nil
+	return c, nil
 }
 
 // Implement to gojsondiff Differ interface
