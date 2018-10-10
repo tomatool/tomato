@@ -1,15 +1,13 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/olekukonko/tablewriter"
 	"github.com/tomatool/tomato/compare"
-	"github.com/tomatool/tomato/errors"
 )
 
 func (h *Handler) sendRequest(resourceName, target string) error {
@@ -88,15 +86,13 @@ func (h *Handler) checkResponseBody(resourceName string, expectedBody *gherkin.D
 		return err
 	}
 
-	if err := compare.Value(actual, expected); err != nil {
-		b := bytes.NewBufferString("")
-		t := tablewriter.NewWriter(b)
-		compare.Print(t, "", actual, expected)
-		t.Render()
-		return errors.NewStep("unexpected response body", map[string]string{
-			"": b.String(),
-		})
+	comparison, err := compare.JSON(body, []byte(expectedBody.Content))
+	if err != nil {
+		return err
 	}
 
+	if comparison.ShouldFailStep() {
+		return comparison
+	}
 	return nil
 }

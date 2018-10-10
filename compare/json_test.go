@@ -25,12 +25,18 @@ func TestJSON(t *testing.T) {
 			b:           ReadFixture("fixtures/base_modified_wildcard.json"),
 			expected:    modifiedWildcard,
 		},
+		{
+			description: "ModifiedWildcardObj",
+			a:           ReadFixture("fixtures/base.json"),
+			b:           ReadFixture("fixtures/base_modified_wildcard_obj.json"),
+			expected:    modifiedWildcardObj,
+		},
 	} {
-		output, err := JSON(test.a, test.b)
+		c, err := JSON(test.a, test.b)
 		if err != nil {
 			t.Errorf("%s - expecting no error, got %s", test.description, err)
-		} else if output != test.expected {
-			t.Errorf("%s \nexpecting: %s\ngot: \n%s", test.description, test.expected, output)
+		} else if c.output != test.expected {
+			t.Errorf("%s \nexpecting: %s\ngot: \n%s", test.description, test.expected, c.output)
 		}
 	}
 }
@@ -113,6 +119,41 @@ var modifiedWildcard = ` {
      ],
 -    "num": 19,
 +    "num": 21,
+     "obj": {
+       "num": 14,
+       "str": "efj3"
+     },
+     "str": "bcded"
+   },
+   "str": "abcde"
+ }
+`
+var modifiedWildcardObj = ` {
+   "arr": [
+     "arr0",
+     21,
+     {
+       "num": 1,
+       "str": "pek3f"
+     },
+     [
+       0,
+       "1"
+     ]
+   ],
+   "bool": true,
+   "null": null,
+   "num_float": 39.39,
+   "num_int": 13,
+   "obj": {
+     "arr": [
+       17,
+       "str",
+       {
+         "str": "eafeb"
+       }
+     ],
+     "num": 19,
      "obj": {
        "num": 14,
        "str": "efj3"
