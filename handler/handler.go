@@ -4,6 +4,7 @@ package handler
 
 import (
 	"github.com/DATA-DOG/godog"
+	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/resource"
 )
 
@@ -14,7 +15,10 @@ type Handler struct {
 func New(r *resource.Manager) func(s *godog.Suite) {
 	h := &Handler{r}
 	return func(s *godog.Suite) {
-		s.BeforeScenario(func(_ interface{}) {
+		s.BeforeFeature(func(_ *gherkin.Feature) {
+			h.resource.Reset()
+		})
+		s.AfterScenario(func(_ interface{}, _ error) {
 			h.resource.Reset()
 		})
 		s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequest)
