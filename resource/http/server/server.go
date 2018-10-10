@@ -49,6 +49,7 @@ func (c *Server) Ready() error {
 }
 
 func (c *Server) Reset() error {
+	c.responses = make(map[string]response)
 	return nil
 }
 
