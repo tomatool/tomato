@@ -36,12 +36,12 @@ func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error
 	if err != nil {
 		return err
 	}
-	code, _, err := r.Response()
+	code, body, err := r.Response()
 	if err != nil {
 		return err
 	}
 	if code != expectedCode {
-		return fmt.Errorf("expecting response code to be %d, got %d", expectedCode, code)
+		return fmt.Errorf("expecting response code to be %d, got %d\nresponse body : \n%s", expectedCode, code, string(body))
 	}
 
 	return nil
