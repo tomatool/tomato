@@ -4,7 +4,6 @@ package handler
 
 import (
 	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/resource"
 )
 
