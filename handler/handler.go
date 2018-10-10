@@ -15,10 +15,7 @@ type Handler struct {
 func New(r *resource.Manager) func(s *godog.Suite) {
 	h := &Handler{r}
 	return func(s *godog.Suite) {
-		s.BeforeFeature(func(_ *gherkin.Feature) {
-			h.resource.Reset()
-		})
-		s.AfterScenario(func(_ interface{}, _ error) {
+		s.BeforeScenario(func(_ interface{}) {
 			h.resource.Reset()
 		})
 		s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequest)
