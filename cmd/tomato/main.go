@@ -10,6 +10,7 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/alileza/tomato/config"
+	"github.com/alileza/tomato/formatter"
 	"github.com/alileza/tomato/handler"
 	"github.com/alileza/tomato/resource"
 	"github.com/alileza/tomato/util/version"
@@ -48,10 +49,12 @@ func main() {
 
 	resourceManager := resource.NewManager(cfg.Resources)
 
+	godog.Format("tomato", "tomato custom godog formatter", formatter.New)
+
 	opts := godog.Options{
 		Output: colors.Colored(os.Stdout),
 		Paths:  strings.Split(featuresPath, ","),
-		Format: "progress",
+		Format: "tomato",
 		Strict: true,
 	}
 
