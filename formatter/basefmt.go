@@ -1,3 +1,8 @@
+//
+// this file is copied from https://github.com/DATA-DOG/godog/blob/master/fmt_progress.go
+// and modified for tomato needs.
+//
+
 package formatter
 
 import (
