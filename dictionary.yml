@@ -68,7 +68,7 @@ resources:
                       type: json
 
         - name: http/server
-          description: http server that mocks API responses 
+          description: http server that mocks API responses
           options:
               - name: port
                 description: http server port to expose
@@ -114,7 +114,7 @@ resources:
                 type: string
           actions:
               - name: set
-                description: truncates the target table and sets row results to the passed values 
+                description: truncates the target table and sets row results to the passed values
                 handle: tableInsert
                 expressions:
                     - set $resource table $table list of content $content
@@ -183,7 +183,7 @@ resources:
                     description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                     type: string
                   - name: count
-                    description: number of expected messages in the queue 
+                    description: number of expected messages in the queue
                     type: number
 
             - name: compare
@@ -198,3 +198,57 @@ resources:
                   - name: payload
                     description: queue message payload
                     type: json
+
+        - name: shell
+          description: to communicate with shell command
+          options: []
+          actions:
+            - name: execute
+              description: execute shell command
+              handle: execCommand
+              expressions:
+                  - $resource execute $command
+              parameters:
+                  - name: command
+                    description: command that gonna get executed
+                    type: string
+
+            - name: stdout_contains
+              description: check stdout for executed command contains a given value
+              handle: checkStdoutContains
+              expressions:
+                  - $resource stdout should contains $substring
+              parameters:
+                  - name: substring
+                    description: substring of the message
+                    type: string
+
+            - name: stdout_not_contains
+              description: check stdout for executed command not contains a given value
+              handle: checkStdoutNotContains
+              expressions:
+                  - $resource stdout should not contains $substring
+              parameters:
+                  - name: substring
+                    description: substring of the message
+                    type: string
+
+            - name: stderr_contains
+              description: check stdout for executed command contains a given value
+              handle: checkStderrContains
+              expressions:
+                  - $resource stderr should contains $substring
+              parameters:
+                  - name: substring
+                    description: substring of the message
+                    type: string
+
+            - name: stderr_not_contains
+              description: check stderr for executed command not contains a given value
+              handle: checkStderrNotContains
+              expressions:
+                  - $resource stderr should not contains $substring
+              parameters:
+                  - name: substring
+                    description: substring of the message
+                    type: string
