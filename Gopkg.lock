@@ -135,7 +135,26 @@
   version = "v1.2.2"
 
 [[projects]]
-  digest = "1:8c432632a230496c35a15cfdf441436f04c90e724ad99c8463ef0c82bbe93edb"
+  digest = "1:529ed3f98838f69e13761788d0cc71b44e130058fab13bae2ce09f7a176bced4"
+  name = "github.com/yudai/gojsondiff"
+  packages = [
+    ".",
+    "formatter",
+  ]
+  pruneopts = ""
+  revision = "7b1b7adf999dab73a6eb02669c3d82dbb27a3dd6"
+  version = "1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9857bb2293f372b2181004d8b62179bbdb4ab0982ec6f762abe6cf2bfedaff85"
+  name = "github.com/yudai/golcs"
+  packages = ["."]
+  pruneopts = ""
+  revision = "ecda9a501e8220fae3b4b600c3db4b0ba22cfc68"
+
+[[projects]]
+  digest = "1:c1771ca6060335f9768dff6558108bc5ef6c58506821ad43377ee23ff059e472"
   name = "google.golang.org/appengine"
   packages = ["cloudsql"]
   pruneopts = ""
@@ -173,7 +192,12 @@
     "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/streadway/amqp",
+<<<<<<< HEAD
     "github.com/stretchr/testify/assert",
+=======
+    "github.com/yudai/gojsondiff",
+    "github.com/yudai/gojsondiff/formatter",
+>>>>>>> Add gojson diff to vendor deps
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/yaml.v2",
   ]
