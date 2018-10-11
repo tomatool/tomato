@@ -1,5 +1,5 @@
 /* GENERATED FILE - DO NOT EDIT */
-/* Rebuild from the cmd/gen/main.go tool */
+/* Rebuild from the tomatool generate handler tool */
 package handler
 
 import (
@@ -39,5 +39,6 @@ func New(r *resource.Manager) func(s *godog.Suite) {
 		s.Step(`^"([^"]*)" stdout should not contains "([^"]*)"$`, h.checkStdoutNotContains)
 		s.Step(`^"([^"]*)" stderr should contains "([^"]*)"$`, h.checkStderrContains)
 		s.Step(`^"([^"]*)" stderr should not contains "([^"]*)"$`, h.checkStderrNotContains)
-	}
+
+    }
 }
