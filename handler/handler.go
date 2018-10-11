@@ -1,10 +1,9 @@
 /* GENERATED FILE - DO NOT EDIT */
-/* Rebuild from the tomatool generate handler tool */
+/* Rebuild from the cmd/gen/main.go tool */
 package handler
 
 import (
 	"github.com/DATA-DOG/godog"
-	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/alileza/tomato/resource"
 )
 
@@ -15,16 +14,14 @@ type Handler struct {
 func New(r *resource.Manager) func(s *godog.Suite) {
 	h := &Handler{r}
 	return func(s *godog.Suite) {
-		s.BeforeFeature(func(_ *gherkin.Feature) {
-			h.resource.Reset()
-		})
-		s.AfterScenario(func(_ interface{}, _ error) {
+		s.BeforeScenario(func(_ interface{}) {
 			h.resource.Reset()
 		})
 		s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequest)
 		s.Step(`^"([^"]*)" send request to "([^"]*)" with body$`, h.sendRequestWithBody)
 		s.Step(`^"([^"]*)" send request to "([^"]*)" with payload$`, h.sendRequestWithBody)
 		s.Step(`^"([^"]*)" response code should be (\d+)$`, h.checkResponseCode)
+		s.Step(`^"([^"]*)" response header "([^"]*)" should be "([^"]*)"$`, h.checkResponseHeader)
 		s.Step(`^"([^"]*)" response body should be$`, h.checkResponseBody)
 		s.Step(`^set "([^"]*)" response code to (\d+) and response body$`, h.setResponse)
 		s.Step(`^set "([^"]*)" with path "([^"]*)" response code to (\d+) and response body$`, h.setResponse)

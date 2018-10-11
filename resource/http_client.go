@@ -2,6 +2,7 @@ package resource
 
 import (
 	"errors"
+	"net/http"
 
 	httpclient "github.com/alileza/tomato/resource/http/client"
 )
@@ -10,7 +11,7 @@ type HTTPClient interface {
 	Resource
 
 	Request(method, path string, body []byte) error
-	Response() (int, []byte, error)
+	Response() (int, http.Header, []byte, error)
 }
 
 func (m *Manager) GetHTTPClient(resourceName string) (HTTPClient, error) {

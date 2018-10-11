@@ -12,8 +12,9 @@ import (
 )
 
 type response struct {
-	Code int
-	Body []byte
+	Code   int
+	Header http.Header
+	Body   []byte
 }
 
 type Client struct {
@@ -59,11 +60,11 @@ func (c *Client) Reset() error {
 	return nil
 }
 
-func (c *Client) Response() (int, []byte, error) {
+func (c *Client) Response() (int, http.Header, []byte, error) {
 	if c.lastResponse == nil {
-		return 0, nil, errors.New("no request has been sent, please send request before checking response")
+		return 0, nil, nil, errors.New("no request has been sent, please send request before checking response")
 	}
-	return c.lastResponse.Code, c.lastResponse.Body, nil
+	return c.lastResponse.Code, c.lastResponse.Header, c.lastResponse.Body, nil
 }
 
 func (c *Client) Request(method, path string, body []byte) error {
@@ -96,6 +97,6 @@ func (c *Client) Request(method, path string, body []byte) error {
 		return err
 	}
 
-	c.lastResponse = &response{resp.StatusCode, body}
+	c.lastResponse = &response{resp.StatusCode, resp.Header, body}
 	return nil
 }

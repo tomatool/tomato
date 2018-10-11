@@ -36,7 +36,7 @@ func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error
 	if err != nil {
 		return err
 	}
-	code, body, err := r.Response()
+	code, _, body, err := r.Response()
 	if err != nil {
 		return err
 	}
@@ -47,12 +47,29 @@ func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error
 	return nil
 }
 
+func (h *Handler) checkResponseHeader(resourceName string, expectedHeaderName, expectedHeaderValue string) error {
+	r, err := h.resource.GetHTTPClient(resourceName)
+	if err != nil {
+		return err
+	}
+	_, header, body, err := r.Response()
+	if err != nil {
+		return err
+	}
+	hvalue := header.Get(expectedHeaderName)
+	if hvalue != expectedHeaderValue {
+		return fmt.Errorf("expecting response header %q to be %q, got %q\nresponse body : \n%s", expectedHeaderName, expectedHeaderValue, hvalue, string(body))
+	}
+
+	return nil
+}
+
 func (h *Handler) checkResponseBody(resourceName string, expectedBody *gherkin.DocString) error {
 	r, err := h.resource.GetHTTPClient(resourceName)
 	if err != nil {
 		return err
 	}
-	_, body, err := r.Response()
+	_, _, body, err := r.Response()
 	if err != nil {
 		return err
 	}
