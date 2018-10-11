@@ -9,7 +9,7 @@ import (
 
 const (
 	handlerTmpl = `/* GENERATED FILE - DO NOT EDIT */
-/* Rebuild from the cmd/gen/main.go tool */
+/* Rebuild from the tomatool generate handler tool */
 package handler
 
 import (
@@ -24,7 +24,10 @@ type Handler struct {
 func New(r *resource.Manager) func(s *godog.Suite) {
 	h := &Handler{r}
 	return func(s *godog.Suite) {
-		s.BeforeScenario(func(_ interface{}) {
+		s.BeforeFeature(func(_ *gherkin.Feature) {
+			h.resource.Reset()
+		})
+		s.AfterScenario(func(_ interface{}, _ error) {
 			h.resource.Reset()
 		})
 %s
