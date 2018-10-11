@@ -57,6 +57,20 @@ resources:
                       description: http response code (`200`)
                       type: number
 
+              - name: response_header
+                description: check http response headers
+                handle: checkResponseHeader
+                expressions:
+                    - $resource response header $header_name should be $header_value
+                parameters:
+                    - name: header_name
+                      description: http header name (`content-type`)
+                      type: string
+                    - name: header_value
+                      description: http header value (`application/json`)
+                      type: string
+
+
               - name: response_body
                 description: check response body
                 handle: checkResponseBody
