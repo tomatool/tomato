@@ -28,12 +28,12 @@ func main() {
 
 	generateCmd := app.Command("generate", "generate")
 	generateDocsCmd := generateCmd.Command("docs", "generate documentation")
-	generateDocsCmd.Flag("dictionary", "tomato dictionary file path.").Short('d').StringVar(&dictionaryPath)
+	generateDocsCmd.Flag("dictionary", "tomato dictionary file path.").Short('d').Default("dictionary.yml").StringVar(&dictionaryPath)
 	generateDocsCmd.Flag("output", "output of handler.go.").Short('o').Default("docs/resources.md").StringVar(&outputPath)
 	generateDocsCmd.Flag("type", "output type (markdown/html).").Short('t').Default("html").StringVar(&outputType)
 
 	generateHandlerCmd := generateCmd.Command("handler", "generate handler")
-	generateHandlerCmd.Flag("dictionary", "tomato dictionary file path.").Short('d').StringVar(&dictionaryPath)
+	generateHandlerCmd.Flag("dictionary", "tomato dictionary file path.").Short('d').Default("dictionary.yml").StringVar(&dictionaryPath)
 	generateHandlerCmd.Flag("output", "output of handler.go.").Short('o').Default("handler/handler.go").StringVar(&outputPath)
 
 	var err error
