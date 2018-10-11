@@ -66,7 +66,6 @@ func (h *Handler) compareMessage(resourceName, target string, expectedMessage *g
 		return err
 	}
 
-	var consumedMessage []string
 	for _, msg := range messages {
 
 		actual := make(map[string]interface{})
@@ -74,13 +73,16 @@ func (h *Handler) compareMessage(resourceName, target string, expectedMessage *g
 			return err
 		}
 
-		err := compare.Value(actual, expected)
-		if err == nil {
-			return nil
+		comparison, err := compare.JSON(msg, []byte(expectedMessage.Content)))
+		if err != nil {
+			return err
 		}
 
-		consumedMessage = append(consumedMessage, string(msg)+"\n"+err.Error())
+		// Return on first failed comparison message
+		if comparison.ShouldFailStep() {
+			return comparison.Error()
+		}
 	}
 
-	return fmt.Errorf("expecting message : %+v\nconsumed messages : %+v", expectedMessage.Content, strings.Join(consumedMessage, "\n"))
+	return nil 
 }
