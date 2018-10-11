@@ -31,3 +31,10 @@ Feature: http feature example
                 "timestamp": "*"
             }
         """
+
+  Scenario: Test response header
+    Given set "tomato-http-server" with path "/status" response code to 200 and response body
+        """
+        """
+    Given "tomato-http-client" send request to "GET /status"
+    Given "tomato-http-client" response header "Content-Length" should be "0"
