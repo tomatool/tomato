@@ -42,6 +42,12 @@ Given "$resourceName" send request to "$target" with payload
 Then "$resourceName" response code should be $statusCode
 ```
 
+* Check response header - to check header values of to a request that has been made
+
+```gherkin
+Then "$resourceName" repsonse header "$headerName" should be "$headerValue"
+```
+
 * Check response body - to check response body of request that been made
 ```gherkin
 Then "$resourceName" response body should be
