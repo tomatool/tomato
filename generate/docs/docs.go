@@ -39,6 +39,13 @@ func Generate(dict *dictionary.Dictionary, opts *Options) (*bytes.Buffer, error)
 		"replace": func(str, a, b string) string {
 			return strings.Replace(str, a, b, -1)
 		},
+		"t": func(str string) string {
+			s := strings.Title(strings.Replace(str, "_", " ", -1))
+			s = strings.Replace(s, "Http", "HTTP", -1)
+			s = strings.Replace(s, "Sql", "SQL", -1)
+			s = strings.Replace(s, "/", " ", -1)
+			return s
+		},
 	}).Parse(tmplGlob)
 	if err != nil {
 		return nil, err
