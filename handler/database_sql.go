@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/util/conv"
+	"github.com/alileza/tomato/conv"
 )
 
 func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.DataTable) error {
