@@ -44,6 +44,13 @@ test:
 	@docker volume ls -q | grep tomato | xargs docker volume rm -f
 	@docker-compose up --build --exit-code-from tomato
 
+check:
+	@go run cmd/tomatool/main.go generate docs -t markdown -o /tmp/docs
+	@diff /tmp/docs docs/resources.md || (echo "$$?"; exit 1)
+
+	@go run cmd/tomatool/main.go generate handler -o /tmp/handler
+	@diff /tmp/handler handler/handler.go || (echo "$$?"; exit 1)
+
 package-releases:
 	@echo ">> packaging releases"
 	@rm -rf dist
