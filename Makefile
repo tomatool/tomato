@@ -46,10 +46,15 @@ test:
 
 check:
 	@go run cmd/tomatool/main.go generate docs -t markdown -o /tmp/docs
-	@diff /tmp/docs docs/resources.md || (echo "$$?"; exit 1)
-
+	@diff -q /tmp/docs docs/resources.md || (echo "$$? inconsistent dictionary with documentation, please run 'make gen'"; exit 1)
 	@go run cmd/tomatool/main.go generate handler -o /tmp/handler
-	@diff /tmp/handler handler/handler.go || (echo "$$?"; exit 1)
+	@diff -q /tmp/handler handler/handler.go || (echo "$$? inconsistent dictionary with handler, please run 'make gen'"; exit 1)
+
+gen:
+	@echo ">> generating markdown documentation"
+	@go run cmd/tomatool/main.go generate docs -t markdown
+	@echo ">> generating handler"
+	@go run cmd/tomatool/main.go generate handler
 
 package-releases:
 	@echo ">> packaging releases"
