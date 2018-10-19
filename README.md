@@ -1,7 +1,7 @@
 # 🍅 tomato - behavioral testing tool kit
 ![CircleCI](https://circleci.com/gh/alileza/tomato/tree/master.svg?style=shield)
-[![Go Report Card](https://goreportcard.com/badge/github.com/alileza/tomato)](https://goreportcard.com/report/github.com/alileza/tomato)
-[![GoDoc](https://godoc.org/github.com/alileza/tomato?status.svg)](https://godoc.org/github.com/alileza/tomato)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tomatool/tomato)](https://goreportcard.com/report/github.com/tomatool/tomato)
+[![GoDoc](https://godoc.org/github.com/tomatool/tomato?status.svg)](https://godoc.org/github.com/tomatool/tomato)
 [![codecov.io](https://codecov.io/github/alileza/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/alileza/tomato)
 
 Tomato is a language agnostic testing tool kit that simplifies the acceptance testing workflow of your application and its dependencies. 
@@ -10,7 +10,7 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 
 - [Background](https://medium.com/@alileza/functional-testing-using-af78a868a1f1)
 - [Documentation](https://alileza.github.io/tomato/)
-- [Examples](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
+- [Examples](https://github.com/tomatool/tomato/tree/0.1.0/examples/features)
 
 ## Features
 - Cucumber [Gherkin](https://docs.cucumber.io/gherkin/) feature syntax
@@ -94,9 +94,9 @@ docker-compose up --abort-on-container-exit
 
 #### Using the binary
 
-Install tomato by grabbing the latest stable [release](https://github.com/alileza/tomato/releases/latest) and placing it in your path, or by using go get
+Install tomato by grabbing the latest stable [release](https://github.com/tomatool/tomato/releases/latest) and placing it in your path, or by using go get
 ```
-go get -u github.com/alileza/tomato/cmd/tomato
+go get -u github.com/tomatool/tomato/cmd/tomato
 ```
 
 Now run tomato:
@@ -112,12 +112,12 @@ Resource are the objects that are going to be used for steps in the scenario. Th
 
 ### List of available resources
 
-* [Database SQL](https://github.com/alileza/tomato/blob/master/docs/resources/database-sql.md) - to manage (insert/check) database state changes
-  * [MySQL](https://github.com/alileza/tomato/blob/master/docs/resources/database-sql.md)
-  * [PostgreSQL](https://github.com/alileza/tomato/blob/master/docs/resources/database-sql.md)
-* [HTTP Client](https://github.com/alileza/tomato/blob/master/docs/resources/http-client.md) - to send HTTP Request
-* [HTTP Server](https://github.com/alileza/tomato/blob/master/docs/resources/http-server.md) - to create fake external service dependency that serve HTTP API
-* [Message Queue](https://github.com/alileza/tomato/blob/master/docs/resources/message-queue.md) - to manage (publish/consume/check) message queue
-  * [RabbitMQ](https://github.com/alileza/tomato/blob/master/docs/resources/message-queue.md)
-  * [NSQ](https://github.com/alileza/tomato/blob/master/docs/resources/message-queue.md)
-* [Shell](https://github.com/alileza/tomato/blob/master/docs/resources/shell.md) -  to execute unix shell command-line interface
+* [Database SQL](https://github.com/tomatool/tomato/blob/master/docs/resources/database-sql.md) - to manage (insert/check) database state changes
+  * [MySQL](https://github.com/tomatool/tomato/blob/master/docs/resources/database-sql.md)
+  * [PostgreSQL](https://github.com/tomatool/tomato/blob/master/docs/resources/database-sql.md)
+* [HTTP Client](https://github.com/tomatool/tomato/blob/master/docs/resources/http-client.md) - to send HTTP Request
+* [HTTP Server](https://github.com/tomatool/tomato/blob/master/docs/resources/http-server.md) - to create fake external service dependency that serve HTTP API
+* [Message Queue](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md) - to manage (publish/consume/check) message queue
+  * [RabbitMQ](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md)
+  * [NSQ](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md)
+* [Shell](https://github.com/tomatool/tomato/blob/master/docs/resources/shell.md) -  to execute unix shell command-line interface

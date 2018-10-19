@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alileza/tomato/config"
+	"github.com/tomatool/tomato/config"
 	"github.com/pkg/errors"
 )
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/alileza/tomato/config"
+	"github.com/tomatool/tomato/config"
 )
 
 const Name = "http/server"

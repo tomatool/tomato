@@ -9,11 +9,11 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
-	"github.com/alileza/tomato/config"
-	"github.com/alileza/tomato/formatter"
-	"github.com/alileza/tomato/handler"
-	"github.com/alileza/tomato/resource"
-	"github.com/alileza/tomato/util/version"
+	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/formatter"
+	"github.com/tomatool/tomato/handler"
+	"github.com/tomatool/tomato/resource"
+	"github.com/tomatool/tomato/util/version"
 	"github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )

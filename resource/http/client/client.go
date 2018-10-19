@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/alileza/tomato/config"
+	"github.com/tomatool/tomato/config"
 )
 
 type response struct {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	httpclient "github.com/alileza/tomato/resource/http/client"
+	httpclient "github.com/tomatool/tomato/resource/http/client"
 )
 
 type HTTPClient interface {
