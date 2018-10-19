@@ -1,15 +1,15 @@
 # 🍅 tomato - behavioral testing tool kit
-![CircleCI](https://circleci.com/gh/alileza/tomato/tree/master.svg?style=shield)
+![CircleCI](https://circleci.com/gh/tomatool/tomato/tree/master.svg?style=shield)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tomatool/tomato)](https://goreportcard.com/report/github.com/tomatool/tomato)
 [![GoDoc](https://godoc.org/github.com/tomatool/tomato?status.svg)](https://godoc.org/github.com/tomatool/tomato)
-[![codecov.io](https://codecov.io/github/alileza/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/alileza/tomato)
+[![codecov.io](https://codecov.io/github/tomatool/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/tomatool/tomato)
 
-Tomato is a language agnostic testing tool kit that simplifies the acceptance testing workflow of your application and its dependencies. 
+Tomato is a language agnostic testing tool kit that simplifies the acceptance testing workflow of your application and its dependencies.
 
 Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucumber.io/gherkin/), tomato makes behavioral tests easier to understand, maintain, and write for developers, QA, and product owners.
 
 - [Background](https://medium.com/@alileza/functional-testing-using-af78a868a1f1)
-- [Documentation](https://alileza.github.io/tomato/)
+- [Documentation](https://tomatool.github.io/tomato/)
 - [Examples](https://github.com/tomatool/tomato/tree/0.1.0/examples/features)
 
 ## Features
@@ -17,14 +17,14 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 - Support for MySQL, MariaDB, and PostgreSQL
 - Support for messaging queues (RabbitMQ, NSQ)
 - Support for mocking HTTP API responses
-- Additional resources [resources](https://alileza.github.io/tomato/resources)
+- Additional resources [resources](https://tomatool.github.io/tomato/resources)
 
 ## Getting Started
 
 ### Set up your tomato configuration
 Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`.
 
-Create a `tomato.yml` file with your application's required test [resources](https://alileza.github.io/tomato/resources):
+Create a `tomato.yml` file with your application's required test [resources](https://tomatool.github.io/tomato/resources):
 ```yml
 ---
 
@@ -62,7 +62,7 @@ Create a `docker-compose.yml` file, or add tomato and your test dependencies to 
 version: '3'
 services:
   tomato:
-    image: quay.io/alileza/tomato:latest
+    image: quay.io/tomatool/tomato:latest
     environment:
       APP_BASE_URL: http://my-application:9000
       PSQL_DATASOURCE: "postgres://user:password@postgres:5432/test-database?sslmode=disable"
