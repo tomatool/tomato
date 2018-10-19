@@ -3,7 +3,7 @@ package resource
 import (
 	"errors"
 
-	"github.com/alileza/tomato/resource/shell"
+	"github.com/tomatool/tomato/resource/shell"
 )
 
 type Shell interface {

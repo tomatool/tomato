@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alileza/tomato/config"
-	"github.com/alileza/tomato/util/sqlutil"
+	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/util/sqlutil"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )

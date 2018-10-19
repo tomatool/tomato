@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/compare"
+	"github.com/tomatool/tomato/compare"
 	"github.com/olekukonko/tablewriter"
 )
 

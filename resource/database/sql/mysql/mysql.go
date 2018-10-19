@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/alileza/tomato/config"
-	"github.com/alileza/tomato/util/sqlutil"
+	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/util/sqlutil"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )

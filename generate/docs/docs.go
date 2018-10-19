@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/template"
-	"github.com/alileza/tomato/dictionary"
+	"github.com/tomatool/tomato/dictionary"
 )
 
 type Options struct {

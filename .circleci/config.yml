@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: circleci/golang:1.10
 
-    working_directory: /go/src/github.com/alileza/tomato
+    working_directory: /go/src/github.com/tomatool/tomato
     steps:
       - checkout
 
@@ -16,12 +16,12 @@ jobs:
     docker:
       - image: circleci/golang:1.10
 
-    working_directory: /go/src/github.com/alileza/tomato
+    working_directory: /go/src/github.com/tomatool/tomato
     steps:
       - checkout
 
       - run: go get -u github.com/go-playground/overalls
-      - run: overalls -project=github.com/alileza/tomato -covermode=atomic -debug -- -race -v
+      - run: overalls -project=github.com/tomatool/tomato -covermode=atomic -debug -- -race -v
       - run: mv overalls.coverprofile coverage.txt
       - run: bash <(curl -s https://codecov.io/bash)
 
@@ -29,7 +29,7 @@ jobs:
     docker:
       - image: docker/compose:1.22.0
 
-    working_directory: /go/src/github.com/alileza/tomato
+    working_directory: /go/src/github.com/tomatool/tomato
     steps:
       - checkout
 

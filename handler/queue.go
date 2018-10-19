@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/compare"
+	"github.com/tomatool/tomato/compare"
 )
 
 func (h *Handler) publishMessage(resourceName, target string, payload *gherkin.DocString) error {

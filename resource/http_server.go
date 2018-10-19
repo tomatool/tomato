@@ -1,7 +1,7 @@
 package resource
 
 import (
-	httpserver "github.com/alileza/tomato/resource/http/server"
+	httpserver "github.com/tomatool/tomato/resource/http/server"
 )
 
 type HTTPServer interface {

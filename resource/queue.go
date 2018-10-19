@@ -3,8 +3,8 @@ package resource
 import (
 	"errors"
 
-	"github.com/alileza/tomato/resource/queue/nsq"
-	"github.com/alileza/tomato/resource/queue/rabbitmq"
+	"github.com/tomatool/tomato/resource/queue/nsq"
+	"github.com/tomatool/tomato/resource/queue/rabbitmq"
 )
 
 type Queue interface {

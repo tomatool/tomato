@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/alileza/tomato/config"
+	"github.com/tomatool/tomato/config"
 )
 
 type Shell struct {

@@ -3,8 +3,8 @@ package resource
 import (
 	"errors"
 
-	"github.com/alileza/tomato/resource/database/sql/mysql"
-	"github.com/alileza/tomato/resource/database/sql/postgres"
+	"github.com/tomatool/tomato/resource/database/sql/mysql"
+	"github.com/tomatool/tomato/resource/database/sql/postgres"
 )
 
 type DatabaseSQL interface {
