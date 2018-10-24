@@ -78,6 +78,7 @@ func (c *server) serve() {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := c.getResponse(r.URL.RequestURI())
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.code)
 		w.Write(resp.body)
 	}))
