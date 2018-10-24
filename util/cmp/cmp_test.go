@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alileza/tomato/util/cmp"
+	"github.com/tomatool/tomato/util/cmp"
 )
 
 func TestJSON(t *testing.T) {

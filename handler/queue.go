@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/resource/queue"
-	"github.com/alileza/tomato/util/cmp"
+	"github.com/tomatool/tomato/resource/queue"
+	"github.com/tomatool/tomato/util/cmp"
 )
 
 func (h *Handler) publishMessageToTargetWithPayload(name, target string, payload *gherkin.DocString) error {

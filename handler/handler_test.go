@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/alileza/tomato/resource"
+import "github.com/tomatool/tomato/resource"
 
 var (
 	resourceManager = &resourceManagerMock{}

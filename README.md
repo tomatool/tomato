@@ -1,8 +1,8 @@
 # 🍅 tomato - behavioral testing tools
-![CircleCI](https://circleci.com/gh/alileza/tomato/tree/master.svg?style=shield)
-[![Go Report Card](https://goreportcard.com/badge/github.com/alileza/tomato)](https://goreportcard.com/report/github.com/alileza/tomato)
-[![GoDoc](https://godoc.org/github.com/alileza/tomato?status.svg)](https://godoc.org/github.com/alileza/tomato)
-[![codecov.io](https://codecov.io/github/alileza/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/alileza/tomato)
+![CircleCI](https://circleci.com/gh/tomatool/tomato/tree/master.svg?style=shield)
+[![Go Report Card](https://goreportcard.com/badge/github.com/tomatool/tomato)](https://goreportcard.com/report/github.com/tomatool/tomato)
+[![GoDoc](https://godoc.org/github.com/tomatool/tomato?status.svg)](https://godoc.org/github.com/tomatool/tomato)
+[![codecov.io](https://codecov.io/github/tomatool/tomato/branch/master/graph/badge.svg)](https://codecov.io/github/tomatool/tomato)
 
 Integration testing tools, built on top of (https://github.com/DATA-DOG/godog). To simplify adding Integration Test to your application without writing any code.
 
@@ -79,4 +79,4 @@ And that's it !!! 🙌
 
 [List of available resources](http://alileza.github.io/tomato/resources)
 
-You can find some of examples [here](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
+You can find some of examples [here](https://github.com/tomatool/tomato/tree/0.1.0/examples/features)

@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	"github.com/alecthomas/template"
-	"github.com/alileza/tomato/dictionary"
+	"github.com/tomatool/tomato/dictionary"
 )
 
 const (

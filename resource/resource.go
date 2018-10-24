@@ -4,11 +4,11 @@ import (
 	"log"
 	"sync"
 
-	"github.com/alileza/tomato/config"
-	"github.com/alileza/tomato/resource/db/sql"
-	"github.com/alileza/tomato/resource/http/client"
-	"github.com/alileza/tomato/resource/http/server"
-	"github.com/alileza/tomato/resource/queue"
+	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/resource/db/sql"
+	"github.com/tomatool/tomato/resource/http/client"
+	"github.com/tomatool/tomato/resource/http/server"
+	"github.com/tomatool/tomato/resource/queue"
 
 	"github.com/pkg/errors"
 )

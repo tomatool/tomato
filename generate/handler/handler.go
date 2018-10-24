@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/alileza/tomato/dictionary"
+	"github.com/tomatool/tomato/dictionary"
 )
 
 const (
@@ -14,7 +14,7 @@ package handler
 
 import (
 	"github.com/DATA-DOG/godog"
-	"github.com/alileza/tomato/resource"
+	"github.com/tomatool/tomato/resource"
 )
 
 type Handler struct {

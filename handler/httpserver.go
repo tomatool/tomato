@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/resource/http/server"
+	"github.com/tomatool/tomato/resource/http/server"
 )
 
 func (h *Handler) setResponseCodeToAndResponseBody(name string, code int, body *gherkin.DocString) error {

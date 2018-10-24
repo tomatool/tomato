@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/alileza/tomato/resource/db/sql"
-	"github.com/alileza/tomato/util/conv"
+	"github.com/tomatool/tomato/resource/db/sql"
+	"github.com/tomatool/tomato/util/conv"
 )
 
 func (h *Handler) getResourceDB(name string) sql.SQL {

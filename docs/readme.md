@@ -1,8 +1,8 @@
 # Getting started
 
-Install tomato by untar latest stable [release](https://github.com/alileza/tomato/releases/latest), or get from latest master by
+Install tomato by untar latest stable [release](https://github.com/tomatool/tomato/releases/latest), or get from latest master by
 ```
-go get -u github.com/alileza/tomato/cmd/tomato
+go get -u github.com/tomatool/tomato/cmd/tomato
 ```
 
 Prepare your `tomato.yml` with your resources. For example :
@@ -26,7 +26,7 @@ resources:
 
 [List of available resources](http://alileza.github.io/tomato/resources)
 
-Once you're ready with all your resources you needed, you're good to start writing your features. You can find some of examples [here](https://github.com/alileza/tomato/tree/0.1.0/examples/features)
+Once you're ready with all your resources you needed, you're good to start writing your features. You can find some of examples [here](https://github.com/tomatool/tomato/tree/0.1.0/examples/features)
 
 `example.feature`
 ```gherkin

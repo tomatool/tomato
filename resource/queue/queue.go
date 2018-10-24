@@ -3,7 +3,7 @@ package queue
 import (
 	"errors"
 
-	"github.com/alileza/tomato/resource/queue/rabbitmq"
+	"github.com/tomatool/tomato/resource/queue/rabbitmq"
 )
 
 const Name = "queue"
