@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/dictionary"
 	"github.com/tomatool/tomato/generate/docs"
 	"github.com/tomatool/tomato/generate/handler"
-	"github.com/tomatool/tomato/util/version"
-	"github.com/pkg/errors"
+	"github.com/tomatool/tomato/version"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 

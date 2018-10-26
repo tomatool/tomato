@@ -9,12 +9,12 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
+	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/formatter"
 	"github.com/tomatool/tomato/handler"
 	"github.com/tomatool/tomato/resource"
-	"github.com/tomatool/tomato/util/version"
-	"github.com/pkg/errors"
+	"github.com/tomatool/tomato/version"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
