@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -64,8 +65,10 @@ func (m *Manager) Reset() {
 }
 
 func (m *Manager) Ready() error {
+	fmt.Printf("Waiting for all resources to be ready...\n")
 	for _, r := range m.resources {
 		if !r.config.ReadyCheck {
+			fmt.Printf("Skipping readiness for %s\n", r.config.Name)
 			continue
 		}
 
@@ -88,13 +91,11 @@ func (m *Manager) Ready() error {
 				err = errors.New("he")
 			}
 			if err != nil {
-				// fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
 				time.Sleep(time.Second * 2)
 				continue
 			}
 
 			if err = rr.Ready(); err != nil {
-				// fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
 				time.Sleep(time.Second * 2)
 				continue
 			}
