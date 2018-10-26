@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/alileza/tomato/util/sqlutil"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/tomatool/tomato/config"
@@ -114,7 +113,7 @@ func (d *MySQL) Insert(tableName string, rows []map[string]string) error {
 	defer tx.Rollback()
 
 	for _, row := range rows {
-		query := sqlutil.NewQueryBuilder("mysql", "INSERT INTO "+tableName)
+		query := sql.NewQueryBuilder("mysql", "INSERT INTO "+tableName)
 		for key, val := range row {
 			if val == "" || strings.ToLower(val) == "null" {
 				continue
