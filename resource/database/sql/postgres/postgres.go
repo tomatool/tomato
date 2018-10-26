@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tomatool/tomato/config"
-	"github.com/tomatool/tomato/util/sqlutil"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/resource/database/sql"
 )
 
 type PostgreSQL struct {
@@ -61,7 +61,11 @@ func (d *PostgreSQL) Reset() error {
 
 func (d *PostgreSQL) Select(tableName string, condition map[string]string) ([]map[string]string, error) {
 	result := make([]map[string]string, 0)
-	rows, err := d.db.Queryx("SELECT * FROM " + tableName)
+	q := sql.NewQueryBuilder("postgres", "SELECT * FROM "+tableName)
+	for key, val := range condition {
+		q.Where(key, "=", val)
+	}
+	rows, err := d.db.Queryx(q.Query(), q.Arguments()...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +96,7 @@ func (d *PostgreSQL) Insert(tableName string, rows []map[string]string) error {
 	defer tx.Rollback()
 
 	for _, row := range rows {
-		query := sqlutil.NewQueryBuilder("postgres", "INSERT INTO "+tableName)
+		query := sql.NewQueryBuilder("postgres", "INSERT INTO "+tableName)
 		for key, val := range row {
 			if val == "" || strings.ToLower(val) == "null" {
 				continue

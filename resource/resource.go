@@ -1,11 +1,10 @@
 package resource
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/tomatool/tomato/config"
 	"github.com/pkg/errors"
+	"github.com/tomatool/tomato/config"
 )
 
 var (
@@ -89,13 +88,13 @@ func (m *Manager) Ready() error {
 				err = errors.New("he")
 			}
 			if err != nil {
-				fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
+				// fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
 				time.Sleep(time.Second * 2)
 				continue
 			}
 
 			if err = rr.Ready(); err != nil {
-				fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
+				// fmt.Printf("%d [%s] not yet ready : %v \n%+v\n", (i + 1), r.config.Name, err, r.config.Params)
 				time.Sleep(time.Second * 2)
 				continue
 			}
