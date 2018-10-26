@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/tomatool/tomato/conv"
+	"github.com/tomatool/tomato/errors"
 )
 
 func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.DataTable) error {
@@ -28,9 +29,16 @@ func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.
 		if err != nil {
 			return err
 		}
+
 		if len(out) == 0 {
 			rows, _ := r.Select(tableName, nil)
-			return fmt.Errorf("couldn't find %+v in table \n%+v", expectedRow, rows)
+
+			r, _ := json.MarshalIndent(expectedRow, "", "    ")
+			t, _ := json.MarshalIndent(rows, "", "    ")
+			return errors.NewStep("unable to find rows in table `"+tableName+"`", map[string]string{
+				"expected row": string(r),
+				"table values": string(t),
+			})
 		}
 	}
 

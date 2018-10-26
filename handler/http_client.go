@@ -3,13 +3,13 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/tomatool/tomato/compare"
 	"github.com/olekukonko/tablewriter"
+	"github.com/tomatool/tomato/compare"
+	"github.com/tomatool/tomato/errors"
 )
 
 func (h *Handler) sendRequest(resourceName, target string) error {
@@ -58,7 +58,12 @@ func (h *Handler) checkResponseHeader(resourceName string, expectedHeaderName, e
 	}
 	hvalue := header.Get(expectedHeaderName)
 	if hvalue != expectedHeaderValue {
-		return fmt.Errorf("expecting response header %q to be %q, got %q\nresponse body : \n%s", expectedHeaderName, expectedHeaderValue, hvalue, string(body))
+
+		return errors.NewStep("unexpected response header `"+expectedHeaderName+"`", map[string]string{
+			"expecting":     expectedHeaderValue,
+			"actual":        hvalue,
+			"response body": string(body),
+		})
 	}
 
 	return nil
@@ -84,11 +89,13 @@ func (h *Handler) checkResponseBody(resourceName string, expectedBody *gherkin.D
 	}
 
 	if err := compare.Value(actual, expected); err != nil {
-		b := bytes.NewBufferString("\nJSON mismatch (" + err.Error() + ")\n\n")
+		b := bytes.NewBufferString("")
 		t := tablewriter.NewWriter(b)
 		compare.Print(t, "", actual, expected)
 		t.Render()
-		return errors.New(b.String())
+		return errors.NewStep("unexpected response body", map[string]string{
+			"": b.String(),
+		})
 	}
 
 	return nil
