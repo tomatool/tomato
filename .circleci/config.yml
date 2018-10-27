@@ -21,9 +21,15 @@ jobs:
       - checkout
 
       - run: go get -u github.com/go-playground/overalls
-      - run: overalls -project=github.com/tomatool/tomato -covermode=atomic -debug -- -race -v
-      - run: mv overalls.coverprofile coverage.txt
-      - run: bash <(curl -s https://codecov.io/bash)
+      - run: overalls -project=github.com/tomatool/tomato -covermode=set -debug -- -v
+
+      - run: mkdir -p /tmp/unit-test
+      - run: mv overalls.coverprofile /tmp/unit-test/unit-coverage.out
+
+      - persist_to_workspace:
+          root: /tmp/unit-test
+          paths:
+            - unit-coverage.out
 
   tomato-test:
     docker:
@@ -40,11 +46,27 @@ jobs:
           command: docker-compose up --abort-on-container-exit --build
 
       - run: docker-compose start tomato
-      - run: docker cp "$(docker-compose ps -q tomato)":/tmp/coverage.out /tmp/coverage.out
 
-      - run: apk add --update curl bash git
-      - run: curl -s https://codecov.io/bash > codecov.sh
-      - run: bash ./codecov.sh -t ${CODECOV_TOKEN} -e tomatotest -f /tmp/coverage.out
+      - run: mkdir -p /tmp/tomato-test
+      - run: docker cp "$(docker-compose ps -q tomato)":/tmp/coverage.out /tmp/tomato-test/tomato-coverage.out
+      - persist_to_workspace:
+          root: /tmp/tomato-test
+          paths:
+            - tomato-coverage.out
+
+  codecov-report:
+    docker:
+      - image: circleci/golang:1.11
+
+    working_directory: /go/src/github.com/tomatool/tomato
+    steps:
+      - attach_workspace:
+          at: /tmp/
+
+      - run: go get -u github.com/wadey/gocovmerge
+      - run: gocovmerge /tmp/tomato-coverage.out /tmp/unit-coverage.out > coverage.out
+      - run: bash <(curl -s https://codecov.io/bash)
+
 
 workflows:
   version: 2
@@ -57,3 +79,7 @@ workflows:
       - tomato-test:
           requires:
               - dictionary-check
+      - codecov-report:
+          requires:
+              - unit-test
+              - tomato-test
