@@ -91,7 +91,7 @@ func Build(bin string) error {
 		// since we do not need it for godog suite.
 		// we also print back the temp WORK directory
 		// go has built. We will reuse it for our suite workdir.
-		out, err = exec.Command("go", "test", "-c", "-work", "-o", "/dev/null").CombinedOutput()
+		out, err = exec.Command("go", "test", "-c", "-work", "-o", os.DevNull).CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("failed to compile tested package: %s, reason: %v, output: %s", pkg.Name, err, string(out))
 		}
@@ -326,7 +326,17 @@ func buildTestMain(pkg *build.Package) ([]byte, bool, error) {
 			return nil, false, err
 		}
 		contexts = ctxs
-		importPath = pkg.ImportPath
+
+		// for module support, query the module import path
+		// @TODO: maybe there is a better way to read it
+		out, err := exec.Command("go", "list", "-m").CombinedOutput()
+		if err != nil {
+			// is not using modules or older go version
+			importPath = pkg.ImportPath
+		} else {
+			// otherwise read the module name from command output
+			importPath = strings.TrimSpace(string(out))
+		}
 		name = pkg.Name
 	}
 
