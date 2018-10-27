@@ -15,7 +15,7 @@ from time to time.
 
 Package godog is the official Cucumber BDD framework for Golang, it merges
 specification and test documentation into one cohesive whole. The author
-is a core member of [cucumber team](https://github.com/cucumber).
+is a member of [cucumber team](https://github.com/cucumber).
 
 The project is inspired by [behat][behat] and [cucumber][cucumber] and is
 based on cucumber [gherkin3 parser][gherkin].
@@ -235,7 +235,43 @@ See implementation examples:
 You may integrate running **godog** in your **go test** command. You can
 run it using go [TestMain](https://golang.org/pkg/testing/#hdr-Main) func
 available since **go 1.4**. In this case it is not necessary to have
-**godog** command installed. See the following example:
+**godog** command installed. See the following examples.
+
+The following example binds **godog** flags with specified prefix `godog`
+in order to prevent flag collisions.
+
+``` go
+var opt = godog.Options{Output: colors.Colored(os.Stdout)}
+
+func init() {
+	godog.BindFlags("godog.", flag.CommandLine, &opt)
+}
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	opt.Paths = flag.Args()
+
+	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
+		FeatureContext(s)
+	}, opt)
+
+	if st := m.Run(); st > status {
+		status = st
+	}
+	os.Exit(status)
+}
+```
+
+Then you may run tests with by specifying flags in order to filter
+features.
+
+```
+go test -v --godog.format=progress --godog.random --godog.tags=wip
+go test -v --godog.format=pretty --godog.random -race -coverprofile=coverage.txt -covermode=atomic
+```
+
+The following example does not bind godog flags, instead manually
+configuring needed options.
 
 ``` go
 func TestMain(m *testing.M) {
