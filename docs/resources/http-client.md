@@ -50,7 +50,7 @@ Then "$resourceName" repsonse header "$headerName" should be "$headerValue"
 
 * Check response body - to check response body of request that been made
 ```gherkin
-Then "$resourceName" response body should be
+Then "$resourceName" response body should contain
 """
   $responseBody
 """
