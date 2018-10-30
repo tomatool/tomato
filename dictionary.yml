@@ -71,11 +71,20 @@ resources:
                       type: string
 
 
-              - name: response_body
+              - name: response_body_contains
                 description: check response body
-                handle: checkResponseBody
+                handle: checkResponseBodyContains
                 expressions:
-                    - $resource response body should be $body
+                    - $resource response body should contain $body
+                parameters:
+                    - name: body
+                      description: expected response body
+                      type: json
+              - name: response_body_equals
+                description: check response body
+                handle: checkResponseBodyEquals
+                expressions:
+                    - $resource response body should equal $body
                 parameters:
                     - name: body
                       description: expected response body
@@ -200,11 +209,24 @@ resources:
                     description: number of expected messages in the queue
                     type: number
 
-            - name: compare
-              description: compare message payload. Declaration should be before the publish action
-              handle: compareMessage
+            - name: compareContains
+              description: compare message payload by checking if the message contains other JSON. Declaration should be before the publish action
+              handle: compareMessageContains
               expressions:
-                  - message from $resource target $target should look like $payload
+                  - message from $resource target $target should contain $payload
+              parameters:
+                  - name: target
+                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
+                    type: string
+                  - name: payload
+                    description: queue message payload
+                    type: json
+
+            - name: compareEquals
+              description: compare message payload by checking for exact JSON matches. Declaration should be before the publish action
+              handle: compareMessageEquals
+              expressions:
+                  - message from $resource target $target should equal $payload
               parameters:
                   - name: target
                     description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`

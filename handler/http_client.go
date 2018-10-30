@@ -1,13 +1,15 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/olekukonko/tablewriter"
 	"github.com/tomatool/tomato/compare"
+	"github.com/tomatool/tomato/errors"
 )
 
 func (h *Handler) sendRequest(resourceName, target string) error {
@@ -67,7 +69,7 @@ func (h *Handler) checkResponseHeader(resourceName string, expectedHeaderName, e
 	return nil
 }
 
-func (h *Handler) checkResponseBody(resourceName string, expectedBody *gherkin.DocString) error {
+func (h *Handler) checkResponseBodyEquals(resourceName string, expectedBody *gherkin.DocString) error {
 	r, err := h.resource.GetHTTPClient(resourceName)
 	if err != nil {
 		return err
@@ -94,5 +96,37 @@ func (h *Handler) checkResponseBody(resourceName string, expectedBody *gherkin.D
 	if comparison.ShouldFailStep() {
 		return comparison
 	}
+	return nil
+}
+
+func (h *Handler) checkResponseBodyContains(resourceName string, expectedBody *gherkin.DocString) error {
+	r, err := h.resource.GetHTTPClient(resourceName)
+	if err != nil {
+		return err
+	}
+	_, _, body, err := r.Response()
+	if err != nil {
+		return err
+	}
+	expected := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(expectedBody.Content), &expected); err != nil {
+		return err
+	}
+
+	actual := make(map[string]interface{})
+	if err := json.Unmarshal(body, &actual); err != nil {
+		return err
+	}
+
+	if err := compare.Value(actual, expected); err != nil {
+		b := bytes.NewBufferString("")
+		t := tablewriter.NewWriter(b)
+		compare.Print(t, "", actual, expected)
+		t.Render()
+		return errors.NewStep("unexpected response body", map[string]string{
+			"": b.String(),
+		})
+	}
+
 	return nil
 }

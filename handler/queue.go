@@ -46,7 +46,46 @@ func (h *Handler) countMessage(resourceName, target string, expectedCount int) e
 	return nil
 }
 
-func (h *Handler) compareMessage(resourceName, target string, expectedMessage *gherkin.DocString) error {
+func (h *Handler) compareMessageEquals(resourceName, target string, expectedMessage *gherkin.DocString) error {
+	r, err := h.resource.GetQueue(resourceName)
+	if err != nil {
+		return err
+	}
+
+	messages, err := r.Fetch(target)
+	if err != nil {
+		return err
+	}
+
+	if len(messages) == 0 {
+		return errors.New("no message on queue")
+	}
+
+	expected := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(expectedMessage.Content), &expected); err != nil {
+		return err
+	}
+
+	var consumedMessage []string
+	for _, msg := range messages {
+
+		actual := make(map[string]interface{})
+		if err := json.Unmarshal(msg, &actual); err != nil {
+			return err
+		}
+
+		err := compare.Value(actual, expected)
+		if err == nil {
+			return nil
+		}
+
+		consumedMessage = append(consumedMessage, string(msg)+"\n"+err.Error())
+	}
+
+	return fmt.Errorf("expecting message : %+v\nconsumed messages : %+v", expectedMessage.Content, strings.Join(consumedMessage, "\n"))
+}
+
+func (h *Handler) compareMessageContains(resourceName, target string, expectedMessage *gherkin.DocString) error {
 	r, err := h.resource.GetQueue(resourceName)
 	if err != nil {
 		return err
