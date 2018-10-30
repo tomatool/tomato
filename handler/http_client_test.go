@@ -257,6 +257,93 @@ func TestCheckResponseBodyContains(t *testing.T) {
 		assert.Nil(t, err)
 	}
 }
+
+func TestCheckResponseBodyEquals(t *testing.T) {
+	var (
+		respCode int    = http.StatusOK
+		respBody []byte = []byte(``)
+	)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(respCode)
+		w.Write(respBody)
+	})
+	srv := httptest.NewServer(mux)
+
+	h := &Handler{resource.NewManager([]*config.Resource{{Name: "httpcli", Type: "http/client", Params: map[string]string{"base_url": srv.URL}}})}
+
+	err := h.checkResponseBodyEquals("httpcli", nil)
+	assert.Error(t, err)
+
+	testCases := []struct {
+		name string
+
+		resource string
+
+		serverResp string
+		respBody   string
+
+		err string
+	}{
+		{
+			"undefined resource",
+			"uyeah",
+			"{}",
+			``,
+			"resource not found",
+		},
+		{
+			"check response body",
+			"httpcli",
+			`not json`,
+			`{}`,
+			"invalid character",
+		},
+		{
+			"check response body",
+			"httpcli",
+			`{}`,
+			`ulala`,
+			"invalid character",
+		},
+		{
+			"check response body",
+			"httpcli",
+			`{}`,
+			`{"name":"joni"}`,
+			`+  "name": "joni"`,
+		},
+		{
+			"check response body",
+			"httpcli",
+			`{"name":"joni"}`,
+			`{"name":"joni"}`,
+			"",
+		},
+		{
+			"check response body",
+			"httpcli",
+			`{"name":"joni"}`,
+			`{"name":"*"}`,
+			"",
+		},
+	}
+
+	for _, test := range testCases {
+		respBody = []byte(test.serverResp)
+		h.sendRequest(test.resource, "GET /")
+
+		err := h.checkResponseBodyEquals(test.resource, &gherkin.DocString{Content: test.respBody})
+		if test.err != "" {
+			assert.NotNil(t, err)
+			if err != nil {
+				assert.Contains(t, err.Error(), test.err)
+			}
+			continue
+		}
+		assert.Nil(t, err)
+	}
+}
 func TestCheckResponseHeader(t *testing.T) {
 	var (
 		headers = make(map[string]string)
