@@ -50,10 +50,17 @@ Given $resource response header $header_name should be $header_value
 
 ```
 
-#### **Response Body**
+#### **Response Body Contains**
 check response body
 ```gherkin
-Given $resource response body should be $body
+Given $resource response body should contain $body
+
+```
+
+#### **Response Body Equals**
+check response body
+```gherkin
+Given $resource response body should equal $body
 
 ```
 
@@ -168,10 +175,17 @@ Given message from $resource target $target count should be $count
 
 ```
 
-#### **Compare**
-compare message payload. Declaration should be before the publish action
+#### **CompareContains**
+compare message payload by checking if the message contains other JSON. Declaration should be before the publish action
 ```gherkin
-Given message from $resource target $target should look like $payload
+Given message from $resource target $target should contain $payload
+
+```
+
+#### **CompareEquals**
+compare message payload by checking for exact JSON matches. Declaration should be before the publish action
+```gherkin
+Given message from $resource target $target should equal $payload
 
 ```
 

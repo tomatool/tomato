@@ -171,7 +171,7 @@ func TestCheckResponseCode(t *testing.T) {
 		assert.Nil(t, err)
 	}
 }
-func TestCheckResponseBody(t *testing.T) {
+func TestCheckResponseBodyContains(t *testing.T) {
 	var (
 		respCode int    = http.StatusOK
 		respBody []byte = []byte(``)
@@ -185,7 +185,7 @@ func TestCheckResponseBody(t *testing.T) {
 
 	h := &Handler{resource.NewManager([]*config.Resource{{Name: "httpcli", Type: "http/client", Params: map[string]string{"base_url": srv.URL}}})}
 
-	err := h.checkResponseBody("httpcli", nil)
+	err := h.checkResponseBodyContains("httpcli", nil)
 	assert.Error(t, err)
 
 	testCases := []struct {
@@ -246,7 +246,7 @@ func TestCheckResponseBody(t *testing.T) {
 		respBody = []byte(test.serverResp)
 		h.sendRequest(test.resource, "GET /")
 
-		err := h.checkResponseBody(test.resource, &gherkin.DocString{Content: test.respBody})
+		err := h.checkResponseBodyContains(test.resource, &gherkin.DocString{Content: test.respBody})
 		if test.err != "" {
 			assert.NotNil(t, err)
 			if err != nil {
