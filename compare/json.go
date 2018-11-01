@@ -28,7 +28,7 @@ func JSON(a []byte, b []byte) (Comparison, error) {
 
 		formatter := formatter.NewAsciiFormatter(aJSON, formatter.AsciiFormatterConfig{
 			ShowArrayIndex: false,
-			Coloring:       false,
+			Coloring:       true,
 		})
 
 		var err error
