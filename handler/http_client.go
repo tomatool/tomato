@@ -88,7 +88,7 @@ func (h *Handler) checkResponseBodyEquals(resourceName string, expectedBody *ghe
 		return err
 	}
 
-	comparison, err := compare.JSON(body, []byte(expectedBody.Content))
+	comparison, err := compare.JSON(body, []byte(expectedBody.Content), true)
 	if err != nil {
 		return err
 	}
