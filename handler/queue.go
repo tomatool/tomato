@@ -61,28 +61,16 @@ func (h *Handler) compareMessageEquals(resourceName, target string, expectedMess
 		return errors.New("no message on queue")
 	}
 
-	expected := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(expectedMessage.Content), &expected); err != nil {
-		return err
-	}
-
-	var consumedMessage []string
+	var comparison compare.Comparison
 	for _, msg := range messages {
-
-		actual := make(map[string]interface{})
-		if err := json.Unmarshal(msg, &actual); err != nil {
+		comparison, err = compare.JSON(msg, []byte(expectedMessage.Content), true)
+		if err != nil {
 			return err
+		} else if comparison.ShouldFailStep() {
+			return comparison
 		}
-
-		err := compare.Value(actual, expected)
-		if err == nil {
-			return nil
-		}
-
-		consumedMessage = append(consumedMessage, string(msg)+"\n"+err.Error())
 	}
-
-	return fmt.Errorf("expecting message : %+v\nconsumed messages : %+v", expectedMessage.Content, strings.Join(consumedMessage, "\n"))
+	return nil
 }
 
 func (h *Handler) compareMessageContains(resourceName, target string, expectedMessage *gherkin.DocString) error {
