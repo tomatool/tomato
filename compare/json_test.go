@@ -32,7 +32,7 @@ func TestJSON(t *testing.T) {
 			expected:    modifiedWildcardObj,
 		},
 	} {
-		c, err := JSON(test.a, test.b)
+		c, err := JSON(test.a, test.b, false)
 		if err != nil {
 			t.Errorf("%s - expecting no error, got %s", test.description, err)
 		} else if c.output != test.expected {

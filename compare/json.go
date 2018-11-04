@@ -9,7 +9,7 @@ import (
 
 // JSON compares two json strings, processes them to handle wild cards, and returns
 // the prettified JSON string
-func JSON(a []byte, b []byte) (Comparison, error) {
+func JSON(a []byte, b []byte, colorize bool) (Comparison, error) {
 	c := Comparison{errorPrefix: "JSON: Difference between expected output and received output"}
 	differ := gojsondiff.New()
 	d, err := differ.Compare(a, b)
@@ -28,7 +28,7 @@ func JSON(a []byte, b []byte) (Comparison, error) {
 
 		formatter := formatter.NewAsciiFormatter(aJSON, formatter.AsciiFormatterConfig{
 			ShowArrayIndex: false,
-			Coloring:       true,
+			Coloring:       colorize,
 		})
 
 		var err error
