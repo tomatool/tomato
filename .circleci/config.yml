@@ -20,11 +20,17 @@ jobs:
     steps:
       - checkout
 
-      - run: go get -u github.com/go-playground/overalls
-      - run: overalls -project=github.com/tomatool/tomato -covermode=set -debug -- -v
-
       - run: mkdir -p /tmp/unit-test
-      - run: mv overalls.coverprofile /tmp/unit-test/unit-coverage.out
+      - run: echo "" > coverage.txt
+      - run: >
+            for d in $(go list ./... | grep -v vendor); do
+                go test -race -coverprofile=profile.out -covermode=atomic $d
+                if [ -f profile.out ]; then
+                    cat profile.out >> coverage.txt
+                    rm profile.out
+                fi
+            done
+      - run: mv coverage.txt /tmp/unit-test/unit-coverage.out
 
       - persist_to_workspace:
           root: /tmp/unit-test
@@ -63,9 +69,8 @@ jobs:
       - attach_workspace:
           at: /tmp/
 
-      - run: go get -u github.com/wadey/gocovmerge
-      - run: gocovmerge /tmp/tomato-coverage.out /tmp/unit-coverage.out > coverage.out
-      - run: bash <(curl -s https://codecov.io/bash)
+      - run: mv /tmp/unit-coverage.out coverage.out && bash <(curl -s https://codecov.io/bash) -c -F unittests
+      - run: mv /tmp/tomato-coverage.out coverage.out && bash <(curl -s https://codecov.io/bash) -c -F tomatotests
 
 
 workflows:
