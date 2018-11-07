@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:bbe008d748ff2cd9d116dbf709c8213b02be8b51f1481f62cf4c4c314d537337"
+  digest = "1:cf8e448e3c16a4fd678c4a234d008d9b979b4bbf7457a225c77115d4eff3476f"
   name = "github.com/DATA-DOG/godog"
   packages = [
     ".",
@@ -10,8 +10,8 @@
     "gherkin",
   ]
   pruneopts = ""
-  revision = "5c352074bcecb39c9dd17182410be9ea0c081a20"
-  version = "v0.7.7"
+  revision = "d9b8b88dd73a1251283326c95f6b53cc99917849"
+  version = "v0.7.8"
 
 [[projects]]
   branch = "master"
@@ -119,17 +119,36 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:3962f553b77bf6c03fc07cd687a22dd3b00fe11aa14d31194f5505f5bb65cdc8"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
+  pruneopts = ""
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
-  digest = "1:cca262ebe762af6f1cef5f9134b2b8d04fd77b69938851d253faee4aed7322ad"
+  digest = "1:4837ae00a10e327fb6a0c72b6bade6af7581c6bfaf920e5e608e50e9c8eaed9c"
   name = "github.com/streadway/amqp"
   packages = ["."]
   pruneopts = ""
-  revision = "70e15c650864f4fc47f5d3c82ea117285480895d"
+  revision = "27835f1a64e97101d95306211f03c0620ffa295d"
+
+[[projects]]
+  digest = "1:711eebe744c0151a9d09af2315f0bb729b2ec7637ef4c410fa90a18ef74b65b6"
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  pruneopts = ""
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:c587772fb8ad29ad4db67575dad25ba17a51f072ff18a22b4f0257a4d9c24f75"
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "mock",
+  ]
   pruneopts = ""
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
@@ -154,12 +173,12 @@
   revision = "ecda9a501e8220fae3b4b600c3db4b0ba22cfc68"
 
 [[projects]]
-  digest = "1:c1771ca6060335f9768dff6558108bc5ef6c58506821ad43377ee23ff059e472"
+  digest = "1:77d3cff3a451d50be4b52db9c7766c0d8570ba47593f0c9dc72173adb208e788"
   name = "google.golang.org/appengine"
   packages = ["cloudsql"]
   pruneopts = ""
-  revision = "ae0ab99deb4dc413a2b4bd6c8bdd0eb67f1e4d06"
-  version = "v1.2.0"
+  revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:15d017551627c8bb091bde628215b2861bed128855343fdd570c62d08871f6e1"
@@ -192,12 +211,9 @@
     "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/streadway/amqp",
-<<<<<<< HEAD
-    "github.com/stretchr/testify/assert",
-=======
+    "github.com/stretchr/testify/mock",
     "github.com/yudai/gojsondiff",
     "github.com/yudai/gojsondiff/formatter",
->>>>>>> Add gojson diff to vendor deps
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/yaml.v2",
   ]
