@@ -5,43 +5,47 @@ package handler
 import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/tomatool/tomato/handler/database/sql"
+	"github.com/tomatool/tomato/handler/http/client"
+	"github.com/tomatool/tomato/handler/http/server"
+	"github.com/tomatool/tomato/handler/queue"
+	"github.com/tomatool/tomato/handler/shell"
 	"github.com/tomatool/tomato/resource"
 )
 
 type Handler struct {
-	resource *resource.Manager
+	resources    map[string]resource.Resource
+	httpServers  map[string]server.Resource
+	httpClients  map[string]client.Resource
+	sqlDatabases map[string]sql.Resource
+	queues       map[string]queue.Resource
+	shells       map[string]shell.Resource
 }
 
-func New(r *resource.Manager) func(s *godog.Suite) {
-	h := &Handler{r}
+func New() *Handler {
+	h := &Handler{
+		resources:    make(map[string]resource.Resource),
+		httpServers:  make(map[string]server.Resource),
+		httpClients:  make(map[string]client.Resource),
+		sqlDatabases: make(map[string]sql.Resource),
+		queues:       make(map[string]queue.Resource),
+		shells:       make(map[string]shell.Resource),
+	}
+	return h
+}
+
+func (h *Handler) Handler() func(s *godog.Suite) {
 	return func(s *godog.Suite) {
 		s.BeforeFeature(func(_ *gherkin.Feature) {
-			h.resource.Reset()
+			h.reset()
 		})
 		s.AfterScenario(func(_ interface{}, _ error) {
-			h.resource.Reset()
+			h.reset()
 		})
-		s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequest)
-		s.Step(`^"([^"]*)" send request to "([^"]*)" with body$`, h.sendRequestWithBody)
-		s.Step(`^"([^"]*)" send request to "([^"]*)" with payload$`, h.sendRequestWithBody)
-		s.Step(`^"([^"]*)" response code should be (\d+)$`, h.checkResponseCode)
-		s.Step(`^"([^"]*)" response header "([^"]*)" should be "([^"]*)"$`, h.checkResponseHeader)
-		s.Step(`^"([^"]*)" response body should contain$`, h.checkResponseBodyContains)
-		s.Step(`^"([^"]*)" response body should equal$`, h.checkResponseBodyEquals)
-		s.Step(`^set "([^"]*)" response code to (\d+) and response body$`, h.setResponse)
-		s.Step(`^set "([^"]*)" with path "([^"]*)" response code to (\d+) and response body$`, h.setResponse)
-		s.Step(`^set "([^"]*)" table "([^"]*)" list of content$`, h.tableInsert)
-		s.Step(`^"([^"]*)" table "([^"]*)" should look like$`, h.tableCompare)
-		s.Step(`^publish message to "([^"]*)" target "([^"]*)" with payload$`, h.publishMessage)
-		s.Step(`^listen message from "([^"]*)" target "([^"]*)"$`, h.listenMessage)
-		s.Step(`^message from "([^"]*)" target "([^"]*)" count should be (\d+)$`, h.countMessage)
-		s.Step(`^message from "([^"]*)" target "([^"]*)" should contain$`, h.compareMessageContains)
-		s.Step(`^message from "([^"]*)" target "([^"]*)" should equal$`, h.compareMessageEquals)
-		s.Step(`^"([^"]*)" execute "([^"]*)"$`, h.execCommand)
-		s.Step(`^"([^"]*)" stdout should contains "([^"]*)"$`, h.checkStdoutContains)
-		s.Step(`^"([^"]*)" stdout should not contains "([^"]*)"$`, h.checkStdoutNotContains)
-		s.Step(`^"([^"]*)" stderr should contains "([^"]*)"$`, h.checkStderrContains)
-		s.Step(`^"([^"]*)" stderr should not contains "([^"]*)"$`, h.checkStderrNotContains)
-
-    }
+		server.New(h.httpServers).Register(s)
+		client.New(h.httpClients).Register(s)
+		sql.New(h.sqlDatabases).Register(s)
+		queue.New(h.queues).Register(s)
+		shell.New(h.shells).Register(s)
+	}
 }

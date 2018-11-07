@@ -1,14 +1,32 @@
-package handler
+package shell
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/tomatool/tomato/resource"
 )
 
+type Resource interface {
+	resource.Resource
+
+	Exec(command string, arguments ...string) error
+	Stdout() (string, error)
+	Stderr() (string, error)
+}
+
+type Handler struct {
+	r map[string]Resource
+}
+
+func New(r map[string]Resource) *Handler {
+	return &Handler{r}
+}
+
 func (h *Handler) execCommand(resourceName, command string) error {
-	r, err := h.resource.GetShell(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	cmds := strings.Split(command, " ")
@@ -16,10 +34,11 @@ func (h *Handler) execCommand(resourceName, command string) error {
 }
 
 func (h *Handler) checkStdoutContains(resourceName, message string) error {
-	r, err := h.resource.GetShell(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	stdout, err := r.Stdout()
 	if err != nil {
 		return err
@@ -33,10 +52,11 @@ func (h *Handler) checkStdoutContains(resourceName, message string) error {
 }
 
 func (h *Handler) checkStderrContains(resourceName, message string) error {
-	r, err := h.resource.GetShell(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	stderr, err := r.Stderr()
 	if err != nil {
 		return err
@@ -50,10 +70,11 @@ func (h *Handler) checkStderrContains(resourceName, message string) error {
 }
 
 func (h *Handler) checkStdoutNotContains(resourceName, message string) error {
-	r, err := h.resource.GetShell(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	stdout, err := r.Stdout()
 	if err != nil {
 		return err
@@ -67,10 +88,11 @@ func (h *Handler) checkStdoutNotContains(resourceName, message string) error {
 }
 
 func (h *Handler) checkStderrNotContains(resourceName, message string) error {
-	r, err := h.resource.GetShell(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	stderr, err := r.Stderr()
 	if err != nil {
 		return err

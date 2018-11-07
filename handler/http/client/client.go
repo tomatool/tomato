@@ -1,25 +1,42 @@
-package handler
+package client
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/olekukonko/tablewriter"
 	"github.com/tomatool/tomato/compare"
 	"github.com/tomatool/tomato/errors"
+	"github.com/tomatool/tomato/resource"
 )
+
+type Resource interface {
+	resource.Resource
+
+	Request(method, path string, body []byte) error
+	Response() (int, http.Header, []byte, error)
+}
+
+type Handler struct {
+	r map[string]Resource
+}
+
+func New(r map[string]Resource) *Handler {
+	return &Handler{r}
+}
 
 func (h *Handler) sendRequest(resourceName, target string) error {
 	return h.sendRequestWithBody(resourceName, target, nil)
 }
 
 func (h *Handler) sendRequestWithBody(resourceName, target string, content *gherkin.DocString) error {
-	r, err := h.resource.GetHTTPClient(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	tt := strings.Split(target, " ")
@@ -32,10 +49,11 @@ func (h *Handler) sendRequestWithBody(resourceName, target string, content *gher
 }
 
 func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error {
-	r, err := h.resource.GetHTTPClient(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	code, _, body, err := r.Response()
 	if err != nil {
 		return err
@@ -48,10 +66,11 @@ func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error
 }
 
 func (h *Handler) checkResponseHeader(resourceName string, expectedHeaderName, expectedHeaderValue string) error {
-	r, err := h.resource.GetHTTPClient(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	_, header, body, err := r.Response()
 	if err != nil {
 		return err
@@ -70,9 +89,9 @@ func (h *Handler) checkResponseHeader(resourceName string, expectedHeaderName, e
 }
 
 func (h *Handler) checkResponseBodyEquals(resourceName string, expectedBody *gherkin.DocString) error {
-	r, err := h.resource.GetHTTPClient(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 	_, _, body, err := r.Response()
 	if err != nil {
@@ -100,10 +119,11 @@ func (h *Handler) checkResponseBodyEquals(resourceName string, expectedBody *ghe
 }
 
 func (h *Handler) checkResponseBodyContains(resourceName string, expectedBody *gherkin.DocString) error {
-	r, err := h.resource.GetHTTPClient(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
+
 	_, _, body, err := r.Response()
 	if err != nil {
 		return err

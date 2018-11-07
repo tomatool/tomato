@@ -1,4 +1,4 @@
-package handler
+package queue
 
 import (
 	"encoding/json"
@@ -8,30 +8,47 @@ import (
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/tomatool/tomato/compare"
+	"github.com/tomatool/tomato/resource"
 )
 
+type Resource interface {
+	resource.Resource
+
+	Listen(target string) error
+	Fetch(target string) ([][]byte, error)
+	Publish(target string, payload []byte) error
+}
+
+type Handler struct {
+	r map[string]Resource
+}
+
+func New(r map[string]Resource) *Handler {
+	return &Handler{r}
+}
+
 func (h *Handler) publishMessage(resourceName, target string, payload *gherkin.DocString) error {
-	r, err := h.resource.GetQueue(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	return r.Publish(target, []byte(payload.Content))
 }
 
 func (h *Handler) listenMessage(resourceName, target string) error {
-	r, err := h.resource.GetQueue(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	return r.Listen(target)
 }
 
 func (h *Handler) countMessage(resourceName, target string, expectedCount int) error {
-	r, err := h.resource.GetQueue(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	messages, err := r.Fetch(target)
@@ -47,9 +64,9 @@ func (h *Handler) countMessage(resourceName, target string, expectedCount int) e
 }
 
 func (h *Handler) compareMessageEquals(resourceName, target string, expectedMessage *gherkin.DocString) error {
-	r, err := h.resource.GetQueue(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	messages, err := r.Fetch(target)
@@ -74,9 +91,9 @@ func (h *Handler) compareMessageEquals(resourceName, target string, expectedMess
 }
 
 func (h *Handler) compareMessageContains(resourceName, target string, expectedMessage *gherkin.DocString) error {
-	r, err := h.resource.GetQueue(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	messages, err := r.Fetch(target)
