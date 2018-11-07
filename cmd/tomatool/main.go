@@ -76,5 +76,11 @@ func GenerateHandler(dictionaryPath, outputPath string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(outputPath, out.Bytes(), 0755)
+	for resourceName, r := range out {
+		if err := ioutil.WriteFile("./handler/"+resourceName+"/handler.go", r.Bytes(), 0755); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
