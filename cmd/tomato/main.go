@@ -13,7 +13,6 @@ import (
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/formatter"
 	"github.com/tomatool/tomato/handler"
-	"github.com/tomatool/tomato/resource"
 	"github.com/tomatool/tomato/version"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -47,8 +46,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	resourceManager := resource.NewManager(cfg.Resources)
-
 	godog.Format("tomato", "tomato custom godog formatter", formatter.New)
 
 	opts := godog.Options{
@@ -66,12 +63,28 @@ func main() {
 		opts.StopOnFailure = cfg.StopOnFailure
 	}
 
-	if err := resourceManager.Ready(); err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Resources is not ready"))
-		os.Exit(1)
+	h := handler.New()
+
+	for _, r := range cfg.Resources {
+		if err := h.Register(r.Name, r); err != nil {
+			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Failed to register resource : %+v", r))
+			os.Exit(1)
+		}
+		if r.ReadyCheck {
+			for i := 0; i < 20; i++ {
+				if err := h.Ready(r.Name); err == nil {
+					break
+				}
+				time.Sleep(time.Second)
+			}
+			if err := h.Ready(r.Name); err != nil {
+				fmt.Fprintln(os.Stderr, errors.Wrapf(err, "resource is not ready : %s", r.Name))
+				os.Exit(1)
+			}
+		}
 	}
 
-	if result := godog.RunWithOptions("godogs", handler.New(resourceManager), opts); result != 0 {
+	if result := godog.RunWithOptions("godogs", h.Handler(), opts); result != 0 {
 		os.Exit(result)
 	}
 }

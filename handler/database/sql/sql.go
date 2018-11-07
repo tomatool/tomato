@@ -1,17 +1,35 @@
-package handler
+package sql
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/tomatool/tomato/conv"
 	"github.com/tomatool/tomato/errors"
+	"github.com/tomatool/tomato/resource"
 )
 
+type Resource interface {
+	resource.Resource
+
+	Select(tableName string, condition map[string]string) ([]map[string]string, error)
+	Insert(tableName string, rows []map[string]string) error
+	Delete(tableName string, condition map[string]string) (int, error)
+}
+
+type Handler struct {
+	r map[string]Resource
+}
+
+func New(r map[string]Resource) *Handler {
+	return &Handler{r}
+}
+
 func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.DataTable) error {
-	r, err := h.resource.GetDatabaseSQL(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	expectedRows, err := conv.GherkinTableToSliceOfMap(content)
@@ -46,9 +64,9 @@ func (h *Handler) tableCompare(resourceName, tableName string, content *gherkin.
 }
 
 func (h *Handler) tableInsert(resourceName, tableName string, content *gherkin.DataTable) error {
-	r, err := h.resource.GetDatabaseSQL(resourceName)
-	if err != nil {
-		return err
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
 	}
 
 	rows, err := conv.GherkinTableToSliceOfMap(content)
