@@ -81,16 +81,14 @@ handlers:
                   type: json
 
     - name: http/server
-      description: http server that mocks API responses
-      resources:
-          - "github.com/tomatool/tomato/resource/http/server"
+      description: http wiremock server resource that mocks API responses
       options:
           - name: port
             description: http server port to expose
             type: number
       actions:
           - name: response
-            description: set a response code and body for any request that comes to the http/server target
+            description: set a response code and body for any request that comes to the wiremock target
             handle: setResponse
             expressions:
                 - set $resource response code to $code and response body $body
@@ -103,7 +101,7 @@ handlers:
                   type: json
 
           - name: response_path
-            description: set a response code and body for a given path for the http/server
+            description: set a response code and body for a given path for wiremock
             handle: setResponse
             expressions:
                 - set $resource with path $path response code to $code and response body $body

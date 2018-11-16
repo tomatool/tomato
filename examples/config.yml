@@ -1,34 +1,39 @@
 ---
 
 resources:
-    - name: tomato-psql
-      type: postgres
-      ready_check: true
-      params:
-        datasource: {{ .PSQL_DATASOURCE }}
+#    - name: tomato-psql
+#      type: database/sql
+#      ready_check: true
+#      params:
+#        driver: postgres
+#        datasource: {{ .PSQL_DATASOURCE }}
+#
+#    - name: tomato-mysql
+#      type: database/sql
+#      ready_check: true
+#      params:
+#        driver: mysql
+#        datasource: {{ .MYSQL_DATASOURCE }}
+#
+#    - name: tomato-queue
+#      type: queue
+#      ready_check: true
+#      params:
+#        driver: rabbitmq
+#        datasource: {{ .RABBITMQ_DATASOURCE }}
+#
+#    - name: tomato-nsq
+#      type: queue
+#      ready_check: true
+#      params:
+#        driver: nsq
+#        nsqd: {{ .NSQ_DATASOURCE }}
 
-    - name: tomato-mysql
-      type: mysql
-      ready_check: true
-      params:
-        datasource: {{ .MYSQL_DATASOURCE }}
-
-    - name: tomato-queue
-      type: rabbitmq
-      ready_check: true
-      params:
-        datasource: {{ .RABBITMQ_DATASOURCE }}
-
-    - name: tomato-nsq
-      type: nsq
-      ready_check: true
-      params:
-        nsqd: {{ .NSQ_DATASOURCE }}
-
-    - name: tomato-http-server
+    - name: tomato-http-wiremock
       type: httpserver
       ready_check: true
       params:
+        host: {{ .HTTP_SERVER_HOST }}
         port: {{ .HTTP_SERVER_PORT }}
 
     - name: tomato-http-client
@@ -36,6 +41,6 @@ resources:
       params:
         base_url: {{ .HTTP_CLIENT_BASE_URL }}
 
-    - name: shell-cli
-      type: shell
-      ready_check: false
+#    - name: shell-cli
+#      type: shell
+#      ready_check: false

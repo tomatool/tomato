@@ -34,6 +34,12 @@ resources:
       params:
         port: 8080
 
+    - name: tomato-http-wiremock
+      type: httpserver
+      ready_check: true
+      params:
+        port: 9090
+
     - name: tomato-http-client
       type: httpclient
       params:

@@ -73,7 +73,7 @@ Given $resource response body should equal $body
 
 ## HTTP Server
 
-http server that mocks API responses
+http wiremock server resource that mocks API responses
 
 Initialize resource in `config.yml`:
 ```yaml
@@ -88,20 +88,19 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
-* github.com/tomatool/tomato/resource/http/server
 
 
 ### Actions
 
 #### **Response**
-set a response code and body for any request that comes to the http/server target
+set a response code and body for any request that comes to the wiremock target
 ```gherkin
 Given set $resource response code to $code and response body $body
 
 ```
 
 #### **Response Path**
-set a response code and body for a given path for the http/server
+set a response code and body for a given path for wiremock
 ```gherkin
 Given set $resource with path $path response code to $code and response body $body
 
