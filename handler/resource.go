@@ -13,7 +13,7 @@ import (
 	mysql_r "github.com/tomatool/tomato/resource/database/sql/mysql"
 	postgres_r "github.com/tomatool/tomato/resource/database/sql/postgres"
 	httpclient_r "github.com/tomatool/tomato/resource/http/client"
-	httpserver_r "github.com/tomatool/tomato/resource/http/server"
+	httpwiremock_r "github.com/tomatool/tomato/resource/http/server/wiremock"
 	nsq_r "github.com/tomatool/tomato/resource/queue/nsq"
 	rabbitmq_r "github.com/tomatool/tomato/resource/queue/rabbitmq"
 	shell_r "github.com/tomatool/tomato/resource/shell"
@@ -42,11 +42,11 @@ func createResource(cfg *config.Resource) (resource.Resource, error) {
 	case "httpclient":
 		return httpclient_r.New(cfg)
 	case "httpserver":
-		return httpserver_r.New(cfg)
+		return httpwiremock_r.New(cfg)
 	case "shell":
 		return shell_r.New(cfg)
 	}
-	return nil, fmt.Errorf("resource %s not found", cfg.Type)
+	return nil, fmt.Errorf("resource %s not found to create resource", cfg.Type)
 }
 
 func (h *Handler) Register(name string, cfg *config.Resource) error {

@@ -12,7 +12,7 @@ func TestRetrieve(t *testing.T) {
 	cfg, err := Retrieve("testdata/conf.good.yml")
 	assert.NoError(t, err)
 
-	assert.Equal(t, len(cfg.Resources), 7)
+	assert.Equal(t, len(cfg.Resources), 8)
 	assert.Equal(t, cfg.StopOnFailure, false)
 }
 

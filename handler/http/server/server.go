@@ -24,7 +24,7 @@ func New(r map[string]Resource) *Handler {
 func (h *Handler) setResponse(resourceName, path string, code int, body *gherkin.DocString) error {
 	r, ok := h.r[resourceName]
 	if !ok {
-		return fmt.Errorf("%s not found", resourceName)
+		return fmt.Errorf("%s not found to set response", resourceName)
 	}
 	return r.SetResponse(path, code, []byte(body.Content))
 }

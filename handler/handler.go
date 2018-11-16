@@ -15,21 +15,21 @@ import (
 
 type Handler struct {
 	resources    map[string]resource.Resource
-	httpServers  map[string]server.Resource
 	httpClients  map[string]client.Resource
 	sqlDatabases map[string]sql.Resource
 	queues       map[string]queue.Resource
 	shells       map[string]shell.Resource
+	httpServers  map[string]server.Resource
 }
 
 func New() *Handler {
 	h := &Handler{
 		resources:    make(map[string]resource.Resource),
-		httpServers:  make(map[string]server.Resource),
 		httpClients:  make(map[string]client.Resource),
 		sqlDatabases: make(map[string]sql.Resource),
 		queues:       make(map[string]queue.Resource),
 		shells:       make(map[string]shell.Resource),
+		httpServers:  make(map[string]server.Resource),
 	}
 	return h
 }

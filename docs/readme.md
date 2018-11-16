@@ -120,4 +120,5 @@ Resource are the objects that are going to be used for steps in the scenario. Th
 * [Message Queue](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md) - to manage (publish/consume/check) message queue
   * [RabbitMQ](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md)
   * [NSQ](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md)
+  * [Wiremock](https://github.com/tomatool/tomato/blob/master/docs/resources/wiremock.md)
 * [Shell](https://github.com/tomatool/tomato/blob/master/docs/resources/shell.md) -  to execute unix shell command-line interface
