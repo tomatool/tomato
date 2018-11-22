@@ -1,290 +1,290 @@
 ---
 
-expression_map:
-    string: '"([^"]*)"'
-    number: '(\d+)'
-    duration: '(["]*)'
-    json: '$'
-    table: '$'
+handlers:
+    - name: http/client
+      description: http client that can be used for sending http requests and comparing the responses
+      resources:
+          - "github.com/tomatool/tomato/resource/http/client"
+      options:
+          - name: base_url
+            description: base url for the http client that will automatically be prepended to any route in the feature.
+            type: string
+          - name: timeout
+            description: timeout for the request round-trip.
+            type: duration
+      actions:
+          - name: send
+            description: send an http request without a request body
+            handle: sendRequest
+            expressions:
+                - $resource send request to $target
+            parameters:
+                - name: target
+                  description: target endpoint that has to be space separated between request method tpye and URL (`GET /status`)
+                  type: string
 
-resources:
-    parameters:
-        - name: resource
-          description: selected resource that is going to be used
+          - name: send_body
+            description: send an http request with a request body
+            handle: sendRequestWithBody
+            expressions:
+                - $resource send request to $target with body $body
+                - $resource send request to $target with payload $body
+            parameters:
+                - name: target
+                  description: target endpoint that has to be space separated between request method tpye and URL (`POST /user`)
+                  type: string
+                - name: body
+                  description: request body payload
+                  type: json
+
+          - name: response_code
+            description: check http response code
+            handle: checkResponseCode
+            expressions:
+                - $resource response code should be $code
+            parameters:
+                - name: code
+                  description: http response code (`200`)
+                  type: number
+
+          - name: response_header
+            description: check http response headers
+            handle: checkResponseHeader
+            expressions:
+                - $resource response header $header_name should be $header_value
+            parameters:
+                - name: header_name
+                  description: http header name (`content-type`)
+                  type: string
+                - name: header_value
+                  description: http header value (`application/json`)
+                  type: string
+
+
+          - name: response_body_contains
+            description: check response body
+            handle: checkResponseBodyContains
+            expressions:
+                - $resource response body should contain $body
+            parameters:
+                - name: body
+                  description: expected response body
+                  type: json
+          - name: response_body_equals
+            description: check response body
+            handle: checkResponseBodyEquals
+            expressions:
+                - $resource response body should equal $body
+            parameters:
+                - name: body
+                  description: expected response body
+                  type: json
+
+    - name: http/server
+      description: http server that mocks API responses
+      resources:
+          - "github.com/tomatool/tomato/resource/http/server"
+      options:
+          - name: port
+            description: http server port to expose
+            type: number
+      actions:
+          - name: response
+            description: set a response code and body for any request that comes to the http/server target
+            handle: setResponse
+            expressions:
+                - set $resource response code to $code and response body $body
+            parameters:
+                - name: code
+                  description: http response code (`404`)
+                  type: number
+                - name: body
+                  description: server response body
+                  type: json
+
+          - name: response_path
+            description: set a response code and body for a given path for the http/server
+            handle: setResponse
+            expressions:
+                - set $resource with path $path response code to $code and response body $body
+            parameters:
+                - name: path
+                  description: server endpoint path (`/status`)
+                  type: string
+                - name: code
+                  description: server response code (`200`)
+                  type: number
+                - name: body
+                  description: server response body
+                  type: json
+
+    - name: database/sql
+      description: database driver that interacts with a sql database
+      resources:
+          - "github.com/tomatool/tomato/resource/database/sql/postgres"
+          - "github.com/tomatool/tomato/resource/database/sql/mysql"
+      options:
+          - name: driver
+            description: sql driver (postgres or mysql)
+            type: string
+          - name: datasource
+            description: sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
+            type: string
+      actions:
+          - name: set
+            description: truncates the target table and sets row results to the passed values
+            handle: tableInsert
+            expressions:
+                - set $resource table $table list of content $content
+            parameters:
+                - name: table
+                  description: table name
+                  type: string
+                - name: content
+                  description: table row content in Gherkin table syntax
+                  type: table
+
+          - name: check
+            description: compares table content after an action
+            handle: tableCompare
+            expressions:
+                - $resource table $table should look like $content
+            parameters:
+                - name: table
+                  description: table name
+                  type: string
+                - name: content
+                  description: table row content in Gherkin table syntax
+                  type: table
+
+    - name: queue
+      description: messaging queue that that publishes and serves messages
+      resources:
+          - "github.com/tomatool/tomato/resource/queue/rabbitmq"
+          - "github.com/tomatool/tomato/resource/queue/nsq"
+      options:
+        - name: driver
+          description: queue driver (rabbitmq)
           type: string
-    list:
-        - name: http/client
-          description: http client that can be used for sending http requests and comparing the responses
-          options:
-              - name: base_url
-                description: base url for the http client that will automatically be prepended to any route in the feature.
+        - name: datasource
+          description: queue source dsn (`amqp://user:pass@host:port/`)
+          type: string
+      actions:
+        - name: publish
+          description: publish a message to message queue
+          handle: publishMessage
+          expressions:
+              - publish message to $resource target $target with payload $payload
+          parameters:
+              - name: target
+                description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                 type: string
-              - name: timeout
-                description: timeout for the request round-trip.
-                type: duration
-          actions:
-              - name: send
-                description: send an http request without a request body
-                handle: sendRequest
-                expressions:
-                    - $resource send request to $target
-                parameters:
-                    - name: target
-                      description: target endpoint that has to be space separated between request method tpye and URL (`GET /status`)
-                      type: string
+              - name: payload
+                description: queue message payload
+                type: json
 
-              - name: send_body
-                description: send an http request with a request body
-                handle: sendRequestWithBody
-                expressions:
-                    - $resource send request to $target with body $body
-                    - $resource send request to $target with payload $body
-                parameters:
-                    - name: target
-                      description: target endpoint that has to be space separated between request method tpye and URL (`POST /user`)
-                      type: string
-                    - name: body
-                      description: request body payload
-                      type: json
+        - name: listen
+          description: |
+                listen for messages on a given queue. Declaration should be before the publish action
+          handle: listenMessage
+          expressions:
+              - listen message from $resource target $target
+          parameters:
+              - name: target
+                description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
+                type: string
 
-              - name: response_code
-                description: check http response code
-                handle: checkResponseCode
-                expressions:
-                    - $resource response code should be $code
-                parameters:
-                    - name: code
-                      description: http response code (`200`)
-                      type: number
-
-              - name: response_header
-                description: check http response headers
-                handle: checkResponseHeader
-                expressions:
-                    - $resource response header $header_name should be $header_value
-                parameters:
-                    - name: header_name
-                      description: http header name (`content-type`)
-                      type: string
-                    - name: header_value
-                      description: http header value (`application/json`)
-                      type: string
-
-
-              - name: response_body_contains
-                description: check response body
-                handle: checkResponseBodyContains
-                expressions:
-                    - $resource response body should contain $body
-                parameters:
-                    - name: body
-                      description: expected response body
-                      type: json
-              - name: response_body_equals
-                description: check response body
-                handle: checkResponseBodyEquals
-                expressions:
-                    - $resource response body should equal $body
-                parameters:
-                    - name: body
-                      description: expected response body
-                      type: json
-
-        - name: http/server
-          description: http server that mocks API responses
-          options:
-              - name: port
-                description: http server port to expose
+        - name: count
+          description: count messages for a given target. Declaration should be before the publish action
+          handle: countMessage
+          expressions:
+              - message from $resource target $target count should be $count
+          parameters:
+              - name: target
+                description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
+                type: string
+              - name: count
+                description: number of expected messages in the queue
                 type: number
-          actions:
-              - name: response
-                description: set a response code and body for any request that comes to the http/server target
-                handle: setResponse
-                expressions:
-                    - set $resource response code to $code and response body $body
-                parameters:
-                    - name: code
-                      description: http response code (`404`)
-                      type: number
-                    - name: body
-                      description: server response body
-                      type: json
 
-              - name: response_path
-                description: set a response code and body for a given path for the http/server
-                handle: setResponse
-                expressions:
-                    - set $resource with path $path response code to $code and response body $body
-                parameters:
-                    - name: path
-                      description: server endpoint path (`/status`)
-                      type: string
-                    - name: code
-                      description: server response code (`200`)
-                      type: number
-                    - name: body
-                      description: server response body
-                      type: json
-
-        - name: database/sql
-          description: database driver that interacts with a sql database
-          options:
-              - name: driver
-                description: sql driver (postgres or mysql)
+        - name: compareContains
+          description: compare message payload by checking if the message contains other JSON. Declaration should be before the publish action
+          handle: compareMessageContains
+          expressions:
+              - message from $resource target $target should contain $payload
+          parameters:
+              - name: target
+                description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                 type: string
-              - name: datasource
-                description: sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
+              - name: payload
+                description: queue message payload
+                type: json
+
+        - name: compareEquals
+          description: compare message payload by checking for exact JSON matches. Declaration should be before the publish action
+          handle: compareMessageEquals
+          expressions:
+              - message from $resource target $target should equal $payload
+          parameters:
+              - name: target
+                description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
                 type: string
-          actions:
-              - name: set
-                description: truncates the target table and sets row results to the passed values
-                handle: tableInsert
-                expressions:
-                    - set $resource table $table list of content $content
-                parameters:
-                    - name: table
-                      description: table name
-                      type: string
-                    - name: content
-                      description: table row content in Gherkin table syntax
-                      type: table
+              - name: payload
+                description: queue message payload
+                type: json
 
-              - name: check
-                description: compares table content after an action
-                handle: tableCompare
-                expressions:
-                    - $resource table $table should look like $content
-                parameters:
-                    - name: table
-                      description: table name
-                      type: string
-                    - name: content
-                      description: table row content in Gherkin table syntax
-                      type: table
+    - name: shell
+      description: to communicate with shell command
+      resources:
+          - "github.com/tomatool/tomato/resource/shell"
+      options: []
+      actions:
+        - name: execute
+          description: execute shell command
+          handle: execCommand
+          expressions:
+              - $resource execute $command
+          parameters:
+              - name: command
+                description: command that gonna get executed
+                type: string
 
-        - name: queue
-          description: messaging queue that that publishes and serves messages
-          options:
-            - name: driver
-              description: queue driver (rabbitmq)
-              type: string
-            - name: datasource
-              description: queue source dsn (`amqp://user:pass@host:port/`)
-              type: string
-          actions:
-            - name: publish
-              description: publish a message to message queue
-              handle: publishMessage
-              expressions:
-                  - publish message to $resource target $target with payload $payload
-              parameters:
-                  - name: target
-                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
-                    type: string
-                  - name: payload
-                    description: queue message payload
-                    type: json
+        - name: stdout_contains
+          description: check stdout for executed command contains a given value
+          handle: checkStdoutContains
+          expressions:
+              - $resource stdout should contains $substring
+          parameters:
+              - name: substring
+                description: substring of the message
+                type: string
 
-            - name: listen
-              description: |
-                    listen for messages on a given queue. Declaration should be before the publish action
-              handle: listenMessage
-              expressions:
-                  - listen message from $resource target $target
-              parameters:
-                  - name: target
-                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
-                    type: string
+        - name: stdout_not_contains
+          description: check stdout for executed command not contains a given value
+          handle: checkStdoutNotContains
+          expressions:
+              - $resource stdout should not contains $substring
+          parameters:
+              - name: substring
+                description: substring of the message
+                type: string
 
-            - name: count
-              description: count messages for a given target. Declaration should be before the publish action
-              handle: countMessage
-              expressions:
-                  - message from $resource target $target count should be $count
-              parameters:
-                  - name: target
-                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
-                    type: string
-                  - name: count
-                    description: number of expected messages in the queue
-                    type: number
+        - name: stderr_contains
+          description: check stdout for executed command contains a given value
+          handle: checkStderrContains
+          expressions:
+              - $resource stderr should contains $substring
+          parameters:
+              - name: substring
+                description: substring of the message
+                type: string
 
-            - name: compareContains
-              description: compare message payload by checking if the message contains other JSON. Declaration should be before the publish action
-              handle: compareMessageContains
-              expressions:
-                  - message from $resource target $target should contain $payload
-              parameters:
-                  - name: target
-                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
-                    type: string
-                  - name: payload
-                    description: queue message payload
-                    type: json
-
-            - name: compareEquals
-              description: compare message payload by checking for exact JSON matches. Declaration should be before the publish action
-              handle: compareMessageEquals
-              expressions:
-                  - message from $resource target $target should equal $payload
-              parameters:
-                  - name: target
-                    description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
-                    type: string
-                  - name: payload
-                    description: queue message payload
-                    type: json
-
-        - name: shell
-          description: to communicate with shell command
-          options: []
-          actions:
-            - name: execute
-              description: execute shell command
-              handle: execCommand
-              expressions:
-                  - $resource execute $command
-              parameters:
-                  - name: command
-                    description: command that gonna get executed
-                    type: string
-
-            - name: stdout_contains
-              description: check stdout for executed command contains a given value
-              handle: checkStdoutContains
-              expressions:
-                  - $resource stdout should contains $substring
-              parameters:
-                  - name: substring
-                    description: substring of the message
-                    type: string
-
-            - name: stdout_not_contains
-              description: check stdout for executed command not contains a given value
-              handle: checkStdoutNotContains
-              expressions:
-                  - $resource stdout should not contains $substring
-              parameters:
-                  - name: substring
-                    description: substring of the message
-                    type: string
-
-            - name: stderr_contains
-              description: check stdout for executed command contains a given value
-              handle: checkStderrContains
-              expressions:
-                  - $resource stderr should contains $substring
-              parameters:
-                  - name: substring
-                    description: substring of the message
-                    type: string
-
-            - name: stderr_not_contains
-              description: check stderr for executed command not contains a given value
-              handle: checkStderrNotContains
-              expressions:
-                  - $resource stderr should not contains $substring
-              parameters:
-                  - name: substring
-                    description: substring of the message
-                    type: string
+        - name: stderr_not_contains
+          description: check stderr for executed command not contains a given value
+          handle: checkStderrNotContains
+          expressions:
+              - $resource stderr should not contains $substring
+          parameters:
+              - name: substring
+                description: substring of the message
+                type: string

@@ -9,7 +9,21 @@ import (
 )
 
 var (
-	Base Dictionary
+	Base        Dictionary
+	expressions = map[string]string{
+		"string":   `"([^"]*)"`,
+		"number":   `(\d+)`,
+		"duration": `(["]*)`,
+		"json":     "$",
+		"table":    "$",
+	}
+	parameters = []Parameter{
+		{
+			Name:        "resource",
+			Description: "selected resource that is going to be used",
+			Type:        "string",
+		},
+	}
 )
 
 type Type struct {
@@ -48,7 +62,7 @@ func (a *Action) Expr() []string {
 		for _, word := range strings.Split(expr, " ") {
 			if word[0] == '$' {
 				param := a.Param(word[1:])
-				e := Base.ExpressionMap[param.Type]
+				e := expressions[param.Type]
 				if e == "$" {
 					continue
 				}
@@ -68,7 +82,7 @@ func (a *Action) Expr() []string {
 }
 
 func (a *Action) Param(name string) *Parameter {
-	for _, param := range append(a.Parameters, Base.Resources.Parameters...) {
+	for _, param := range append(a.Parameters, parameters...) {
 		if param.Name == name {
 			return &param
 		}
@@ -76,15 +90,15 @@ func (a *Action) Param(name string) *Parameter {
 	return nil
 }
 
-type Resource struct {
+type Handler struct {
 	Name        string   `yaml:"name"`
-	Group       string   `yaml:"group"`
+	Resources   []string `yaml:"resources"`
 	Description string   `yaml:"description"`
 	Options     []Option `yaml:"options"`
 	Actions     []Action `yaml:"actions"`
 }
 
-func (r *Resource) Action(name string) *Action {
+func (r *Handler) Action(name string) *Action {
 	if r == nil {
 		return nil
 	}
@@ -96,23 +110,8 @@ func (r *Resource) Action(name string) *Action {
 	return nil
 }
 
-type Resources struct {
-	Parameters []Parameter `yaml:"parameters"`
-	List       []Resource  `yaml:"list"`
-}
-
-func (r *Resources) Find(name string) *Resource {
-	for _, v := range r.List {
-		if v.Name == name {
-			return &v
-		}
-	}
-	return nil
-}
-
 type Dictionary struct {
-	ExpressionMap map[string]string `yaml:"expression_map"`
-	Resources     Resources         `yaml:"resources"`
+	Handlers []Handler `yaml:"handlers"`
 }
 
 func Retrieve(filepath string) (*Dictionary, error) {
