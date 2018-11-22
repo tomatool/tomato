@@ -1,7 +1,7 @@
 # Resources
 
 Resource are the objects that are going to be used for steps in the scenario. They are listed under the resources key in the pipeline configuration.
-{{range $group, $resource := .Resources}}
+{{range $group, $handler := .Handlers}}
 ## {{t .Name}}
 
 {{.Description}}
@@ -16,6 +16,11 @@ Initialize resource in `config.yml`:
     {{.Name}}: # {{.Type}}
     {{end}}{{end}}
 ```
+
+### Resources
+
+{{range $resource := .Resources}}* {{ $resource }}
+{{end}}
 
 ### Actions
 {{range .Actions}}

@@ -52,16 +52,11 @@ func Generate(dict *dictionary.Dictionary, opts *Options) (*bytes.Buffer, error)
 	}
 
 	type vals struct {
-		Resources []dictionary.Resource
-		Groups    map[string][]dictionary.Resource
+		Handlers []dictionary.Handler
+		Groups   map[string][]dictionary.Handler
 	}
 	v := vals{
-		Groups:    make(map[string][]dictionary.Resource),
-		Resources: dict.Resources.List,
-	}
-	for _, r := range dict.Resources.List {
-		tmp := v.Groups[r.Group]
-		v.Groups[r.Group] = append(tmp, r)
+		Handlers: dict.Handlers,
 	}
 
 	out := &bytes.Buffer{}
