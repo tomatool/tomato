@@ -19,6 +19,11 @@ Initialize resource in `config.yml`:
     
 ```
 
+### Resources
+
+* github.com/tomatool/tomato/resource/http/client
+
+
 ### Actions
 
 #### **Send**
@@ -81,6 +86,11 @@ Initialize resource in `config.yml`:
     
 ```
 
+### Resources
+
+* github.com/tomatool/tomato/resource/http/server
+
+
 ### Actions
 
 #### **Response**
@@ -116,6 +126,12 @@ Initialize resource in `config.yml`:
     
 ```
 
+### Resources
+
+* github.com/tomatool/tomato/resource/database/sql/postgres
+* github.com/tomatool/tomato/resource/database/sql/mysql
+
+
 ### Actions
 
 #### **Set**
@@ -150,6 +166,12 @@ Initialize resource in `config.yml`:
     datasource: # string
     
 ```
+
+### Resources
+
+* github.com/tomatool/tomato/resource/queue/rabbitmq
+* github.com/tomatool/tomato/resource/queue/nsq
+
 
 ### Actions
 
@@ -201,6 +223,11 @@ Initialize resource in `config.yml`:
   type: shell
   ready_check: true 
 ```
+
+### Resources
+
+* github.com/tomatool/tomato/resource/shell
+
 
 ### Actions
 
