@@ -25,7 +25,7 @@ func step(expr, handle string) string {
 
 func Generate(dict *dictionary.Dictionary) (map[string]*bytes.Buffer, error) {
 	m := make(map[string]*bytes.Buffer)
-	for _, resource := range dict.Resources.List {
+	for _, resource := range dict.Handlers {
 		steps := bytes.NewBuffer(nil)
 		for _, action := range resource.Actions {
 			for _, expr := range action.Expr() {
