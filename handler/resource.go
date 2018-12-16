@@ -20,7 +20,16 @@ func (h *Handler) Register(name string, cfg *config.Resource) error {
 		err error
 	)
 
-	switch cfg.Type {
+	resources := map[string]string{
+		"httpclient": "http/client",
+		"httpserver": "http/server",
+		"postgres":   "database/sql",
+		"mysql":      "database/sql",
+		"rabbitmq":   "queue",
+		"nsq":        "queue",
+	}
+
+	switch resources[cfg.Type] {
 	case "database/sql":
 		h.sqlDatabases[cfg.Name], err = createSQL(cfg)
 		h.resources[cfg.Name] = h.sqlDatabases[cfg.Name]
