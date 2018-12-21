@@ -21,21 +21,16 @@ jobs:
       - checkout
 
       - run: mkdir -p /tmp/unit-test
-      - run: echo "" > coverage.txt
+      - run: echo "" > coverage.out
       - run: >
             for d in $(go list ./... | grep -v vendor); do
                 go test -race -coverprofile=profile.out -covermode=atomic $d
                 if [ -f profile.out ]; then
-                    cat profile.out >> coverage.txt
+                    cat profile.out >> coverage.out
                     rm profile.out
                 fi
             done
-      - run: mv coverage.txt /tmp/unit-test/unit-coverage.out
-
-      - persist_to_workspace:
-          root: /tmp/unit-test
-          paths:
-            - unit-coverage.out
+      - run: bash <(curl -s https://codecov.io/bash) -c -F unittests
 
   tomato-test:
     docker:
@@ -69,7 +64,6 @@ jobs:
       - attach_workspace:
           at: /tmp/
 
-      - run: mv /tmp/unit-coverage.out coverage.out && bash <(curl -s https://codecov.io/bash) -c -F unittests
       - run: mv /tmp/tomato-coverage.out coverage.out && bash <(curl -s https://codecov.io/bash) -c -F tomatotests
 
 
