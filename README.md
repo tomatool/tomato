@@ -30,9 +30,8 @@ Create a `tomato.yml` file with your application's required test [resources](htt
 
 resources:
     - name: psql
-      type: database/sql
+      type: postgres
       params:
-        driver: postgres
         datasource: {{ .PSQL_DATASOURCE }}
 
     - name: your-application-client
