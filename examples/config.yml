@@ -26,7 +26,7 @@ resources:
         nsqd: {{ .NSQ_DATASOURCE }}
 
     - name: tomato-http-server
-      type: http/server
+      type: httpserver
       ready_check: true
       params:
         port: {{ .HTTP_SERVER_PORT }}
