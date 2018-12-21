@@ -50,7 +50,9 @@ jobs:
 
       - run: mkdir -p /tmp/tomato-test
       - run: docker cp "$(docker-compose ps -q tomato)":/tmp/coverage.out ./tomato-coverage.out
-      - run: bash <(curl -s https://codecov.io/bash) -c -F tomatotests
+      
+      - run: curl -s https://codecov.io/bash > codecov.sh
+      - run: bash ./codecov.sh -c -F tomatotests
 
 workflows:
   version: 2
