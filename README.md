@@ -35,7 +35,7 @@ resources:
         datasource: {{ .PSQL_DATASOURCE }}
 
     - name: your-application-client
-      type: http/client
+      type: httpclient
       params:
         base_url: {{ .APP_BASE_URL }}
 ```
