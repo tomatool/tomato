@@ -49,10 +49,23 @@ jobs:
       - run: docker-compose start tomato
 
       - run: mkdir -p /tmp/tomato-test
-      - run: docker cp "$(docker-compose ps -q tomato)":/tmp/coverage.out ./tomato-coverage.out
-      
-      - run: curl -s https://codecov.io/bash > codecov.sh
-      - run: bash ./codecov.sh -c -F tomatotests
+      - run: docker cp "$(docker-compose ps -q tomato)":/tmp/coverage.out /tmp/tomato-test/tomato-coverage.out
+      - persist_to_workspace:
+          root: /tmp/tomato-test
+          paths:
+            - tomato-coverage.out
+
+  codecov-report:
+    docker:
+      - image: circleci/golang:1.11
+
+    working_directory: /go/src/github.com/tomatool/tomato
+    steps:
+      - attach_workspace:
+          at: /tmp/
+
+      - run: mv /tmp/tomato-coverage.out coverage.out && bash <(curl -s https://codecov.io/bash) -c -F tomatotests
+
 
 workflows:
   version: 2
@@ -65,3 +78,7 @@ workflows:
       - tomato-test:
           requires:
               - dictionary-check
+      - codecov-report:
+          requires:
+              - unit-test
+              - tomato-test
