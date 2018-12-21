@@ -24,10 +24,6 @@ type Resource struct {
 	Params     map[string]string `yaml:"params"`
 }
 
-func (r *Resource) Key() string {
-	return r.Type + ":" + r.Name
-}
-
 func Retrieve(configFile string) (*Config, error) {
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
