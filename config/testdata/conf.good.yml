@@ -28,11 +28,12 @@ resources:
       params:
         nsqd: 127.0.0.1:4160
 
-    - name: tomato-http-server
-      type: httpserver
+    - name: tomato-wiremock
+      type: wiremock
       ready_check: true
       params:
-        port: 8080
+        host: "wiremock" 
+        port: 8080 
 
     - name: tomato-wiremock
       type: httpserver
@@ -43,7 +44,7 @@ resources:
     - name: tomato-http-client
       type: httpclient
       params:
-        base_url: http://localhost:8080/
+        base_url: http://wiremock:8080/
 
     - name: shell-cli
       type: shell

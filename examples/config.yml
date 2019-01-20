@@ -2,35 +2,31 @@
 
 resources:
     - name: tomato-psql
-      type: database/sql
+      type: postgres
       ready_check: true
       params:
-        driver: postgres
         datasource: {{ .PSQL_DATASOURCE }}
 
     - name: tomato-mysql
-      type: database/sql
+      type: mysql
       ready_check: true
       params:
-        driver: mysql
         datasource: {{ .MYSQL_DATASOURCE }}
 
     - name: tomato-queue
-      type: queue
+      type: rabbitmq
       ready_check: true
-     params:
-        driver: rabbitmq
+      params:
         datasource: {{ .RABBITMQ_DATASOURCE }}
 
     - name: tomato-nsq
-      type: queue
+      type: nsq
       ready_check: true
       params:
-        driver: nsq
         nsqd: {{ .NSQ_DATASOURCE }}
 
     - name: tomato-wiremock
-      type: httpserver
+      type: wiremock
       ready_check: true
       params:
         host: {{ .HTTP_SERVER_HOST }}
