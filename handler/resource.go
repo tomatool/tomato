@@ -20,8 +20,8 @@ import (
 )
 
 var resources = map[string]string{
-	"httpclient": "http/client",
-	"wiremock":   "http/server",
+	"httpclient": "httpclient",
+	"wiremock":   "httpserver",
 	"postgres":   "database/sql",
 	"mysql":      "database/sql",
 	"rabbitmq":   "queue",
@@ -61,9 +61,9 @@ func (h *Handler) Register(name string, cfg *config.Resource) error {
 		h.sqlDatabases[cfg.Name] = r.(sql.Resource)
 	case "shell":
 		h.shells[cfg.Name] = r.(shell.Resource)
-	case "http/client":
+	case "httpclient":
 		h.httpClients[cfg.Name] = r.(client.Resource)
-	case "http/server":
+	case "httpserver":
 		h.httpServers[cfg.Name] = r.(server.Resource)
 	case "queue":
 		h.queues[cfg.Name] = r.(queue.Resource)
