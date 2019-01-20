@@ -13,7 +13,7 @@ import (
 	mysql_r "github.com/tomatool/tomato/resource/database/sql/mysql"
 	postgres_r "github.com/tomatool/tomato/resource/database/sql/postgres"
 	httpclient_r "github.com/tomatool/tomato/resource/http/client"
-	httpwiremock_r "github.com/tomatool/tomato/resource/http/server/wiremock"
+	wiremock_r "github.com/tomatool/tomato/resource/http/server/wiremock"
 	nsq_r "github.com/tomatool/tomato/resource/queue/nsq"
 	rabbitmq_r "github.com/tomatool/tomato/resource/queue/rabbitmq"
 	shell_r "github.com/tomatool/tomato/resource/shell"
@@ -21,7 +21,7 @@ import (
 
 var resources = map[string]string{
 	"httpclient": "http/client",
-	"httpserver": "http/server",
+	"wiremock":   "http/server",
 	"postgres":   "database/sql",
 	"mysql":      "database/sql",
 	"rabbitmq":   "queue",
@@ -41,8 +41,8 @@ func createResource(cfg *config.Resource) (resource.Resource, error) {
 		return nsq_r.New(cfg)
 	case "httpclient":
 		return httpclient_r.New(cfg)
-	case "httpserver":
-		return httpwiremock_r.New(cfg)
+	case "wiremock":
+		return wiremock_r.New(cfg)
 	case "shell":
 		return shell_r.New(cfg)
 	}
