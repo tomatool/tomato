@@ -1,13 +1,13 @@
 Feature: http feature example
 
     Scenario: Set and compare http-wiremock responses
-        Given set "tomato-http-wiremock" with path "/example" response code to 202 and response body
+        Given set "tomato-wiremock" with path "/example" response code to 202 and response body
             """
           {
                 "example":"word"
           }
             """
-        Given set "tomato-http-wiremock" with path "/example?fail" response code to 500 and response body
+        Given set "tomato-wiremock" with path "/example?fail" response code to 500 and response body
             """
           {
                 "example":"not word",
