@@ -34,7 +34,7 @@ resources:
       params:
         port: 8080
 
-    - name: tomato-http-wiremock
+    - name: tomato-wiremock
       type: httpserver
       ready_check: true
       params:
