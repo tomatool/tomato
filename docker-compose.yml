@@ -51,7 +51,7 @@ services:
     wiremock:
         image: rodolpheche/wiremock
         ports:
-          - "8080:8080"
+          - "8080"
         expose:
             - "8080"
 
