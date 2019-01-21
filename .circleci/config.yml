@@ -67,8 +67,15 @@ jobs:
       - run: mv /tmp/tomato-coverage.out coverage.out && bash <(curl -s https://codecov.io/bash) -c -F tomatotests
 
 
+
 workflows:
   version: 2
+  build:
+    jobs:
+      - dictionary-check:
+        filters:
+          tags:
+            only: /[0-9].[0-9].*/
   tests:
     jobs:
       - dictionary-check
