@@ -1,51 +1,45 @@
-package mysql
+package postgres
 
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"github.com/tomatool/tomato/config"
-	"github.com/tomatool/tomato/resource/database/sql"
+	"github.com/tomatool/tomato/sql"
 )
 
-type MySQL struct {
-	db     *sqlx.DB
-	dbname string
+type PostgreSQL struct {
+	db *sqlx.DB
 }
 
-func New(cfg *config.Resource) (*MySQL, error) {
+func New(cfg *config.Resource) (*PostgreSQL, error) {
 	datasource, ok := cfg.Params["datasource"]
 	if !ok {
 		return nil, errors.New("datasource is required")
 	}
 
-	u, err := url.Parse("mysql://" + datasource + "?uyeah")
+	db, err := sqlx.Open("postgres", datasource)
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := sqlx.Open("mysql", datasource)
-	if err != nil {
-		return nil, err
-	}
-
-	return &MySQL{db: db, dbname: strings.Replace(u.Path, "/", "", -1)}, nil
+	return &PostgreSQL{db: db}, nil
 }
 
-func (d *MySQL) Ready() error {
+func (d *PostgreSQL) Ready() error {
 	return d.db.Ping()
 }
 
-func (d *MySQL) Reset() error {
+func (d *PostgreSQL) Reset() error {
 	var (
 		tables []string
+		query  string
 	)
 
-	query := `SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_schema='` + d.dbname + `'`
+	query = `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`
 	if err := d.db.Select(&tables, query); err != nil {
 		return err
 	}
@@ -55,30 +49,19 @@ func (d *MySQL) Reset() error {
 		return err
 	}
 	defer tx.Rollback()
-	if _, err := tx.Exec("SET FOREIGN_KEY_CHECKS=0"); err != nil {
-		return err
-	}
 
 	for _, table := range tables {
-		if _, err := tx.Exec("TRUNCATE TABLE " + table); err != nil {
-			e, ok := err.(*mysql.MySQLError)
-			if ok && e.Number == 1146 {
-				return nil
-			}
+		if _, err := tx.Exec(`TRUNCATE TABLE ` + table + ` RESTART IDENTITY CASCADE`); err != nil {
 			return err
 		}
-	}
-
-	if _, err := tx.Exec("SET FOREIGN_KEY_CHECKS=1"); err != nil {
-		return err
 	}
 
 	return tx.Commit()
 }
 
-func (d *MySQL) Select(tableName string, condition map[string]string) ([]map[string]string, error) {
+func (d *PostgreSQL) Select(tableName string, condition map[string]string) ([]map[string]string, error) {
 	result := make([]map[string]string, 0)
-	q := sql.NewQueryBuilder("mysql", "SELECT * FROM "+tableName)
+	q := sql.NewQueryBuilder("postgres", "SELECT * FROM "+tableName)
 	for key, val := range condition {
 		q.Where(key, "=", val)
 	}
@@ -105,7 +88,7 @@ func (d *MySQL) Select(tableName string, condition map[string]string) ([]map[str
 
 	return result, nil
 }
-func (d *MySQL) Insert(tableName string, rows []map[string]string) error {
+func (d *PostgreSQL) Insert(tableName string, rows []map[string]string) error {
 	tx, err := d.db.Beginx()
 	if err != nil {
 		return err
@@ -113,7 +96,7 @@ func (d *MySQL) Insert(tableName string, rows []map[string]string) error {
 	defer tx.Rollback()
 
 	for _, row := range rows {
-		query := sql.NewQueryBuilder("mysql", "INSERT INTO "+tableName)
+		query := sql.NewQueryBuilder("postgres", "INSERT INTO "+tableName)
 		for key, val := range row {
 			if val == "" || strings.ToLower(val) == "null" {
 				continue
@@ -126,6 +109,6 @@ func (d *MySQL) Insert(tableName string, rows []map[string]string) error {
 	}
 	return tx.Commit()
 }
-func (d *MySQL) Delete(tableName string, condition map[string]string) (int, error) {
+func (d *PostgreSQL) Delete(tableName string, condition map[string]string) (int, error) {
 	return 0, errors.New("not implemented")
 }

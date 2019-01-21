@@ -10,18 +10,18 @@ import (
 	"github.com/tomatool/tomato/handler/queue"
 	"github.com/tomatool/tomato/handler/shell"
 	"github.com/tomatool/tomato/resource"
-	mysql_r "github.com/tomatool/tomato/resource/database/sql/mysql"
-	postgres_r "github.com/tomatool/tomato/resource/database/sql/postgres"
-	httpclient_r "github.com/tomatool/tomato/resource/http/client"
-	wiremock_r "github.com/tomatool/tomato/resource/http/server/wiremock"
-	nsq_r "github.com/tomatool/tomato/resource/queue/nsq"
-	rabbitmq_r "github.com/tomatool/tomato/resource/queue/rabbitmq"
+	httpclient_r "github.com/tomatool/tomato/resource/httpclient"
+	mysql_r "github.com/tomatool/tomato/resource/mysql"
+	nsq_r "github.com/tomatool/tomato/resource/nsq"
+	postgres_r "github.com/tomatool/tomato/resource/postgres"
+	rabbitmq_r "github.com/tomatool/tomato/resource/rabbitmq"
 	shell_r "github.com/tomatool/tomato/resource/shell"
+	wiremock_r "github.com/tomatool/tomato/resource/wiremock"
 )
 
 var resources = map[string]string{
-	"httpclient": "httpclient",
-	"wiremock":   "httpserver",
+	"httpclient": "http/client",
+	"wiremock":   "http/server",
 	"postgres":   "database/sql",
 	"mysql":      "database/sql",
 	"rabbitmq":   "queue",
@@ -61,9 +61,9 @@ func (h *Handler) Register(name string, cfg *config.Resource) error {
 		h.sqlDatabases[cfg.Name] = r.(sql.Resource)
 	case "shell":
 		h.shells[cfg.Name] = r.(shell.Resource)
-	case "httpclient":
+	case "http/client":
 		h.httpClients[cfg.Name] = r.(client.Resource)
-	case "httpserver":
+	case "http/server":
 		h.httpServers[cfg.Name] = r.(server.Resource)
 	case "queue":
 		h.queues[cfg.Name] = r.(queue.Resource)
