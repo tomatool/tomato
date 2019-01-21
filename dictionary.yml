@@ -4,7 +4,7 @@ handlers:
     - name: http/client
       description: http client that can be used for sending http requests and comparing the responses
       resources:
-          - "github.com/tomatool/tomato/resource/http/client"
+          - "httpclient"
       options:
           - name: base_url
             description: base url for the http client that will automatically be prepended to any route in the feature.
@@ -83,7 +83,7 @@ handlers:
     - name: http/server
       description: http wiremock server resource that mocks API responses
       resources:
-          - "github.com/tomatool/tomato/resource/wiremock"
+          - "wiremock"
       options:
           - name: port
             description: http server port to expose
@@ -121,8 +121,8 @@ handlers:
     - name: database/sql
       description: database driver that interacts with a sql database
       resources:
-          - "github.com/tomatool/tomato/resource/database/sql/postgres"
-          - "github.com/tomatool/tomato/resource/database/sql/mysql"
+          - "postgres"
+          - "mysql"
       options:
           - name: driver
             description: sql driver (postgres or mysql)
@@ -160,8 +160,8 @@ handlers:
     - name: queue
       description: messaging queue that that publishes and serves messages
       resources:
-          - "github.com/tomatool/tomato/resource/queue/rabbitmq"
-          - "github.com/tomatool/tomato/resource/queue/nsq"
+          - "rabbitmq"
+          - "nsq"
       options:
         - name: driver
           description: queue driver (rabbitmq)
@@ -236,7 +236,7 @@ handlers:
     - name: shell
       description: to communicate with shell command
       resources:
-          - "github.com/tomatool/tomato/resource/shell"
+          - "shell"
       options: []
       actions:
         - name: execute
