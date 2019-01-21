@@ -82,6 +82,8 @@ handlers:
 
     - name: http/server
       description: http wiremock server resource that mocks API responses
+      resources:
+          - "github.com/tomatool/tomato/resource/wiremock"
       options:
           - name: port
             description: http server port to expose

@@ -88,6 +88,7 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
+* github.com/tomatool/tomato/resource/wiremock
 
 
 ### Actions
