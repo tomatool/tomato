@@ -2,6 +2,9 @@
 
 randomize: false
 stop_on_failure: false
+features_path:
+  - "ulala"
+  - "uyeah"
 
 resources:
     - name: tomato-psql
@@ -32,8 +35,8 @@ resources:
       type: wiremock
       ready_check: true
       params:
-        host: "wiremock" 
-        port: 8080 
+        host: "wiremock"
+        port: 8080
 
     - name: tomato-wiremock
       type: httpserver

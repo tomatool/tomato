@@ -46,11 +46,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	featuresPaths := strings.Split(featuresPath, ",")
+	if len(cfg.FeaturesPaths) > 0 {
+		featuresPaths = cfg.FeaturesPaths
+	}
+
 	godog.Format("tomato", "tomato custom godog formatter", formatter.New)
 
 	opts := godog.Options{
 		Output: colors.Colored(os.Stdout),
-		Paths:  strings.Split(featuresPath, ","),
+		Paths:  featuresPaths,
 		Format: "tomato",
 		Strict: true,
 	}
