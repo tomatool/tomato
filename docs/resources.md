@@ -21,7 +21,7 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
-* github.com/tomatool/tomato/resource/http/client
+* httpclient
 
 
 ### Actions
@@ -88,7 +88,7 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
-* github.com/tomatool/tomato/resource/wiremock
+* wiremock
 
 
 ### Actions
@@ -128,8 +128,8 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
-* github.com/tomatool/tomato/resource/database/sql/postgres
-* github.com/tomatool/tomato/resource/database/sql/mysql
+* postgres
+* mysql
 
 
 ### Actions
@@ -169,8 +169,8 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
-* github.com/tomatool/tomato/resource/queue/rabbitmq
-* github.com/tomatool/tomato/resource/queue/nsq
+* rabbitmq
+* nsq
 
 
 ### Actions
@@ -226,7 +226,7 @@ Initialize resource in `config.yml`:
 
 ### Resources
 
-* github.com/tomatool/tomato/resource/shell
+* shell
 
 
 ### Actions

@@ -111,13 +111,13 @@ Resource are the objects that are going to be used for steps in the scenario. Th
 
 ### List of available resources
 
-* [Database SQL](https://github.com/tomatool/tomato/blob/master/docs/resources/database-sql.md) - to manage (insert/check) database state changes
-  * [MySQL](https://github.com/tomatool/tomato/blob/master/docs/resources/database-sql.md)
-  * [PostgreSQL](https://github.com/tomatool/tomato/blob/master/docs/resources/database-sql.md)
-* [HTTP Client](https://github.com/tomatool/tomato/blob/master/docs/resources/http-client.md) - to send HTTP Request
-* [HTTP Server](https://github.com/tomatool/tomato/blob/master/docs/resources/wiremock.md) - to mock external HTTP Server
-  * [Wiremock](https://github.com/tomatool/tomato/blob/master/docs/resources/wiremock.md)
-* [Message Queue](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md) - to manage (publish/consume/check) message queue
-  * [RabbitMQ](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md)
-  * [NSQ](https://github.com/tomatool/tomato/blob/master/docs/resources/message-queue.md)
-* [Shell](https://github.com/tomatool/tomato/blob/master/docs/resources/shell.md) -  to execute unix shell command-line interface
+* [Database SQL](https://github.com/tomatool/tomato/blob/master/docs/resources.md#database-sql) - to manage (insert/check) database state changes
+  * [MySQL](https://github.com/tomatool/tomato/blob/master/docs/resources.md#database-sql)
+  * [PostgreSQL](https://github.com/tomatool/tomato/blob/master/docs/resources.md#database-sql)
+* [HTTP Client](https://github.com/tomatool/tomato/blob/master/docs/resources.md#http-client) - to send HTTP Request
+* [HTTP Server](https://github.com/tomatool/tomato/blob/master/docs/resources.md#http-server) - to mock external HTTP Server
+  * [Wiremock](https://github.com/tomatool/tomato/blob/master/docs/resources.md#http-server)
+* [Message Queue](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue) - to manage (publish/consume/check) message queue
+  * [RabbitMQ](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue)
+  * [NSQ](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue)
+* [Shell](https://github.com/tomatool/tomato/blob/master/docs/resources.md#shell) -  to execute unix shell command-line interface
