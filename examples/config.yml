@@ -29,8 +29,7 @@ resources:
       type: wiremock
       ready_check: true
       params:
-        host: {{ .HTTP_SERVER_HOST }}
-        port: {{ .HTTP_SERVER_PORT }}
+        base_url: {{ .WIREMOCK_BASE_URL }}
 
     - name: tomato-http-client
       type: httpclient

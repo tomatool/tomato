@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
@@ -17,29 +17,22 @@ const Name = "http/server"
 
 // Wiremock contains the configuration for the wiremock stubbing resource
 type Wiremock struct {
-	host string
-	port int
+	baseURL string
 }
 
 // New connects and creates the wiremock resource
 // create the stub via the API you can post the request/response JSON to http://<host>:<port>/__admin/mappings
 func New(cfg *config.Resource) (*Wiremock, error) {
-	p, ok := cfg.Params["port"]
+	u, ok := cfg.Params["base_url"]
 	if !ok {
-		return nil, errors.New("http/server: port is required")
+		return nil, errors.New("wiremock: base_url is required")
 	}
 
-	host, ok := cfg.Params["host"]
-	if !ok {
-		return nil, errors.New("http/server: host is required")
+	if _, err := url.Parse(u); err != nil {
+		return nil, fmt.Errorf("%s - invalid base_url : %s", u, err.Error())
 	}
 
-	port, err := strconv.Atoi(p)
-	if err != nil {
-		return nil, errors.Wrap(err, "http/server: unrecognized port format")
-	}
-
-	return &Wiremock{port: port, host: host}, nil
+	return &Wiremock{baseURL: u}, nil
 }
 
 // Ready informs tomato of when wiremock is ready to handle connections
@@ -91,17 +84,17 @@ func (w *Wiremock) SetResponse(requestPath string, responseCode int, responseBod
 
 func (w *Wiremock) mappingURL() string {
 	// http://<host>:<port>/__admin/mappings
-	return fmt.Sprintf("http://%s:%v/__admin/mappings", w.host, w.port)
+	return fmt.Sprintf("%s/__admin/mappings", w.baseURL)
 }
 
 func (w *Wiremock) resetURL() string {
 	// http://<host>:<port>/__admin/reset
-	return fmt.Sprintf("http://%s:%v/__admin/reset", w.host, w.port)
+	return fmt.Sprintf("%s/__admin/reset", w.baseURL)
 }
 
 func (w *Wiremock) statusURL() string {
 	// http://<host>:<port>/__admin/reset
-	return fmt.Sprintf("http://%s:%v/__admin/docs", w.host, w.port)
+	return fmt.Sprintf("%s/__admin/docs", w.baseURL)
 }
 
 func (w *Wiremock) createMapping(m *mapping) error {

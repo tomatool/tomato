@@ -81,8 +81,8 @@ Initialize resource in `config.yml`:
   type: http/server
   ready_check: true 
   params:
-    # http server port to expose
-    port: # number
+    # writemock base url (e.g : http://localhost:8080)
+    base_url: # string
     
 ```
 

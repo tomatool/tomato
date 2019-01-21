@@ -85,9 +85,9 @@ handlers:
       resources:
           - "wiremock"
       options:
-          - name: port
-            description: http server port to expose
-            type: number
+          - name: base_url
+            description: "writemock base url (e.g : http://localhost:8080)"
+            type: string
       actions:
           - name: response
             description: set a response code and body for any request that comes to the wiremock target
