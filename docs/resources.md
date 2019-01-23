@@ -9,7 +9,7 @@ http client that can be used for sending http requests and comparing the respons
 Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
-  type: http/client
+  type: # | httpclient | 
   ready_check: true 
   params:
     # base url for the http client that will automatically be prepended to any route in the feature.
@@ -78,7 +78,7 @@ http wiremock server resource that mocks API responses
 Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
-  type: http/server
+  type: # | wiremock | 
   ready_check: true 
   params:
     # writemock base url (e.g : http://localhost:8080)
@@ -116,7 +116,7 @@ database driver that interacts with a sql database
 Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
-  type: database/sql
+  type: # | postgres | mysql | 
   ready_check: true 
   params:
     # sql driver (postgres or mysql)
@@ -157,7 +157,7 @@ messaging queue that that publishes and serves messages
 Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
-  type: queue
+  type: # | rabbitmq | nsq | 
   ready_check: true 
   params:
     # queue driver (rabbitmq)
@@ -220,7 +220,7 @@ to communicate with shell command
 Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
-  type: shell
+  type: # | shell | 
   ready_check: true 
 ```
 

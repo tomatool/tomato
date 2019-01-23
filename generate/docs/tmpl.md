@@ -9,7 +9,7 @@ Resource are the objects that are going to be used for steps in the scenario. Th
 Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
-  type: {{.Name}}
+  type: # | {{range $resource := .Resources}}{{ $resource }} | {{end}}
   ready_check: true {{if .Options}}
   params:
     {{range .Options}}# {{.Description}}
