@@ -72,7 +72,7 @@ func main() {
 
 	for _, r := range cfg.Resources {
 		if err := h.Register(r.Name, r); err != nil {
-			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Failed to register resource : %+v", r))
+			fmt.Fprintf(os.Stderr, "%s: %s\n", colors.Red("Error"), err.Error())
 			os.Exit(1)
 		}
 		if r.ReadyCheck {
@@ -83,7 +83,7 @@ func main() {
 				time.Sleep(time.Second)
 			}
 			if err := h.Ready(r.Name); err != nil {
-				fmt.Fprintln(os.Stderr, errors.Wrapf(err, "resource is not ready : %s", r.Name))
+				fmt.Fprintf(os.Stderr, "%s: %s\n", colors.Red("Error"), err.Error())
 				os.Exit(1)
 			}
 		}
