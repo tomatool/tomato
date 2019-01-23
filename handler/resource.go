@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 
+	"github.com/DATA-DOG/godog/colors"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/handler/database/sql"
 	"github.com/tomatool/tomato/handler/http/client"
@@ -46,7 +47,9 @@ func createResource(cfg *config.Resource) (resource.Resource, error) {
 	case "shell":
 		return shell_r.New(cfg)
 	}
-	return nil, fmt.Errorf("resource %s not found to create resource", cfg.Type)
+	return nil, fmt.Errorf("resource type `%s` is not defined\nplease refer to %s for list of available resources",
+		cfg.Type,
+		colors.Bold(colors.White)("https://github.com/tomatool/tomato#resources"))
 }
 
 func (h *Handler) Register(name string, cfg *config.Resource) error {
