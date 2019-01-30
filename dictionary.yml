@@ -31,11 +31,24 @@ handlers:
                 - $resource send request to $target with payload $body
             parameters:
                 - name: target
-                  description: target endpoint that has to be space separated between request method tpye and URL (`POST /user`)
+                  description: target endpoint that has to be space separated between request method type and URL (`POST /user`)
                   type: string
                 - name: body
                   description: request body payload
                   type: json
+
+          - name: request_header
+            description: set request header
+            handle: setRequestHeader
+            expressions:
+                - $resource set request header key $key with value $value
+            parameters:
+                - name: key
+                  description: request header key
+                  type: string
+                - name: value
+                  description: request header value
+                  type: string
 
           - name: response_code
             description: check http response code
