@@ -5,5 +5,5 @@ Feature: shell features example
     Then "shell-cli" execute "ls"
     Then "shell-cli" stdout should contains "helloworld"
     Then "shell-cli" execute "rm helloworld"
-    Then "shell-cli" execute "ls"
-    Then "shell-cli" stdout should not contains "helloworld"
+    Then "ls" execute "."
+    Then "ls" stdout should not contains "helloworld"

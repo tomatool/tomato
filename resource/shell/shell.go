@@ -3,18 +3,25 @@ package shell
 import (
 	"errors"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/tomatool/tomato/config"
 )
 
 type Shell struct {
+	prefix []string
+
 	stdout string
 	stderr string
 }
 
 func New(cfg *config.Resource) (*Shell, error) {
-	return &Shell{}, nil
+	sh := &Shell{}
+	if prefix, ok := cfg.Params["prefix"]; ok {
+		sh.prefix = strings.Split(prefix, " ")
+	}
+	return sh, nil
 }
 
 func (s *Shell) Ready() error {
@@ -26,7 +33,12 @@ func (s *Shell) Reset() error {
 	return nil
 }
 func (s *Shell) Exec(command string, arguments ...string) error {
-	cmd := exec.Command(command, arguments...)
+	arguments = append([]string{command}, arguments...)
+	if len(s.prefix) > 0 {
+		arguments = append(s.prefix, arguments...)
+	}
+
+	cmd := exec.Command(arguments[0], arguments[1:]...)
 	cmd.Stdout = newWriter(&s.stdout)
 	cmd.Stderr = newWriter(&s.stderr)
 	return cmd.Run()
