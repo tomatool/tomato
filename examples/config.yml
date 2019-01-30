@@ -39,3 +39,9 @@ resources:
     - name: shell-cli
       type: shell
       ready_check: false
+
+    - name: ls
+      type: shell
+      ready_check: false
+      params:
+        prefix: "ls"

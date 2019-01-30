@@ -264,7 +264,10 @@ handlers:
       description: to communicate with shell command
       resources:
           - "shell"
-      options: []
+      options:
+        - name: prefix
+          description: shell command prefixes
+          type: string
       actions:
         - name: execute
           description: execute shell command

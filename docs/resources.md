@@ -236,6 +236,10 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | shell | 
   ready_check: true 
+  params:
+    # shell command prefixes
+    prefix: # string
+    
 ```
 
 ### Resources
