@@ -19,6 +19,7 @@ type Resource interface {
 
 	Request(method, path string, body []byte) error
 	Response() (int, http.Header, []byte, error)
+	SetRequestHeader(string, string) error
 }
 
 type Handler struct {
@@ -31,6 +32,19 @@ func New(r map[string]Resource) *Handler {
 
 func (h *Handler) sendRequest(resourceName, target string) error {
 	return h.sendRequestWithBody(resourceName, target, nil)
+}
+
+func (h *Handler) setRequestHeader(resourceName, key, value string) error {
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
+	}
+
+	if err := r.SetRequestHeader(key, value); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (h *Handler) sendRequestWithBody(resourceName, target string, content *gherkin.DocString) error {

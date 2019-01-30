@@ -41,6 +41,13 @@ Given $resource send request to $target with payload $body
 
 ```
 
+#### **Request Header**
+set request header
+```gherkin
+Given $resource set request header key $key with value $value
+
+```
+
 #### **Response Code**
 check http response code
 ```gherkin

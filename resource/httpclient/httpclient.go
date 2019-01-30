@@ -21,12 +21,16 @@ type Client struct {
 	httpClient   *http.Client
 	baseURL      string
 	lastResponse *response
+
+	requestHeaders http.Header
 }
+
+var defaultHeaders = map[string][]string{"Content-Type": {"application/json"}}
 
 func New(cfg *config.Resource) (*Client, error) {
 	params := cfg.Params
 
-	client := &Client{new(http.Client), "", nil}
+	client := &Client{new(http.Client), "", nil, defaultHeaders}
 	for key, val := range params {
 		switch key {
 		case "base_url":
@@ -57,6 +61,7 @@ func (c *Client) Ready() error {
 
 func (c *Client) Reset() error {
 	c.lastResponse = nil
+	c.requestHeaders = defaultHeaders
 	return nil
 }
 
@@ -67,11 +72,18 @@ func (c *Client) Response() (int, http.Header, []byte, error) {
 	return c.lastResponse.Code, c.lastResponse.Header, c.lastResponse.Body, nil
 }
 
+func (c *Client) SetRequestHeader(key, value string) error {
+	c.requestHeaders.Set(key, value)
+	return nil
+}
+
 func (c *Client) Request(method, path string, body []byte) error {
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
 		return err
 	}
+
+	req.Header = c.requestHeaders
 
 	if c.baseURL != "" {
 		baseURL, err := url.Parse(c.baseURL)
@@ -80,10 +92,6 @@ func (c *Client) Request(method, path string, body []byte) error {
 		}
 		req.URL.Scheme = baseURL.Scheme
 		req.URL.Host = baseURL.Host
-	}
-
-	if req.Method != http.MethodGet {
-		req.Header.Set("Content-Type", "application/json")
 	}
 
 	resp, err := c.httpClient.Do(req)
