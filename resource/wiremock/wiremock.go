@@ -78,8 +78,38 @@ func (w *Wiremock) SetResponse(requestPath string, responseCode int, responseBod
 	m.Request.URLPath = requestPath
 	m.Response.Status = responseCode
 	m.Response.Base64Body = responseBody
-	m.Response.Headers.ContentType = "application/json"
 	return w.createMapping(&m)
+}
+
+// GetRequestsCount get requests count on the mock endpoint
+func (w *Wiremock) GetRequestsCount(method, path string) (int, error) {
+	b := new(bytes.Buffer)
+	if err := json.NewEncoder(b).Encode(map[string]string{
+		"method": method,
+		"url":    path,
+	}); err != nil {
+		return 0, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/__admin/requests/count", w.baseURL), b)
+	if err != nil {
+		return 0, err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Count int `json:"count"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return 0, err
+	}
+
+	return result.Count, nil
 }
 
 func (w *Wiremock) mappingURL() string {

@@ -131,6 +131,20 @@ handlers:
                   description: server response body
                   type: json
 
+          - name: verify_requests
+            description: check requests count on a given endpoint
+            handle: verifyRequestsCount
+            expressions:
+                - $resource with path $path request count should be $count
+            parameters:
+                - name: path
+                  description: server endpoint path (`GET /status`)
+                  type: string
+                - name: count
+                  description: request count
+                  type: number
+
+
     - name: database/sql
       description: database driver that interacts with a sql database
       resources:
