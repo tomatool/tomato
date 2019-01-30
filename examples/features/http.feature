@@ -14,7 +14,9 @@ Feature: http feature example
                 "timestamp": "2018-01-05 00:39:33"
           }
             """
+        Given "tomato-wiremock" with path "GET /example" request count should be 0
         Given "tomato-http-client" send request to "GET /example"
+        Given "tomato-wiremock" with path "GET /example" request count should be 1
         Then "tomato-http-client" response code should be 202
         Then "tomato-http-client" response body should contain
             """

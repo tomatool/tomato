@@ -114,6 +114,13 @@ Given set $resource with path $path response code to $code and response body $bo
 
 ```
 
+#### **Verify Requests**
+check requests count on a given endpoint
+```gherkin
+Given $resource with path $path request count should be $count
+
+```
+
 
 
 ## Database SQL
