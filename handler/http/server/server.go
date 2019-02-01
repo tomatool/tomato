@@ -48,7 +48,7 @@ func (h *Handler) verifyRequestsCount(resourceName, target string, expectedReque
 		return err
 	}
 	if count != expectedRequestCount {
-		return fmt.Errorf("expecting request count to be %d, got %d", count, expectedRequestCount)
+		return fmt.Errorf("expecting request count to be %d, got %d", expectedRequestCount, count)
 	}
 	return nil
 }
