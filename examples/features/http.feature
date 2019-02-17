@@ -14,6 +14,13 @@ Feature: http feature example
                 "timestamp": "2018-01-05 00:39:33"
           }
             """
+        Given set "tomato-wiremock" with method "POST" and path "/example-post" response code to 201 and response body
+          """
+          {
+                "example":"word created"
+          }
+          """
+        Given set "tomato-wiremock" with method "PUT" and path "/example-put" response code to 204
         Given "tomato-wiremock" with path "GET /example" request count should be 0
         Given "tomato-http-client" send request to "GET /example"
         Given "tomato-wiremock" with path "GET /example" request count should be 1
@@ -33,3 +40,13 @@ Feature: http feature example
                 "timestamp": "2018-01-05 00:39:33"
           }
             """
+        Given "tomato-http-client" send request to "POST /example-post"
+        Then "tomato-http-client" response code should be 201
+        Then "tomato-http-client" response body should contain
+          """
+          {
+                 "example":"word created"
+          }
+          """
+        Given "tomato-http-client" send request to "PUT /example-put"
+        Then "tomato-http-client" response code should be 204
