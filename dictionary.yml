@@ -131,6 +131,41 @@ handlers:
                   description: server response body
                   type: json
 
+          - name: response_method_path
+            description: set a response code and body for a given method and path for wiremock
+            handle: setResponseWithMethod
+            expressions:
+                - set $resource with method $method and path $path response code to $code and response body $body
+            parameters:
+                - name: method
+                  description: server endpoint method (`POST`)
+                  type: string
+                - name: path
+                  description: server endpoint path (`/status`)
+                  type: string
+                - name: code
+                  description: server response code (`200`)
+                  type: number
+                - name: body
+                  description: server response body
+                  type: json
+
+          - name: response_code_method_path
+            description: set a response code for a given method and path for wiremock
+            handle: setResponseWithMethodAndNoBody
+            expressions:
+                - set $resource with method $method and path $path response code to $code
+            parameters:
+                - name: method
+                  description: server endpoint method (`POST`)
+                  type: string
+                - name: path
+                  description: server endpoint path (`/status`)
+                  type: string
+                - name: code
+                  description: server response code (`200`)
+                  type: number
+
           - name: verify_requests
             description: check requests count on a given endpoint
             handle: verifyRequestsCount

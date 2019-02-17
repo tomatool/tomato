@@ -71,10 +71,9 @@ func (w *Wiremock) Reset() error {
 }
 
 // SetResponse satisfies the http/server interface for setting requests and their responses
-func (w *Wiremock) SetResponse(requestPath string, responseCode int, responseBody []byte) error {
+func (w *Wiremock) SetResponse(method string, requestPath string, responseCode int, responseBody []byte) error {
 	m := mapping{}
-	// todo make this customizable, and update http server resource to do same
-	m.Request.Method = "GET"
+	m.Request.Method = method
 	m.Request.URLPath = requestPath
 	m.Response.Status = responseCode
 	m.Response.Base64Body = responseBody

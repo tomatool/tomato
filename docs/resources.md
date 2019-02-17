@@ -114,6 +114,20 @@ Given set $resource with path $path response code to $code and response body $bo
 
 ```
 
+#### **Response Method Path**
+set a response code and body for a given method and path for wiremock
+```gherkin
+Given set $resource with method $method and path $path response code to $code and response body $body
+
+```
+
+#### **Response Code Method Path**
+set a response code for a given method and path for wiremock
+```gherkin
+Given set $resource with method $method and path $path response code to $code
+
+```
+
 #### **Verify Requests**
 check requests count on a given endpoint
 ```gherkin
