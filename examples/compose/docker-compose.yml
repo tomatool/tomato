@@ -2,9 +2,11 @@ version: '3'
 services:
   tomato:
     image: alileza/tomato:latest
+    # use the env file for the QUEUE_DSN example
+    env_file:
+    - queue_dsn.env
     environment:
       APP_BASE_URL: http://sample-app:9000
-      QUEUE_DSN: amqp://guest:guest@rabbitmq:5672/
     volumes:
       - ./tomato.yml:/tomato.yml
       - ./features/:/features/
@@ -16,8 +18,10 @@ services:
     image: alileza/sample-app:latest
     expose:
       - "9000"
-    environment:
-      QUEUE_DSN: amqp://guest:guest@rabbitmq:5672/
+    # use the env file for the QUEUE_DSN example
+    env_file:
+    - queue_dsn.env
+      
     volumes:
       - waitfor:/util
     entrypoint: >
