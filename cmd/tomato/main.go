@@ -43,10 +43,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = godotenv.Load(envFile)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error loading env file"))
-		os.Exit(1)
+	if envFile != "" {
+		err = godotenv.Load(envFile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, errors.Wrapf(err, "Error loading env file"))
+			os.Exit(1)
+		}
 	}
 
 	cfg, err := config.Retrieve(configFile)
