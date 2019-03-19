@@ -76,6 +76,14 @@
   revision = "82935fac6c1a317907c8f43ed3f7f85ea844a78b"
 
 [[projects]]
+  digest = "1:7df5a9695a743c3e1626b28bb8741602c8c15527e1efaeaec48ab2ff9a23f74c"
+  name = "github.com/joho/godotenv"
+  packages = ["."]
+  pruneopts = ""
+  revision = "23d116af351c84513e1946b527c88823e476be13"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:29145d7af4adafd72a79df5e41456ac9e232d5a28c1cd4dacf3ff008a217fc10"
   name = "github.com/lib/pq"
   packages = [
@@ -207,10 +215,12 @@
     "github.com/bitly/go-nsq",
     "github.com/go-sql-driver/mysql",
     "github.com/jmoiron/sqlx",
+    "github.com/joho/godotenv",
     "github.com/lib/pq",
     "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/streadway/amqp",
+    "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/yudai/gojsondiff",
     "github.com/yudai/gojsondiff/formatter",
