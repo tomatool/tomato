@@ -1,0 +1,53 @@
+# github.com/DATA-DOG/godog v0.7.13
+github.com/DATA-DOG/godog
+github.com/DATA-DOG/godog/colors
+github.com/DATA-DOG/godog/gherkin
+# github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
+github.com/alecthomas/units
+# github.com/bitly/go-nsq v1.0.7
+github.com/bitly/go-nsq
+# github.com/davecgh/go-spew v1.1.0
+github.com/davecgh/go-spew/spew
+# github.com/go-sql-driver/mysql v1.4.1
+github.com/go-sql-driver/mysql
+# github.com/golang/snappy v0.0.1
+github.com/golang/snappy
+# github.com/jmoiron/sqlx v1.2.0
+github.com/jmoiron/sqlx
+github.com/jmoiron/sqlx/reflectx
+# github.com/joho/godotenv v1.3.0
+github.com/joho/godotenv
+# github.com/lib/pq v1.0.0
+github.com/lib/pq
+github.com/lib/pq/oid
+# github.com/mattn/go-runewidth v0.0.4
+github.com/mattn/go-runewidth
+# github.com/olekukonko/tablewriter v0.0.1
+github.com/olekukonko/tablewriter
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/sergi/go-diff v1.0.0
+github.com/sergi/go-diff/diffmatchpatch
+# github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
+github.com/streadway/amqp
+# github.com/stretchr/objx v0.1.0
+github.com/stretchr/objx
+# github.com/stretchr/testify v1.3.0
+github.com/stretchr/testify/mock
+github.com/stretchr/testify/assert
+# github.com/yudai/gojsondiff v1.0.0
+github.com/yudai/gojsondiff
+github.com/yudai/gojsondiff/formatter
+# github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82
+github.com/yudai/golcs
+# google.golang.org/appengine v1.5.0
+google.golang.org/appengine/cloudsql
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+gopkg.in/alecthomas/kingpin.v2
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2
