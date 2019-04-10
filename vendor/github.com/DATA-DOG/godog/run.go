@@ -145,11 +145,17 @@ func RunWithOptions(suite string, contextInitializer func(suite *Suite), opt Opt
 		return exitOptionError
 	}
 
+	// user may have specified -1 option to create random seed
+	randomize := opt.Randomize
+	if randomize == -1 {
+		randomize = makeRandomSeed()
+	}
+
 	r := runner{
 		fmt:           formatter(suite, output),
 		initializer:   contextInitializer,
 		features:      features,
-		randomSeed:    opt.Randomize,
+		randomSeed:    randomize,
 		stopOnFailure: opt.StopOnFailure,
 		strict:        opt.Strict,
 	}
@@ -166,6 +172,10 @@ func RunWithOptions(suite string, contextInitializer func(suite *Suite), opt Opt
 	} else {
 		failed = r.run()
 	}
+
+	// @TODO: should prevent from having these
+	os.Setenv("GODOG_SEED", "")
+	os.Setenv("GODOG_TESTED_PACKAGE", "")
 	if failed && opt.Format != "events" {
 		return exitFailure
 	}

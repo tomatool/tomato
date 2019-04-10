@@ -306,16 +306,20 @@ func (f *basefmt) Summary() {
 			switch t := def.(type) {
 			case *gherkin.Scenario:
 				total++
+				if len(t.Steps) == 0 {
+					undefined++
+				}
 			case *gherkin.ScenarioOutline:
 				for _, ex := range t.Examples {
-					if examples, hasExamples := examples(ex); hasExamples {
-						total += len(examples.TableBody)
+					total += len(ex.TableBody)
+					if len(t.Steps) == 0 {
+						undefined += len(ex.TableBody)
 					}
 				}
 			}
 		}
 	}
-	passed = total
+	passed = total - undefined
 	var owner interface{}
 	for _, undef := range f.undefined {
 		if owner != undef.owner {
@@ -343,6 +347,9 @@ func (f *basefmt) Summary() {
 		passed -= undefined
 		parts = append(parts, yellow(fmt.Sprintf("%d undefined", undefined)))
 		steps = append(steps, yellow(fmt.Sprintf("%d undefined", len(f.undefined))))
+	} else if undefined > 0 {
+		// there may be some scenarios without steps
+		parts = append(parts, yellow(fmt.Sprintf("%d undefined", undefined)))
 	}
 	if len(f.skipped) > 0 {
 		steps = append(steps, cyan(fmt.Sprintf("%d skipped", len(f.skipped))))
@@ -365,7 +372,13 @@ func (f *basefmt) Summary() {
 	} else {
 		fmt.Fprintln(f.out, fmt.Sprintf("%d steps (%s)", nsteps, strings.Join(steps, ", ")))
 	}
-	fmt.Fprintln(f.out, elapsed)
+
+	elapsedString := elapsed.String()
+	if elapsed.Nanoseconds() == 0 {
+		// go 1.5 and 1.6 prints 0 instead of 0s, if duration is zero.
+		elapsedString = "0s"
+	}
+	fmt.Fprintln(f.out, elapsedString)
 
 	// prints used randomization seed
 	seed, err := strconv.ParseInt(os.Getenv("GODOG_SEED"), 10, 64)
@@ -375,7 +388,8 @@ func (f *basefmt) Summary() {
 	}
 
 	if text := f.snippets(); text != "" {
-		fmt.Fprintln(f.out, yellow("\nYou can implement step definitions for undefined steps with these snippets:"))
+		fmt.Fprintln(f.out, "")
+		fmt.Fprintln(f.out, yellow("You can implement step definitions for undefined steps with these snippets:"))
 		fmt.Fprintln(f.out, yellow(text))
 	}
 }
