@@ -21,19 +21,6 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 
 ## Getting Started
 
-### Install latest binary
-```
-curl https://raw.githubusercontent.com/tomatool/tomato/master/install.sh | sh
-```
-and you should be able to start using the binary
-```sh
-$ tomato --version
-tomato, version 1.1.0 (branch: refs/heads/master, revision: 97c7b93ef17d864b472cf0d74dd0023e7166b140)
-  build user:       tomatool
-  build date:       2019-03-19T12:30:58CET
-  go version:       go1.11.4
-```
-
 ### Set up your tomato configuration
 Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`.
 
@@ -104,12 +91,20 @@ Execute your tests
 docker-compose up --abort-on-container-exit
 ```
 
-#### Using the binary
+#### Install latest stable version
+
+```
+curl https://raw.githubusercontent.com/tomatool/tomato/master/install.sh | sh
+```
+
+#### Install latest master
 
 Install tomato by grabbing the latest stable [release](https://github.com/tomatool/tomato/releases/latest) and placing it in your path, or by using go get
 ```
 go get -u github.com/tomatool/tomato/cmd/tomato
 ```
+
+#### Executing tomato
 
 Now run tomato:
 ```sh
