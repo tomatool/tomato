@@ -21,6 +21,19 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 
 ## Getting Started
 
+### Install latest binary
+```
+curl https://raw.githubusercontent.com/tomatool/tomato/master/install.sh | sh
+```
+and you should be able to start using the binary
+```sh
+$ tomato --version
+tomato, version 1.1.0 (branch: refs/heads/master, revision: 97c7b93ef17d864b472cf0d74dd0023e7166b140)
+  build user:       tomatool
+  build date:       2019-03-19T12:30:58CET
+  go version:       go1.11.4
+```
+
 ### Set up your tomato configuration
 Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`.
 
