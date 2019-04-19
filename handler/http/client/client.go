@@ -57,7 +57,7 @@ func (h *Handler) sendRequestWithBody(resourceName, target string, content *gher
 
 	var requestBody []byte
 	if content != nil {
-		requestBody = []byte(content.Content)
+		requestBody = []byte(strings.TrimSpace(content.Content))
 	}
 	return r.Request(tt[0], tt[1], requestBody)
 }
