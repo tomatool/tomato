@@ -13,7 +13,6 @@ import (
 
 type Resource interface {
 	resource.Resource
-
 	Listen(target string) error
 	Fetch(target string) ([][]byte, error)
 	Publish(target string, payload []byte) error

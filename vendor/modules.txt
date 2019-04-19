@@ -13,6 +13,8 @@ github.com/bitly/go-nsq
 github.com/davecgh/go-spew/spew
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
+# github.com/golang/mock v1.2.0
+github.com/golang/mock/gomock
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
 # github.com/jmoiron/sqlx v1.2.0
@@ -35,10 +37,7 @@ github.com/pmezard/go-difflib/difflib
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 github.com/streadway/amqp
-# github.com/stretchr/objx v0.1.0
-github.com/stretchr/objx
 # github.com/stretchr/testify v1.3.0
-github.com/stretchr/testify/mock
 github.com/stretchr/testify/assert
 # github.com/yudai/gojsondiff v1.0.0
 github.com/yudai/gojsondiff

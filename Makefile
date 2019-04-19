@@ -55,6 +55,8 @@ gen:
 	@go run cmd/tomatool/main.go generate docs -t markdown
 	@echo ">> generating handler"
 	@go run cmd/tomatool/main.go generate handler
+	@echo ">> generating mocks"
+	@mockgen -destination=handler/queue/mocks/Resource.go -package=mocks -source=handler/queue/queue.go
 
 package-releases:
 	@echo ">> packaging releases"

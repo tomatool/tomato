@@ -10,13 +10,14 @@ Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
   type: # | httpclient | 
-  ready_check: true 
+  
   params:
     # base url for the http client that will automatically be prepended to any route in the feature.
     base_url: # string
     # timeout for the request round-trip.
     timeout: # duration
     
+  
 ```
 
 ### Resources
@@ -86,11 +87,12 @@ Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
   type: # | wiremock | 
-  ready_check: true 
+  
   params:
     # writemock base url (e.g : http://localhost:8080)
     base_url: # string
     
+  
 ```
 
 ### Resources
@@ -145,13 +147,14 @@ Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
   type: # | postgres | mysql | 
-  ready_check: true 
+  
   params:
     # sql driver (postgres or mysql)
     driver: # string
     # sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
     datasource: # string
     
+  
 ```
 
 ### Resources
@@ -186,13 +189,14 @@ Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
   type: # | rabbitmq | nsq | 
-  ready_check: true 
+  
   params:
     # queue driver (rabbitmq)
     driver: # string
     # queue source dsn (`amqp://user:pass@host:port/`)
     datasource: # string
     
+  
 ```
 
 ### Resources
@@ -249,11 +253,12 @@ Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
   type: # | shell | 
-  ready_check: true 
+  
   params:
     # shell command prefixes
     prefix: # string
     
+  
 ```
 
 ### Resources

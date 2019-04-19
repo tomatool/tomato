@@ -10,11 +10,12 @@ Initialize resource in `config.yml`:
 ```yaml
 - name: # name of the resource
   type: # | {{range $resource := .Resources}}{{ $resource }} | {{end}}
-  ready_check: true {{if .Options}}
+  {{if .Options}}
   params:
     {{range .Options}}# {{.Description}}
     {{.Name}}: # {{.Type}}
-    {{end}}{{end}}
+    {{end}}
+  {{end}}
 ```
 
 ### Resources

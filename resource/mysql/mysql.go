@@ -13,8 +13,9 @@ import (
 )
 
 type MySQL struct {
-	db     *sqlx.DB
-	dbname string
+	db         *sqlx.DB
+	dbname     string
+	datasource string
 }
 
 func New(cfg *config.Resource) (*MySQL, error) {
@@ -28,12 +29,16 @@ func New(cfg *config.Resource) (*MySQL, error) {
 		return nil, err
 	}
 
-	db, err := sqlx.Open("mysql", datasource)
-	if err != nil {
-		return nil, err
-	}
+	return &MySQL{datasource: datasource, dbname: strings.Replace(u.Path, "/", "", -1)}, nil
+}
 
-	return &MySQL{db: db, dbname: strings.Replace(u.Path, "/", "", -1)}, nil
+func (d *MySQL) Open() error {
+	var err error
+	d.db, err = sqlx.Open("mysql", d.datasource)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (d *MySQL) Ready() error {
@@ -74,6 +79,10 @@ func (d *MySQL) Reset() error {
 	}
 
 	return tx.Commit()
+}
+
+func (d *MySQL) Close() error {
+	return d.db.Close()
 }
 
 func (d *MySQL) Select(tableName string, condition map[string]string) ([]map[string]string, error) {

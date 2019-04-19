@@ -84,10 +84,20 @@ func (h *Handler) reset() {
 	}
 }
 
+func (h *Handler) Open(name string) error {
+	r, ok := h.resources[name]
+	if !ok {
+		return fmt.Errorf("resource %s not found", name)
+	}
+
+	return r.Open()
+}
+
 func (h *Handler) Ready(name string) error {
 	r, ok := h.resources[name]
 	if !ok {
 		return fmt.Errorf("resource %s not found", name)
 	}
+
 	return r.Ready()
 }

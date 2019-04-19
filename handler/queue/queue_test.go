@@ -5,12 +5,18 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/tomatool/tomato/handler/queue/mocks"
 )
 
 func TestPublishMessage(t *testing.T) {
-	q := &mocks.Resource{}
+
+	ctrl := gomock.NewController(t)
+
+	defer ctrl.Finish()
+
+	q := mocks.NewMockResource(ctrl)
 	h := New(map[string]Resource{"q": q})
 
 	for _, tc := range []struct {
@@ -34,7 +40,7 @@ func TestPublishMessage(t *testing.T) {
 		},
 	} {
 		if tc.err == "" {
-			q.On("Publish", tc.target, []byte(tc.payload)).Return(nil)
+			q.EXPECT().Publish(tc.target, []byte(tc.payload)).Return(nil)
 		}
 
 		err := h.publishMessage(tc.resourceName, tc.target, &gherkin.DocString{Content: tc.payload})
@@ -44,13 +50,15 @@ func TestPublishMessage(t *testing.T) {
 		if tc.err != "" {
 			assert.Error(t, err)
 		}
-
-		q.AssertExpectations(t)
 	}
 }
 
 func TestListenMessage(t *testing.T) {
-	q := &mocks.Resource{}
+	ctrl := gomock.NewController(t)
+
+	defer ctrl.Finish()
+
+	q := mocks.NewMockResource(ctrl)
 	h := New(map[string]Resource{"q": q})
 
 	for _, tc := range []struct {
@@ -72,7 +80,7 @@ func TestListenMessage(t *testing.T) {
 		},
 	} {
 		if tc.err == "" {
-			q.On("Listen", tc.target).Return(nil)
+			q.EXPECT().Listen(tc.target).Return(nil)
 		}
 
 		err := h.listenMessage(tc.resourceName, tc.target)
@@ -83,12 +91,15 @@ func TestListenMessage(t *testing.T) {
 			assert.Error(t, err)
 		}
 
-		q.AssertExpectations(t)
 	}
 }
 
 func TestCountMessage(t *testing.T) {
-	q := &mocks.Resource{}
+	ctrl := gomock.NewController(t)
+
+	defer ctrl.Finish()
+
+	q := mocks.NewMockResource(ctrl)
 	h := New(map[string]Resource{"q": q})
 
 	for _, tc := range []struct {
@@ -129,14 +140,13 @@ func TestCountMessage(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			q.On("Fetch", tc.target).Return(tc.fetchValue, tc.fetchErr)
+
+			q.EXPECT().Fetch(tc.target).Return(tc.fetchValue, tc.fetchErr)
 
 			err := h.countMessage(tc.resourceName, tc.target, tc.count)
 			if tc.err != "" {
 				assert.EqualError(t, err, tc.err)
 			}
-
-			q.AssertExpectations(t)
 		})
 	}
 }

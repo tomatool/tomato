@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tomatool/tomato/config"
 	"github.com/bitly/go-nsq"
 	"github.com/pkg/errors"
+	"github.com/tomatool/tomato/config"
 )
 
 const (
@@ -65,6 +65,49 @@ func New(cfg *config.Resource) (*NSQ, error) {
 		topicReadiness: make(map[string]*nsq.Consumer),
 		data:           make(map[string][][]byte),
 	}, nil
+}
+
+// Open satisfies resource interface
+func (nm *NSQ) Open() error {
+	return nil
+}
+
+// to check whether nsq is ready to be used, both for publishing or consuming.
+// it is intended not to be cached
+func (nm *NSQ) Ready() error {
+	dummyTarget := "ready_flag"
+
+	err := nm.Publish(dummyTarget, []byte("test"))
+	if err != nil {
+		return errors.Wrapf(err, "queue/nsq: failed to publish test")
+	}
+
+	cNsq, err := nm.connectConsumer(dummyTarget)
+	if err != nil {
+		return errors.Wrapf(err, "queue/nsq: failed to attach testing consumer")
+	}
+
+	cNsq.Stop()
+
+	return nil
+}
+
+func (nm *NSQ) Reset() error {
+	nm.data = make(map[string][][]byte)
+	return nil
+}
+
+// to terminate nsq connections
+func (nm *NSQ) Close() error {
+	nm.Lock()
+	for _, v := range nm.topicReadiness {
+		if v != nil {
+			v.Stop()
+		}
+	}
+	nm.Unlock()
+
+	return nil
 }
 
 // to connect consumer function to target
@@ -166,42 +209,4 @@ func (nm *NSQ) Fetch(target string) ([][]byte, error) {
 	}
 
 	return msgs, nil
-}
-
-// to check whether nsq is ready to be used, both for publishing or consuming.
-// it is intended not to be cached
-func (nm *NSQ) Ready() error {
-	dummyTarget := "ready_flag"
-
-	err := nm.Publish(dummyTarget, []byte("test"))
-	if err != nil {
-		return errors.Wrapf(err, "queue/nsq: failed to publish test")
-	}
-
-	cNsq, err := nm.connectConsumer(dummyTarget)
-	if err != nil {
-		return errors.Wrapf(err, "queue/nsq: failed to attach testing consumer")
-	}
-
-	cNsq.Stop()
-
-	return nil
-}
-
-func (nm *NSQ) Reset() error {
-	nm.data = make(map[string][][]byte)
-	return nil
-}
-
-// to terminate nsq connections
-func (nm *NSQ) Close() error {
-	nm.Lock()
-	for _, v := range nm.topicReadiness {
-		if v != nil {
-			v.Stop()
-		}
-	}
-	nm.Unlock()
-
-	return nil
 }

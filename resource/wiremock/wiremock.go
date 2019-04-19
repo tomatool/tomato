@@ -35,6 +35,11 @@ func New(cfg *config.Resource) (*Wiremock, error) {
 	return &Wiremock{baseURL: u}, nil
 }
 
+// Open satisfies the resource interface
+func (w *Wiremock) Open() error {
+	return nil
+}
+
 // Ready informs tomato of when wiremock is ready to handle connections
 func (w *Wiremock) Ready() error {
 	resp, err := http.Get(w.statusURL())
@@ -58,6 +63,8 @@ func (w *Wiremock) Reset() error {
 		return err
 	}
 
+	defer resp.Body.Close()
+
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -67,6 +74,11 @@ func (w *Wiremock) Reset() error {
 		return errors.Wrap(errors.New("failed to reset mappings"), string(respBody))
 	}
 
+	return nil
+}
+
+// Close satisfies the resource interface
+func (w *Wiremock) Close() error {
 	return nil
 }
 
