@@ -12,7 +12,8 @@ import (
 )
 
 type PostgreSQL struct {
-	db *sqlx.DB
+	db         *sqlx.DB
+	datasource string
 }
 
 func New(cfg *config.Resource) (*PostgreSQL, error) {
@@ -21,12 +22,16 @@ func New(cfg *config.Resource) (*PostgreSQL, error) {
 		return nil, errors.New("datasource is required")
 	}
 
-	db, err := sqlx.Open("postgres", datasource)
-	if err != nil {
-		return nil, err
-	}
+	return &PostgreSQL{datasource: datasource}, nil
+}
 
-	return &PostgreSQL{db: db}, nil
+func (d *PostgreSQL) Open() error {
+	var err error
+	d.db, err = sqlx.Open("postgres", d.datasource)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (d *PostgreSQL) Ready() error {
@@ -57,6 +62,10 @@ func (d *PostgreSQL) Reset() error {
 	}
 
 	return tx.Commit()
+}
+
+func (d *PostgreSQL) Close() error {
+	return d.db.Close()
 }
 
 func (d *PostgreSQL) Select(tableName string, condition map[string]string) ([]map[string]string, error) {

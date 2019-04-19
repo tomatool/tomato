@@ -3,31 +3,26 @@
 resources:
     - name: tomato-psql
       type: postgres
-      ready_check: true
       params:
         datasource: {{ .PSQL_DATASOURCE }}
 
     - name: tomato-mysql
       type: mysql
-      ready_check: true
       params:
         datasource: {{ .MYSQL_DATASOURCE }}
 
     - name: tomato-queue
       type: rabbitmq
-      ready_check: true
       params:
         datasource: {{ .RABBITMQ_DATASOURCE }}
 
     - name: tomato-nsq
       type: nsq
-      ready_check: true
       params:
         nsqd: {{ .NSQ_DATASOURCE }}
 
     - name: tomato-wiremock
       type: wiremock
-      ready_check: true
       params:
         base_url: {{ .WIREMOCK_BASE_URL }}
 
@@ -38,10 +33,8 @@ resources:
 
     - name: shell-cli
       type: shell
-      ready_check: false
 
     - name: ls
       type: shell
-      ready_check: false
       params:
         prefix: "ls"

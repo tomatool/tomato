@@ -24,6 +24,10 @@ func New(cfg *config.Resource) (*Shell, error) {
 	return sh, nil
 }
 
+func (s *Shell) Open() error {
+	return nil
+}
+
 func (s *Shell) Ready() error {
 	return nil
 }
@@ -32,6 +36,11 @@ func (s *Shell) Reset() error {
 	s.stdout = ""
 	return nil
 }
+
+func (s *Shell) Close() error {
+	return nil
+}
+
 func (s *Shell) Exec(command string, arguments ...string) error {
 	arguments = append([]string{command}, arguments...)
 	if len(s.prefix) > 0 {

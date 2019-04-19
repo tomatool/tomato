@@ -86,17 +86,15 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s: %s\n", colors.Red("Error"), err.Error())
 			os.Exit(1)
 		}
-		if r.ReadyCheck {
-			for i := 0; i < 20; i++ {
-				if err := h.Ready(r.Name); err == nil {
-					break
-				}
-				time.Sleep(time.Second)
+		for i := 0; i < 20; i++ {
+			if err := h.Ready(r.Name); err == nil {
+				break
 			}
-			if err := h.Ready(r.Name); err != nil {
-				fmt.Fprintf(os.Stderr, "%s: %s\n", colors.Red("Error"), err.Error())
-				os.Exit(1)
-			}
+			time.Sleep(time.Second)
+		}
+		if err := h.Ready(r.Name); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %s\n", colors.Red("Error"), err.Error())
+			os.Exit(1)
 		}
 	}
 

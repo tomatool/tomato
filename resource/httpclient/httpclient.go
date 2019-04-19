@@ -48,6 +48,11 @@ func New(cfg *config.Resource) (*Client, error) {
 	return client, nil
 }
 
+// Open satisfies resource interface
+func (c *Client) Open() error {
+	return nil
+}
+
 func (c *Client) Ready() error {
 	resp, err := c.httpClient.Get(c.baseURL)
 	if err != nil {
@@ -62,6 +67,11 @@ func (c *Client) Ready() error {
 func (c *Client) Reset() error {
 	c.lastResponse = nil
 	c.requestHeaders = defaultHeaders
+	return nil
+}
+
+// Close satisfies resource interface
+func (c *Client) Close() error {
 	return nil
 }
 
