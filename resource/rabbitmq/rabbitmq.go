@@ -13,6 +13,7 @@ import (
 
 const (
 	DefaultWaitDuration = time.Millisecond * 50
+	resourceName        = "rabbitmq"
 )
 
 type RabbitMQ struct {
@@ -49,23 +50,15 @@ func (c *RabbitMQ) Open() error {
 	var err error
 	c.conn, err = amqp.Dial(c.datasource)
 	if err != nil {
-		return errors.Wrap(err, "rabbitmq: failed to connect on initial dial")
+		return errors.Wrapf(err, "%s: failed to connect on initial dial", resourceName)
 	}
 
 	return nil
 }
 
-func (c *RabbitMQ) target(target string) (string, string) {
-	result := strings.Split(target, ":")
-	if len(result) < 2 {
-		return result[0], ""
-	}
-	return result[0], result[1]
-}
-
 func (c *RabbitMQ) Ready() error {
 	if err := c.Publish("test:test", []byte("")); err != nil {
-		return errors.Wrapf(err, "queue: rabbitmq is not ready")
+		return errors.Wrapf(err, "%s: ready check failed", resourceName)
 	}
 	return nil
 }
@@ -75,10 +68,17 @@ func (c *RabbitMQ) Reset() error {
 	return nil
 }
 
+func (c *RabbitMQ) Close() error {
+	if err := c.conn.Close(); err != nil {
+		return errors.Wrapf(err, "%s: failed to close connection", resourceName)
+	}
+	return nil
+}
+
 func (c *RabbitMQ) Listen(target string) error {
 	ch, err := c.conn.Channel()
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "%s: listen attempt failed", resourceName)
 	}
 
 	exchange, key := c.target(target)
@@ -114,20 +114,6 @@ func (c *RabbitMQ) Listen(target string) error {
 	}(msgs, target)
 
 	return nil
-}
-
-func (c *RabbitMQ) clear(target string) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	c.consumedMessage[target] = [][]byte{}
-}
-
-func (c *RabbitMQ) consume(target string, payload []byte) {
-	c.mtx.Lock()
-	defer c.mtx.Unlock()
-
-	c.consumedMessage[target] = append(c.consumedMessage[target], payload)
 }
 
 func (c *RabbitMQ) Publish(target string, payload []byte) error {
@@ -172,6 +158,28 @@ func (c *RabbitMQ) Fetch(target string) ([][]byte, error) {
 	}
 
 	return msgs, nil
+}
+
+func (c *RabbitMQ) target(target string) (string, string) {
+	result := strings.Split(target, ":")
+	if len(result) < 2 {
+		return result[0], ""
+	}
+	return result[0], result[1]
+}
+
+func (c *RabbitMQ) clear(target string) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	c.consumedMessage[target] = [][]byte{}
+}
+
+func (c *RabbitMQ) consume(target string, payload []byte) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	c.consumedMessage[target] = append(c.consumedMessage[target], payload)
 }
 
 func exchangeDeclare(ch *amqp.Channel, name string) error {
