@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tomatool/tomato/config"
 	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
+	"github.com/tomatool/tomato/config"
 )
 
 const (
@@ -17,11 +17,14 @@ const (
 
 type RabbitMQ struct {
 	mtx             sync.Mutex
+	datasource      string
 	conn            *amqp.Connection
 	consumedMessage map[string][][]byte
 	waitDuration    time.Duration
 }
 
+// New creates and validates the resource params for the connection initialized
+// in Open()
 func New(cfg *config.Resource) (*RabbitMQ, error) {
 	params := cfg.Params
 	datasource, ok := params["datasource"]
@@ -34,16 +37,22 @@ func New(cfg *config.Resource) (*RabbitMQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
-	conn, err := amqp.Dial(datasource)
-	if err != nil {
-		return nil, errors.New("queue/rabbitmq: failed to connect > " + err.Error())
-	}
-
 	return &RabbitMQ{
-		conn:            conn,
+		datasource:      datasource,
 		waitDuration:    waitDuration,
 		consumedMessage: make(map[string][][]byte),
 	}, nil
+}
+
+// Open attempts a dial connection to the AMQP server
+func (c *RabbitMQ) Open() error {
+	var err error
+	c.conn, err = amqp.Dial(c.datasource)
+	if err != nil {
+		return errors.Wrap(err, "rabbitmq: failed to connect on initial dial")
+	}
+
+	return nil
 }
 
 func (c *RabbitMQ) target(target string) (string, string) {
