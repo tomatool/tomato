@@ -67,17 +67,30 @@ func (c *RabbitMQ) Ready() error {
 
 // Reset empties the consumedMessage map and cleans up the queues
 func (c *RabbitMQ) Reset() error {
+
+	failedTargets := make(map[string][]string)
 	for target := range c.consumedMessage {
 		exchange, key := c.target(target)
 		ch, err := c.conn.Channel()
 		if err != nil {
-			return errors.Wrapf(err, "%s: reset connection attempt failed", resourceName)
+			msg := fmt.Sprintf("reset connection attempt failed: %s", err.Error())
+			failedTargets[msg] = append(failedTargets[msg], target)
+			continue
 		}
 		if _, err := ch.QueueDelete(c.queueName(exchange, key), false, false, false); err != nil {
-			return errors.Wrapf(err, "%s: reset attempt failed `%s`", resourceName, c.queueName(exchange, key))
+			msg := fmt.Sprintf("queue deletion attempt failed: %s", err.Error())
+			failedTargets[msg] = append(failedTargets[msg], target)
 		}
 	}
 	c.consumedMessage = make(map[string][][]byte)
+
+	if len(failedTargets) > 0 {
+		var errMsg string
+		for msg, targets := range failedTargets {
+			errMsg += msg + strings.Join(targets, ",")
+		}
+		return errors.Errorf("%s: %s", resourceName, errMsg)
+	}
 	return nil
 }
 
