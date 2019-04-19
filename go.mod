@@ -8,6 +8,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/bitly/go-nsq v1.0.7
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/golang/mock v1.2.0
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
