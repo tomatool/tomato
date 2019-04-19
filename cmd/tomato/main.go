@@ -87,12 +87,16 @@ func main() {
 			os.Exit(1)
 		}
 		for i := 0; i < 20; i++ {
-			if err := h.Ready(r.Name); err == nil {
-				break
+			// Try to open, then check if ready
+			if err := h.Open(r.Name); err == nil {
+				if err := h.Ready(r.Name); err == nil {
+					break
+				}
 			}
+
 			time.Sleep(time.Second)
 		}
-		if err := h.Ready(r.Name); err != nil {
+		if err := h.Open(r.Name); err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %s\n", colors.Red("Error"), err.Error())
 			os.Exit(1)
 		}
