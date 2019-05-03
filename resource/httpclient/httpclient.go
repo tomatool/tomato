@@ -30,7 +30,13 @@ var defaultHeaders = map[string][]string{"Content-Type": {"application/json"}}
 func New(cfg *config.Resource) (*Client, error) {
 	params := cfg.Params
 
-	client := &Client{new(http.Client), "", nil, defaultHeaders}
+	httpClient := &http.Client{
+		// In order for http client not to follow response redirect
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	client := &Client{httpClient, "", nil, defaultHeaders}
 	for key, val := range params {
 		switch key {
 		case "base_url":
