@@ -23,7 +23,7 @@ type RabbitMQ struct {
 	conn            *amqp.Connection
 	consumedMessage map[string][][]byte
 	waitDuration    time.Duration
-	stubs           map[string][]byte
+	stubs           *stub.Stubs
 }
 
 // New creates and validates the resource params for the connection initialized
@@ -40,11 +40,11 @@ func New(cfg *config.Resource) (*RabbitMQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
-	var stubs map[string][]byte
 	path, ok := cfg.Params["stubs_path"]
+	var stubs *stub.Stubs
 	if ok {
 		var err error
-		stubs, err = stub.Retrieve(path)
+		stubs, err = stub.RetrieveFiles(path)
 		if err != nil {
 			return nil, err
 		}
@@ -159,13 +159,9 @@ func (c *RabbitMQ) Listen(target string) error {
 
 // PublishFromFile attempts to publish a message read from a file to the passed target
 func (c *RabbitMQ) PublishFromFile(target string, fileName string) error {
-	payload, ok := c.stubs[fileName]
-	if !ok {
-		files := make([]string, len(c.stubs))
-		for file := range c.stubs {
-			files = append(files, file)
-		}
-		return errors.Errorf("no stubs loaded with file name: %s available: %s", fileName, strings.Join(files, ", "))
+	payload, err := c.stubs.Get(fileName)
+	if err != nil {
+		return err
 	}
 	return c.Publish(target, payload)
 }

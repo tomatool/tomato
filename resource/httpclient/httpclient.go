@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -25,7 +24,7 @@ type Client struct {
 	lastResponse *response
 
 	requestHeaders http.Header
-	stubs          map[string][]byte
+	stubs          *stub.Stubs
 }
 
 var defaultHeaders = map[string][]string{"Content-Type": {"application/json"}}
@@ -58,7 +57,7 @@ func New(cfg *config.Resource) (*Client, error) {
 	path, ok := cfg.Params["stubs_path"]
 	if ok {
 		var err error
-		client.stubs, err = stub.Retrieve(path)
+		client.stubs, err = stub.RetrieveFiles(path)
 		if err != nil {
 			return nil, err
 		}
@@ -106,13 +105,9 @@ func (c *Client) SetRequestHeader(key, value string) error {
 }
 
 func (c *Client) RequestFromFile(method, path, fileName string) error {
-	body, ok := c.stubs[fileName]
-	if !ok {
-		files := make([]string, len(c.stubs))
-		for file := range c.stubs {
-			files = append(files, file)
-		}
-		return errors.Errorf("no stubs loaded with file name: %s available: %s", fileName, strings.Join(files, ", "))
+	body, err := c.stubs.Get(fileName)
+	if err != nil {
+		return err
 	}
 	return c.Request(method, path, body)
 }

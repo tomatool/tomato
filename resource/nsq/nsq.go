@@ -2,7 +2,6 @@ package nsq
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -48,7 +47,7 @@ type NSQ struct {
 	topicReadiness map[string]*nsq.Consumer
 	data           map[string][][]byte
 	waitDuration   time.Duration
-	stubs          map[string][]byte
+	stubs          *stub.Stubs
 }
 
 func New(cfg *config.Resource) (*NSQ, error) {
@@ -62,11 +61,11 @@ func New(cfg *config.Resource) (*NSQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
-	var stubs map[string][]byte
 	path, ok := cfg.Params["stubs_path"]
+	var stubs *stub.Stubs
 	if ok {
 		var err error
-		stubs, err = stub.Retrieve(path)
+		stubs, err = stub.RetrieveFiles(path)
 		if err != nil {
 			return nil, err
 		}
@@ -201,13 +200,9 @@ func (nm *NSQ) introduceProducer() error {
 
 // PublishFromFile attempts to publish a message read from a file to the passed target
 func (nm *NSQ) PublishFromFile(target string, fileName string) error {
-	payload, ok := nm.stubs[fileName]
-	if !ok {
-		files := make([]string, len(nm.stubs))
-		for file := range nm.stubs {
-			files = append(files, file)
-		}
-		return errors.Errorf("no stubs loaded with file name: %s available: %s", fileName, strings.Join(files, ", "))
+	payload, err := nm.stubs.Get(fileName)
+	if err != nil {
+		return err
 	}
 	return nm.Publish(target, payload)
 }

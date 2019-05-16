@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/tomatool/tomato/stub"
 
@@ -21,7 +20,7 @@ const Name = "http/server"
 // Wiremock contains the configuration for the wiremock stubbing resource
 type Wiremock struct {
 	baseURL string
-	stubs   map[string][]byte
+	stubs   *stub.Stubs
 }
 
 // New connects and creates the wiremock resource
@@ -36,11 +35,11 @@ func New(cfg *config.Resource) (*Wiremock, error) {
 		return nil, fmt.Errorf("%s - invalid base_url : %s", u, err.Error())
 	}
 
-	var stubs map[string][]byte
 	path, ok := cfg.Params["stubs_path"]
+	var stubs *stub.Stubs
 	if ok {
 		var err error
-		stubs, err = stub.Retrieve(path)
+		stubs, err = stub.RetrieveFiles(path)
 		if err != nil {
 			return nil, err
 		}
@@ -113,13 +112,9 @@ func (w *Wiremock) SetResponseFromFile(method string, requestPath string, respon
 	m.Request.URLPath = requestPath
 	m.Response.Status = responseCode
 
-	body, ok := w.stubs[fileName]
-	if !ok {
-		files := make([]string, len(w.stubs))
-		for file := range w.stubs {
-			files = append(files, file)
-		}
-		return errors.Errorf("no stubs loaded with file name: %s available: %s", fileName, strings.Join(files, ", "))
+	body, err := w.stubs.Get(fileName)
+	if err != nil {
+		return err
 	}
 	m.Response.Base64Body = body
 	return w.createMapping(&m)
