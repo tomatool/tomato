@@ -12,6 +12,9 @@ handlers:
           - name: timeout
             description: timeout for the request round-trip.
             type: duration
+          - name: stubs_path
+            description: stubs file path (`./stubs`)
+            type: string
       actions:
           - name: send
             description: send an http request without a request body
@@ -36,6 +39,19 @@ handlers:
                 - name: body
                   description: request body payload
                   type: json
+          - name: send_body_from_file
+            description: send an http request with a request body from a file
+            handle: sendRequestWithBodyFromFile
+            expressions:
+                - $resource send request to $target with body from file $file
+                - $resource send request to $target with payload from file $file
+            parameters:
+                - name: target
+                  description: target endpoint that has to be space separated between request method type and URL (`POST /user`)
+                  type: string
+                - name: file
+                  description: request body file name
+                  type: string
 
           - name: request_header
             description: set request header
@@ -101,6 +117,8 @@ handlers:
           - name: base_url
             description: "writemock base url (e.g : http://localhost:8080)"
             type: string
+            # stubs file path (`./stubs`)
+            stubs_path: # string
       actions:
           - name: response
             description: set a response code and body for any request that comes to the wiremock target
@@ -114,6 +132,19 @@ handlers:
                 - name: body
                   description: server response body
                   type: json
+
+          - name: response_from_file
+            description: set a response code and body from a file for any request that comes to the wiremock target
+            handle: setResponseFromFile
+            expressions:
+                - set $resource response code to $code and response body from file $file
+            parameters:
+                - name: code
+                  description: http response code (`404`)
+                  type: number
+                - name: file
+                  description: file name for response body data
+                  type: string
 
           - name: response_path
             description: set a response code and body for a given path for wiremock
@@ -165,6 +196,25 @@ handlers:
                 - name: code
                   description: server response code (`200`)
                   type: number
+
+          - name: response_code_method_path_from_file
+            description: set a response code for a given method and path for wiremock
+            handle: setResponseWithMethodAndBodyFromFile
+            expressions:
+                - set $resource with method $method and path $path response code to $code and response body from file $file
+            parameters:
+                - name: method
+                  description: server endpoint method (`POST`)
+                  type: string
+                - name: path
+                  description: server endpoint path (`/status`)
+                  type: string
+                - name: code
+                  description: server response code (`200`)
+                  type: number
+                - name: file
+                  description: file name for body data (`file-name`)
+                  type: string
 
           - name: verify_requests
             description: check requests count on a given endpoint
@@ -231,6 +281,9 @@ handlers:
         - name: datasource
           description: queue source dsn (`amqp://user:pass@host:port/`)
           type: string
+        - name: stubs_path
+          description: stubs file path (`./stubs`)
+          type: string
       actions:
         - name: publish
           description: publish a message to message queue
@@ -244,6 +297,18 @@ handlers:
               - name: payload
                 description: queue message payload
                 type: json
+        - name: publish_from_file
+          description: publish a message to message queue from a file
+          handle: publishMessageFromFile
+          expressions:
+              - publish message to $resource target $target with payload from file $file
+          parameters:
+              - name: target
+                description: target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`
+                type: string
+              - name: file
+                description: queue message payload file name
+                type: string
 
         - name: listen
           description: |
