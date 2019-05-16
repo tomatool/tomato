@@ -130,3 +130,17 @@ func (mr *MockResourceMockRecorder) Publish(target, payload interface{}) *gomock
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockResource)(nil).Publish), target, payload)
 }
+
+// PublishFromFile mocks base method
+func (m *MockResource) PublishFromFile(target, file string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PublishFromFile", target, file)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PublishFromFile indicates an expected call of PublishFromFile
+func (mr *MockResourceMockRecorder) PublishFromFile(target, file interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishFromFile", reflect.TypeOf((*MockResource)(nil).PublishFromFile), target, file)
+}
