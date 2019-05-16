@@ -7,6 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/tomatool/tomato/stub"
 
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
@@ -18,6 +21,7 @@ const Name = "http/server"
 // Wiremock contains the configuration for the wiremock stubbing resource
 type Wiremock struct {
 	baseURL string
+	stubs   map[string][]byte
 }
 
 // New connects and creates the wiremock resource
@@ -32,7 +36,17 @@ func New(cfg *config.Resource) (*Wiremock, error) {
 		return nil, fmt.Errorf("%s - invalid base_url : %s", u, err.Error())
 	}
 
-	return &Wiremock{baseURL: u}, nil
+	var stubs map[string][]byte
+	path, ok := cfg.Params["stubs_path"]
+	if ok {
+		var err error
+		stubs, err = stub.Retrieve(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Wiremock{baseURL: u, stubs: stubs}, nil
 }
 
 // Open satisfies the resource interface
@@ -89,6 +103,25 @@ func (w *Wiremock) SetResponse(method string, requestPath string, responseCode i
 	m.Request.URLPath = requestPath
 	m.Response.Status = responseCode
 	m.Response.Base64Body = responseBody
+	return w.createMapping(&m)
+}
+
+// SetResponseFromFile satisfies the http/server interface for setting requests and their responses while reading stubs from a file
+func (w *Wiremock) SetResponseFromFile(method string, requestPath string, responseCode int, fileName string) error {
+	m := mapping{}
+	m.Request.Method = method
+	m.Request.URLPath = requestPath
+	m.Response.Status = responseCode
+
+	body, ok := w.stubs[fileName]
+	if !ok {
+		files := make([]string, len(w.stubs))
+		for file := range w.stubs {
+			files = append(files, file)
+		}
+		return errors.Errorf("no stubs loaded with file name: %s available: %s", fileName, strings.Join(files, ", "))
+	}
+	m.Response.Base64Body = body
 	return w.createMapping(&m)
 }
 

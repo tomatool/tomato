@@ -2,12 +2,14 @@ package nsq
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/bitly/go-nsq"
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/stub"
 )
 
 const (
@@ -46,6 +48,7 @@ type NSQ struct {
 	topicReadiness map[string]*nsq.Consumer
 	data           map[string][][]byte
 	waitDuration   time.Duration
+	stubs          map[string][]byte
 }
 
 func New(cfg *config.Resource) (*NSQ, error) {
@@ -59,11 +62,22 @@ func New(cfg *config.Resource) (*NSQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
+	var stubs map[string][]byte
+	path, ok := cfg.Params["stubs_path"]
+	if ok {
+		var err error
+		stubs, err = stub.Retrieve(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &NSQ{
 		nsqd:           nsqdAddress,
 		waitDuration:   waitDuration,
 		topicReadiness: make(map[string]*nsq.Consumer),
 		data:           make(map[string][][]byte),
+		stubs:          stubs,
 	}, nil
 }
 
@@ -183,6 +197,19 @@ func (nm *NSQ) introduceProducer() error {
 	nm.producer = nsqProducer
 
 	return nil
+}
+
+// PublishFromFile attempts to publish a message read from a file to the passed target
+func (nm *NSQ) PublishFromFile(target string, fileName string) error {
+	payload, ok := nm.stubs[fileName]
+	if !ok {
+		files := make([]string, len(nm.stubs))
+		for file := range nm.stubs {
+			files = append(files, file)
+		}
+		return errors.Errorf("no stubs loaded with file name: %s available: %s", fileName, strings.Join(files, ", "))
+	}
+	return nm.Publish(target, payload)
 }
 
 // to publish payload to designated target
