@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/streadway/amqp"
 	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/stub"
 )
 
 const (
@@ -22,6 +23,7 @@ type RabbitMQ struct {
 	conn            *amqp.Connection
 	consumedMessage map[string][][]byte
 	waitDuration    time.Duration
+	stubs           *stub.Stubs
 }
 
 // New creates and validates the resource params for the connection initialized
@@ -38,10 +40,21 @@ func New(cfg *config.Resource) (*RabbitMQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
+	path, ok := cfg.Params["stubs_path"]
+	stubs := &stub.Stubs{}
+	if ok {
+		var err error
+		stubs, err = stub.RetrieveFiles(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &RabbitMQ{
 		datasource:      datasource,
 		waitDuration:    waitDuration,
 		consumedMessage: make(map[string][][]byte),
+		stubs:           stubs,
 	}, nil
 }
 
@@ -142,6 +155,15 @@ func (c *RabbitMQ) Listen(target string) error {
 	}(msgs, target)
 
 	return nil
+}
+
+// PublishFromFile attempts to publish a message read from a file to the passed target
+func (c *RabbitMQ) PublishFromFile(target string, fileName string) error {
+	payload, err := c.stubs.Get(fileName)
+	if err != nil {
+		return err
+	}
+	return c.Publish(target, payload)
 }
 
 // Publish attempts to publish a message to the passed target

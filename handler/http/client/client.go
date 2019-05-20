@@ -18,6 +18,7 @@ type Resource interface {
 	resource.Resource
 
 	Request(method, path string, body []byte) error
+	RequestFromFile(method, path, file string) error
 	Response() (int, http.Header, []byte, error)
 	SetRequestHeader(string, string) error
 }
@@ -60,6 +61,16 @@ func (h *Handler) sendRequestWithBody(resourceName, target string, content *gher
 		requestBody = []byte(strings.TrimSpace(content.Content))
 	}
 	return r.Request(tt[0], tt[1], requestBody)
+}
+
+func (h *Handler) sendRequestWithBodyFromFile(resourceName, target string, file string) error {
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
+	}
+
+	tt := strings.Split(target, " ")
+	return r.RequestFromFile(tt[0], tt[1], file)
 }
 
 func (h *Handler) checkResponseCode(resourceName string, expectedCode int) error {

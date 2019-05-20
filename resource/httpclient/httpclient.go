@@ -2,13 +2,14 @@ package httpclient
 
 import (
 	"bytes"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/stub"
 )
 
 type response struct {
@@ -23,6 +24,7 @@ type Client struct {
 	lastResponse *response
 
 	requestHeaders http.Header
+	stubs          *stub.Stubs
 }
 
 var defaultHeaders = map[string][]string{"Content-Type": {"application/json"}}
@@ -36,7 +38,7 @@ func New(cfg *config.Resource) (*Client, error) {
 			return http.ErrUseLastResponse
 		},
 	}
-	client := &Client{httpClient, "", nil, defaultHeaders}
+	client := &Client{httpClient, "", nil, defaultHeaders, nil}
 	for key, val := range params {
 		switch key {
 		case "base_url":
@@ -51,6 +53,17 @@ func New(cfg *config.Resource) (*Client, error) {
 			return nil, errors.New(key + ": invalid params")
 		}
 	}
+
+	path, ok := cfg.Params["stubs_path"]
+	stubs := &stub.Stubs{}
+	if ok {
+		var err error
+		stubs, err = stub.RetrieveFiles(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+	client.stubs = stubs
 	return client, nil
 }
 
@@ -91,6 +104,14 @@ func (c *Client) Response() (int, http.Header, []byte, error) {
 func (c *Client) SetRequestHeader(key, value string) error {
 	c.requestHeaders.Set(key, value)
 	return nil
+}
+
+func (c *Client) RequestFromFile(method, path, fileName string) error {
+	body, err := c.stubs.Get(fileName)
+	if err != nil {
+		return err
+	}
+	return c.Request(method, path, body)
 }
 
 func (c *Client) Request(method, path string, body []byte) error {

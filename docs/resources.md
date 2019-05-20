@@ -16,6 +16,8 @@ Initialize resource in `config.yml`:
     base_url: # string
     # timeout for the request round-trip.
     timeout: # duration
+    # stubs file path (`./stubs`)
+    stubs_path: # string
     
   
 ```
@@ -39,6 +41,14 @@ send an http request with a request body
 ```gherkin
 Given $resource send request to $target with body $body
 Given $resource send request to $target with payload $body
+
+```
+
+#### **Send Body From File**
+send an http request with a request body from a file
+```gherkin
+Given $resource send request to $target with body from file $file
+Given $resource send request to $target with payload from file $file
 
 ```
 
@@ -89,8 +99,10 @@ Initialize resource in `config.yml`:
   type: # | wiremock | 
   
   params:
-    # writemock base url (e.g : http://localhost:8080)
+    # wiremock base url (e.g : http://localhost:8080)
     base_url: # string
+    # stubs file path (`./stubs`)
+    stubs_path: # string
     
   
 ```
@@ -106,6 +118,13 @@ Initialize resource in `config.yml`:
 set a response code and body for any request that comes to the wiremock target
 ```gherkin
 Given set $resource response code to $code and response body $body
+
+```
+
+#### **Response From File**
+set a response code and body from a file for any request that comes to the wiremock target
+```gherkin
+Given set $resource response code to $code and response body from file $file
 
 ```
 
@@ -127,6 +146,13 @@ Given set $resource with method $method and path $path response code to $code an
 set a response code for a given method and path for wiremock
 ```gherkin
 Given set $resource with method $method and path $path response code to $code
+
+```
+
+#### **Response Code Method Path From File**
+set a response code for a given method and path for wiremock
+```gherkin
+Given set $resource with method $method and path $path response code to $code and response body from file $file
 
 ```
 
@@ -195,6 +221,8 @@ Initialize resource in `config.yml`:
     driver: # string
     # queue source dsn (`amqp://user:pass@host:port/`)
     datasource: # string
+    # stubs file path (`./stubs`)
+    stubs_path: # string
     
   
 ```
@@ -211,6 +239,13 @@ Initialize resource in `config.yml`:
 publish a message to message queue
 ```gherkin
 Given publish message to $resource target $target with payload $payload
+
+```
+
+#### **Publish From File**
+publish a message to message queue from a file
+```gherkin
+Given publish message to $resource target $target with payload from file $file
 
 ```
 

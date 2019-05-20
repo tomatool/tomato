@@ -16,6 +16,7 @@ type Resource interface {
 	Listen(target string) error
 	Fetch(target string) ([][]byte, error)
 	Publish(target string, payload []byte) error
+	PublishFromFile(target, file string) error
 }
 
 type Handler struct {
@@ -33,6 +34,14 @@ func (h *Handler) publishMessage(resourceName, target string, payload *gherkin.D
 	}
 
 	return r.Publish(target, []byte(payload.Content))
+}
+
+func (h *Handler) publishMessageFromFile(resourceName, target string, file string) error {
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
+	}
+	return r.PublishFromFile(target, file)
 }
 
 func (h *Handler) listenMessage(resourceName, target string) error {

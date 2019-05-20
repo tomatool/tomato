@@ -13,6 +13,7 @@ type Resource interface {
 	resource.Resource
 
 	SetResponse(method string, requestPath string, responseCode int, responseBody []byte) error
+	SetResponseFromFile(method string, requestPath string, responseCode int, file string) error
 	GetRequestsCount(method, path string) (int, error)
 }
 
@@ -28,8 +29,21 @@ func (h *Handler) setResponse(resourceName, path string, code int, body *gherkin
 	return h.setResponseWithMethod(resourceName, "GET", path, code, body)
 }
 
+func (h *Handler) setResponseFromFile(resourceName, path string, code int, file string) error {
+	return h.setResponseWithMethodAndBodyFromFile(resourceName, "GET", path, code, file)
+}
+
 func (h *Handler) setResponseWithMethodAndNoBody(resourceName, method string, path string, code int) error {
 	return h.setResponseWithMethod(resourceName, method, path, code, nil)
+}
+
+func (h *Handler) setResponseWithMethodAndBodyFromFile(resourceName, method string, path string, code int, file string) error {
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found to set response", resourceName)
+	}
+
+	return r.SetResponseFromFile(method, path, code, file)
 }
 
 func (h *Handler) setResponseWithMethod(resourceName, method string, path string, code int, body *gherkin.DocString) error {

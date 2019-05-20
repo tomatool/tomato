@@ -8,6 +8,7 @@ import (
 	"github.com/bitly/go-nsq"
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/stub"
 )
 
 const (
@@ -46,6 +47,7 @@ type NSQ struct {
 	topicReadiness map[string]*nsq.Consumer
 	data           map[string][][]byte
 	waitDuration   time.Duration
+	stubs          *stub.Stubs
 }
 
 func New(cfg *config.Resource) (*NSQ, error) {
@@ -59,11 +61,22 @@ func New(cfg *config.Resource) (*NSQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
+	path, ok := cfg.Params["stubs_path"]
+	stubs := &stub.Stubs{}
+	if ok {
+		var err error
+		stubs, err = stub.RetrieveFiles(path)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &NSQ{
 		nsqd:           nsqdAddress,
 		waitDuration:   waitDuration,
 		topicReadiness: make(map[string]*nsq.Consumer),
 		data:           make(map[string][][]byte),
+		stubs:          stubs,
 	}, nil
 }
 
@@ -183,6 +196,15 @@ func (nm *NSQ) introduceProducer() error {
 	nm.producer = nsqProducer
 
 	return nil
+}
+
+// PublishFromFile attempts to publish a message read from a file to the passed target
+func (nm *NSQ) PublishFromFile(target string, fileName string) error {
+	payload, err := nm.stubs.Get(fileName)
+	if err != nil {
+		return err
+	}
+	return nm.Publish(target, payload)
 }
 
 // to publish payload to designated target

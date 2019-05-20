@@ -8,6 +8,8 @@ func (h *Handler) Register(s *godog.Suite) {
 	s.Step(`^"([^"]*)" send request to "([^"]*)"$`, h.sendRequest)
 	s.Step(`^"([^"]*)" send request to "([^"]*)" with body$`, h.sendRequestWithBody)
 	s.Step(`^"([^"]*)" send request to "([^"]*)" with payload$`, h.sendRequestWithBody)
+	s.Step(`^"([^"]*)" send request to "([^"]*)" with body from file "([^"]*)"$`, h.sendRequestWithBodyFromFile)
+	s.Step(`^"([^"]*)" send request to "([^"]*)" with payload from file "([^"]*)"$`, h.sendRequestWithBodyFromFile)
 	s.Step(`^"([^"]*)" set request header key "([^"]*)" with value "([^"]*)"$`, h.setRequestHeader)
 	s.Step(`^"([^"]*)" response code should be (\d+)$`, h.checkResponseCode)
 	s.Step(`^"([^"]*)" response header "([^"]*)" should be "([^"]*)"$`, h.checkResponseHeader)
