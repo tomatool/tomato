@@ -115,9 +115,11 @@ handlers:
           - "wiremock"
       options:
           - name: base_url
-            description: "writemock base url (e.g : http://localhost:8080)"
+            description: "wiremock base url (e.g : http://localhost:8080)"
             type: string
-            stubs_path: # string
+          - name: stubs_path
+            description: stubs file path (`./stubs`)
+            type: string
       actions:
           - name: response
             description: set a response code and body for any request that comes to the wiremock target

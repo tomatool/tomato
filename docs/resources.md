@@ -99,8 +99,10 @@ Initialize resource in `config.yml`:
   type: # | wiremock | 
   
   params:
-    # writemock base url (e.g : http://localhost:8080)
+    # wiremock base url (e.g : http://localhost:8080)
     base_url: # string
+    # stubs file path (`./stubs`)
+    stubs_path: # string
     
   
 ```
