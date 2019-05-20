@@ -55,6 +55,9 @@ func (h *Handler) sendRequestWithBody(resourceName, target string, content *gher
 	}
 
 	tt := strings.Split(target, " ")
+	if len(tt) != 2 {
+		return fmt.Errorf("unrecognized target format: %s,  should follow `[METHOD] [PATH]`", target)
+	}
 
 	var requestBody []byte
 	if content != nil {
@@ -70,6 +73,9 @@ func (h *Handler) sendRequestWithBodyFromFile(resourceName, target string, file 
 	}
 
 	tt := strings.Split(target, " ")
+	if len(tt) != 2 {
+		return fmt.Errorf("unrecognized target format: %s,  should follow `[METHOD] [PATH]`", target)
+	}
 	return r.RequestFromFile(tt[0], tt[1], file)
 }
 

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -68,7 +67,7 @@ func (h *Handler) verifyRequestsCount(resourceName, target string, expectedReque
 
 	tt := strings.Split(target, " ")
 	if len(tt) != 2 {
-		return errors.New("target format should be following `[METHOD] [PATH]`")
+		return fmt.Errorf("unrecognized target format: %s,  should follow `[METHOD] [PATH]`", target)
 	}
 
 	count, err := r.GetRequestsCount(tt[0], tt[1])
