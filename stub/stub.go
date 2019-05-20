@@ -39,8 +39,12 @@ func RetrieveFiles(stubsPath string) (*Stubs, error) {
 				if err != nil {
 					return err
 				}
+
+				if info.IsDir() {
+					return nil
+				}
 				// read and add the files to our stubs
-				data, err := ioutil.ReadFile(info.Name())
+				data, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err
 				}
