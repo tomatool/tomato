@@ -15,11 +15,13 @@ resources:
       type: rabbitmq
       params:
         datasource: {{ .RABBITMQ_DATASOURCE }}
+        stubs_path: "/stubs"
 
     - name: tomato-nsq
       type: nsq
       params:
         nsqd: {{ .NSQ_DATASOURCE }}
+        stubs_path: "/stubs"
 
     - name: tomato-wiremock
       type: wiremock

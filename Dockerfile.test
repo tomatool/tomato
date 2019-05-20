@@ -13,6 +13,7 @@ FROM alpine
 
 COPY --from=builder /go/src/github.com/tomatool/tomato/bin/tomato.test /bin/tomato
 COPY --from=builder /go/src/github.com/tomatool/tomato/examples/ /
+COPY --from=builder /go/src/github.com/tomatool/tomato/examples/stubs /stubs
 
 ENTRYPOINT  [ "/bin/tomato" ]
 CMD         [ "-test.run=^TestMain$", \
