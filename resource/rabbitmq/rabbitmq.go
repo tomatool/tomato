@@ -41,7 +41,7 @@ func New(cfg *config.Resource) (*RabbitMQ, error) {
 	}
 
 	path, ok := cfg.Params["stubs_path"]
-	var stubs *stub.Stubs
+	stubs := &stub.Stubs{}
 	if ok {
 		var err error
 		stubs, err = stub.RetrieveFiles(path)

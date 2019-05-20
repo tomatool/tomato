@@ -55,13 +55,15 @@ func New(cfg *config.Resource) (*Client, error) {
 	}
 
 	path, ok := cfg.Params["stubs_path"]
+	stubs := &stub.Stubs{}
 	if ok {
 		var err error
-		client.stubs, err = stub.RetrieveFiles(path)
+		stubs, err = stub.RetrieveFiles(path)
 		if err != nil {
 			return nil, err
 		}
 	}
+	client.stubs = stubs
 	return client, nil
 }
 
