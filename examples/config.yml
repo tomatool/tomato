@@ -1,5 +1,10 @@
 ---
 
+features: 
+  - /features/
+randomize: true
+stop_on_failure: false
+
 resources:
     - name: tomato-psql
       type: postgres

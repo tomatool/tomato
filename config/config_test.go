@@ -15,7 +15,7 @@ func TestUnmarshal(t *testing.T) {
 
 	assert.Equal(t, len(cfg.Resources), 8)
 	assert.Equal(t, cfg.StopOnFailure, false)
-	assert.Equal(t, len(cfg.FeaturesPaths), 2)
+	assert.Equal(t, len(cfg.Features), 2)
 }
 
 func TestEnv(t *testing.T) {

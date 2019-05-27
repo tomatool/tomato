@@ -2,7 +2,7 @@
 
 randomize: false
 stop_on_failure: false
-features_path:
+features:
   - "ulala"
   - "uyeah"
 

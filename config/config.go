@@ -18,13 +18,21 @@ type Config struct {
 	Resources     []*Resource `yaml:"resources"`
 }
 
+func (c *Config) IsValid() error {
+	if len(c.Features) == 0 {
+		return errors.New("Missing configuration : <features>\nSpecify features path on config file or flag")
+	}
+
+	return nil
+}
+
 type Resource struct {
 	Name   string            `yaml:"name"`
 	Type   string            `yaml:"type"`
 	Params map[string]string `yaml:"params"`
 }
 
-func Unmarshal(configFile string, target interface{}) error {
+func Unmarshal(configFile string, target *Config) error {
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return err
@@ -43,7 +51,7 @@ func Unmarshal(configFile string, target interface{}) error {
 		return errors.Wrapf(err, "render template : %s", string(b))
 	}
 
-	if err := yaml.Unmarshal(buf.Bytes(), &target); err != nil {
+	if err := yaml.Unmarshal(buf.Bytes(), target); err != nil {
 		return errors.Wrapf(err, "unmarshal yaml : %s", buf.String())
 	}
 

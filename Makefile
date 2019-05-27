@@ -20,13 +20,13 @@ deps:
 
 build:
 	@echo ">> building binaries"
-	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
-	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) .	
+	@CGO_ENABLED=0 go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
+	@CGO_ENABLED=0 go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) .	
 
 build-test:
 	@echo ">> building binaries"
-	@go test -coverpkg="./..." github.com/tomatool/$(project_name) -c -tags testmain -o $(build_dir)/$(project_name).test
-	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
+	@CGO_ENABLED=0 go test -coverpkg="./..." github.com/tomatool/$(project_name) -c -tags testmain -o $(build_dir)/$(project_name).test
+	@CGO_ENABLED=0 go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
 
 build-all:
 	@echo ">> packaging releases"
@@ -35,7 +35,7 @@ build-all:
 	@for os in "linux" "darwin" ; do \
 			for arch in "amd64" "386" "arm" "arm64" ; do \
 					echo " > building $$os/$$arch" ; \
-					GOOS=$$os GOARCH=$$arch go build -ldflags $(ldflags) -o $(build_dir)/$(project_name).$(version).$$os-$$arch cmd/$(project_name)/main.go ; \
+					CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch go build -ldflags $(ldflags) -o $(build_dir)/$(project_name).$(version).$$os-$$arch cmd/$(project_name)/main.go ; \
 			done ; \
 	done
 

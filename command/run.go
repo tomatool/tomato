@@ -36,6 +36,7 @@ func (r *RunCommand) Flags() []cli.Flag {
 		cli.StringFlag{
 			Name:  "features",
 			Usage: "All feature file paths",
+			Value: "features/",
 		},
 		cli.BoolFlag{
 			Name:  "randomize",
@@ -68,7 +69,7 @@ func (r *RunCommand) preRun(ctx *cli.Context) error {
 		r.config.StopOnFailure = ctx.Bool("stop-on-failure")
 	}
 
-	return nil
+	return r.config.IsValid()
 }
 
 func (r *RunCommand) Run(ctx *cli.Context) error {

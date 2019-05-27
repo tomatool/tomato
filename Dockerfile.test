@@ -18,5 +18,4 @@ ENTRYPOINT  [ "/bin/tomato" ]
 CMD         [ "run", \
               "-test.run=^TestMain$", \
               "-test.coverprofile=/tmp/coverage.out", \
-              "/config.yml", \
-              "-features    =/features/" ]
+              "/config.yml" ]
