@@ -1,6 +1,6 @@
 # github.com/DATA-DOG/godog v0.7.13
-github.com/DATA-DOG/godog
 github.com/DATA-DOG/godog/colors
+github.com/DATA-DOG/godog
 github.com/DATA-DOG/godog/gherkin
 # github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 github.com/alecthomas/template
@@ -39,6 +39,8 @@ github.com/sergi/go-diff/diffmatchpatch
 github.com/streadway/amqp
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
+# github.com/urfave/cli v1.20.0
+github.com/urfave/cli
 # github.com/yudai/gojsondiff v1.0.0
 github.com/yudai/gojsondiff
 github.com/yudai/gojsondiff/formatter
