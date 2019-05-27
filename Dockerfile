@@ -1,4 +1,4 @@
-FROM golang:1.10-alpine AS builder
+FROM golang:1.12-alpine AS builder
 
 WORKDIR /go/src/github.com/tomatool/tomato
 
@@ -14,5 +14,6 @@ FROM alpine
 COPY --from=builder /go/src/github.com/tomatool/tomato/bin/tomato /bin/tomato
 
 ENTRYPOINT  [ "/bin/tomato" ]
-CMD         [ "--config.file=/config.yml", \
-              "--features.path=/features/" ]
+CMD         [ "run", \
+              "/config.yml", \
+              "-features=/features/" ]
