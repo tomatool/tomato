@@ -14,7 +14,7 @@ import (
 type Config struct {
 	Randomize     bool        `yaml:"randomize"`
 	StopOnFailure bool        `yaml:"stop_on_failure"`
-	FeaturesPaths []string    `yaml:"features_path"`
+	Features      []string    `yaml:"features"`
 	Resources     []*Resource `yaml:"resources"`
 }
 
@@ -24,10 +24,10 @@ type Resource struct {
 	Params map[string]string `yaml:"params"`
 }
 
-func Retrieve(configFile string) (*Config, error) {
+func Unmarshal(configFile string, target interface{}) error {
 	b, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	envs := make(map[string]string)
@@ -40,13 +40,12 @@ func Retrieve(configFile string) (*Config, error) {
 
 	var buf bytes.Buffer
 	if err := t.ExecuteTemplate(&buf, "config", envs); err != nil {
-		return nil, errors.Wrapf(err, "render template : %s", string(b))
+		return errors.Wrapf(err, "render template : %s", string(b))
 	}
 
-	var cfg Config
-	if err := yaml.Unmarshal(buf.Bytes(), &cfg); err != nil {
-		return nil, errors.Wrapf(err, "unmarshal yaml : %s", buf.String())
+	if err := yaml.Unmarshal(buf.Bytes(), &target); err != nil {
+		return errors.Wrapf(err, "unmarshal yaml : %s", buf.String())
 	}
 
-	return &cfg, nil
+	return nil
 }

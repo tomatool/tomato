@@ -11,7 +11,6 @@ import (
 	"github.com/tomatool/tomato/dictionary"
 	"github.com/tomatool/tomato/generate/docs"
 	"github.com/tomatool/tomato/generate/handler"
-	"github.com/tomatool/tomato/version"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -23,7 +22,6 @@ var (
 
 func main() {
 	app := kingpin.New(filepath.Base(os.Args[0]), "tomatool - tomato tools")
-	app.Version(version.Print())
 	app.HelpFlag.Short('h')
 
 	generateCmd := app.Command("generate", "generate")

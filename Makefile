@@ -9,7 +9,7 @@ pwd = $(shell pwd)
 build_dir ?= bin/
 
 pkgs          = ./...
-version_pkg= github.com/tomatool/tomato/version
+version_pkg= main
 ldflags := "-X $(version_pkg).Version=$(version) -X $(version_pkg).Branch=$(branch) -X $(version_pkg).Revision=$(revision) -X $(version_pkg).BuildUser=$(build_user) -X $(version_pkg).BuildDate=$(build_date)"
 
 
@@ -21,7 +21,7 @@ deps:
 build:
 	@echo ">> building binaries"
 	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
-	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) cmd/$(project_name)/main.go
+	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) .
 
 build-test:
 	@echo ">> building binaries"

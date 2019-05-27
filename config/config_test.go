@@ -8,8 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRetrieve(t *testing.T) {
-	cfg, err := Retrieve("testdata/conf.good.yml")
+func TestUnmarshal(t *testing.T) {
+	var cfg Config
+	err := Unmarshal("testdata/conf.good.yml", &cfg)
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(cfg.Resources), 8)
@@ -23,7 +24,8 @@ func TestEnv(t *testing.T) {
 	os.Setenv("samplevar", timeNow)
 	os.Setenv("STOP_ON_FAILURE", "true")
 
-	cfg, err := Retrieve("testdata/env.good.yml")
+	var cfg Config
+	err := Unmarshal("testdata/env.good.yml", &cfg)
 	assert.NoError(t, err)
 
 	assert.Equal(t, cfg.StopOnFailure, true)

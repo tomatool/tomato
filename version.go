@@ -1,4 +1,4 @@
-package version
+package main
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ var versionInfoTmpl = `
   go version:       {{.goVersion}}
 `
 
-func Print() string {
+func PrintVersion() string {
 	m := map[string]string{
 		"program":   "tomato",
 		"version":   Version,
