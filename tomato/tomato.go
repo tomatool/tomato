@@ -66,7 +66,7 @@ func (t *Tomato) Run() error {
 	}
 	t.readinessTimeout = readinessTimeout
 
-	t.log.Printf("Configuration:\n  Features\t\t: %s\n  Randomize\t\t: %v\n  Stop on Failure\t\t: %v\n  Readiness Timeout\t: %s\n", t.config.FeaturesPaths, t.config.Randomize, t.config.StopOnFailure, t.readinessTimeout.String())
+	t.log.Printf("Configuration:\n  Features\t\t: %s\n  Randomize\t\t: %v\n  Stop on Failure\t: %v\n  Readiness Timeout\t: %s\n", t.config.FeaturesPaths, t.config.Randomize, t.config.StopOnFailure, t.readinessTimeout.String())
 
 	h := handler.New()
 

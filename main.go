@@ -27,6 +27,11 @@ func main() {
 			Name:  "features.path, f",
 			Usage: "features directory/file path (comma separated for multi path)",
 		},
+		cli.StringFlag{
+			Name:   "config.file, c",
+			Usage:  "[DEPRECATED PLEASE USE ARGUMENT] configuration file path",
+			Hidden: true,
+		},
 	}
 
 	app.Before = func(ctx *cli.Context) error {
@@ -38,11 +43,23 @@ func main() {
 	}
 
 	app.Action = func(ctx *cli.Context) error {
-		if len(ctx.Args()) != 1 {
+		var configPath string
+
+		// backward compability
+		if c := ctx.String("config.file"); c != "" {
+			log.Printf(colors.Bold(colors.Yellow)("Flag --config.file, -c is deprecated, please use args instead. For additional help try 'tomato -help'"))
+			configPath = c
+		}
+
+		if len(ctx.Args()) == 1 {
+			configPath = ctx.Args()[0]
+		}
+
+		if configPath == "" {
 			return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato -help'")
 		}
 
-		conf, err := config.Retrieve(ctx.Args()[0])
+		conf, err := config.Retrieve(configPath)
 		if err != nil {
 			return errors.Wrap(err, "Failed to retrieve config")
 		}
