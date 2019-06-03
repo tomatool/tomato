@@ -21,7 +21,7 @@ deps:
 build:
 	@echo ">> building binaries"
 	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
-	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) cmd/$(project_name)/main.go
+	@go build -ldflags $(ldflags) -o $(build_dir)/$(project_name) .
 
 build-test:
 	@echo ">> building binaries"

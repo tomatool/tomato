@@ -1,5 +1,7 @@
 ---
 
+features_path:
+  - /features/
 resources:
     - name: tomato-psql
       type: postgres

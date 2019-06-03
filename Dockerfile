@@ -14,5 +14,4 @@ FROM alpine
 COPY --from=builder /go/src/github.com/tomatool/tomato/bin/tomato /bin/tomato
 
 ENTRYPOINT  [ "/bin/tomato" ]
-CMD         [ "--config.file=/config.yml", \
-              "--features.path=/features/" ]
+CMD         [ "/config.yml" ]
