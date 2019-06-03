@@ -1,4 +1,4 @@
-FROM golang:1.10-alpine AS builder
+FROM golang:1.12-alpine AS builder
 
 WORKDIR /go/src/github.com/tomatool/tomato
 
