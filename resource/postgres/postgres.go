@@ -18,7 +18,7 @@ type PostgreSQL struct {
 
 func New(cfg *config.Resource) (*PostgreSQL, error) {
 	datasource, ok := cfg.Params["datasource"]
-	if !ok {
+	if !ok || datasource == "" || datasource == "<no value>" {
 		return nil, errors.New("datasource is required")
 	}
 

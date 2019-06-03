@@ -30,7 +30,7 @@ var resources = map[string]string{
 	"shell":      "shell",
 }
 
-func createResource(cfg *config.Resource) (resource.Resource, error) {
+func CreateResource(cfg *config.Resource) (resource.Resource, error) {
 	switch cfg.Type {
 	case "mysql":
 		return mysql_r.New(cfg)
@@ -52,11 +52,7 @@ func createResource(cfg *config.Resource) (resource.Resource, error) {
 		colors.Bold(colors.White)("https://github.com/tomatool/tomato#resources"))
 }
 
-func (h *Handler) Register(name string, cfg *config.Resource) error {
-	r, err := createResource(cfg)
-	if err != nil {
-		return err
-	}
+func (h *Handler) Register(cfg *config.Resource, r resource.Resource) {
 	h.resources[cfg.Name] = r
 
 	switch resources[cfg.Type] {
@@ -71,33 +67,14 @@ func (h *Handler) Register(name string, cfg *config.Resource) error {
 	case "queue":
 		h.queues[cfg.Name] = r.(queue.Resource)
 	}
-	if err != nil {
-		return err
-	}
 
-	return nil
+}
+func (h *Handler) Resources() map[string]resource.Resource {
+	return h.resources
 }
 
 func (h *Handler) reset() {
 	for _, r := range h.resources {
 		r.Reset()
 	}
-}
-
-func (h *Handler) Open(name string) error {
-	r, ok := h.resources[name]
-	if !ok {
-		return fmt.Errorf("resource %s not found", name)
-	}
-
-	return r.Open()
-}
-
-func (h *Handler) Ready(name string) error {
-	r, ok := h.resources[name]
-	if !ok {
-		return fmt.Errorf("resource %s not found", name)
-	}
-
-	return r.Ready()
 }

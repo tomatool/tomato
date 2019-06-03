@@ -193,6 +193,8 @@ func (nm *NSQ) introduceProducer() error {
 		return err
 	}
 
+	nsqProducer.SetLogger(theSilentLogger, nsq.LogLevelDebug)
+
 	nm.producer = nsqProducer
 
 	return nil
