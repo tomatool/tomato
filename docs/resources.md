@@ -340,3 +340,37 @@ Given $resource stderr should not contains $substring
 
 
 
+## Database Kv
+
+to communicate with key-value command
+
+Initialize resource in `config.yml`:
+```yaml
+- name: # name of the resource
+  type: # | redis | 
+  
+```
+
+### Resources
+
+* redis
+
+
+### Actions
+
+#### **Set**
+set key on key-value store
+```gherkin
+Given $resource set $key to $value
+
+```
+
+#### **Compare**
+compare value on key-value store
+```gherkin
+Given $resource key $key should equal $expectedValue
+
+```
+
+
+

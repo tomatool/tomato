@@ -419,3 +419,35 @@ handlers:
               - name: substring
                 description: substring of the message
                 type: string
+
+    - name: database/kv
+      description: to communicate with key-value command
+      resources:
+          - "redis"
+      options: []
+      actions:
+        - name: set
+          description: set key on key-value store
+          handle: set
+          expressions:
+              - $resource set $key to $value
+          parameters:
+              - name: key
+                description: key of the key-value store
+                type: string
+              - name: value
+                description: value of the key-value store
+                type: string
+
+        - name: compare
+          description: compare value on key-value store
+          handle: compare
+          expressions:
+              - $resource key $key should equal $expectedValue
+          parameters:
+              - name: key
+                description: key of the key-value store
+                type: string
+              - name: expectedValue
+                description: expectedValue of the key-value store
+                type: string
