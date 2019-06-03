@@ -39,6 +39,10 @@ func New(conf *config.Config, logger *log.Logger) *Tomato {
 }
 
 func (t *Tomato) Verify() error {
+	if len(t.config.FeaturesPaths) == 0 {
+		return errors.New("Features path is missing, please specify on config file or flag\nFor additional help try 'tomato -help'")
+	}
+
 	return nil
 }
 
