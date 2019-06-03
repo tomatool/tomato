@@ -17,5 +17,4 @@ COPY --from=builder /go/src/github.com/tomatool/tomato/examples/ /
 ENTRYPOINT  [ "/bin/tomato" ]
 CMD         [ "-test.run=^TestMain$", \
               "-test.coverprofile=/tmp/coverage.out", \
-              "--config.file=/config.yml", \
-              "--features.path=/features/" ]
+              "/config.yml" ]

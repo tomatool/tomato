@@ -12,10 +12,11 @@ import (
 )
 
 type Config struct {
-	Randomize     bool        `yaml:"randomize"`
-	StopOnFailure bool        `yaml:"stop_on_failure"`
-	FeaturesPaths []string    `yaml:"features_path"`
-	Resources     []*Resource `yaml:"resources"`
+	Randomize        bool        `yaml:"randomize"`
+	StopOnFailure    bool        `yaml:"stop_on_failure"`
+	FeaturesPaths    []string    `yaml:"features_path"`
+	ReadinessTimeout string      `yaml:"readiness_timeout"`
+	Resources        []*Resource `yaml:"resources"`
 }
 
 type Resource struct {

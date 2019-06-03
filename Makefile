@@ -25,7 +25,7 @@ build:
 
 build-test:
 	@echo ">> building binaries"
-	@go test -coverpkg="./..." github.com/tomatool/$(project_name)/cmd/$(project_name) -c -tags testmain -o $(build_dir)/$(project_name).test
+	@go test -coverpkg="./..." github.com/tomatool/$(project_name) -c -tags testmain -o $(build_dir)/$(project_name).test
 	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
 
 build-all:
