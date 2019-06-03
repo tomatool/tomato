@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/joho/godotenv"
@@ -22,6 +23,10 @@ func main() {
 			Name:  "env.file, e",
 			Usage: "environment variable file path",
 		},
+		cli.StringFlag{
+			Name:  "features.path, f",
+			Usage: "features directory/file path (comma separated for multi path)",
+		},
 	}
 
 	app.Before = func(ctx *cli.Context) error {
@@ -40,6 +45,10 @@ func main() {
 		conf, err := config.Retrieve(ctx.Args()[0])
 		if err != nil {
 			return errors.Wrap(err, "Failed to retrieve config")
+		}
+
+		if featuresPath := ctx.String("features.path"); featuresPath != "" {
+			conf.FeaturesPaths = strings.Split(featuresPath, ",")
 		}
 
 		t := tomato.New(conf, log)
