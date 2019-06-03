@@ -101,7 +101,7 @@ curl https://raw.githubusercontent.com/tomatool/tomato/master/install.sh | sh
 
 Install tomato by grabbing the latest stable [release](https://github.com/tomatool/tomato/releases/latest) and placing it in your path, or by using go get
 ```
-go get -u github.com/tomatool/tomato/cmd/tomato
+go get -u github.com/tomatool/tomat
 ```
 
 #### Executing tomato
