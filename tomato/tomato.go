@@ -60,8 +60,12 @@ func (t *Tomato) Run() error {
 		opts.Randomize = time.Now().UTC().UnixNano()
 	}
 
+	if t.config.ReadinessTimeout == "" {
+		t.config.ReadinessTimeout = "15s"
+	}
 	readinessTimeout, err := time.ParseDuration(t.config.ReadinessTimeout)
 	if err != nil {
+		t.log.Printf(colors.Yellow("Failed to parse duration of %s: %v"), t.config.ReadinessTimeout, err)
 		readinessTimeout = time.Second * 15
 	}
 	t.readinessTimeout = readinessTimeout
