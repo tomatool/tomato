@@ -104,8 +104,11 @@ func (t *Tomato) waitResource(r resource.Resource) error {
 		done = make(chan struct{})
 	)
 
+	ticker := time.NewTicker(time.Millisecond * 300)
+	defer ticker.Stop()
+
 	go func() {
-		for range time.Tick(time.Millisecond * 300) {
+		for range ticker.C {
 			err = r.Open()
 			if err != nil {
 				continue
