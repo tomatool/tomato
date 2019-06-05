@@ -14,7 +14,19 @@ import (
 	"github.com/tomatool/tomato/tomato"
 )
 
+// AppHelpTemplate is the text template for the Default help topic.
+// cli.go uses text/template to render templates. You can
+// render custom help text by setting this variable.
+const AppHelpTemplate = `Usage: {{if .UsageText}}{{.UsageText}}{{else}}tomato {{if .VisibleFlags}}[options]{{end}}{{if .ArgsUsage}}{{.ArgsUsage}}{{else}} <config path>{{end}}{{end}}
+
+Options:
+   {{range $index, $option := .VisibleFlags}}{{if $index}}
+   {{end}}{{$option}}{{end}}
+`
+
 func main() {
+	cli.AppHelpTemplate = AppHelpTemplate
+
 	log := log.New(os.Stdout, "", 0)
 
 	app := cli.NewApp()

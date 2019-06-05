@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-func init() {}
-
 func TestMain(t *testing.T) {
 	var args []string
 	for _, arg := range os.Args {
