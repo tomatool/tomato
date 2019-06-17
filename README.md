@@ -24,10 +24,22 @@ Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucu
 ### Set up your tomato configuration
 Tomato integrates your app and its test dependencies using a simple configuration file `tomato.yml`.
 
-Create a `tomato.yml` file with your application's required test [resources](https://tomatool.github.io/tomato/resources):
+Create a `tomato.yml` file with your application's required test [resources](https://github.com/tomatool/tomato/blob/master/docs/resources.md):
 ```yml
 ---
 
+# Randomize scenario execution order
+randomize: true
+
+# Stops on the first failure
+stop_on_failure: false
+
+# All feature file paths
+features_path:
+    - ./features
+    - check-status.feature
+
+# List of resources for application dependencies
 resources:
     - name: psql
       type: postgres
@@ -108,7 +120,7 @@ go get -u github.com/tomatool/tomato
 
 Now run tomato:
 ```sh
-tomato -f check-status.feature tomato.yml
+tomato tomato.yml
 ```
 
 ---
