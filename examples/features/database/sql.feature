@@ -39,3 +39,22 @@ Feature: database features example
       | customer_id | country | name   |
       | 1           | us      | cembri |
       | 2           | id      | cembre |
+      
+      
+  Scenario: Test to assure no trace between each scenario
+    Given set "tomato-mysql" table "customers" list of content
+      | customer_id | country | name   |
+      | 1           | us      | cembri |
+    Given "tomato-mysql" table "customers" should look like
+      | customer_id | country | name   |
+      | 1           | us      | cembri |
+
+  Scenario: Test to assure no trace between each scenario
+    Given set "tomato-mysql" table "customers" list of content
+      | customer_id | country | name   |
+      | 1           | us      | cembri |
+      | 2           | id      | cembre |
+    Given "tomato-mysql" table "customers" should look like
+      | customer_id | country | name   |
+      | 1           | us      | cembri |
+      | 2           | id      | cembre |
