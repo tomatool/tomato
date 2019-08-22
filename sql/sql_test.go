@@ -1,6 +1,10 @@
 package sql
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/jmoiron/sqlx/types"
+)
 
 func TestQueryBuilder(t *testing.T) {
 	var (
@@ -92,4 +96,20 @@ func TestQueryBuilder(t *testing.T) {
 		t.Errorf("expecting query builder argument to be 5, got %d", out)
 	}
 
+}
+
+func TestMySQLBit(t *testing.T) {
+	var (
+		baseQuery = "SELECT * FROM a"
+	)
+	qb := NewQueryBuilder("mysql", baseQuery)
+
+	qb.Where("u", "=", "bit::0")
+
+	if out := qb.Query(); out != baseQuery+" WHERE (u = ?) " {
+		t.Errorf("expecting query to be `%s`, got %s", baseQuery, out)
+	}
+	if out := qb.Arguments()[1]; out != types.BitBool(false) {
+		t.Errorf("expecting query builder argument to be []byte{0}, got %d", out)
+	}
 }
