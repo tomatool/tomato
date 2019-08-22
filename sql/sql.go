@@ -3,6 +3,8 @@ package sql
 import (
 	"fmt"
 	"strings"
+
+	"github.com/jmoiron/sqlx/types"
 )
 
 type QueryBuilder struct {
@@ -54,7 +56,15 @@ func (q *QueryBuilder) Value(key string, val interface{}) {
 	}
 	q.key = append(q.key, key)
 	q.value = append(q.value, q.inc())
-	q.args = append(q.args, val)
+	if q.databaseDriver == "mysql" && strings.HasPrefix(key, "bit::") {
+		s, ok := (val.(string))
+		if !ok {
+			// what do here?
+		}
+		q.args = append(q.args, types.BitBool(s[5] == 1))
+	} else {
+		q.args = append(q.args, val)
+	}
 }
 
 const (
