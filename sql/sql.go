@@ -56,19 +56,18 @@ func (q *QueryBuilder) Value(key string, val interface{}) {
 	}
 	q.key = append(q.key, key)
 	q.value = append(q.value, q.inc())
-	if q.databaseDriver == "mysql" && strings.HasPrefix(key, "bit::") {
-		s, ok := (val.(string))
-		if !ok {
-			// what do here?
-		}
-		q.args = append(q.args, types.BitBool(s[5] == 1))
-	} else {
-		q.args = append(q.args, val)
+
+	valstr, ok := (val.(string))
+	if ok && strings.HasPrefix(valstr, ColumnTypeBit) && len(valstr[5:]) == 1 {
+		val = types.BitBool(valstr[5] == '1')
 	}
+
+	q.args = append(q.args, val)
 }
 
 const (
 	ColumnTypeArrayVarchar = "array::varchar"
+	ColumnTypeBit          = "bit::"
 )
 
 func (q *QueryBuilder) WhereOr(key, operator string, val interface{}, valueType ...string) {
