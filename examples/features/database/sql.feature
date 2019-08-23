@@ -27,15 +27,15 @@ Feature: database features example
     Given "tomato-mysql" table "customers" should look like
       | customer_id | name    |
     Given set "tomato-mysql" table "customers" list of content
-      | name    | country |
-      | cembri  | us      |
+      | name    | country | active |
+      | cembri  | us      | bit::1      |
     Then "tomato-mysql" table "customers" should look like
-      | customer_id | country | name   |
-      | 1           | us      | cembri |
+      | customer_id | country | name   | active | 
+      | 1           | us      | cembri | 1      |
     Given set "tomato-mysql" table "customers" list of content
-      | name    | country |
-      | cembre  | id      |
+      | name    | country | active |
+      | cembre  | id      | bit::0      |
     Then "tomato-mysql" table "customers" should look like
-      | customer_id | country | name   |
-      | 1           | us      | cembri |
-      | 2           | id      | cembre |
+      | customer_id | country | name   | active |
+      | 1           | us      | cembri | 1      |
+      | 2           | id      | cembre | 0      |

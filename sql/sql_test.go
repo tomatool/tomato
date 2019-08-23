@@ -104,12 +104,14 @@ func TestMySQLBit(t *testing.T) {
 	)
 	qb := NewQueryBuilder("mysql", baseQuery)
 
-	qb.Where("u", "=", "bit::0")
+	qb.Value("key", "bit::0")
+	qb.Value("key", "bit::1")
 
-	if out := qb.Query(); out != baseQuery+" WHERE (u = ?) " {
-		t.Errorf("expecting query to be `%s`, got %s", baseQuery, out)
+	if out := qb.Arguments()[0]; out != types.BitBool(false) {
+		t.Errorf("expecting query builder argument to be BitBool(false), got %d", out)
 	}
-	if out := qb.Arguments()[1]; out != types.BitBool(false) {
-		t.Errorf("expecting query builder argument to be []byte{0}, got %d", out)
+
+	if out := qb.Arguments()[1]; out != types.BitBool(true) {
+		t.Errorf("expecting query builder argument to be BitBool(true), got %d", out)
 	}
 }
