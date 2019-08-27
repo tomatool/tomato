@@ -3,7 +3,6 @@ package mysql
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -24,12 +23,18 @@ func New(cfg *config.Resource) (*MySQL, error) {
 		return nil, errors.New("datasource is required")
 	}
 
-	u, err := url.Parse("mysql://" + datasource + "?uyeah")
-	if err != nil {
-		return nil, err
+	return &MySQL{datasource: datasource, dbname: getDatabaseName(datasource)}, nil
+}
+
+func getDatabaseName(datasource string) string {
+	if strings.HasPrefix(datasource, "mysql://") {
+		datasource = datasource[8:]
+	}
+	if s := strings.Split(datasource, "/"); len(s) == 2 {
+		return strings.Split(s[len(s)-1], "?")[0]
 	}
 
-	return &MySQL{datasource: datasource, dbname: strings.Replace(u.Path, "/", "", -1)}, nil
+	return datasource
 }
 
 func (d *MySQL) Open() error {
