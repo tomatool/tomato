@@ -5,6 +5,7 @@ package handler
 import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/tomatool/tomato/handler/cache"
 	"github.com/tomatool/tomato/handler/database/sql"
 	"github.com/tomatool/tomato/handler/http/client"
 	"github.com/tomatool/tomato/handler/http/server"
@@ -20,6 +21,7 @@ type Handler struct {
 	queues       map[string]queue.Resource
 	shells       map[string]shell.Resource
 	httpServers  map[string]server.Resource
+	caches       map[string]cache.Resource
 }
 
 func New() *Handler {
@@ -30,6 +32,7 @@ func New() *Handler {
 		queues:       make(map[string]queue.Resource),
 		shells:       make(map[string]shell.Resource),
 		httpServers:  make(map[string]server.Resource),
+		caches:       make(map[string]cache.Resource),
 	}
 	return h
 }
@@ -47,5 +50,6 @@ func (h *Handler) Handler() func(s *godog.Suite) {
 		sql.New(h.sqlDatabases).Register(s)
 		queue.New(h.queues).Register(s)
 		shell.New(h.shells).Register(s)
+		cache.New(h.caches).Register(s)
 	}
 }

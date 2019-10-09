@@ -419,3 +419,61 @@ handlers:
               - name: substring
                 description: substring of the message
                 type: string
+
+    - name: cache
+      description: cache driver that interacts with a cache service
+      resources:
+          - "redis"
+      options:
+          - name: driver
+            description: cache driver (only "redis" for now)
+            type: string
+          - name: datasource
+            description: cache source url (`redis://user:secret@localhost:6379/0?foo=bar&qux=baz`)
+            type: string
+      actions:
+          - name: set
+            description: set key to hold the string value
+            handle: valueSet
+            expressions:
+                - cache $resource stores $key with value $value
+            parameters:
+                - name: key
+                  description: key of content
+                  type: string
+                - name: value
+                  description: stored content value
+                  type: string
+
+          - name: check
+            description: compares cached content after an action
+            handle: valueCompare
+            expressions:
+                - cache $resource stored key $key should look like $value
+            parameters:
+                - name: key
+                  description: key of content
+                  type: string
+                - name: value
+                  description: stored content value
+                  type: string
+
+          - name: exists
+            description: check if such key exists in the cache
+            handle: valueExists
+            expressions:
+                -  cache $resource has key $key
+            parameters:
+                - name: key
+                  description: key of content
+                  type: string
+
+          - name: not_exists
+            description: check if such key doesn't exists in the cache
+            handle: valueNotExists
+            expressions:
+                - cache $resource hasn't key $key
+            parameters:
+                - name: key
+                  description: key of content
+                  type: string

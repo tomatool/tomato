@@ -10,6 +10,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang/mock v1.2.0
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/joho/godotenv v1.3.0
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
