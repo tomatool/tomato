@@ -82,7 +82,10 @@ func (t *Tomato) Run() error {
 		}
 
 		h.Register(cfg, resource)
-
+		if v, ok := cfg.Params["readiness_check"]; ok && v != "true" {
+			t.log.Printf("  [%s] Skipping\n", cfg.Name)
+			continue
+		}
 		if err := t.waitResource(resource); err != nil {
 			return errors.Wrapf(err, "  [%s] Error", cfg.Name)
 		}
