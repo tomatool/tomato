@@ -59,6 +59,7 @@ func New(cfg *config.Resource) (*Client, error) {
 				defaultHeaders.Set(strings.TrimSpace(s[0]), strings.TrimSpace(s[1]))
 			}
 			client.requestHeaders = defaultHeaders
+		case "readiness_check":
 		default:
 			return nil, errors.New(key + ": invalid params")
 		}
