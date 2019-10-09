@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -27,7 +28,7 @@ type Client struct {
 	stubs          *stub.Stubs
 }
 
-var defaultHeaders = map[string][]string{"Content-Type": {"application/json"}}
+var defaultHeaders = http.Header{"Content-Type": {"application/json"}}
 
 func New(cfg *config.Resource) (*Client, error) {
 	params := cfg.Params
@@ -49,6 +50,15 @@ func New(cfg *config.Resource) (*Client, error) {
 				return nil, errors.New("timeout: get http client, invalid params value : " + err.Error())
 			}
 			client.httpClient.Timeout = timeout
+		case "headers":
+			for _, h := range strings.Split(val, ";") {
+				s := strings.Split(h, "=")
+				if len(s) != 2 {
+					return nil, errors.New("httpclient: invalid headers params, expecting `[key1]=[value1];[key2]=[value2]` got `" + val + "`")
+				}
+				defaultHeaders.Set(strings.TrimSpace(s[0]), strings.TrimSpace(s[1]))
+			}
+			client.requestHeaders = defaultHeaders
 		default:
 			return nil, errors.New(key + ": invalid params")
 		}
