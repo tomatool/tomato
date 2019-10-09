@@ -340,3 +340,58 @@ Given $resource stderr should not contains $substring
 
 
 
+## Cache
+
+cache driver that interacts with a cache service
+
+Initialize resource in `config.yml`:
+```yaml
+- name: # name of the resource
+  type: # | redis | 
+  
+  params:
+    # cache driver (only "redis" for now)
+    driver: # string
+    # cache source url (`redis://user:secret@localhost:6379/0?foo=bar&qux=baz`)
+    datasource: # string
+    
+  
+```
+
+### Resources
+
+* redis
+
+
+### Actions
+
+#### **Set**
+set key to hold the string value
+```gherkin
+Given cache $resource stores $key with value $value
+
+```
+
+#### **Check**
+compares cached content after an action
+```gherkin
+Given cache $resource stored key $key should look like $value
+
+```
+
+#### **Exists**
+check if such key exists in the cache
+```gherkin
+Given cache $resource has key $key
+
+```
+
+#### **Not Exists**
+check if such key doesn't exists in the cache
+```gherkin
+Given cache $resource hasn't key $key
+
+```
+
+
+

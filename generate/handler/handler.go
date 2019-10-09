@@ -16,7 +16,8 @@ package %s
 import "github.com/DATA-DOG/godog"
 
 func (h *Handler) Register(s *godog.Suite) {%s
-}`
+}
+`
 )
 
 func step(expr, handle string) string {
