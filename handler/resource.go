@@ -5,6 +5,7 @@ import (
 
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/handler/cache"
 	"github.com/tomatool/tomato/handler/database/sql"
 	"github.com/tomatool/tomato/handler/http/client"
 	"github.com/tomatool/tomato/handler/http/server"
@@ -16,6 +17,7 @@ import (
 	nsq_r "github.com/tomatool/tomato/resource/nsq"
 	postgres_r "github.com/tomatool/tomato/resource/postgres"
 	rabbitmq_r "github.com/tomatool/tomato/resource/rabbitmq"
+	redis_r "github.com/tomatool/tomato/resource/redis"
 	shell_r "github.com/tomatool/tomato/resource/shell"
 	wiremock_r "github.com/tomatool/tomato/resource/wiremock"
 )
@@ -28,6 +30,7 @@ var resources = map[string]string{
 	"rabbitmq":   "queue",
 	"nsq":        "queue",
 	"shell":      "shell",
+	"redis":      "cache",
 }
 
 func CreateResource(cfg *config.Resource) (resource.Resource, error) {
@@ -46,6 +49,8 @@ func CreateResource(cfg *config.Resource) (resource.Resource, error) {
 		return wiremock_r.New(cfg)
 	case "shell":
 		return shell_r.New(cfg)
+	case "redis":
+		return redis_r.New(cfg)
 	}
 	return nil, fmt.Errorf("resource type `%s` is not defined\nplease refer to %s for list of available resources",
 		cfg.Type,
@@ -66,6 +71,8 @@ func (h *Handler) Register(cfg *config.Resource, r resource.Resource) {
 		h.httpServers[cfg.Name] = r.(server.Resource)
 	case "queue":
 		h.queues[cfg.Name] = r.(queue.Resource)
+	case "cache":
+		h.caches[cfg.Name] = r.(cache.Resource)
 	}
 
 }
