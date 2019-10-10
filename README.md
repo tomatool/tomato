@@ -9,7 +9,7 @@ Tomato is a language agnostic testing tool kit that simplifies the acceptance te
 Using [godog](https://github.com/DATA-DOG/godog) and [Gherkin](https://docs.cucumber.io/gherkin/), tomato makes behavioral tests easier to understand, maintain, and write for developers, QA, and product owners.
 
 - [Background](https://medium.com/@alileza/functional-testing-using-af78a868a1f1)
-- [Documentation](https://tomatool.github.io/tomato/)
+- [Documentation](https://github.com/tomatool/tomato/tree/master/docs)
 - [Examples](https://github.com/tomatool/tomato/tree/0.1.0/examples/features)
 
 ## Features
@@ -141,3 +141,5 @@ Resource are the objects that are going to be used for steps in the scenario. Th
   * [RabbitMQ](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue)
   * [NSQ](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue)
 * [Shell](https://github.com/tomatool/tomato/blob/master/docs/resources.md#shell) -  to execute unix shell command-line interface
+* [Cache](https://github.com/tomatool/tomato/blob/master/docs/resources.md#cache)
+  * [Redis](https://github.com/tomatool/tomato/blob/master/docs/resources.md#cache)

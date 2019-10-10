@@ -14,3 +14,5 @@ Resource are the objects that are going to be used for steps in the scenario. Th
   * [RabbitMQ](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue)
   * [NSQ](https://github.com/tomatool/tomato/blob/master/docs/resources.md#queue)
 * [Shell](https://github.com/tomatool/tomato/blob/master/docs/resources.md#shell) -  to execute unix shell command-line interface
+* [Cache](https://github.com/tomatool/tomato/blob/master/docs/resources.md#cache)
+  * [Redis](https://github.com/tomatool/tomato/blob/master/docs/resources.md#cache)
