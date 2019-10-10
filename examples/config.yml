@@ -35,6 +35,11 @@ resources:
       params:
         base_url: {{ .HTTP_CLIENT_BASE_URL }}
 
+    - name: tomato-redis
+      type: redis
+      params:
+        datasource: {{ .REDIS_DATASOURCE }}
+
     - name: shell-cli
       type: shell
 

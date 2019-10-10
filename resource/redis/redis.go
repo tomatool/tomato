@@ -67,7 +67,13 @@ func (r *Redis) Get(key string) (string, error) {
 	conn := r.pool.Get()
 	defer conn.Close()
 	reply, err := conn.Do("GET", key)
-	return fmt.Sprint(reply), err
+	if err != nil {
+		return "", err
+	}
+	if result, err := redis.String(reply, nil); err == nil {
+		return result, err
+	}
+	return fmt.Sprint(reply), nil
 }
 
 func (r *Redis) Exists(key string) (bool, error) {

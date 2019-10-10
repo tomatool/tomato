@@ -15,6 +15,7 @@ services:
             NSQ_DATASOURCE: "nsqd:4150"
             WIREMOCK_BASE_URL: "http://wiremock:8080"
             HTTP_CLIENT_BASE_URL: "http://wiremock:8080"
+            REDIS_DATASOURCE: "redis://redis:6379/0"
 
     rabbit:
         image: rabbitmq:3.6.1-management
@@ -54,6 +55,13 @@ services:
           - "8080"
         expose:
             - "8080"
+
+    redis:
+        image: redis:5.0.6-alpine
+        ports:
+            - "6379"
+        expose:
+            - "6379"
 
 volumes:
   postgres-initdb: {}
