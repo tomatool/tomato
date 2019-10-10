@@ -3,9 +3,10 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/tomatool/tomato/config"
-	"time"
 )
 
 // Redis contains the configuration for the redis resource
