@@ -338,6 +338,20 @@ Given $resource stderr should not contains $substring
 
 ```
 
+#### **Exit Code Equal**
+check exit code is equal given value
+```gherkin
+Given $resource exit code equal to $exit_code
+
+```
+
+#### **Exit Code Not Equal**
+check exit code is not equal given value
+```gherkin
+Given $resource exit code not equal to $exit_code
+
+```
+
 
 
 ## Cache

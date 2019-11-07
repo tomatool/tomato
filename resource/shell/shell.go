@@ -2,9 +2,11 @@ package shell
 
 import (
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/tomatool/tomato/config"
 )
@@ -12,8 +14,9 @@ import (
 type Shell struct {
 	prefix []string
 
-	stdout string
-	stderr string
+	stdout   string
+	stderr   string
+	exitCode int
 }
 
 func New(cfg *config.Resource) (*Shell, error) {
@@ -48,9 +51,24 @@ func (s *Shell) Exec(command string, arguments ...string) error {
 	}
 
 	cmd := exec.Command(arguments[0], arguments[1:]...)
+
 	cmd.Stdout = newWriter(&s.stdout)
 	cmd.Stderr = newWriter(&s.stderr)
-	return cmd.Run()
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("shell: %v\nstdout: %s\nstderr: %s", err, s.stdout, s.stderr)
+	}
+
+	if err := cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				s.exitCode = status.ExitStatus()
+			}
+		} else {
+			return fmt.Errorf("shell: %v\nstdout: %s\nstderr: %s", err, s.stdout, s.stderr)
+		}
+	}
+	return nil
 }
 func (s *Shell) Stdout() (string, error) {
 	defer func() { s.stdout = "" }()
@@ -69,6 +87,15 @@ func (s *Shell) Stderr() (string, error) {
 	}
 
 	return s.stderr, nil
+}
+func (s *Shell) ExitCode() (int, error) {
+	defer func() { s.exitCode = 0 }()
+
+	if s.exitCode == 0 {
+		return s.exitCode, nil
+	}
+
+	return s.exitCode, nil
 }
 
 type writer struct {
