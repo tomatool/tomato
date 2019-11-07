@@ -420,6 +420,26 @@ handlers:
                 description: substring of the message
                 type: string
 
+        - name: exit_code_equal
+          description: check exit code is equal given value
+          handle: checkExitCodeEqual
+          expressions:
+              - $resource exit code equal to $exit_code
+          parameters:
+              - name: exit_code
+                description: exit code of the executed command
+                type: number
+
+        - name: exit_code_not_equal
+          description: check exit code is not equal given value
+          handle: checkExitCodeNotEqual
+          expressions:
+              - $resource exit code not equal to $exit_code
+          parameters:
+              - name: exit_code
+                description: exit code of the executed command
+                type: number
+
     - name: cache
       description: cache driver that interacts with a cache service
       resources:

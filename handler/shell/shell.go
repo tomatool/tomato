@@ -13,6 +13,7 @@ type Resource interface {
 	Exec(command string, arguments ...string) error
 	Stdout() (string, error)
 	Stderr() (string, error)
+	ExitCode() (int, error)
 }
 
 type Handler struct {
@@ -100,6 +101,42 @@ func (h *Handler) checkStderrNotContains(resourceName, message string) error {
 
 	if strings.Contains(stderr, message) {
 		return fmt.Errorf("stderr is contains `%s`\nstdout actual output:%s", message, stderr)
+	}
+
+	return nil
+}
+
+func (h *Handler) checkExitCodeEqual(resourceName string, expectedExitCode int) error {
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
+	}
+
+	exitCode, err := r.ExitCode()
+	if err != nil {
+		return err
+	}
+
+	if exitCode != expectedExitCode {
+		return fmt.Errorf("expecting exit code to be %d, got %d", expectedExitCode, exitCode)
+	}
+
+	return nil
+}
+
+func (h *Handler) checkExitCodeNotEqual(resourceName string, unexpectedExitCode int) error {
+	r, ok := h.r[resourceName]
+	if !ok {
+		return fmt.Errorf("%s not found", resourceName)
+	}
+
+	exitCode, err := r.ExitCode()
+	if err != nil {
+		return err
+	}
+
+	if exitCode == unexpectedExitCode {
+		return fmt.Errorf("expecting exit code not to be %d, got %d", unexpectedExitCode, exitCode)
 	}
 
 	return nil
