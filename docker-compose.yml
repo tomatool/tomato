@@ -8,14 +8,6 @@ services:
           - postgres-initdb:/db/postgres/
           - mysql-initdb:/db/mysql/
           - /tmp/:/tmp/
-        environment:
-            PSQL_DATASOURCE: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
-            MYSQL_DATASOURCE: "root:potato@tcp(mysql:3306)/tomato"
-            RABBITMQ_DATASOURCE: "amqp://guest:guest@rabbit:5672"
-            NSQ_DATASOURCE: "nsqd:4150"
-            WIREMOCK_BASE_URL: "http://wiremock:8080"
-            HTTP_CLIENT_BASE_URL: "http://wiremock:8080"
-            REDIS_DATASOURCE: "redis://redis:6379/0"
 
     rabbit:
         image: rabbitmq:3.6.1-management

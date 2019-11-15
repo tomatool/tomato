@@ -6,39 +6,39 @@ resources:
     - name: tomato-psql
       type: postgres
       params:
-        datasource: {{ .PSQL_DATASOURCE }}
+        datasource: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
 
     - name: tomato-mysql
       type: mysql
       params:
-        datasource: {{ .MYSQL_DATASOURCE }}
+        datasource: "root:potato@tcp(mysql:3306)/tomato"
 
     - name: tomato-queue
       type: rabbitmq
       params:
-        datasource: {{ .RABBITMQ_DATASOURCE }}
+        datasource: "amqp://guest:guest@rabbit:5672"
         stubs_path: "/stubs"
 
     - name: tomato-nsq
       type: nsq
       params:
-        nsqd: {{ .NSQ_DATASOURCE }}
+        nsqd: "nsqd:4150"
         stubs_path: "/stubs"
 
     - name: tomato-wiremock
       type: wiremock
       params:
-        base_url: {{ .WIREMOCK_BASE_URL }}
+        base_url: "http://wiremock:8080"
 
     - name: tomato-http-client
       type: httpclient
       params:
-        base_url: {{ .HTTP_CLIENT_BASE_URL }}
+        base_url: http://wiremock:8080
 
     - name: tomato-redis
       type: redis
       params:
-        datasource: {{ .REDIS_DATASOURCE }}
+        datasource:  "redis://redis:6379/0"
 
     - name: shell-cli
       type: shell

@@ -1,9 +1,15 @@
 package handler
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/DATA-DOG/godog/colors"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	dockerclient "github.com/docker/docker/client"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/handler/cache"
 	"github.com/tomatool/tomato/handler/database/sql"
@@ -33,7 +39,40 @@ var resources = map[string]string{
 	"redis":      "cache",
 }
 
-func CreateResource(cfg *config.Resource) (resource.Resource, error) {
+var defaultImages = map[string]string{
+	"httpclient": "pstauffer/curl",
+	"wiremock":   "rodolpheche/wiremock",
+	"postgres":   "postgres:9.5",
+	"mysql":      "mysql:5.6.34",
+	"rabbitmq":   "rabbitmq:3.6.1-management",
+	"nsq":        "queue",
+	"shell":      "alpine",
+	"redis":      "redis:5.0.6-alpine",
+}
+
+func DeleteResource(ctx context.Context, c *dockerclient.Client, cfg *config.Resource) error {
+	return nil
+}
+
+func CreateResource(ctx context.Context, c *dockerclient.Client, cfg *config.Resource) (resource.Resource, error) {
+	imageName := defaultImages[cfg.Type]
+	reader, err := c.ImagePull(ctx, "docker.io/library/"+imageName, types.ImagePullOptions{})
+	if err != nil {
+		return nil, err
+	}
+	io.Copy(os.Stdout, reader)
+
+	resp, err := c.ContainerCreate(ctx, &container.Config{
+		Image: imageName,
+	}, nil, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		return nil, err
+	}
+
 	switch cfg.Type {
 	case "mysql":
 		return mysql_r.New(cfg)
@@ -84,4 +123,8 @@ func (h *Handler) reset() {
 	for _, r := range h.resources {
 		r.Reset()
 	}
+}
+
+func AttachNetwork(ctx context.Context, c *dockerclient.Client, containerA, containerB resource.Resource) error {
+	return nil
 }

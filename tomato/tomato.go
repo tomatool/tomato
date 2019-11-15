@@ -1,12 +1,14 @@
 package tomato
 
 import (
+	"context"
 	"log"
 	"os"
 	"time"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
+	dockerclient "github.com/docker/docker/client"
 	"github.com/pkg/errors"
 
 	"github.com/tomatool/tomato/config"
@@ -21,20 +23,27 @@ func init() {
 }
 
 type Tomato struct {
-	log    *log.Logger
-	config *config.Config
+	log       *log.Logger
+	config    *config.Config
+	dockerapi *dockerclient.Client
 
 	readinessTimeout time.Duration
 }
 
 func New(conf *config.Config, logger *log.Logger) *Tomato {
+	dockerClient, err := dockerclient.NewEnvClient()
+	if err != nil {
+		log.Fatalf("Failed to initiate docker client : %v", err)
+	}
+
 	if logger == nil {
 		logger = log.New(os.Stdout, "", 0)
 	}
 
 	return &Tomato{
-		config: conf,
-		log:    logger,
+		config:    conf,
+		log:       logger,
+		dockerapi: dockerClient,
 	}
 }
 
@@ -63,6 +72,10 @@ func (t *Tomato) Run() error {
 	if t.config.ReadinessTimeout == "" {
 		t.config.ReadinessTimeout = "15s"
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*20)
+	defer cancel()
+
 	readinessTimeout, err := time.ParseDuration(t.config.ReadinessTimeout)
 	if err != nil {
 		t.log.Printf(colors.Yellow("Failed to parse duration of %s: %v"), t.config.ReadinessTimeout, err)
@@ -74,10 +87,19 @@ func (t *Tomato) Run() error {
 
 	h := handler.New()
 
+	tomatoResource, err := handler.CreateResource(ctx, t.dockerapi, &config.Resource{})
+	if err != nil {
+		return err
+	}
+
 	t.log.Printf("Resources Readiness:\n")
 	for _, cfg := range t.config.Resources {
-		resource, err := handler.CreateResource(cfg)
+		resource, err := handler.CreateResource(ctx, t.dockerapi, cfg)
 		if err != nil {
+			return errors.Wrapf(err, "  [%s] Error", cfg.Name)
+		}
+
+		if err := handler.AttachNetwork(ctx, t.dockerapi, tomatoResource, resource); err != nil {
 			return errors.Wrapf(err, "  [%s] Error", cfg.Name)
 		}
 
@@ -96,6 +118,13 @@ func (t *Tomato) Run() error {
 	t.log.Printf("Test Result:\n")
 	if result := godog.RunWithOptions("godogs", h.Handler(), opts); result != 0 {
 		return errors.New("Test failed")
+	}
+	t.log.Printf("Resources Cleanup:\n")
+	for _, cfg := range t.config.Resources {
+		err := handler.DeleteResource(ctx, t.dockerapi, cfg)
+		if err != nil {
+			t.log.Printf("  [%s] Error\n", cfg.Name)
+		}
 	}
 
 	return nil
