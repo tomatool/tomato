@@ -3,12 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/DATA-DOG/godog/colors"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/handler/cache"
@@ -54,25 +50,7 @@ func DeleteResource(ctx context.Context, c *dockerclient.Client, cfg *config.Res
 	return nil
 }
 
-func CreateResource(ctx context.Context, c *dockerclient.Client, cfg *config.Resource) (resource.Resource, error) {
-	imageName := defaultImages[cfg.Type]
-	reader, err := c.ImagePull(ctx, "docker.io/library/"+imageName, types.ImagePullOptions{})
-	if err != nil {
-		return nil, err
-	}
-	io.Copy(os.Stdout, reader)
-
-	resp, err := c.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-	}, nil, nil, "")
-	if err != nil {
-		return nil, err
-	}
-
-	if err := c.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		return nil, err
-	}
-
+func CreateResourceHandler(cfg *config.Resource) (resource.Handler, error) {
 	switch cfg.Type {
 	case "mysql":
 		return mysql_r.New(cfg)
@@ -96,8 +74,8 @@ func CreateResource(ctx context.Context, c *dockerclient.Client, cfg *config.Res
 		colors.Bold(colors.White)("https://github.com/tomatool/tomato#resources"))
 }
 
-func (h *Handler) Register(cfg *config.Resource, r resource.Resource) {
-	h.resources[cfg.Name] = r
+func (h *Handler) Register(cfg *config.Resource, r resource.Handler) {
+	h.handlers[cfg.Name] = r
 
 	switch resources[cfg.Type] {
 	case "database/sql":
@@ -115,16 +93,16 @@ func (h *Handler) Register(cfg *config.Resource, r resource.Resource) {
 	}
 
 }
-func (h *Handler) Resources() map[string]resource.Resource {
-	return h.resources
+func (h *Handler) Resources() map[string]resource.Handler {
+	return h.handlers
 }
 
 func (h *Handler) reset() {
-	for _, r := range h.resources {
+	for _, r := range h.handlers {
 		r.Reset()
 	}
 }
 
-func AttachNetwork(ctx context.Context, c *dockerclient.Client, containerA, containerB resource.Resource) error {
+func AttachNetwork(ctx context.Context, c *dockerclient.Client, containerA, containerB resource.Handler) error {
 	return nil
 }

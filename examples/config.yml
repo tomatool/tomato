@@ -1,49 +1,54 @@
 ---
 
+composer: "docker"
+
 features_path:
-  - /features/
+  - ./examples/features/shell.feature
+
 resources:
-    - name: tomato-psql
-      type: postgres
-      params:
-        datasource: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
+    # - name: tomato-psql
+    #   type: postgres
+    #   params:
+    #     datasource: "postgres://tomato:potato@postgres:5432/tomato?sslmode=disable"
 
-    - name: tomato-mysql
-      type: mysql
-      params:
-        datasource: "root:potato@tcp(mysql:3306)/tomato"
+    # - name: tomato-mysql
+    #   type: mysql
+    #   params:
+    #     datasource: "root:potato@tcp(mysql:3306)/tomato"
 
-    - name: tomato-queue
-      type: rabbitmq
-      params:
-        datasource: "amqp://guest:guest@rabbit:5672"
-        stubs_path: "/stubs"
+    # - name: tomato-queue
+    #   type: rabbitmq
+    #   params:
+    #     datasource: "amqp://guest:guest@rabbit:5672"
+    #     stubs_path: "/stubs"
 
-    - name: tomato-nsq
-      type: nsq
-      params:
-        nsqd: "nsqd:4150"
-        stubs_path: "/stubs"
+    # - name: tomato-nsq
+    #   type: nsq
+    #   params:
+    #     nsqd: "nsqd:4150"
+    #     stubs_path: "/stubs"
 
-    - name: tomato-wiremock
-      type: wiremock
-      params:
-        base_url: "http://wiremock:8080"
+    # - name: tomato-wiremock
+    #   type: wiremock
+    #   params:
+    #     base_url: "http://wiremock:8080"
 
-    - name: tomato-http-client
-      type: httpclient
-      params:
-        base_url: http://wiremock:8080
+    # - name: tomato-http-client
+    #   type: httpclient
+    #   params:
+    #     base_url: http://wiremock:8080
 
-    - name: tomato-redis
-      type: redis
-      params:
-        datasource:  "redis://redis:6379/0"
+    # - name: tomato-redis
+    #   type: redis
+    #   params:
+    #     datasource:  "redis://redis:6379/0"
 
     - name: shell-cli
       type: shell
+      image: alpine
 
     - name: ls
       type: shell
+      image: alpine
       params:
         prefix: "ls"

@@ -12,7 +12,8 @@ import (
 )
 
 type Resource interface {
-	resource.Resource
+	resource.Handler
+
 	Listen(target string) error
 	Fetch(target string) ([][]byte, error)
 	Publish(target string, payload []byte) error

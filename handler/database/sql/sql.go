@@ -11,7 +11,7 @@ import (
 )
 
 type Resource interface {
-	resource.Resource
+	resource.Handler
 
 	Select(tableName string, condition map[string]string) ([]map[string]string, error)
 	Insert(tableName string, rows []map[string]string) error

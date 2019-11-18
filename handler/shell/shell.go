@@ -8,7 +8,7 @@ import (
 )
 
 type Resource interface {
-	resource.Resource
+	resource.Handler
 
 	Exec(command string, arguments ...string) error
 	Stdout() (string, error)

@@ -2,19 +2,29 @@ package tomato
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
-	dockerclient "github.com/docker/docker/client"
+	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
-
+	"github.com/tomatool/tomato/composer"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/formatter"
 	"github.com/tomatool/tomato/handler"
 	"github.com/tomatool/tomato/resource"
+
+	httpclient_r "github.com/tomatool/tomato/resource/httpclient"
+	mysql_r "github.com/tomatool/tomato/resource/mysql"
+	nsq_r "github.com/tomatool/tomato/resource/nsq"
+	postgres_r "github.com/tomatool/tomato/resource/postgres"
+	rabbitmq_r "github.com/tomatool/tomato/resource/rabbitmq"
+	redis_r "github.com/tomatool/tomato/resource/redis"
+	shell_r "github.com/tomatool/tomato/resource/shell"
+	wiremock_r "github.com/tomatool/tomato/resource/wiremock"
 )
 
 func init() {
@@ -23,39 +33,41 @@ func init() {
 }
 
 type Tomato struct {
-	log       *log.Logger
-	config    *config.Config
-	dockerapi *dockerclient.Client
+	log    *log.Logger
+	config *config.Config
+
+	composer composer.Composer
 
 	readinessTimeout time.Duration
 }
 
-func New(conf *config.Config, logger *log.Logger) *Tomato {
-	dockerClient, err := dockerclient.NewEnvClient()
-	if err != nil {
-		log.Fatalf("Failed to initiate docker client : %v", err)
+func NewTomato(config *config.Config) (t *Tomato) {
+	t = &Tomato{
+		config: config,
 	}
 
-	if logger == nil {
-		logger = log.New(os.Stdout, "", 0)
+	if t.log == nil {
+		t.log = log.New(os.Stdout, "", 0)
 	}
 
-	return &Tomato{
-		config:    conf,
-		log:       logger,
-		dockerapi: dockerClient,
+	switch config.Composer {
+	case composer.ComposerTypeDocker:
+		client, err := client.NewEnvClient()
+		if err != nil {
+			panic("Failed to create docker client: " + err.Error())
+		}
+		t.composer = &composer.DockerClient{
+			Client: client,
+		}
+	case composer.ComposerTypeKubernetes:
+	default:
+		t.composer = &composer.DefaultComposer{}
 	}
+
+	return t
 }
 
-func (t *Tomato) Verify() error {
-	if len(t.config.FeaturesPaths) == 0 {
-		return errors.New("Features path is missing, please specify on config file or flag\nFor additional help try 'tomato -help'")
-	}
-
-	return nil
-}
-
-func (t *Tomato) Run() error {
+func (t *Tomato) Run(ctx context.Context) error {
 	t.log.Println("🍅 testing suite starting...")
 	opts := godog.Options{
 		Output:        colors.Colored(os.Stdout),
@@ -64,18 +76,12 @@ func (t *Tomato) Run() error {
 		Strict:        true,
 		StopOnFailure: t.config.StopOnFailure,
 	}
-
 	if t.config.Randomize {
 		opts.Randomize = time.Now().UTC().UnixNano()
 	}
-
 	if t.config.ReadinessTimeout == "" {
 		t.config.ReadinessTimeout = "15s"
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*20)
-	defer cancel()
-
 	readinessTimeout, err := time.ParseDuration(t.config.ReadinessTimeout)
 	if err != nil {
 		t.log.Printf(colors.Yellow("Failed to parse duration of %s: %v"), t.config.ReadinessTimeout, err)
@@ -87,50 +93,75 @@ func (t *Tomato) Run() error {
 
 	h := handler.New()
 
-	tomatoResource, err := handler.CreateResource(ctx, t.dockerapi, &config.Resource{})
-	if err != nil {
-		return err
-	}
-
 	t.log.Printf("Resources Readiness:\n")
-	for _, cfg := range t.config.Resources {
-		resource, err := handler.CreateResource(ctx, t.dockerapi, cfg)
+
+	for _, resourceConfig := range t.config.ResourcesConfig {
+		err := t.composer.CreateContainer(ctx, resourceConfig)
 		if err != nil {
-			return errors.Wrapf(err, "  [%s] Error", cfg.Name)
+			return err
 		}
 
-		if err := handler.AttachNetwork(ctx, t.dockerapi, tomatoResource, resource); err != nil {
-			return errors.Wrapf(err, "  [%s] Error", cfg.Name)
+		resourceHandler, err := handler.CreateResourceHandler(resourceConfig)
+		if err != nil {
+			return errors.Wrapf(err, "  [%s] Error", resourceConfig.Name)
 		}
+		h.Register(resourceConfig, resourceHandler)
 
-		h.Register(cfg, resource)
-		if v, ok := cfg.Params["readiness_check"]; ok && v != "true" {
-			t.log.Printf("  [%s] Skipping\n", cfg.Name)
+		if v, ok := resourceConfig.Params["readiness_check"]; ok && v != "true" {
+			t.log.Printf("  [%s] Skipping\n", resourceConfig.Name)
 			continue
 		}
-		if err := t.waitResource(resource); err != nil {
-			return errors.Wrapf(err, "  [%s] Error", cfg.Name)
+		if err := t.waitResource(resourceHandler); err != nil {
+			return errors.Wrapf(err, "  [%s] Error", resourceConfig.Name)
 		}
 
-		t.log.Printf("  [%s] Ready\n", cfg.Name)
+		t.log.Printf("  [%s] Ready\n", resourceConfig.Name)
 	}
 
 	t.log.Printf("Test Result:\n")
 	if result := godog.RunWithOptions("godogs", h.Handler(), opts); result != 0 {
 		return errors.New("Test failed")
 	}
-	t.log.Printf("Resources Cleanup:\n")
-	for _, cfg := range t.config.Resources {
-		err := handler.DeleteResource(ctx, t.dockerapi, cfg)
-		if err != nil {
-			t.log.Printf("  [%s] Error\n", cfg.Name)
-		}
-	}
 
 	return nil
 }
 
-func (t *Tomato) waitResource(r resource.Resource) error {
+func (t *Tomato) Close(ctx context.Context) error {
+	switch t.config.Composer {
+	case composer.ComposerTypeDocker:
+		return t.composer.DeleteAll(ctx)
+	case composer.ComposerTypeKubernetes:
+		return t.composer.DeleteAll(ctx)
+	default:
+	}
+	return nil
+}
+
+func (t *Tomato) CreateResourceHandler(cfg *config.Resource) (resource.Handler, error) {
+	switch cfg.Type {
+	case "mysql":
+		return mysql_r.New(cfg)
+	case "postgres":
+		return postgres_r.New(cfg)
+	case "rabbitmq":
+		return rabbitmq_r.New(cfg)
+	case "nsq":
+		return nsq_r.New(cfg)
+	case "httpclient":
+		return httpclient_r.New(cfg)
+	case "wiremock":
+		return wiremock_r.New(cfg)
+	case "shell":
+		return shell_r.New(cfg)
+	case "redis":
+		return redis_r.New(cfg)
+	}
+	return nil, fmt.Errorf("resource type `%s` is not defined\nplease refer to %s for list of available resources",
+		cfg.Type,
+		colors.Bold(colors.White)("https://github.com/tomatool/tomato#resources"))
+}
+
+func (t *Tomato) waitResource(r resource.Handler) error {
 	var (
 		err  error
 		done = make(chan struct{})

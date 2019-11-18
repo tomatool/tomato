@@ -15,7 +15,7 @@ import (
 )
 
 type Handler struct {
-	resources    map[string]resource.Resource
+	handlers     map[string]resource.Handler
 	httpClients  map[string]client.Resource
 	sqlDatabases map[string]sql.Resource
 	queues       map[string]queue.Resource
@@ -26,7 +26,7 @@ type Handler struct {
 
 func New() *Handler {
 	h := &Handler{
-		resources:    make(map[string]resource.Resource),
+		handlers:     make(map[string]resource.Handler),
 		httpClients:  make(map[string]client.Resource),
 		sqlDatabases: make(map[string]sql.Resource),
 		queues:       make(map[string]queue.Resource),

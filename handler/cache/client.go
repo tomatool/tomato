@@ -8,7 +8,7 @@ import (
 )
 
 type Resource interface {
-	resource.Resource
+	resource.Handler
 
 	Set(key string, value string) error
 	Get(key string) (string, error)

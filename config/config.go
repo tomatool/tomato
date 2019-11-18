@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"text/template"
@@ -12,16 +13,19 @@ import (
 )
 
 type Config struct {
-	Randomize        bool        `yaml:"randomize"`
-	StopOnFailure    bool        `yaml:"stop_on_failure"`
-	FeaturesPaths    []string    `yaml:"features_path"`
-	ReadinessTimeout string      `yaml:"readiness_timeout"`
-	Resources        []*Resource `yaml:"resources"`
-}
+	Logger          *log.Logger
+	Composer        string      `yaml:"composer"`
+	ResourcesConfig []*Resource `yaml:"resources"`
 
+	FeaturesPaths    []string `yaml:"features_path"`
+	StopOnFailure    bool     `yaml:"stop_on_failure"`
+	Randomize        bool     `yaml:"randomize"`
+	ReadinessTimeout string   `yaml:"readiness_timeout"`
+}
 type Resource struct {
 	Name   string            `yaml:"name"`
 	Type   string            `yaml:"type"`
+	Image  string            `yaml:"image"`
 	Params map[string]string `yaml:"params"`
 }
 

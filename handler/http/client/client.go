@@ -15,7 +15,7 @@ import (
 )
 
 type Resource interface {
-	resource.Resource
+	resource.Handler
 
 	Request(method, path string, body []byte) error
 	RequestFromFile(method, path, file string) error

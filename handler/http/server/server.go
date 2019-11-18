@@ -9,7 +9,7 @@ import (
 )
 
 type Resource interface {
-	resource.Resource
+	resource.Handler
 
 	SetResponse(method string, requestPath string, responseCode int, responseBody []byte) error
 	SetResponseFromFile(method string, requestPath string, responseCode int, file string) error

@@ -1,6 +1,6 @@
 package resource
 
-type Resource interface {
+type Handler interface {
 	Open() error
 	Ready() error
 	Reset() error

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"strings"
@@ -80,13 +81,16 @@ func main() {
 			conf.FeaturesPaths = strings.Split(featuresPath, ",")
 		}
 
-		t := tomato.New(conf, log)
+		t := tomato.NewTomato(conf)
 
-		if err := t.Verify(); err != nil {
-			return errors.Wrap(err, "Verification failed")
+		ctxx := context.Background()
+
+		defer t.Close(ctxx)
+
+		if err := t.Run(ctxx); err != nil {
+			return err
 		}
-
-		return t.Run()
+		return nil
 	}
 
 	if err := app.Run(os.Args); err != nil {
