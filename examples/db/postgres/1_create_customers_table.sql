@@ -1,4 +1,4 @@
-create table customers (
+create table "tblCustomers" (
     customer_id serial primary key,
     country char(2) NOT NULL,
     name varchar(255) NOT NULL,
