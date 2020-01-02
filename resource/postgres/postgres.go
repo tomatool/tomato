@@ -68,9 +68,16 @@ func (d *PostgreSQL) Close() error {
 	return d.db.Close()
 }
 
+func addDoubleQuotes(s string) string {
+	if s[0] == '"' {
+		return s
+	}
+	return fmt.Sprintf(`"%s"`, s)
+}
+
 func (d *PostgreSQL) Select(tableName string, condition map[string]string) ([]map[string]string, error) {
 	result := make([]map[string]string, 0)
-	q := sql.NewQueryBuilder("postgres", "SELECT * FROM "+tableName)
+	q := sql.NewQueryBuilder("postgres", "SELECT * FROM "+addDoubleQuotes(tableName))
 	for key, val := range condition {
 		q.Where(key, "=", val)
 	}
@@ -105,7 +112,7 @@ func (d *PostgreSQL) Insert(tableName string, rows []map[string]string) error {
 	defer tx.Rollback()
 
 	for _, row := range rows {
-		query := sql.NewQueryBuilder("postgres", "INSERT INTO "+tableName)
+		query := sql.NewQueryBuilder("postgres", "INSERT INTO "+addDoubleQuotes(tableName))
 		for key, val := range row {
 			if val == "" || strings.ToLower(val) == "null" {
 				continue
