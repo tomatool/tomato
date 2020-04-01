@@ -17,6 +17,17 @@ Feature: database features example
         | 1           | us      | cembri |
         | 2           | id      | cembre |
 
+  Scenario: Test UUID value in postgres
+    Given set "tomato-psql" table "tblCustomers" list of content
+        | name                                 | country                             |
+        | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11 | 60b22a92-ba9d-4af1-9ac5-b20357185e4 |
+    Then "tomato-psql" table "tblCustomers" should look like
+        | customer_id | country                             |
+        | 1           | 60b22a92-ba9d-4af1-9ac5-b20357185e4 |
+    Then "tomato-psql" table "tblCustomers" should look like
+        | customer_id | country                             | name                                 |
+        | 1           | 60b22a92-ba9d-4af1-9ac5-b20357185e4 | a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11 |
+
   Scenario: Table should always empty on each starting scenario
     Given "tomato-psql" table "tblCustomers" should look like
       | customer_id | name    |
