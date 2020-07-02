@@ -9,10 +9,19 @@ github.com/alecthomas/template/parse
 github.com/alecthomas/units
 # github.com/bitly/go-nsq v1.0.7
 github.com/bitly/go-nsq
-# github.com/davecgh/go-spew v1.1.0
+# github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/ghodss/yaml v1.0.0
+github.com/ghodss/yaml
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
+# github.com/gobuffalo/envy v1.7.0
+github.com/gobuffalo/envy
+# github.com/gobuffalo/packd v0.3.0
+github.com/gobuffalo/packd
+github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
+# github.com/gobuffalo/packr v1.30.1
+github.com/gobuffalo/packr
 # github.com/golang/mock v1.2.0
 github.com/golang/mock/gomock
 # github.com/golang/snappy v0.0.1
@@ -31,12 +40,18 @@ github.com/lib/pq
 github.com/lib/pq/oid
 # github.com/mattn/go-runewidth v0.0.4
 github.com/mattn/go-runewidth
+# github.com/oklog/run v1.1.0
+github.com/oklog/run
 # github.com/olekukonko/tablewriter v0.0.1
 github.com/olekukonko/tablewriter
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/rogpeppe/go-internal v1.3.0
+github.com/rogpeppe/go-internal/modfile
+github.com/rogpeppe/go-internal/module
+github.com/rogpeppe/go-internal/semver
 # github.com/sergi/go-diff v1.0.0
 github.com/sergi/go-diff/diffmatchpatch
 # github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
