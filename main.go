@@ -91,6 +91,7 @@ func main() {
 					box := packr.NewBox(".")
 
 					return http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						setupResponse(&w, r)
 						fs := http.FileServer(http.Dir("./ui"))
 
 						if r.URL.Path == "/api" {
@@ -223,4 +224,11 @@ func yamlToJSON(y []byte) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+    (*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+    (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
