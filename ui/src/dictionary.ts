@@ -1,0 +1,779 @@
+export default {
+   "handlers": [
+      {
+         "name": "http/client",
+         "description": "http client that can be used for sending http requests and comparing the responses",
+         "resources": [
+            "httpclient"
+         ],
+         "options": [
+            {
+               "name": "base_url",
+               "description": "base url for the http client that will automatically be prepended to any route in the feature.",
+               "type": "string"
+            },
+            {
+               "name": "timeout",
+               "description": "timeout for the request round-trip.",
+               "type": "duration"
+            },
+            {
+               "name": "stubs_path",
+               "description": "stubs file path (`./stubs`)",
+               "type": "string"
+            }
+         ],
+         "actions": [
+            {
+               "name": "send",
+               "description": "send an http request without a request body",
+               "handle": "sendRequest",
+               "expressions": [
+                  "$resource send request to $target"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target endpoint that has to be space separated between request method tpye and URL (`GET /status`)",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "send_body",
+               "description": "send an http request with a request body",
+               "handle": "sendRequestWithBody",
+               "expressions": [
+                  "$resource send request to $target with body $body",
+                  "$resource send request to $target with payload $body"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target endpoint that has to be space separated between request method type and URL (`POST /user`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "body",
+                     "description": "request body payload",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "send_body_from_file",
+               "description": "send an http request with a request body from a file",
+               "handle": "sendRequestWithBodyFromFile",
+               "expressions": [
+                  "$resource send request to $target with body from file $file",
+                  "$resource send request to $target with payload from file $file"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target endpoint that has to be space separated between request method type and URL (`POST /user`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "file",
+                     "description": "request body file name",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "request_header",
+               "description": "set request header",
+               "handle": "setRequestHeader",
+               "expressions": [
+                  "$resource set request header key $key with value $value"
+               ],
+               "parameters": [
+                  {
+                     "name": "key",
+                     "description": "request header key",
+                     "type": "string"
+                  },
+                  {
+                     "name": "value",
+                     "description": "request header value",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "response_code",
+               "description": "check http response code",
+               "handle": "checkResponseCode",
+               "expressions": [
+                  "$resource response code should be $code"
+               ],
+               "parameters": [
+                  {
+                     "name": "code",
+                     "description": "http response code (`200`)",
+                     "type": "number"
+                  }
+               ]
+            },
+            {
+               "name": "response_header",
+               "description": "check http response headers",
+               "handle": "checkResponseHeader",
+               "expressions": [
+                  "$resource response header $header_name should be $header_value"
+               ],
+               "parameters": [
+                  {
+                     "name": "header_name",
+                     "description": "http header name (`content-type`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "header_value",
+                     "description": "http header value (`application/json`)",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "response_body_contains",
+               "description": "check response body",
+               "handle": "checkResponseBodyContains",
+               "expressions": [
+                  "$resource response body should contain $body"
+               ],
+               "parameters": [
+                  {
+                     "name": "body",
+                     "description": "expected response body",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "response_body_equals",
+               "description": "check response body",
+               "handle": "checkResponseBodyEquals",
+               "expressions": [
+                  "$resource response body should equal $body"
+               ],
+               "parameters": [
+                  {
+                     "name": "body",
+                     "description": "expected response body",
+                     "type": "json"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "name": "http/server",
+         "description": "http wiremock server resource that mocks API responses",
+         "resources": [
+            "wiremock"
+         ],
+         "options": [
+            {
+               "name": "base_url",
+               "description": "wiremock base url (e.g : http://localhost:8080)",
+               "type": "string"
+            },
+            {
+               "name": "stubs_path",
+               "description": "stubs file path (`./stubs`)",
+               "type": "string"
+            }
+         ],
+         "actions": [
+            {
+               "name": "response",
+               "description": "set a response code and body for any request that comes to the wiremock target",
+               "handle": "setResponse",
+               "expressions": [
+                  "set $resource response code to $code and response body $body"
+               ],
+               "parameters": [
+                  {
+                     "name": "code",
+                     "description": "http response code (`404`)",
+                     "type": "number"
+                  },
+                  {
+                     "name": "body",
+                     "description": "server response body",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "response_from_file",
+               "description": "set a response code and body from a file for any request that comes to the wiremock target",
+               "handle": "setResponseFromFile",
+               "expressions": [
+                  "set $resource response code to $code and response body from file $file"
+               ],
+               "parameters": [
+                  {
+                     "name": "code",
+                     "description": "http response code (`404`)",
+                     "type": "number"
+                  },
+                  {
+                     "name": "file",
+                     "description": "file name for response body data",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "response_path",
+               "description": "set a response code and body for a given path for wiremock",
+               "handle": "setResponse",
+               "expressions": [
+                  "set $resource with path $path response code to $code and response body $body"
+               ],
+               "parameters": [
+                  {
+                     "name": "path",
+                     "description": "server endpoint path (`/status`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "code",
+                     "description": "server response code (`200`)",
+                     "type": "number"
+                  },
+                  {
+                     "name": "body",
+                     "description": "server response body",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "response_method_path",
+               "description": "set a response code and body for a given method and path for wiremock",
+               "handle": "setResponseWithMethod",
+               "expressions": [
+                  "set $resource with method $method and path $path response code to $code and response body $body"
+               ],
+               "parameters": [
+                  {
+                     "name": "method",
+                     "description": "server endpoint method (`POST`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "path",
+                     "description": "server endpoint path (`/status`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "code",
+                     "description": "server response code (`200`)",
+                     "type": "number"
+                  },
+                  {
+                     "name": "body",
+                     "description": "server response body",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "response_code_method_path",
+               "description": "set a response code for a given method and path for wiremock",
+               "handle": "setResponseWithMethodAndNoBody",
+               "expressions": [
+                  "set $resource with method $method and path $path response code to $code"
+               ],
+               "parameters": [
+                  {
+                     "name": "method",
+                     "description": "server endpoint method (`POST`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "path",
+                     "description": "server endpoint path (`/status`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "code",
+                     "description": "server response code (`200`)",
+                     "type": "number"
+                  }
+               ]
+            },
+            {
+               "name": "response_code_method_path_from_file",
+               "description": "set a response code for a given method and path for wiremock",
+               "handle": "setResponseWithMethodAndBodyFromFile",
+               "expressions": [
+                  "set $resource with method $method and path $path response code to $code and response body from file $file"
+               ],
+               "parameters": [
+                  {
+                     "name": "method",
+                     "description": "server endpoint method (`POST`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "path",
+                     "description": "server endpoint path (`/status`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "code",
+                     "description": "server response code (`200`)",
+                     "type": "number"
+                  },
+                  {
+                     "name": "file",
+                     "description": "file name for body data (`file-name`)",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "verify_requests",
+               "description": "check requests count on a given endpoint",
+               "handle": "verifyRequestsCount",
+               "expressions": [
+                  "$resource with path $path request count should be $count"
+               ],
+               "parameters": [
+                  {
+                     "name": "path",
+                     "description": "server endpoint path (`GET /status`)",
+                     "type": "string"
+                  },
+                  {
+                     "name": "count",
+                     "description": "request count",
+                     "type": "number"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "name": "database/sql",
+         "description": "database driver that interacts with a sql database",
+         "resources": [
+            "postgres",
+            "mysql"
+         ],
+         "options": [
+            {
+               "name": "driver",
+               "description": "sql driver (postgres or mysql)",
+               "type": "string"
+            },
+            {
+               "name": "datasource",
+               "description": "sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)",
+               "type": "string"
+            }
+         ],
+         "actions": [
+            {
+               "name": "set",
+               "description": "truncates the target table and sets row results to the passed values",
+               "handle": "tableInsert",
+               "expressions": [
+                  "set $resource table $table list of content $content"
+               ],
+               "parameters": [
+                  {
+                     "name": "table",
+                     "description": "table name",
+                     "type": "string"
+                  },
+                  {
+                     "name": "content",
+                     "description": "table row content in Gherkin table syntax",
+                     "type": "table"
+                  }
+               ]
+            },
+            {
+               "name": "check",
+               "description": "compares table content after an action",
+               "handle": "tableCompare",
+               "expressions": [
+                  "$resource table $table should look like $content"
+               ],
+               "parameters": [
+                  {
+                     "name": "table",
+                     "description": "table name",
+                     "type": "string"
+                  },
+                  {
+                     "name": "content",
+                     "description": "table row content in Gherkin table syntax",
+                     "type": "table"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "name": "queue",
+         "description": "messaging queue that that publishes and serves messages",
+         "resources": [
+            "rabbitmq",
+            "nsq"
+         ],
+         "options": [
+            {
+               "name": "driver",
+               "description": "queue driver (rabbitmq)",
+               "type": "string"
+            },
+            {
+               "name": "datasource",
+               "description": "queue source dsn (`amqp://user:pass@host:port/`)",
+               "type": "string"
+            },
+            {
+               "name": "stubs_path",
+               "description": "stubs file path (`./stubs`)",
+               "type": "string"
+            }
+         ],
+         "actions": [
+            {
+               "name": "publish",
+               "description": "publish a message to message queue",
+               "handle": "publishMessage",
+               "expressions": [
+                  "publish message to $resource target $target with payload $payload"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`",
+                     "type": "string"
+                  },
+                  {
+                     "name": "payload",
+                     "description": "queue message payload",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "publish_from_file",
+               "description": "publish a message to message queue from a file",
+               "handle": "publishMessageFromFile",
+               "expressions": [
+                  "publish message to $resource target $target with payload from file $file"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`",
+                     "type": "string"
+                  },
+                  {
+                     "name": "file",
+                     "description": "queue message payload file name",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "listen",
+               "description": "listen for messages on a given queue. Declaration should be before the publish action\n",
+               "handle": "listenMessage",
+               "expressions": [
+                  "listen message from $resource target $target"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "count",
+               "description": "count messages for a given target. Declaration should be before the publish action",
+               "handle": "countMessage",
+               "expressions": [
+                  "message from $resource target $target count should be $count"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`",
+                     "type": "string"
+                  },
+                  {
+                     "name": "count",
+                     "description": "number of expected messages in the queue",
+                     "type": "number"
+                  }
+               ]
+            },
+            {
+               "name": "compareContains",
+               "description": "compare message payload by checking if the message contains other JSON. Declaration should be before the publish action",
+               "handle": "compareMessageContains",
+               "expressions": [
+                  "message from $resource target $target should contain $payload"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`",
+                     "type": "string"
+                  },
+                  {
+                     "name": "payload",
+                     "description": "queue message payload",
+                     "type": "json"
+                  }
+               ]
+            },
+            {
+               "name": "compareEquals",
+               "description": "compare message payload by checking for exact JSON matches. Declaration should be before the publish action",
+               "handle": "compareMessageEquals",
+               "expressions": [
+                  "message from $resource target $target should equal $payload"
+               ],
+               "parameters": [
+                  {
+                     "name": "target",
+                     "description": "target syntax changes depending on the driver, using rabbitmq `[exchange]:[routing-key]`",
+                     "type": "string"
+                  },
+                  {
+                     "name": "payload",
+                     "description": "queue message payload",
+                     "type": "json"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "name": "shell",
+         "description": "to communicate with shell command",
+         "resources": [
+            "shell"
+         ],
+         "options": [
+            {
+               "name": "prefix",
+               "description": "shell command prefixes",
+               "type": "string"
+            }
+         ],
+         "actions": [
+            {
+               "name": "execute",
+               "description": "execute shell command",
+               "handle": "execCommand",
+               "expressions": [
+                  "$resource execute $command"
+               ],
+               "parameters": [
+                  {
+                     "name": "command",
+                     "description": "command that gonna get executed",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "stdout_contains",
+               "description": "check stdout for executed command contains a given value",
+               "handle": "checkStdoutContains",
+               "expressions": [
+                  "$resource stdout should contains $substring"
+               ],
+               "parameters": [
+                  {
+                     "name": "substring",
+                     "description": "substring of the message",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "stdout_not_contains",
+               "description": "check stdout for executed command not contains a given value",
+               "handle": "checkStdoutNotContains",
+               "expressions": [
+                  "$resource stdout should not contains $substring"
+               ],
+               "parameters": [
+                  {
+                     "name": "substring",
+                     "description": "substring of the message",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "stderr_contains",
+               "description": "check stdout for executed command contains a given value",
+               "handle": "checkStderrContains",
+               "expressions": [
+                  "$resource stderr should contains $substring"
+               ],
+               "parameters": [
+                  {
+                     "name": "substring",
+                     "description": "substring of the message",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "stderr_not_contains",
+               "description": "check stderr for executed command not contains a given value",
+               "handle": "checkStderrNotContains",
+               "expressions": [
+                  "$resource stderr should not contains $substring"
+               ],
+               "parameters": [
+                  {
+                     "name": "substring",
+                     "description": "substring of the message",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "exit_code_equal",
+               "description": "check exit code is equal given value",
+               "handle": "checkExitCodeEqual",
+               "expressions": [
+                  "$resource exit code equal to $exit_code"
+               ],
+               "parameters": [
+                  {
+                     "name": "exit_code",
+                     "description": "exit code of the executed command",
+                     "type": "number"
+                  }
+               ]
+            },
+            {
+               "name": "exit_code_not_equal",
+               "description": "check exit code is not equal given value",
+               "handle": "checkExitCodeNotEqual",
+               "expressions": [
+                  "$resource exit code not equal to $exit_code"
+               ],
+               "parameters": [
+                  {
+                     "name": "exit_code",
+                     "description": "exit code of the executed command",
+                     "type": "number"
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "name": "cache",
+         "description": "cache driver that interacts with a cache service",
+         "resources": [
+            "redis"
+         ],
+         "options": [
+            {
+               "name": "driver",
+               "description": "cache driver (only \"redis\" for now)",
+               "type": "string"
+            },
+            {
+               "name": "datasource",
+               "description": "cache source url (`redis://user:secret@localhost:6379/0?foo=bar&qux=baz`)",
+               "type": "string"
+            }
+         ],
+         "actions": [
+            {
+               "name": "set",
+               "description": "set key to hold the string value",
+               "handle": "valueSet",
+               "expressions": [
+                  "cache $resource stores $key with value $value"
+               ],
+               "parameters": [
+                  {
+                     "name": "key",
+                     "description": "key of content",
+                     "type": "string"
+                  },
+                  {
+                     "name": "value",
+                     "description": "stored content value",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "check",
+               "description": "compares cached content after an action",
+               "handle": "valueCompare",
+               "expressions": [
+                  "cache $resource stored key $key should look like $value"
+               ],
+               "parameters": [
+                  {
+                     "name": "key",
+                     "description": "key of content",
+                     "type": "string"
+                  },
+                  {
+                     "name": "value",
+                     "description": "stored content value",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "exists",
+               "description": "check if such key exists in the cache",
+               "handle": "valueExists",
+               "expressions": [
+                  "cache $resource has key $key"
+               ],
+               "parameters": [
+                  {
+                     "name": "key",
+                     "description": "key of content",
+                     "type": "string"
+                  }
+               ]
+            },
+            {
+               "name": "not_exists",
+               "description": "check if such key doesn't exists in the cache",
+               "handle": "valueNotExists",
+               "expressions": [
+                  "cache $resource hasn't key $key"
+               ],
+               "parameters": [
+                  {
+                     "name": "key",
+                     "description": "key of content",
+                     "type": "string"
+                  }
+               ]
+            }
+         ]
+      }
+   ]
+}
