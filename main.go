@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net"
@@ -63,87 +65,7 @@ func main() {
 		cli.Command{
 			Name:        "edit",
 			Description: "edit tomato related file",
-			Action: func(ctx *cli.Context) error {
-				var g run.Group
-				var configPath string
-				if len(ctx.Args()) == 1 {
-					configPath = ctx.Args()[0]
-				}
-				if configPath == "" {
-					return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato edit -help'")
-				}
-
-				l, err := net.Listen("tcp", "127.0.0.1:0")
-				if err != nil {
-					return err
-				}
-				printErr := func(err error) {
-					l.Close()
-					if err != nil {
-						log.Printf(colors.Bold(colors.Red)("ERR: %v"), err)
-					}
-				}
-				g.Add(func() error {
-					if err := openbrowser("http://" + l.Addr().String()); err != nil {
-						return err
-					}
-
-					box := packr.NewBox(".")
-
-					return http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						setupResponse(&w, r)
-						fs := http.FileServer(http.Dir("./ui"))
-
-						if r.URL.Path == "/api" {
-							switch r.Method {
-							case http.MethodGet:
-								dict, err := box.Find("./dictionary.yml")
-								if err != nil {
-									panic(err)
-								}
-								dictMap, err := yamlToJSON(dict)
-								if err != nil {
-									panic(err)
-								}
-								cfg, err := ioutil.ReadFile(configPath)
-								if err != nil {
-									panic(err)
-								}
-								config, err := yamlToJSON(cfg)
-								if err != nil {
-									panic(err)
-								}
-
-								b, err := json.Marshal(map[string]interface{}{
-									"config":     config,
-									"dictionary": dictMap,
-								})
-								if err != nil {
-									panic(err)
-								}
-
-								w.Write(b)
-								return
-							}
-
-						}
-
-						fs.ServeHTTP(w, r)
-					}))
-				}, printErr)
-
-				term := make(chan os.Signal, 1)
-				signal.Notify(term, os.Interrupt, syscall.SIGTERM)
-				g.Add(func() error {
-					select {
-					case <-term:
-						log.Printf(colors.Bold(colors.Yellow)("Received SIGTERM, exiting gracefully..."))
-					}
-					return nil
-				}, printErr)
-
-				return g.Run()
-			},
+			Action:      editServer,
 		},
 		cli.Command{
 			Name:        "run",
@@ -157,6 +79,7 @@ func main() {
 				return nil
 			},
 			Action: func(ctx *cli.Context) error {
+				// Initialize astilectron
 				var configPath string
 
 				// backward compability
@@ -226,9 +149,112 @@ func yamlToJSON(y []byte) (map[string]interface{}, error) {
 	return result, nil
 }
 
-
 func setupResponse(w *http.ResponseWriter, req *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-    (*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-    (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
+func editServer(ctx *cli.Context) error {
+	var g run.Group
+	var configPath string
+	if len(ctx.Args()) == 1 {
+		configPath = ctx.Args()[0]
+	}
+	if configPath == "" {
+		return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato edit -help'")
+	}
+
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return err
+	}
+	printErr := func(err error) {
+		l.Close()
+		if err != nil {
+			log.Printf(colors.Bold(colors.Red)("ERR: %v"), err)
+		}
+	}
+	g.Add(func() error {
+
+		if err := openbrowser("http://" + l.Addr().String() + "/index.html"); err != nil {
+			return err
+		}
+
+		box := packr.NewBox(".")
+
+		return http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("client") != "" {
+				setupResponse(&w, r)
+				switch r.Method {
+				case http.MethodGet:
+					dict, err := box.Find("./dictionary.yml")
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					dictMap, err := yamlToJSON(dict)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					cfg, err := ioutil.ReadFile(configPath)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					config, err := yamlToJSON(cfg)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+
+					b, err := json.Marshal(map[string]interface{}{
+						"config":     config,
+						"dictionary": dictMap,
+					})
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					w.Header().Set("Content-Type", "application/json")
+					w.Write(b)
+					return
+				}
+			} else {
+				if r.URL.Path == "" {
+					index, err := box.Find("./ui/build/index.html")
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					var buf bytes.Buffer
+
+					t := template.Must(template.New("config").Parse(string(index)))
+					if err := t.ExecuteTemplate(&buf, "config", map[string]string{"ServerURL": "http://" + l.Addr().String()}); err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+
+					w.Write(index)
+					return
+				}
+
+				fs := http.FileServer(http.Dir("./ui/build"))
+				fs.ServeHTTP(w, r)
+			}
+		}))
+	}, printErr)
+
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+	g.Add(func() error {
+		select {
+		case <-term:
+			log.Printf(colors.Bold(colors.Yellow)("Received SIGTERM, exiting gracefully..."))
+		}
+		return nil
+	}, printErr)
+
+	return g.Run()
 }
