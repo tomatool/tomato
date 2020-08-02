@@ -12,7 +12,15 @@ interface IProps {
 function ConfigContainer({ dictionary, config }:IProps) {
   const [configState, setConfig] = useState<IConfig>(config);
 
-  let handleFeaturesPathChange = () => {}
+  let handleFeaturesPathChange = ( event: any, idx: number) => {
+    let copy = config.features_path
+    copy[idx] = event.target.value
+
+    setConfig({
+      features_path: copy,
+      resources: configState.resources
+    })
+  }
 
   let handleResourceItemChange = (selectedName: string, newItem: IResource) => {
     const newResourceItem = configState.resources.map((item: IResource) => {
@@ -51,15 +59,13 @@ function ConfigContainer({ dictionary, config }:IProps) {
 
 //   ,[configState])
 
-  
-
   let validateConfig = (config: IConfig) => {
       // validate & return error
   }
 
   const handleSave = () => {
       
-  }  
+  }
   
   return (
     <div className="App">
@@ -67,9 +73,9 @@ function ConfigContainer({ dictionary, config }:IProps) {
         <List
             itemLayout="horizontal"
             dataSource={configState.features_path}
-            renderItem={item => (
+            renderItem={(item, idx) => (
             <List.Item>
-                <Input placeholder="Features path" value={item}/>
+                <Input placeholder="Features path" name={item} value={item} onChange={(event) => handleFeaturesPathChange(event, idx)}/>
             </List.Item>
             )}
         />
