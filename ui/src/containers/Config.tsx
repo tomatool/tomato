@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input, List, Button } from 'antd';
 import ConfigResourceContainer from './ConfigResource'
 import { IDictionary, IResource, IConfig } from '../interfaces'
 import { getResourceParams } from '../dictionary'
 
 interface IProps {
-    dictionary: IDictionary;
-    config: IConfig;
+  dictionary: IDictionary;
+  config: IConfig;
 }
 
-function ConfigContainer({ dictionary, config }:IProps) {
+function ConfigContainer({ dictionary, config }: IProps) {
   const [configState, setConfig] = useState<IConfig>(config);
 
-  let handleFeaturesPathChange = ( event: any, idx: number) => {
+  let handleFeaturesPathChange = (event: any, idx: number) => {
     let copy = config.features_path
     copy[idx] = event.target.value
 
@@ -24,84 +24,92 @@ function ConfigContainer({ dictionary, config }:IProps) {
 
   let handleResourceItemChange = (selectedName: string, newItem: IResource) => {
     const newResourceItem = configState.resources.map((item: IResource) => {
-        if (item.name === selectedName) {
-            return newItem;
-        }
-        return item;
-    }); 
-    
+      if (item.name === selectedName) {
+        return newItem;
+      }
+      return item;
+    });
+
     setConfig({
-        features_path: configState.features_path,
-        resources: newResourceItem
+      features_path: configState.features_path,
+      resources: newResourceItem
     });
   }
 
   let handleNewResourceItem = () => {
     const newResourceItem = {
-        name: "new",
-        type: "httpclient",
-        parameters: {}
-    }; 
+      name: "new",
+      type: "httpclient",
+      parameters: {}
+    };
 
     getResourceParams(dictionary, "httpclient").forEach((param) => {
       newResourceItem.parameters[param.name] = ""
-    }) 
-    
+    })
+
     console.log(newResourceItem)
 
     setConfig({
-        features_path: configState.features_path,
-        resources: [...configState.resources, newResourceItem]
+      features_path: configState.features_path,
+      resources: [...configState.resources, newResourceItem]
     });
   }
 
-//   useEffect(() => 
+  let handleNewFeatureItem = () => {
+    let newFeatures: string = ""
 
-//   ,[configState])
-
-  let validateConfig = (config: IConfig) => {
-      // validate & return error
+    setConfig({
+      ...config,
+      features_path: [...config.features_path, newFeatures]
+    })
   }
 
   const handleSave = () => {
-      
-  }
-  
-  return (
-    <div className="App">
-        <label htmlFor="">Features Path</label>
-        <List
-            itemLayout="horizontal"
-            dataSource={configState.features_path}
-            renderItem={(item, idx) => (
-            <List.Item>
-                <Input placeholder="Features path" name={item} value={item} onChange={(event) => handleFeaturesPathChange(event, idx)}/>
-            </List.Item>
-            )}
-        />
 
-        <label htmlFor="">Resources</label>
+  }
+
+  return (
+    <div className="App" style={{display: "flex", flexDirection: "column"}}>
+      <div className="features" style={{marginBottom: "10px"}}>
+        <label htmlFor="" style={{fontWeight: "bolder"}}>Features Path</label>
         <List
-            itemLayout="horizontal"
-            dataSource={configState.resources}
-            renderItem={item => (
+          itemLayout="horizontal"
+          dataSource={configState.features_path}
+          renderItem={(item, idx) => (
             <List.Item>
-                <ConfigResourceContainer 
-                    dictionary={dictionary} 
-                    item={item} 
-                    handleResourceItemChange={handleResourceItemChange} 
-                />          
+              <Input placeholder="Features path" name={item} value={item} onChange={(event) => handleFeaturesPathChange(event, idx)} />
             </List.Item>
-            )}
+          )}
         />
-        <Button onClick={handleNewResourceItem} type="primary">
+        <Button onClick={handleNewFeatureItem} type="primary">
+          New Feature
+        </Button>
+      </div>
+
+      <div className="resources">
+        <label htmlFor="" style={{fontWeight: "bolder"}}>Resources</label>
+        <List
+          itemLayout="horizontal"
+          dataSource={configState.resources}
+          renderItem={item => (
+            <List.Item>
+              <ConfigResourceContainer
+                dictionary={dictionary}
+                item={item}
+                handleResourceItemChange={handleResourceItemChange}
+              />
+            </List.Item>
+          )}
+        />
+        <Button onClick={handleNewResourceItem} type="primary" style={{marginRight: "10px"}}>
           New Resource
         </Button>
         <Button onClick={handleSave} type="primary">
           Save
         </Button>
+      </div>
 
-        <div>{JSON.stringify(configState)}</div>
+      <div>{JSON.stringify(configState)}</div>
     </div>
   );
 }
