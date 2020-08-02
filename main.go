@@ -1,12 +1,24 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
 	"os"
+	"os/exec"
+	"os/signal"
+	"runtime"
 	"strings"
+	"syscall"
 
 	"github.com/DATA-DOG/godog/colors"
+	"github.com/ghodss/yaml"
+	"github.com/gobuffalo/packr"
 	"github.com/joho/godotenv"
+	"github.com/oklog/run"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 
@@ -30,6 +42,7 @@ func main() {
 	log := log.New(os.Stdout, "", 0)
 
 	app := cli.NewApp()
+
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "env.file, e",
@@ -46,51 +59,176 @@ func main() {
 		},
 	}
 
-	app.Before = func(ctx *cli.Context) error {
-		if envFile := ctx.String("env.file"); envFile != "" {
-			return godotenv.Load(envFile)
-		}
+	app.Commands = []cli.Command{
+		cli.Command{
+			Name:        "edit",
+			Description: "edit tomato related file",
+			Action: func(ctx *cli.Context) error {
+				var g run.Group
+				var configPath string
+				if len(ctx.Args()) == 1 {
+					configPath = ctx.Args()[0]
+				}
+				if configPath == "" {
+					return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato edit -help'")
+				}
 
-		return nil
-	}
+				l, err := net.Listen("tcp", "127.0.0.1:0")
+				if err != nil {
+					return err
+				}
+				printErr := func(err error) {
+					l.Close()
+					if err != nil {
+						log.Printf(colors.Bold(colors.Red)("ERR: %v"), err)
+					}
+				}
+				g.Add(func() error {
+					if err := openbrowser("http://" + l.Addr().String()); err != nil {
+						return err
+					}
 
-	app.Action = func(ctx *cli.Context) error {
-		var configPath string
+					box := packr.NewBox(".")
 
-		// backward compability
-		if c := ctx.String("config.file"); c != "" {
-			log.Printf(colors.Bold(colors.Yellow)("Flag --config.file, -c is deprecated, please use args instead. For additional help try 'tomato -help'"))
-			configPath = c
-		}
+					return http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						setupResponse(&w, r)
+						fs := http.FileServer(http.Dir("./ui"))
 
-		if len(ctx.Args()) == 1 {
-			configPath = ctx.Args()[0]
-		}
+						if r.URL.Path == "/api" {
+							switch r.Method {
+							case http.MethodGet:
+								dict, err := box.Find("./dictionary.yml")
+								if err != nil {
+									panic(err)
+								}
+								dictMap, err := yamlToJSON(dict)
+								if err != nil {
+									panic(err)
+								}
+								cfg, err := ioutil.ReadFile(configPath)
+								if err != nil {
+									panic(err)
+								}
+								config, err := yamlToJSON(cfg)
+								if err != nil {
+									panic(err)
+								}
 
-		if configPath == "" {
-			return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato -help'")
-		}
+								b, err := json.Marshal(map[string]interface{}{
+									"config":     config,
+									"dictionary": dictMap,
+								})
+								if err != nil {
+									panic(err)
+								}
 
-		conf, err := config.Retrieve(configPath)
-		if err != nil {
-			return errors.Wrap(err, "Failed to retrieve config")
-		}
+								w.Write(b)
+								return
+							}
 
-		if featuresPath := ctx.String("features.path"); featuresPath != "" {
-			conf.FeaturesPaths = strings.Split(featuresPath, ",")
-		}
+						}
 
-		t := tomato.New(conf, log)
+						fs.ServeHTTP(w, r)
+					}))
+				}, printErr)
 
-		if err := t.Verify(); err != nil {
-			return errors.Wrap(err, "Verification failed")
-		}
+				term := make(chan os.Signal, 1)
+				signal.Notify(term, os.Interrupt, syscall.SIGTERM)
+				g.Add(func() error {
+					select {
+					case <-term:
+						log.Printf(colors.Bold(colors.Yellow)("Received SIGTERM, exiting gracefully..."))
+					}
+					return nil
+				}, printErr)
 
-		return t.Run()
+				return g.Run()
+			},
+		},
+		cli.Command{
+			Name:        "run",
+			Description: "Run tomato testing suite",
+			Flags:       app.Flags,
+			Before: func(ctx *cli.Context) error {
+				if envFile := ctx.String("env.file"); envFile != "" {
+					return godotenv.Load(envFile)
+				}
+
+				return nil
+			},
+			Action: func(ctx *cli.Context) error {
+				var configPath string
+
+				// backward compability
+				if c := ctx.String("config.file"); c != "" {
+					log.Printf(colors.Bold(colors.Yellow)("Flag --config.file, -c is deprecated, please use args instead. For additional help try 'tomato -help'"))
+					configPath = c
+				}
+
+				if len(ctx.Args()) == 1 {
+					configPath = ctx.Args()[0]
+				}
+
+				if configPath == "" {
+					return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato -help'")
+				}
+
+				conf, err := config.Retrieve(configPath)
+				if err != nil {
+					return errors.Wrap(err, "Failed to retrieve config")
+				}
+
+				if featuresPath := ctx.String("features.path"); featuresPath != "" {
+					conf.FeaturesPaths = strings.Split(featuresPath, ",")
+				}
+
+				t := tomato.New(conf, log)
+
+				if err := t.Verify(); err != nil {
+					return errors.Wrap(err, "Verification failed")
+				}
+
+				return t.Run()
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
 		log.Printf("%v", colors.Bold(colors.Red)(err))
 		os.Exit(1)
 	}
+}
+
+func openbrowser(url string) (err error) {
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	return
+}
+
+func yamlToJSON(y []byte) (map[string]interface{}, error) {
+	by, err := yaml.YAMLToJSON(y)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]interface{})
+	if err := json.Unmarshal(by, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+    (*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+    (*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
