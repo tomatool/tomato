@@ -26,7 +26,7 @@ type Wiremock struct {
 // New connects and creates the wiremock resource
 // create the stub via the API you can post the request/response JSON to http://<host>:<port>/__admin/mappings
 func New(cfg *config.Resource) (*Wiremock, error) {
-	u, ok := cfg.Params["base_url"]
+	u, ok := cfg.Options["base_url"]
 	if !ok {
 		return nil, errors.New("wiremock: base_url is required")
 	}
@@ -35,7 +35,7 @@ func New(cfg *config.Resource) (*Wiremock, error) {
 		return nil, fmt.Errorf("%s - invalid base_url : %s", u, err.Error())
 	}
 
-	path, ok := cfg.Params["stubs_path"]
+	path, ok := cfg.Options["stubs_path"]
 	stubs := &stub.Stubs{}
 	if ok {
 		var err error

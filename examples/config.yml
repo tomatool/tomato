@@ -5,39 +5,39 @@ features_path:
 resources:
     - name: tomato-psql
       type: postgres
-      params:
+      options:
         datasource: {{ .PSQL_DATASOURCE }}
 
     - name: tomato-mysql
       type: mysql
-      params:
+      options:
         datasource: {{ .MYSQL_DATASOURCE }}
 
     - name: tomato-queue
       type: rabbitmq
-      params:
+      options:
         datasource: {{ .RABBITMQ_DATASOURCE }}
         stubs_path: "/stubs"
 
     - name: tomato-nsq
       type: nsq
-      params:
+      options:
         nsqd: {{ .NSQ_DATASOURCE }}
         stubs_path: "/stubs"
 
     - name: tomato-wiremock
       type: wiremock
-      params:
+      options:
         base_url: {{ .WIREMOCK_BASE_URL }}
 
     - name: tomato-http-client
       type: httpclient
-      params:
+      options:
         base_url: {{ .HTTP_CLIENT_BASE_URL }}
 
     - name: tomato-redis
       type: redis
-      params:
+      options:
         datasource: {{ .REDIS_DATASOURCE }}
 
     - name: shell-cli
@@ -45,5 +45,5 @@ resources:
 
     - name: ls
       type: shell
-      params:
+      options:
         prefix: "ls"

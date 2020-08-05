@@ -20,9 +20,9 @@ type Config struct {
 }
 
 type Resource struct {
-	Name   string            `yaml:"name"`
-	Type   string            `yaml:"type"`
-	Params map[string]string `yaml:"params"`
+	Name    string            `yaml:"name"`
+	Type    string            `yaml:"type"`
+	Options map[string]string `yaml:"options"`
 }
 
 func Retrieve(configFile string) (*Config, error) {

@@ -237,9 +237,6 @@ handlers:
           - "postgres"
           - "mysql"
       options:
-          - name: driver
-            description: sql driver (postgres or mysql)
-            type: string
           - name: datasource
             description: sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
             type: string
@@ -276,9 +273,6 @@ handlers:
           - "rabbitmq"
           - "nsq"
       options:
-        - name: driver
-          description: queue driver (rabbitmq)
-          type: string
         - name: datasource
           description: queue source dsn (`amqp://user:pass@host:port/`)
           type: string

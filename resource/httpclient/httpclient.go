@@ -31,7 +31,7 @@ type Client struct {
 var defaultHeaders = http.Header{"Content-Type": {"application/json"}}
 
 func New(cfg *config.Resource) (*Client, error) {
-	params := cfg.Params
+	params := cfg.Options
 
 	httpClient := &http.Client{
 		// In order for http client not to follow response redirect
@@ -65,7 +65,7 @@ func New(cfg *config.Resource) (*Client, error) {
 		}
 	}
 
-	path, ok := cfg.Params["stubs_path"]
+	path, ok := cfg.Options["stubs_path"]
 	stubs := &stub.Stubs{}
 	if ok {
 		var err error

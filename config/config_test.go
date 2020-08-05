@@ -27,5 +27,5 @@ func TestEnv(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, cfg.StopOnFailure, true)
-	assert.Equal(t, cfg.Resources[0].Params["datasource"], timeNow)
+	assert.Equal(t, cfg.Resources[0].Options["datasource"], timeNow)
 }

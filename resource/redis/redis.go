@@ -16,7 +16,7 @@ type Redis struct {
 }
 
 func New(cfg *config.Resource) (*Redis, error) {
-	u, ok := cfg.Params["datasource"]
+	u, ok := cfg.Options["datasource"]
 	if !ok {
 		return nil, errors.New("redis: datasource is required")
 	}

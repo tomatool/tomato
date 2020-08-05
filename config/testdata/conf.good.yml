@@ -9,38 +9,38 @@ features_path:
 resources:
     - name: tomato-psql
       type: postgres
-      params:
+      options:
         datasource: postgres://user:pass@localhost:5432/dbname?sslmode
 
     - name: tomato-mysql
       type: mysql
-      params:
+      options:
         datasource: user:pass@tcp(localhost:3306)/dbname
 
     - name: tomato-queue
       type: rabbitmq
-      params:
+      options:
         datasource: guest:guest@localhost:5672
 
     - name: tomato-nsq
       type: nsq
-      params:
+      options:
         nsqd: 127.0.0.1:4160
 
     - name: tomato-wiremock
       type: wiremock
-      params:
+      options:
         host: "wiremock"
         port: 8080
 
     - name: tomato-wiremock
       type: httpserver
-      params:
+      options:
         port: 9090
 
     - name: tomato-http-client
       type: httpclient
-      params:
+      options:
         base_url: http://wiremock:8080/
 
     - name: shell-cli

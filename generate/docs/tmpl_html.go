@@ -32,7 +32,7 @@ const (
 resources:
     - name: my-awesome-name
       type: {{ .Name }}
-      params:
+      options:
 	  {{range .Options}}{{.Name}}: # ({{.Type}}) {{.Description}}
 	  {{end}}</code></pre>
 					</div>
