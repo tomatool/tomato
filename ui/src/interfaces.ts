@@ -1,7 +1,7 @@
 export interface IResource {
     name: string;
     type: string;
-    parameters: any;
+    options: object;
 }
 
 export interface IConfig {
@@ -17,10 +17,10 @@ export interface IHandler {
    name: string;
    description: string;
    resources: Array<string>;
-   options: Array<IParameter>;
+   options: Array<IOption>;
 }
 
-export interface IParameter {
+export interface IOption {
    name: string;
    type: string;
    description: string;

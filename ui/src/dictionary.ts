@@ -1,4 +1,4 @@
-import { IDictionary, IParameter } from './interfaces';
+import { IDictionary, IOption } from './interfaces';
 
 export function getListOfResources(dictionary: IDictionary): Array<string> {
    return dictionary.handlers.map((handler) => {
@@ -8,7 +8,7 @@ export function getListOfResources(dictionary: IDictionary): Array<string> {
    }).flat();
 }
 
-export function getResourceParams(dictionary: IDictionary, resourceType: string): Array<IParameter> {
+export function getResourceOptions(dictionary: IDictionary, resourceType: string): Array<IOption> {
    const handler = dictionary.handlers.find(handler => {
         const selectedHandler = handler.resources.find((resource) => resource === resourceType);
          

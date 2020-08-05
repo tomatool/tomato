@@ -7,7 +7,7 @@ import { IDictionary, IResource, IConfig } from '../interfaces'
 interface IProps {
     dictionary: IDictionary;
     config: IConfig;
-    setConfig: any;
+    setConfig: (config: IConfig) => void;
 }
 
 function ConfigContainer({ dictionary, config, setConfig }:IProps) {
@@ -70,7 +70,7 @@ function ConfigContainer({ dictionary, config, setConfig }:IProps) {
     const newResourceItem = {
         name: `new-${config.resources.length}`,
         type: 'wiremock',
-        parameters: {}
+        options: {}
     }; 
     setConfig({
         features_path: config.features_path,

@@ -1,4 +1,4 @@
-import React, {useState,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Spin, Button } from 'antd';
 import Config from './containers/Config';
@@ -18,12 +18,13 @@ function App() {
     config: { features_path: [], resources: []},
     dictionary: { handlers:[] }
   } as IGlobal);
-  const initialData = (window as any).__INITIAL_DATA__;
+  const initialData = (window as any).__INITIAL_DATA__ as object;
   
   useEffect(() => {
     const initConfig = async () => {
       try {
-        const result = await axios.get(initialData.serverURL, { headers: {'client': 'true', 'Access-Control-Allow-Headers': '*'} });
+        const result = await axios.get(initialData['serverURL'], { headers: {'client': 'true'} });
+        
         setGlobal({
           loading: false,
           config: result.data.config,
@@ -43,8 +44,23 @@ function App() {
       dictionary: global.dictionary
     })
   }
+  
   const handleSave = () => {
-    
+    setGlobal({
+      loading: true,
+      config: global.config,
+      dictionary: global.dictionary
+    });
+    try {
+      const result = axios.post(initialData['serverURL'], { headers: {'client': 'true'} }, {data: global.config});
+      setGlobal({
+        loading: false,
+        config: global.config,
+        dictionary: global.dictionary
+      });
+    } catch(e) {
+      alert(e);
+    }
   }
 
   return (
