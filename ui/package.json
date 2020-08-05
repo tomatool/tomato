@@ -10,7 +10,7 @@
     "react-dom": "^16.13.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_SERVER_URL=https://run.mocky.io/v3/4875a81b-12e2-40a1-ab99-c93c8a37eea8 react-scripts start",
     "build": "REACT_APP_SERVER_URL=/ react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
