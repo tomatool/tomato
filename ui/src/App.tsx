@@ -45,14 +45,15 @@ function App() {
     })
   }
   
-  const handleSave = () => {
+  const handleSave = async () => {
     setGlobal({
       loading: true,
       config: global.config,
       dictionary: global.dictionary
     });
+
     try {
-      const result = axios.post(initialData['serverURL'], { headers: {'client': 'true'} }, {data: global.config});
+      const result = await axios.post(initialData['serverURL'], {}, {data: global.config});
       setGlobal({
         loading: false,
         config: global.config,
