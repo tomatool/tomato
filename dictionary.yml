@@ -91,7 +91,7 @@ handlers:
 
 
           - name: response_body_contains
-            description: check response body
+            description: check response body contains a given json fields
             handle: checkResponseBodyContains
             expressions:
                 - $resource response body should contain $body
@@ -100,7 +100,7 @@ handlers:
                   description: expected response body
                   type: json
           - name: response_body_equals
-            description: check response body
+            description: check response body to be equals a given json
             handle: checkResponseBodyEquals
             expressions:
                 - $resource response body should equal $body
@@ -199,7 +199,7 @@ handlers:
                   type: number
 
           - name: response_code_method_path_from_file
-            description: set a response code for a given method and path for wiremock
+            description: set a response code and body for a given method and path for wiremock (reads from given file path)
             handle: setResponseWithMethodAndBodyFromFile
             expressions:
                 - set $resource with method $method and path $path response code to $code and response body from file $file
@@ -395,7 +395,7 @@ handlers:
                 type: string
 
         - name: stderr_contains
-          description: check stdout for executed command contains a given value
+          description: check stderr for executed command contains a given value
           handle: checkStderrContains
           expressions:
               - $resource stderr should contains $substring
