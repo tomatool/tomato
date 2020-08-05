@@ -18,7 +18,7 @@ type MySQL struct {
 }
 
 func New(cfg *config.Resource) (*MySQL, error) {
-	datasource, ok := cfg.Params["datasource"]
+	datasource, ok := cfg.Options["datasource"]
 	if !ok || datasource == "" || datasource == "<no value>" {
 		return nil, errors.New("datasource is required")
 	}

@@ -43,12 +43,12 @@ features_path:
 resources:
     - name: psql
       type: postgres
-      params:
+      options:
         datasource: {{ .PSQL_DATASOURCE }}
 
     - name: your-application-client
       type: httpclient
-      params:
+      options:
         base_url: {{ .APP_BASE_URL }}
 ```
 

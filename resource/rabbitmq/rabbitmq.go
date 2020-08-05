@@ -29,7 +29,7 @@ type RabbitMQ struct {
 // New creates and validates the resource params for the connection initialized
 // in Open()
 func New(cfg *config.Resource) (*RabbitMQ, error) {
-	params := cfg.Params
+	params := cfg.Options
 	datasource, ok := params["datasource"]
 	if !ok {
 		return nil, errors.Errorf("%s: datasource is required", resourceName)
@@ -40,7 +40,7 @@ func New(cfg *config.Resource) (*RabbitMQ, error) {
 		waitDuration = DefaultWaitDuration
 	}
 
-	path, ok := cfg.Params["stubs_path"]
+	path, ok := cfg.Options["stubs_path"]
 	stubs := &stub.Stubs{}
 	if ok {
 		var err error

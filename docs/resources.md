@@ -11,7 +11,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | httpclient | 
   
-  params:
+  options:
     # base url for the http client that will automatically be prepended to any route in the feature.
     base_url: # string
     # timeout for the request round-trip.
@@ -98,7 +98,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | wiremock | 
   
-  params:
+  options:
     # wiremock base url (e.g : http://localhost:8080)
     base_url: # string
     # stubs file path (`./stubs`)
@@ -174,9 +174,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | postgres | mysql | 
   
-  params:
-    # sql driver (postgres or mysql)
-    driver: # string
+  options:
     # sql database source name (`postgres://user:pass@host:port/dbname?sslmode=disable`)
     datasource: # string
     
@@ -216,9 +214,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | rabbitmq | nsq | 
   
-  params:
-    # queue driver (rabbitmq)
-    driver: # string
+  options:
     # queue source dsn (`amqp://user:pass@host:port/`)
     datasource: # string
     # stubs file path (`./stubs`)
@@ -289,7 +285,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | shell | 
   
-  params:
+  options:
     # shell command prefixes
     prefix: # string
     
@@ -363,7 +359,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | redis | 
   
-  params:
+  options:
     # cache driver (only "redis" for now)
     driver: # string
     # cache source url (`redis://user:secret@localhost:6379/0?foo=bar&qux=baz`)

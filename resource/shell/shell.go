@@ -21,7 +21,7 @@ type Shell struct {
 
 func New(cfg *config.Resource) (*Shell, error) {
 	sh := &Shell{}
-	if prefix, ok := cfg.Params["prefix"]; ok {
+	if prefix, ok := cfg.Options["prefix"]; ok {
 		sh.prefix = strings.Split(prefix, " ")
 	}
 	return sh, nil

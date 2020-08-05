@@ -11,7 +11,7 @@ Initialize resource in `config.yml`:
 - name: # name of the resource
   type: # | {{range $resource := .Resources}}{{ $resource }} | {{end}}
   {{if .Options}}
-  params:
+  options:
     {{range .Options}}# {{.Description}}
     {{.Name}}: # {{.Type}}
     {{end}}

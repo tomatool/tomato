@@ -18,7 +18,7 @@ func TestDefaultHeaders(t *testing.T) {
 	}))
 
 	cli, err := httpclient.New(&config.Resource{
-		Params: map[string]string{
+		Options: map[string]string{
 			"headers": "awesome=header ; rest =true; gokil =men",
 		},
 	})

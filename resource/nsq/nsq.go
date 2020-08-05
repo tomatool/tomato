@@ -51,17 +51,17 @@ type NSQ struct {
 }
 
 func New(cfg *config.Resource) (*NSQ, error) {
-	nsqdAddress, ok := cfg.Params["nsqd"]
+	nsqdAddress, ok := cfg.Options["nsqd"]
 	if !ok {
 		return nil, errors.New("queue/nsq: nsqd address is required")
 	}
 
-	waitDuration, err := time.ParseDuration(cfg.Params["wait_duration"])
+	waitDuration, err := time.ParseDuration(cfg.Options["wait_duration"])
 	if err != nil {
 		waitDuration = DefaultWaitDuration
 	}
 
-	path, ok := cfg.Params["stubs_path"]
+	path, ok := cfg.Options["stubs_path"]
 	stubs := &stub.Stubs{}
 	if ok {
 		var err error
