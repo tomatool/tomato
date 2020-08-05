@@ -12,7 +12,7 @@ interface IProps {
   handleResourceItemChange: any;
 }
 
-function ConfigResourceContainer({ dictionary, item, handleResourceItemChange, }:IProps) {
+function ConfigResourceContainer({ dictionary, item, handleResourceItemChange }:IProps) {
   let handleNameChange = (e) => {
     let copy = Object.assign({}, item); 
     copy.name = e.target.value;
@@ -72,18 +72,20 @@ function ConfigResourceContainer({ dictionary, item, handleResourceItemChange, }
           <td valign="top" style={{ padding: '10px'}}>
           {getResourceParams(dictionary, item.type).map((param, index) => {
             return (
-              <Form.Item style={{ width: '100%' }}>
+              <Form.Item key={index} style={{ width: '100%' }}>
                 <Input
                   name={param.name}
                   onChange={handleParameterChange}   
-                  placeholder={param.name} />
+                  placeholder={param.name}
+                  value={(item.parameters && item.parameters[param.name]) ? item.parameters[param.name] : ''}
+                  />
                 <small>{param.description}</small>
               </Form.Item>
             );
           })}
         </td>
         <td valign="top" style={{ padding: '10px'}}>
-          <a onClick={handleRemove}>Remove</a>
+          <a onClick={handleRemove} href="/#">Remove</a>
         </td>
     </tr>
   );

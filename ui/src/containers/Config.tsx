@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Input, List, Button, Form } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone } from '@ant-design/icons';
 import ConfigResourceContainer from './ConfigResource'
@@ -7,43 +7,42 @@ import { IDictionary, IResource, IConfig } from '../interfaces'
 interface IProps {
     dictionary: IDictionary;
     config: IConfig;
+    setConfig: any;
 }
 
-function ConfigContainer({ dictionary, config }:IProps) {
-  const [configState, setConfig] = useState<IConfig>(config);
-
+function ConfigContainer({ dictionary, config, setConfig }:IProps) {
   const handleFeaturePathsChange = (index) => { 
     return (e) => {
-      let featurePaths = configState.features_path;
+      let featurePaths = config.features_path;
       featurePaths[index] = e.target.value;
   
       setConfig({
-        features_path: configState.features_path.map((val, i) => {
+        features_path: config.features_path.map((val, i) => {
           if (i === index) return e.target.value;
           return val;
         }),
-        resources: configState.resources
+        resources: config.resources
       })
     }
   }
   const handleFeaturePathsDelete = (index) => {
     return () => {
       setConfig({
-        features_path: configState.features_path.filter((item, i) => index !== i),
-        resources: configState.resources
+        features_path: config.features_path.filter((item, i) => index !== i),
+        resources: config.resources
       })
     }
   }
   const handleFeaturePathsAdd = () => {
     setConfig({
-      features_path: [...configState.features_path, `somewhere/features-${configState.features_path.length}`],
-      resources: configState.resources
+      features_path: [...config.features_path, `somewhere/features-${config.features_path.length}`],
+      resources: config.resources
     })
   }
 
   const handleResourceItemChange = (selectedName: string, newItem: IResource | null) => {
     if (newItem === null) return handleResourceItemRemove(selectedName);
-    const newResourceItem = configState.resources.map((item: IResource) => {
+    const newResourceItem = config.resources.map((item: IResource) => {
         if (item.name === selectedName) {
             return newItem;
         }
@@ -51,39 +50,33 @@ function ConfigContainer({ dictionary, config }:IProps) {
     }); 
     
     setConfig({
-        features_path: configState.features_path,
+        features_path: config.features_path,
         resources: newResourceItem
     });
   }
 
   const handleResourceItemRemove = (selectedName: string) => {
-    const newResourceItems = configState.resources.filter((item: IResource) => {
+    const newResourceItems = config.resources.filter((item: IResource) => {
         return (item.name !== selectedName)
     });
     
     setConfig({
-        features_path: configState.features_path,
+        features_path: config.features_path,
         resources: newResourceItems
     });
   }
 
   const handleAddResourceItem = () => {
     const newResourceItem = {
-        name: `new-${configState.resources.length}`,
-        type: "wiremock",
+        name: `new-${config.resources.length}`,
+        type: 'wiremock',
         parameters: {}
     }; 
-      
     setConfig({
-        features_path: configState.features_path,
-        resources: [...configState.resources, newResourceItem]
+        features_path: config.features_path,
+        resources: [...config.resources, newResourceItem]
     });
   }
-
-
-  const handleSave = () => {
-      
-  }  
   
   return (
     <div className="App">
@@ -92,10 +85,11 @@ function ConfigContainer({ dictionary, config }:IProps) {
           <strong>Features Path</strong>
           <List
               itemLayout="horizontal"
-              dataSource={configState.features_path}
+              dataSource={config.features_path}
               renderItem={(item, index) => (
               <List.Item>
                 <Input 
+                  key={index}
                   style={{ width: '300px' }}
                   onChange={handleFeaturePathsChange(index)} 
                   placeholder="Features path" 
@@ -114,10 +108,13 @@ function ConfigContainer({ dictionary, config }:IProps) {
           </Button>
         </div>
         <table style={{ width: '100%' }}>
-          <tr>
-            <th>Resources</th>
-          </tr>
-          {configState.resources.map((item, index) => {
+          <thead>
+            <tr>
+              <th>Resources</th>
+            </tr>
+          </thead>
+          <tbody>
+          {config.resources.map((item, index) => {
             return (
               <ConfigResourceContainer 
                         key={index}
@@ -127,27 +124,25 @@ function ConfigContainer({ dictionary, config }:IProps) {
                         />
             );
           })}
-          <tr>
-            <td colSpan={3}>
-              <Form.Item>
-                <Button
-                  style={{ height: '60px' }}
-                  type="dashed"
-                  onClick={handleAddResourceItem}
-                  block
-                >
-                  <PlusOutlined /> Add new resource
-                </Button>
-              </Form.Item>
-            </td>
-          </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={3}>
+                <Form.Item>
+                  <Button
+                    style={{ height: '60px' }}
+                    type="dashed"
+                    onClick={handleAddResourceItem}
+                    block
+                  >
+                    <PlusOutlined /> Add new resource
+                  </Button>
+                </Form.Item>
+              </td>
+            </tr>
+          </tfoot>
         </table>
-          
-        <Button onClick={handleSave} type="primary">
-          Save
-        </Button>
-
-        <div>{JSON.stringify(configState)}</div>
+        <div>{JSON.stringify(config)}</div>
     </div>
   );
 }
