@@ -1,6 +1,6 @@
 module github.com/tomatool/tomato
 
-go 1.13
+go 1.14
 
 require (
 	github.com/DATA-DOG/godog v0.7.13
@@ -10,7 +10,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gobuffalo/packr v1.30.1
-	github.com/golang/mock v1.2.0
+	github.com/golang/mock v1.4.3
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/jmoiron/sqlx v1.2.0

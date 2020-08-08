@@ -26,6 +26,7 @@ import (
 
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/tomato"
+	"github.com/tomatool/tomato/web"
 )
 
 // AppHelpTemplate is the text template for the Default help topic.
@@ -65,7 +66,7 @@ func main() {
 		cli.Command{
 			Name:        "edit",
 			Description: "edit tomato related file",
-			Action:      editServer,
+			Action:      web.New().Handler,
 		},
 		cli.Command{
 			Name:        "run",
@@ -78,15 +79,21 @@ func main() {
 
 				return nil
 			},
-			Action: func(ctx *cli.Context) error {
-				// Initialize astilectron
-				var configPath string
+			Action: runHandler(log),
+		},
+	}
+	app.Action = runHandler(log)
 
-				// backward compability
-				if c := ctx.String("config.file"); c != "" {
-					log.Printf(colors.Bold(colors.Yellow)("Flag --config.file, -c is deprecated, please use args instead. For additional help try 'tomato -help'"))
-					configPath = c
-				}
+	if err := app.Run(os.Args); err != nil {
+		log.Printf("%v", colors.Bold(colors.Red)(err))
+		os.Exit(1)
+	}
+}
+
+func runHandler(log *log.Logger) func(*cli.Context) error {
+	return func(ctx *cli.Context) error {
+		// Initialize astilectron
+		var configPath string
 
 				if len(ctx.Args()) == 1 {
 					configPath = ctx.Args()[0]
@@ -114,11 +121,6 @@ func main() {
 				return t.Run()
 			},
 		},
-	}
-
-	if err := app.Run(os.Args); err != nil {
-		log.Printf("%v", colors.Bold(colors.Red)(err))
-		os.Exit(1)
 	}
 }
 

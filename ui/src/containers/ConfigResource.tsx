@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input, Select, Form } from 'antd';
 import { IDictionary, IResource } from '../interfaces';
-import { getListOfResources, getResourceParams } from '../dictionary';
+import { getListOfResources, getResourceOptions } from '../dictionary';
 
 const { Option } = Select;
 
@@ -9,10 +9,10 @@ const { Option } = Select;
 interface IProps {
   dictionary: IDictionary;
   item: IResource;
-  handleResourceItemChange: any;
+  handleResourceItemChange: (selectedName: string, newItem: IResource | null) => void;
 }
 
-function ConfigResourceContainer({ dictionary, item, handleResourceItemChange, }:IProps) {
+function ConfigResourceContainer({ dictionary, item, handleResourceItemChange }:IProps) {
   let handleNameChange = (e) => {
     let copy = Object.assign({}, item); 
     copy.name = e.target.value;
@@ -23,14 +23,16 @@ function ConfigResourceContainer({ dictionary, item, handleResourceItemChange, }
   let handleTypeChange = (value) => {
     let copy = Object.assign({}, item); 
     copy.type = value;
-    copy.parameters = {};
+    copy.options = {};
        
     handleResourceItemChange(item.name, copy);
   }
 
-  let handleParameterChange = (e) => {
-    let copy = Object.assign({}, item); 
-    copy.parameters[e.target.name] = e.target.value;
+  let handleOptionChange = (e) => {
+    let copy = Object.assign({}, item);
+    if(!copy.options) copy.options = {};
+    
+    copy.options[e.target.name] = e.target.value;
 
     handleResourceItemChange(item.name, copy);
   }
@@ -70,20 +72,22 @@ function ConfigResourceContainer({ dictionary, item, handleResourceItemChange, }
           </Form.Item>
           </td>
           <td valign="top" style={{ padding: '10px'}}>
-          {getResourceParams(dictionary, item.type).map((param, index) => {
+          {getResourceOptions(dictionary, item.type).map((option, index) => {
             return (
-              <Form.Item style={{ width: '100%' }}>
+              <Form.Item key={index} style={{ width: '100%' }}>
                 <Input
-                  name={param.name}
-                  onChange={handleParameterChange}   
-                  placeholder={param.name} />
-                <small>{param.description}</small>
+                  name={option.name}
+                  onChange={handleOptionChange}   
+                  placeholder={option.name}
+                  value={(item.options && item.options[option.name]) ? item.options[option.name] : ''}
+                  />
+                <small>{option.description}</small>
               </Form.Item>
             );
           })}
         </td>
         <td valign="top" style={{ padding: '10px'}}>
-          <a onClick={handleRemove}>Remove</a>
+          <a onClick={handleRemove} href="/#">Remove</a>
         </td>
     </tr>
   );
