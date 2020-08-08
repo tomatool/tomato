@@ -18,7 +18,7 @@ import (
 
 	"github.com/DATA-DOG/godog/colors"
 	"github.com/ghodss/yaml"
-	"github.com/gobuffalo/packr"
+	"github.com/markbates/pkger"
 	"github.com/oklog/run"
 	"github.com/urfave/cli"
 	stdyaml "gopkg.in/yaml.v2"
@@ -98,17 +98,14 @@ func (w *Web) Handler(ctx *cli.Context) error {
 		}
 	}
 	g.Add(func() error {
-
 		if err := openbrowser("http://" + l.Addr().String() + "/index.html"); err != nil {
 			return err
 		}
 
-		box := packr.NewBox("..")
-
 		return http.Serve(l, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			switch r.Method {
 			case http.MethodGet:
-				handleGet(box, configPath, l)(w, r)
+				handleGet(configPath, l)(w, r)
 			case http.MethodPost:
 				handlePost(configPath)(w, r)
 			default:
@@ -130,17 +127,24 @@ func (w *Web) Handler(ctx *cli.Context) error {
 	return g.Run()
 }
 
-func handleGet(box packr.Box, configPath string, l net.Listener) http.HandlerFunc {
+func handleGet(configPath string, l net.Listener) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("client") != "" {
 			setupResponse(&w, r)
 			switch r.Method {
 			case http.MethodGet:
-				dict, err := box.Find("./dictionary.yml")
+				f, err := pkger.Open("/dictionary.yml")
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
+
+				dict, err := ioutil.ReadAll(f)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
 				dictMap, err := yamlToJSON(dict)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -171,13 +175,19 @@ func handleGet(box packr.Box, configPath string, l net.Listener) http.HandlerFun
 			}
 		} else {
 			if r.URL.Path == "/" {
-				index, err := box.Find("./ui/build/index.html")
+				f, err := pkger.Open("/ui/build/index.html")
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				var buf bytes.Buffer
 
+				index, err := ioutil.ReadAll(f)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				var buf bytes.Buffer
 				t := template.Must(template.New("config").Parse(string(index)))
 				if err := t.ExecuteTemplate(&buf, "config", map[string]string{"ServerURL": "http://" + l.Addr().String()}); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -188,7 +198,7 @@ func handleGet(box packr.Box, configPath string, l net.Listener) http.HandlerFun
 				return
 			}
 
-			fs := http.FileServer(http.Dir("./ui/build"))
+			fs := http.FileServer(pkger.Dir("/ui/build"))
 			fs.ServeHTTP(w, r)
 		}
 	}
