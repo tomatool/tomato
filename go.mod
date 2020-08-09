@@ -6,7 +6,6 @@ require (
 	github.com/DATA-DOG/godog v0.7.13
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
-	github.com/bitly/go-nsq v1.0.7
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang/mock v1.4.3
@@ -19,7 +18,7 @@ require (
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/nsqio/go-nsq v1.0.7 // indirect
+	github.com/nsqio/go-nsq v1.0.7
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect

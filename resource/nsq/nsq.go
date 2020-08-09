@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bitly/go-nsq"
+	"github.com/nsqio/go-nsq"
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/stub"
