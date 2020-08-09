@@ -10,9 +10,6 @@ github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 ## explicit
 github.com/alecthomas/units
-# github.com/bitly/go-nsq v1.0.7
-## explicit
-github.com/bitly/go-nsq
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
@@ -52,6 +49,7 @@ github.com/lib/pq/oid
 github.com/mattn/go-runewidth
 # github.com/nsqio/go-nsq v1.0.7
 ## explicit
+github.com/nsqio/go-nsq
 # github.com/olekukonko/tablewriter v0.0.1
 ## explicit
 github.com/olekukonko/tablewriter
