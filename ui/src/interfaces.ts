@@ -37,7 +37,9 @@ export interface IOption {
 
 export interface IStep {
    resource: any;
-   action: string;
+   expression: any;
+   arguments: Array<any>;
+   action?: string;
 }
 
 export interface IScenario {

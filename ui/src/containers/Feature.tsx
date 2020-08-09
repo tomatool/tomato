@@ -1,8 +1,8 @@
 import React from 'react';
 import { Input, List, Button, Form } from 'antd';
 import { PlusOutlined, CloseCircleTwoTone } from '@ant-design/icons';
-import ConfigResourceContainer from './ConfigResource'
-import { IDictionary, IResource, IConfig, IFeature } from '../interfaces'
+import FeatureScenarioContainer from './FeatureScenario'
+import { IDictionary, IResource, IConfig, IFeature, IScenario } from '../interfaces'
 
 interface IProps {
     dictionary: IDictionary;
@@ -25,46 +25,32 @@ function FeatureContainer({ dictionary, config, setFeature, feature }:IProps) {
 
     setFeature(newFeature)
   }
-  // const handleFeaturePathsDelete = (index) => {
-  //   return () => {
-  //     setConfig({
-  //       features_path: config.features_path.filter((item, i) => index !== i),
-  //       resources: config.resources
-  //     })
-  //   }
-  // }
-  // const handleFeaturePathsAdd = () => {
-  //   setConfig({
-  //     features_path: [...config.features_path, `somewhere/features-${config.features_path.length}`],
-  //     resources: config.resources
-  //   })
-  // }
 
-  // const handleResourceItemChange = (selectedName: string, newItem: IResource | null) => {
-  //   if (newItem === null) return handleResourceItemRemove(selectedName);
-  //   const newResourceItem = config.resources.map((item: IResource) => {
-  //       if (item.name === selectedName) {
-  //           return newItem;
-  //       }
-  //       return item;
-  //   }); 
+  const handleScenarioItemChange = (index: number, newItem: IScenario | null) => {
+    if (newItem === null) return handleScenarioItemRemove(index);
+    const newResourceItem = feature.scenarios.map((item: IScenario, idx: number) => {
+        if (idx === index) {
+            return newItem;
+        }
+        return item;
+    }); 
     
-  //   setConfig({
-  //       features_path: config.features_path,
-  //       resources: newResourceItem
-  //   });
-  // }
+    setFeature({
+        title: feature.title,
+        scenarios: newResourceItem
+    });
+  }
 
-  // const handleResourceItemRemove = (selectedName: string) => {
-  //   const newResourceItems = config.resources.filter((item: IResource) => {
-  //       return (item.name !== selectedName)
-  //   });
+  const handleScenarioItemRemove = (index: number) => {
+    const newResourceItems = feature.scenarios.filter((item: IScenario, idx: number) => {
+        return (idx !== index)
+    });
     
-  //   setConfig({
-  //       features_path: config.features_path,
-  //       resources: newResourceItems
-  //   });
-  // }
+    setFeature({
+      title: feature.title,
+      scenarios: newResourceItems
+  });
+  }
 
   // const handleAddResourceItem = () => {
   //   const newResourceItem = {
@@ -89,47 +75,25 @@ function FeatureContainer({ dictionary, config, setFeature, feature }:IProps) {
             placeholder="Features path" 
             value={feature.title} 
           />
-          
-
-          {/* <List
-              itemLayout="horizontal"
-              dataSource={config.features_path}
-              renderItem={(item, index) => (
-              <List.Item>
-                <Input 
-                  key={index}
-                  style={{ width: '300px' }}
-                  onChange={handleFeaturePathsChange(index)} 
-                  placeholder="Features path" 
-                  value={item} 
-                  addonAfter={
-                    <CloseCircleTwoTone name={item} onClick={handleFeaturePathsDelete(index)} />}
-                />
-              </List.Item>
-              )}
-          />
-          <Button
-              style={{ height: '30px' }}
-              onClick={handleFeaturePathsAdd}
-            >
-              <PlusOutlined /> 
-          </Button>
         </div>
-        <table style={{ width: '100%' }}>
+        <table style={{ width: '100%', marginTop: '1rem'
+       }}>
           <thead>
             <tr>
-              <th>Resources</th>
+              <th>Scenarios</th>
             </tr>
           </thead>
           <tbody>
-          {config.resources.map((item, index) => {
+          {feature.scenarios.map((item, index) => {
             return (
-              <ConfigResourceContainer 
-                        key={index}
-                        dictionary={dictionary} 
-                        item={item} 
-                        handleResourceItemChange={handleResourceItemChange} 
-                        />
+              <FeatureScenarioContainer 
+                  key={index}
+                  dictionary={dictionary} 
+                  item={item} 
+                  idx={index}
+                  config={config}
+                  handleScenarioItemChange={handleScenarioItemChange} 
+              />
             );
           })}
           </tbody>
@@ -140,18 +104,17 @@ function FeatureContainer({ dictionary, config, setFeature, feature }:IProps) {
                   <Button
                     style={{ height: '60px' }}
                     type="dashed"
-                    onClick={handleAddResourceItem}
+                    // onClick={handleAddResourceItem}
                     block
                   >
-                    <PlusOutlined /> Add new resource
+                    <PlusOutlined /> Add new scenario
                   </Button>
                 </Form.Item>
               </td>
             </tr>
           </tfoot>
-        </table> */}
+        </table>
         <div>{JSON.stringify(feature)}</div>
-    </div>
     </div>
   );
 }
