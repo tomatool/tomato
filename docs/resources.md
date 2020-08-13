@@ -74,14 +74,14 @@ Given $resource response header $header_name should be $header_value
 ```
 
 #### **Response Body Contains**
-check response body
+check response body contains a given json fields
 ```gherkin
 Given $resource response body should contain $body
 
 ```
 
 #### **Response Body Equals**
-check response body
+check response body to be equals a given json
 ```gherkin
 Given $resource response body should equal $body
 
@@ -150,7 +150,7 @@ Given set $resource with method $method and path $path response code to $code
 ```
 
 #### **Response Code Method Path From File**
-set a response code for a given method and path for wiremock
+set a response code and body for a given method and path for wiremock (reads from given file path)
 ```gherkin
 Given set $resource with method $method and path $path response code to $code and response body from file $file
 
@@ -321,7 +321,7 @@ Given $resource stdout should not contains $substring
 ```
 
 #### **Stderr Contains**
-check stdout for executed command contains a given value
+check stderr for executed command contains a given value
 ```gherkin
 Given $resource stderr should contains $substring
 
