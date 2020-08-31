@@ -18,6 +18,11 @@ deps:
 	@go get -u github.com/golang/dep/cmd/dep
 	@dep ensure --vendor-only
 
+build-ui:
+	@echo ">> building ui"
+	@cd ui && npm run build
+	@pkger
+
 build:
 	@echo ">> building binaries"
 	@go build -mod vendor -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go

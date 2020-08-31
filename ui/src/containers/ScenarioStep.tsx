@@ -2,6 +2,7 @@ import React from 'react';
 import { Input, Select, Form, Typography } from 'antd';
 import { IDictionary, IResource, IStep } from '../interfaces';
 import { getListOfResources, getResourceOptions, getResourceActions } from '../dictionary';
+import Expression from './Expression'
 
 const { Option } = Select;
 const { Text, Link } = Typography;
@@ -95,10 +96,11 @@ function ScenarioStepContainer({ dictionary, item, handleStepItemChange, config,
       </div>
       <div style={{ margin: '1rem 0 1rem 0' }}>
         <strong>Expression</strong><br />
-        <Text code>Given <span>{item.expression}</span></Text><br />
+        <Text>Given <span>{item.expression}</span></Text><br />
+        <Expression expression={item.expression} action="response_path" resource={item.resource.name} argument={item.arguments}/>
       </div>
       <div>
-        <strong>Arguments</strong><br />
+        <strong>Expression Arguments</strong><br />
         {item.arguments.map((argument, index) => {
           return (
             <Form.Item key={index} style={{ width: '100%' }}>
