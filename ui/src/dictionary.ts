@@ -36,6 +36,34 @@ export function getResourceActions(dictionary: IDictionary, resourceType: string
    return handler.actions;
 }
 
+export function getActionArguments(dictionary: IDictionary, actionName: string, resourceType: string): Array<any> {
+   const handler = dictionary.handlers.find(handler => {
+      const selectedHandler = handler.resources.find((resource) => resource === resourceType);
+         
+        if (selectedHandler) return true;
+
+        return false;
+   });
+
+   const action = handler?.actions.find(action => {
+      console.log(action)
+      if (action.name === actionName) {
+         console.log("a")
+         return true;
+      }else{
+         return false;
+      }
+   })
+
+   console.log(action)
+
+   if (action !== undefined) {
+      return action.parameters
+   }
+
+   return ['test'];
+}
+
 
 
 

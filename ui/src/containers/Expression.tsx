@@ -6,7 +6,6 @@ const { Text, Link } = Typography;
 function Expression({
   expression,
   argument,
-  action,
   resource,
 }: any) {
 
@@ -39,7 +38,8 @@ function Expression({
     })
 
     setStep(copyParameters.join(' '))
-  }, [])
+  }, [argument, expression]
+  )
 
 
 

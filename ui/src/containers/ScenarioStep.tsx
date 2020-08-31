@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Input, Select, Form, Typography } from 'antd';
 import { IDictionary, IResource, IStep } from '../interfaces';
-import { getListOfResources, getResourceOptions, getResourceActions } from '../dictionary';
+import { getListOfResources, getResourceOptions, getResourceActions, getActionArguments } from '../dictionary';
 import Expression from './Expression'
 
 const { Option } = Select;
@@ -17,12 +17,6 @@ interface IProps {
 }
 
 function ScenarioStepContainer({ dictionary, item, handleStepItemChange, config, idx }: IProps) {
-  // let handleNameChange = (e) => {
-  //   let copy = Object.assign({}, item); 
-  //   copy.name = e.target.value;
-
-  //   handleResourceItemChange(item.name, copy);
-  // }
 
   let getListOfResourceConfig = (config) => {
     return config.resources.map((resource) => {
@@ -41,21 +35,44 @@ function ScenarioStepContainer({ dictionary, item, handleStepItemChange, config,
     handleStepItemChange(idx, copy);
   }
 
-  // let handleOptionChange = (e) => {
-  //   let copy = Object.assign({}, item);
-  //   if(!copy.options) copy.options = {};
+  let handleActionChange = (value) => {
+    let copy = Object.assign({}, item);
+    let action = value.split(',')
+    copy.action = {
+      name: action[0],
+      description: action[1],
+    }
+    copy.expression = action[2]
+    copy.arguments = getActionArguments(dictionary, item.action.name, item.resource.type).map((arg) => {
+      const obj = {
+        name: arg.name,
+        type: arg.type,
+        value: ''
+      }
+      return obj
+    })
 
-  //   copy.options[e.target.name] = e.target.value;
+    handleStepItemChange(idx, copy);
+  }
 
-  //   handleResourceItemChange(item.name, copy);
-  // }
+  let handleOptionChange = (e, index: number) => {
+    let copy = Object.assign({}, item);
+    let argument = getActionArguments(dictionary, item.action.name, item.resource.type)[index]
+    copy.arguments[index] = {
+      name: argument.name,
+      type: argument.type,
+      value: e.target.value
+    }
 
-  // let handleRemove = (e) => {
-  //   handleResourceItemChange(item.name, null);
-  // }
+    handleStepItemChange(idx, copy);
+  }
+
+  let handleRemove = (e) => {
+    handleStepItemChange(idx, null);
+  }
 
   let resourceTypeSelect = (
-    <Select onChange={handleTypeChange} placeholder="Resource type" defaultValue={item.resource.name}>
+    <Select onChange={handleTypeChange} placeholder="Resource type" style={{ width: '50%' }} defaultValue={item.resource.name}>
       {getListOfResourceConfig(config).map((resource, index) => {
         return (<Option
           key={index}
@@ -64,21 +81,19 @@ function ScenarioStepContainer({ dictionary, item, handleStepItemChange, config,
     </Select>
   );
 
-  console.log(getListOfResourceConfig(config))
-
   let actionSelect = (
-    <Select onChange={handleTypeChange} placeholder="Resource type" style={{ width: '100%' }} defaultValue={item.action}>
+    <Select onChange={handleActionChange} placeholder="Action" style={{ width: '50%' }} defaultValue={item.action.name}>
       {getResourceActions(dictionary, item.resource.type).map((action, index) => {
         return (<Option
           key={index}
-          value={action.name} >{action.name}</Option>);
+          value={`${action.name}, ${action.description}, ${action.expressions[0]}`}>{action.name}</Option>);
       })}
     </Select>
   )
 
   return (
     <>
-
+      <h3>Step {idx+1}</h3>
       <Form.Item label="">
         <Input.Group compact>
           <Form.Item
@@ -97,11 +112,11 @@ function ScenarioStepContainer({ dictionary, item, handleStepItemChange, config,
       <div style={{ margin: '1rem 0 1rem 0' }}>
         <strong>Expression</strong><br />
         <Text>Given <span>{item.expression}</span></Text><br />
-        <Expression expression={item.expression} action="response_path" resource={item.resource.name} argument={item.arguments}/>
+        <Expression expression={item.expression} resource={item.resource.name} argument={item.arguments}/>
       </div>
       <div>
         <strong>Expression Arguments</strong><br />
-        {item.arguments.map((argument, index) => {
+        {item.arguments.length !== 0 && getActionArguments(dictionary, item.action.name, item.resource.type).map((argument, index) => {
           return (
             <Form.Item key={index} style={{ width: '100%' }}>
               <label>${argument.name}</label>
@@ -109,27 +124,28 @@ function ScenarioStepContainer({ dictionary, item, handleStepItemChange, config,
                 argument.type === 'json' ?
                   <TextArea
                     name={argument.name}
-                    // onChange={handleOptionChange}   
+                    onChange={(event) => handleOptionChange(event, index)}   
                     placeholder={argument.name}
-                    value={argument.value}
+                    value={(item.arguments && item.arguments[index]) ? item.arguments[index].value : ''}
                     autoSize={{ minRows: 3  }}
                   />
                   :
                   <Input
                     name={argument.name}
-                    // onChange={handleOptionChange}   
+                    onChange={(event) => handleOptionChange(event, index)}   
                     placeholder={argument.name}
-                    value={argument.value}
+                    value={(item.arguments && item.arguments[index]) ? item.arguments[index].value : ''}
                   />
               }
-              <small>{argument.type}</small>
+              <small>type: {argument.type}</small><br />
+              <small>description: {argument.description}</small>
             </Form.Item>
           );
         })}
       </div>
-      {/* <td valign="top" style={{ padding: '10px' }}>
-        <a href="/#">Remove</a>
-      </td> */}
+      <td valign="top" style={{ padding: '10px' }}>
+        <a onClick={handleRemove} href="/#">Remove Step</a>
+      </td>
     </>
   );
 }

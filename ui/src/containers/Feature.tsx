@@ -52,17 +52,16 @@ function FeatureContainer({ dictionary, config, setFeature, feature }:IProps) {
   });
   }
 
-  // const handleAddResourceItem = () => {
-  //   const newResourceItem = {
-  //       name: `new-${config.resources.length}`,
-  //       type: 'wiremock',
-  //       options: {}
-  //   }; 
-  //   setConfig({
-  //       features_path: config.features_path,
-  //       resources: [...config.resources, newResourceItem]
-  //   });
-  // }
+  const handleAddScenarioItem = () => {
+    const newResourceItem = {
+        title: '',
+        steps: [],
+    }; 
+    setFeature({
+      title: feature.title,
+      scenarios: [...feature.scenarios, newResourceItem]
+    });
+  }
   
   return (
     <div className="App">
@@ -104,7 +103,7 @@ function FeatureContainer({ dictionary, config, setFeature, feature }:IProps) {
                   <Button
                     style={{ height: '60px' }}
                     type="dashed"
-                    // onClick={handleAddResourceItem}
+                    onClick={handleAddScenarioItem}
                     block
                   >
                     <PlusOutlined /> Add new scenario

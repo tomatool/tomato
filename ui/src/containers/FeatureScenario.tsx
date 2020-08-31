@@ -1,5 +1,6 @@
 import React from 'react';
-import { Input, Select, Form } from 'antd';
+import { Input, Select, Form, Button } from 'antd';
+import { PlusOutlined, CloseCircleTwoTone } from '@ant-design/icons';
 import { IDictionary, IScenario, IStep } from '../interfaces';
 import { getListOfResources, getResourceOptions, getResourceActions } from '../dictionary';
 import ScenarioStepContainer from './ScenarioStep'
@@ -47,36 +48,46 @@ function FeatureScenarioContainer({ dictionary, item, handleScenarioItemChange, 
 
     handleScenarioItemChange(idx, copy);
   }
-  // let handleTypeChange = (value) => {
-  //   let copy = Object.assign({}, item); 
-  //   copy.type = value;
-  //   copy.options = {};
 
-  //   handleResourceItemChange(item.name, copy);
-  // }
+  let handleRemove = (e) => {
+    handleScenarioItemChange(idx, null);
+  }
 
-  // let handleOptionChange = (e) => {
-  //   let copy = Object.assign({}, item);
-  //   if(!copy.options) copy.options = {};
+  const handleAddStepItem = () => {
+    const newResourceItem = {
+      resource: {
+        type: "wiremock",
+        name: "tomato-wiremock"
+      },
+      action: {
+        name: "response_path",
+        description: "set a response code and body for a given path for wiremock"
+      },
+      expression: "set $resource with path $path response code to $code and response body $body",
+      arguments: [
+        {
+          "name": "path",
+          "type": "string",
+          "value": ""
+        },
+        {
+          "name": "code",
+          "type": "number",
+          "value": ""
+        },
+        {
+          "name": "body",
+          "type": "json",
+          "value": ""
+        }
+      ]
+    }
 
-  //   copy.options[e.target.name] = e.target.value;
+    let copy = Object.assign({}, item);
+    copy.steps = [...copy.steps, newResourceItem]
 
-  //   handleResourceItemChange(item.name, copy);
-  // }
-
-  // let handleRemove = (e) => {
-  //   handleResourceItemChange(item.name, null);
-  // }
-
-  // let resourceTypeSelect = (
-  //   <Select onChange={handleTypeChange} placeholder="Resource type" defaultValue={item.type}>
-  //     {getListOfResources(dictionary).map((resource, index) => {
-  //         return (<Option 
-  //                   key={index} 
-  //                   value={resource} >{resource}</Option>);
-  //     })}
-  //   </Select>
-  // );
+    handleScenarioItemChange(idx, copy);
+  }
 
 
   return (
@@ -100,7 +111,7 @@ function FeatureScenarioContainer({ dictionary, item, handleScenarioItemChange, 
       </td>
       <td style={{ padding: '10px', width: "50rem" }}>
         <strong>Scenario Steps</strong><br />
-        <div style={{marginTop: "1rem"}}>
+        <div style={{ marginTop: "1rem" }}>
           {item.steps.map((element, index) => {
             return (
               <ScenarioStepContainer
@@ -113,25 +124,20 @@ function FeatureScenarioContainer({ dictionary, item, handleScenarioItemChange, 
               />
             );
           })}
-        </div>
+        </div><br />
+        <Form.Item>
+          <Button
+            style={{ height: '60px' }}
+            type="dashed"
+            onClick={handleAddStepItem}
+            block
+          >
+            <PlusOutlined /> Add new step
+          </Button>
+        </Form.Item>
       </td>
-      {/* <td valign="top" style={{ padding: '10px'}}>
-          {getResourceOptions(dictionary, item.type).map((option, index) => {
-            return (
-              <Form.Item key={index} style={{ width: '100%' }}>
-                <Input
-                  name={option.name}
-                  onChange={handleOptionChange}   
-                  placeholder={option.name}
-                  value={(item.options && item.options[option.name]) ? item.options[option.name] : ''}
-                  />
-                <small>{option.description}</small>
-              </Form.Item>
-            );
-          })}
-        </td> */}
       <td valign="top" style={{ padding: '10px' }}>
-        <a href="/#">Remove Scenario</a>
+        <a onClick={handleRemove} href="/#">Remove Scenario</a>
       </td>
     </tr>
   );

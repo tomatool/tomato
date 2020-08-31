@@ -39,7 +39,7 @@ export interface IStep {
    resource: any;
    expression: any;
    arguments: Array<any>;
-   action?: string;
+   action: any;
 }
 
 export interface IScenario {
