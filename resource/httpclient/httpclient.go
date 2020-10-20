@@ -96,7 +96,10 @@ func (c *Client) Ready() error {
 
 func (c *Client) Reset() error {
 	c.lastResponse = nil
-	c.requestHeaders = defaultHeaders
+	c.requestHeaders = make(http.Header)
+	for key, val := range defaultHeaders {
+		c.requestHeaders[key] = val
+	}
 	return nil
 }
 
