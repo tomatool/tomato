@@ -10,6 +10,8 @@ github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 ## explicit
 github.com/alecthomas/units
+# github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
+github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
@@ -62,9 +64,13 @@ github.com/olekukonko/tablewriter
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/russross/blackfriday/v2 v2.0.1
+github.com/russross/blackfriday/v2
 # github.com/sergi/go-diff v1.0.0
 ## explicit
 github.com/sergi/go-diff/diffmatchpatch
+# github.com/shurcooL/sanitized_anchor_name v1.0.0
+github.com/shurcooL/sanitized_anchor_name
 # github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 ## explicit
 github.com/streadway/amqp
@@ -73,7 +79,9 @@ github.com/streadway/amqp
 github.com/stretchr/testify/assert
 # github.com/urfave/cli v1.20.0
 ## explicit
-github.com/urfave/cli
+# github.com/urfave/cli/v2 v2.3.0
+## explicit
+github.com/urfave/cli/v2
 # github.com/yudai/gojsondiff v1.0.0
 ## explicit
 github.com/yudai/gojsondiff
@@ -95,6 +103,6 @@ google.golang.org/appengine/cloudsql
 gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 ## explicit
-# gopkg.in/yaml.v2 v2.2.2
+# gopkg.in/yaml.v2 v2.2.3
 ## explicit
 gopkg.in/yaml.v2
