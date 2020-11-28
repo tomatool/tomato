@@ -1,6 +1,6 @@
 module github.com/tomatool/tomato
 
-go 1.14
+go 1.15
 
 require (
 	github.com/DATA-DOG/godog v0.7.13
@@ -26,7 +26,8 @@ require (
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/stretchr/testify v1.4.0
-	github.com/urfave/cli v1.20.0
+	github.com/urfave/cli v1.20.0 // indirect
+	github.com/urfave/cli/v2 v2.3.0
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
@@ -35,5 +36,5 @@ require (
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.3
 )
