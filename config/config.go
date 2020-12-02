@@ -12,17 +12,17 @@ import (
 )
 
 type Config struct {
-	Randomize        bool        `yaml:"randomize"`
-	StopOnFailure    bool        `yaml:"stop_on_failure"`
-	FeaturesPaths    []string    `yaml:"features_path"`
-	ReadinessTimeout string      `yaml:"readiness_timeout"`
-	Resources        []*Resource `yaml:"resources"`
+	Randomize        bool        `json:"randomize" yaml:"randomize"`
+	StopOnFailure    bool        `json:"stop_on_failure" yaml:"stop_on_failure"`
+	FeaturesPaths    []string    `json:"feature_paths" yaml:"features_path"`
+	ReadinessTimeout string      `json:"readiness_timeout" yaml:"readiness_timeout"`
+	Resources        []*Resource `json:"resources" yaml:"resources"`
 }
 
 type Resource struct {
-	Name    string            `yaml:"name"`
-	Type    string            `yaml:"type"`
-	Options map[string]string `yaml:"options"`
+	Name    string            `json:"name" yaml:"name"`
+	Type    string            `json:"type" yaml:"type"`
+	Options map[string]string `json:"options" yaml:"options"`
 }
 
 func Retrieve(configFile string) (*Config, error) {

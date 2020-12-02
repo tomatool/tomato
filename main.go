@@ -22,8 +22,6 @@ Options:
 `
 
 func main() {
-	// cli.AppHelpTemplate = AppHelpTemplate
-
 	app := cli.NewApp()
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
@@ -35,6 +33,7 @@ func main() {
 	app.Commands = []*cli.Command{
 		cmd.InitCmd,
 		cmd.RunCmd,
+		cmd.UICmd,
 	}
 
 	app.Before = func(ctx *cli.Context) error {
