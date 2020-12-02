@@ -27,28 +27,28 @@ var (
 )
 
 type Type struct {
-	Expression string `yaml:"expression"`
+	Expression string `json:"expression" yaml:"expression"`
 }
 
 type Parameter struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
-	Type        string `yaml:"type"`
+	Name        string `json:"name" yaml:"name"`
+	Description string `json:"description" yaml:"description"`
+	Type        string `json:"type" yaml:"type"`
 }
 
 type Option struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
-	Type        string `yaml:"type"`
+	Name        string `json:"name" yaml:"name"`
+	Description string `json:"description" yaml:"description"`
+	Type        string `json:"type" yaml:"type"`
 }
 
 type Action struct {
-	Name        string      `yaml:"name"`
-	Handle      string      `yaml:"handle"`
-	Description string      `yaml:"description"`
-	Expressions []string    `yaml:"expressions"`
-	Parameters  []Parameter `yaml:"parameters"`
-	Examples    []string    `yaml:"examples"`
+	Name        string      `json:"name" yaml:"name"`
+	Handle      string      `json:"handle" yaml:"handle"`
+	Description string      `json:"description"yaml:"description"`
+	Expressions []string    `json:"expressions" yaml:"expressions"`
+	Parameters  []Parameter `json:"parameters" yaml:"parameters"`
+	Examples    []string    `json:"examples" yaml:"examples"`
 }
 
 func (a *Action) Expr() []string {
@@ -91,11 +91,11 @@ func (a *Action) Param(name string) *Parameter {
 }
 
 type Handler struct {
-	Name        string   `yaml:"name"`
-	Resources   []string `yaml:"resources"`
-	Description string   `yaml:"description"`
-	Options     []Option `yaml:"options"`
-	Actions     []Action `yaml:"actions"`
+	Name        string   `json:"name" yaml:"name"`
+	Resources   []string `json:"resources" yaml:"resources"`
+	Description string   `json:"description" yaml:"description"`
+	Options     []Option `json:"options" yaml:"options"`
+	Actions     []Action `json:"actions" yaml:"actions"`
 }
 
 func (r *Handler) Action(name string) *Action {
@@ -111,7 +111,7 @@ func (r *Handler) Action(name string) *Action {
 }
 
 type Dictionary struct {
-	Handlers []Handler `yaml:"handlers"`
+	Handlers []Handler `json:"handlers" yaml:"handlers"`
 }
 
 func Retrieve(filepath string) (*Dictionary, error) {

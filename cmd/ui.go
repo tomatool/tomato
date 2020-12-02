@@ -2,12 +2,18 @@ package cmd
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
+	"github.com/tomatool/tomato/dictionary"
 	"github.com/urfave/cli/v2"
 )
 
@@ -31,9 +37,92 @@ func uiProxyMux(uiProxyURL string) http.Handler {
 	}
 }
 
-func getConfigMux(config *config.Config) http.Handler {
+func getDirPath(str string) string {
+	l := strings.Split(str, "/")
+	l = l[:len(l)-1]
+	return strings.Join(l, "/")
+}
+
+func visit(files *[]string) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if filepath.Ext(path) != ".feature" {
+			return nil
+		}
+		*files = append(*files, path)
+		return nil
+	}
+}
+
+func unique(s []string) []string {
+	unique := make(map[string]struct{}, len(s))
+	us := make([]string, len(unique))
+	for _, elem := range s {
+		if len(elem) != 0 {
+			if _, ok := unique[elem]; !ok {
+				us = append(us, elem)
+				unique[elem] = struct{}{}
+			}
+		}
+	}
+	return us
+}
+
+func getFiles(basePath string, dirs []string) ([]string, error) {
+	var result []string
+	for _, dir := range dirs {
+		var files []string
+		err := filepath.Walk(basePath+"/"+dir, visit(&files))
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, files...)
+	}
+
+	re, err := regexp.Compile("/+")
+	if err != nil {
+		return nil, err
+	}
+	for i := range result {
+		result[i] = re.ReplaceAllLiteralString(result[i], "/")
+	}
+	return unique(result), nil
+}
+
+func getConfigMux(configPath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		configDirPath := getDirPath(configPath)
+
+		config, err := config.Retrieve(configPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		files, err := getFiles(configDirPath, config.FeaturesPaths)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		config.FeaturesPaths = files
 		if err := json.NewEncoder(w).Encode(config); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+}
+
+func getDictionaryMux(dictionaryPath string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		dict, err := dictionary.Retrieve(dictionaryPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(dict); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
@@ -44,6 +133,7 @@ var UIInputs struct {
 	ProxyEnabled   bool
 	ProxyURL       string
 	StaticFilePath string
+	DictionaryPath string
 }
 
 var UICmd *cli.Command = &cli.Command{
@@ -72,6 +162,12 @@ var UICmd *cli.Command = &cli.Command{
 			Value:       "http://localhost:3000",
 			Hidden:      true,
 		},
+		&cli.StringFlag{
+			Name:        "dictionary-path",
+			Destination: &UIInputs.DictionaryPath,
+			Usage:       "Tomato dictionary path.",
+			Value:       "dictionary.yml",
+		},
 	},
 	Action: func(ctx *cli.Context) error {
 		var configPath string
@@ -83,22 +179,19 @@ var UICmd *cli.Command = &cli.Command{
 			return errors.New("This command takes one argument: <config path>\nFor additional help try 'tomato ui -help'")
 		}
 
-		conf, err := config.Retrieve(configPath)
-		if err != nil {
-			return errors.Wrap(err, "Failed to retrieve config")
-		}
-
 		mux := http.NewServeMux()
 		if UIInputs.ProxyEnabled {
 			mux.Handle("/", uiProxyMux(UIInputs.ProxyURL))
 		} else {
 			mux.Handle("/", uiFileServerMux(UIInputs.StaticFilePath))
 		}
-		mux.Handle("/api/config", getConfigMux(conf))
+		mux.Handle("/api/config", getConfigMux(configPath))
+		mux.Handle("/api/dictionary", getDictionaryMux(UIInputs.DictionaryPath))
 		srv := &http.Server{
 			Addr:    UIInputs.Addr,
 			Handler: mux,
 		}
+		log.Printf("Server run on: %s", srv.Addr)
 		return srv.ListenAndServe()
 	},
 }
