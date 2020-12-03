@@ -1,9 +1,9 @@
-import React, { FC } from 'react';
+import React, { FC, useState, useEffect } from 'react';
+import ksuid from 'ksuid';
 import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
 import Link from '@material-ui/core/Link';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -45,8 +45,38 @@ const resourceOptions = (dictionary: Dictionary): Record<string, string[]> => {
   return result as Record<string, string[]>;
 }
 
-const ConfigView: FC<{ config: Config, dictionary: Dictionary }> = ({ config, dictionary }) => {
+const ConfigView: FC<{ config: Config, dictionary: Dictionary }> = (props) => {
   const classes = useStyles();
+
+  props.config.resources = props.config.resources.map((r) => {
+    return { ...r, ...{ uuid: ksuid.randomSync().string } }
+  });
+  const [config, setConfig] = useState(props.config);
+  const [newUUID, setNewUUID] = useState(ksuid.randomSync().string);
+
+  const onSave = (uuid: string, newConfigResource: ConfigResource) => {
+    let newResources = config.resources.map(r => {
+      if (r.uuid === uuid) {
+        return newConfigResource;
+      }
+      return r
+    });
+    if (uuid === newUUID) {
+      newResources.push(newConfigResource)
+      setNewUUID(ksuid.randomSync().string);
+    }
+    setConfig({
+      ...config, ...{
+        resources: newResources
+      }
+    })
+  }
+
+  const onDelete = (uuid: string) => {
+    setConfig({
+      ...config, ...{ resources: (config.resources.filter(r => r.uuid!==uuid) as ConfigResource[]).filter(r => r !== undefined) }
+    })
+  }
 
   return (
     <Container maxWidth="lg">
@@ -57,34 +87,47 @@ const ConfigView: FC<{ config: Config, dictionary: Dictionary }> = ({ config, di
         <div className={classes.demo}>
           <List dense={true}>
             {config.feature_paths?.map(path => (
-              <Link href={`#${path}`} color="inherit">
-              <ListItem>
+              <Link key={path} href={`#${path}`} color="inherit">
+                <ListItem>
                   <ListItemIcon className={classes.icon}>
                     <InsertDriveFile />
                   </ListItemIcon>
                   <ListItemText primary={path} />
-              </ListItem>
+                </ListItem>
               </Link>
             ))}
           </List>
         </div>
       </Grid>
-            <br/> 
+      <br />
       <Typography variant="h5" component="h5" gutterBottom>
         Resources
       </Typography>
       <Grid container spacing={2}>
-        {config.resources?.map(r => {
+        {config.resources?.map((r, index) => {
           return (
-            <Grid item md={3} xs={4}>
-              <ConfigResourceView 
-                resource={r} 
-                resourceOptions={resourceOptions(dictionary)} 
-                resourceTypes={resourceTypes(dictionary)} 
-                onSave={(r: ConfigResource) => console.log(r)} />
+            <Grid key={index} item md={3} xs={4}>
+              <ConfigResourceView
+                uuid={r.uuid}
+                resource={r}
+                editable={false}
+                resourceOptions={resourceOptions(props.dictionary)}
+                resourceTypes={resourceTypes(props.dictionary)}
+                onSave={onSave}
+                onDelete={onDelete} />
             </Grid>
           );
         })}
+        <Grid key={newUUID} item md={3} xs={4}>
+              <ConfigResourceView
+                uuid={newUUID}
+                editable={true}
+                resource={{uuid: newUUID, name: '', type: 'httpclient', options: {}} as ConfigResource}
+                resourceOptions={resourceOptions(props.dictionary)}
+                resourceTypes={resourceTypes(props.dictionary)}
+                onSave={onSave}
+                onDelete={onDelete} />
+            </Grid>
       </Grid>
     </Container>
   );

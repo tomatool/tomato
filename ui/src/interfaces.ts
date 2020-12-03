@@ -1,4 +1,5 @@
 export interface ConfigResource {
+    uuid: string;
     name: string;
     type: string;
     options: Record<string, string>;

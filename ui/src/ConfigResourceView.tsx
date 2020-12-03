@@ -31,13 +31,27 @@ const useStyles = makeStyles({
     }
 });
 
-const ConfigResourceView: FC<{ resource: ConfigResource, resourceTypes: string[], resourceOptions: Record<string, string[]>, onSave: Function }> = (props) => {
+const ConfigResourceView: FC<{
+    uuid: string,
+    editable: boolean,
+    resource: ConfigResource,
+    resourceTypes: string[],
+    resourceOptions: Record<string, string[]>,
+    onSave: Function,
+    onDelete: Function,
+}> = (props) => {
     const classes = useStyles();
     const [resource, setResource] = useState(props.resource);
-    const [editable, setEditable] = useState(false);
-    
+    const [editable, setEditable] = useState(props.editable);
+
+    useEffect(() => setResource(props.resource), [props.resource]);
+
     const onSave = () => {
-        props.onSave(resource);
+        props.onSave(props.uuid, resource);
+        setEditable(false);
+    }
+    const onDelete = () => {
+        props.onDelete(props.uuid);
         setEditable(false);
     }
 
@@ -51,15 +65,15 @@ const ConfigResourceView: FC<{ resource: ConfigResource, resourceTypes: string[]
     }
 
     return (
-        <Card className={classes.root} style={editable ? {minHeight: 308} : {}} variant="outlined">
+        <Card className={classes.root} style={editable ? { minHeight: 308 } : {}} variant="outlined">
             <CardContent>
                 {!editable ? (
                     <Typography className={classes.title} color="textSecondary" gutterBottom>{resource.type}</Typography>
                 ) :
-                    <div style={{float:'right'}}>
+                    <div style={{ float: 'right' }}>
                         <InputLabel style={{ fontSize: 12 }}>Type</InputLabel>
                         <Select onChange={onTypeChange} value={resource.type}>
-                            {props.resourceTypes?.map((r) => <MenuItem value={r}>{r}</MenuItem>)}
+                            {props.resourceTypes?.map((r, index) => <MenuItem key={index} value={r}>{r}</MenuItem>)}
                         </Select>
                     </div>
                 }
@@ -70,22 +84,23 @@ const ConfigResourceView: FC<{ resource: ConfigResource, resourceTypes: string[]
 
 
                 <pre style={{ padding: 0, marginTop: 10, fontSize: 12 }}>
-                <div>
-                    {props.resourceOptions[resource.type].map(key => (
-                        <div>
-                            {!editable && `${key}: `}
-                            {!editable ? 
-                                (resource.options && resource.options[key] !== null ? resource.options[key]: '') : 
-                                <TextField style={{ fontSize: 9 }} size="small" label={key} value={resource.options[key]} onChange={onOptionChange(key)} />}
-                        </div>
-                    ))}
-                </div>
+                    <div>
+                        {props.resourceOptions[resource.type].map((key, index) => (
+                            <div key={index}>
+                                {!editable && `${key}: `}
+                                {!editable ?
+                                    (resource.options && resource.options[key] !== null ? resource.options[key] : '') :
+                                    <TextField style={{ fontSize: 9 }} size="small" label={key} value={resource.options[key]} onChange={onOptionChange(key)} />}
+                            </div>
+                        ))}
+                    </div>
                 </pre>
 
             </CardContent>
             <CardActions className={classes.actions}>
                 <Button size="small" onClick={() => { setEditable(!editable) }}>{!editable ? 'Edit' : 'Cancel'}</Button>
                 {editable && (<Button size="small" variant="contained" color="primary" onClick={onSave}>Save</Button>)}
+                {editable && (<Button size="small" style={{ float: 'right' }} variant="contained" color="secondary" onClick={onDelete}>Delete</Button>)}
             </CardActions>
         </Card>
     );

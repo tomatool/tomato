@@ -2764,6 +2764,11 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
 
+base-convert-int-array@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/base-convert-int-array/-/base-convert-int-array-1.0.1.tgz#5b4ddbfa72d2d3b5f75dd86cd32fe3dc8e7e81fe"
+  integrity sha512-NWqzaoXx8L/SS32R+WmKqnQkVXVYl2PwNJ68QV3RAlRRL1uV+yxJT66abXI1cAvqCXQTyXr7/9NN4Af90/zDVw==
+
 base64-js@^1.0.2:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
@@ -6995,6 +7000,13 @@ kleur@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
+
+ksuid@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ksuid/-/ksuid-2.0.0.tgz#83618ce67b235bb5f41c04cb914a2605e1ffca5a"
+  integrity sha512-BM5UU56FhzqQN6v83X8JSKWktl0gAYRovV0DnO/mXpuOs/SFMTPP7fr7ViNtzpg3iV4pnk/6pChuLhOkKBZ59A==
+  dependencies:
+    base-convert-int-array "^1.0.1"
 
 language-subtag-registry@~0.3.2:
   version "0.3.21"
