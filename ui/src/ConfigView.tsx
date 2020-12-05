@@ -80,6 +80,7 @@ const ConfigView: FC<{ config: Config, dictionary: Dictionary }> = (props) => {
 
   return (
     <Container maxWidth="lg">
+      <img src="/logo192.png" />
       <Typography variant="h5" component="h5" gutterBottom>
         Feature Paths
       </Typography>
