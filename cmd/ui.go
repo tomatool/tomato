@@ -11,9 +11,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cucumber/gherkin-go"
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/dictionary"
+	"github.com/tomatool/tomato/feature"
 	"github.com/urfave/cli/v2"
 )
 
@@ -128,6 +130,45 @@ func getDictionaryMux(dictionaryPath string) http.Handler {
 	})
 }
 
+func getFeatureMux(dictionaryPath string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		f, err := os.Open(r.FormValue("path"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer f.Close()
+
+		doc, err := gherkin.ParseGherkinDocument(f)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		dict, err := dictionary.Retrieve(dictionaryPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		p := feature.Parser{Dictionary: dict}
+		feature, err := p.Parse(doc)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(feature); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+}
+
 var UIInputs struct {
 	Addr           string
 	ProxyEnabled   bool
@@ -187,6 +228,7 @@ var UICmd *cli.Command = &cli.Command{
 		}
 		mux.Handle("/api/config", getConfigMux(configPath))
 		mux.Handle("/api/dictionary", getDictionaryMux(UIInputs.DictionaryPath))
+		mux.Handle("/api/feature", getFeatureMux(UIInputs.DictionaryPath))
 		srv := &http.Server{
 			Addr:    UIInputs.Addr,
 			Handler: mux,
