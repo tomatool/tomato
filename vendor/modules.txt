@@ -12,6 +12,9 @@ github.com/alecthomas/template/parse
 github.com/alecthomas/units
 # github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
 github.com/cpuguy83/go-md2man/v2/md2man
+# github.com/cucumber/gherkin-go v5.1.0+incompatible
+## explicit
+github.com/cucumber/gherkin-go
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
@@ -66,6 +69,9 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
+# github.com/schollz/closestmatch v2.1.0+incompatible
+## explicit
+github.com/schollz/closestmatch
 # github.com/sergi/go-diff v1.0.0
 ## explicit
 github.com/sergi/go-diff/diffmatchpatch
@@ -77,8 +83,6 @@ github.com/streadway/amqp
 # github.com/stretchr/testify v1.4.0
 ## explicit
 github.com/stretchr/testify/assert
-# github.com/urfave/cli v1.20.0
-## explicit
 # github.com/urfave/cli/v2 v2.3.0
 ## explicit
 github.com/urfave/cli/v2
@@ -94,6 +98,8 @@ github.com/yudai/golcs
 # golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
 ## explicit
 # golang.org/x/sys v0.0.0-20190515120540-06a5c4944438
+## explicit
+# golang.org/x/text v0.3.2
 ## explicit
 # google.golang.org/appengine v1.5.0
 ## explicit
