@@ -1,4 +1,4 @@
-# 🍅 tomato - behavioral testing tool kit
+# 🍅 tomato - functional testing tool kit
 ![CircleCI](https://circleci.com/gh/tomatool/tomato/tree/master.svg?style=shield)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tomatool/tomato)](https://goreportcard.com/report/github.com/tomatool/tomato)
 [![GoDoc](https://godoc.org/github.com/tomatool/tomato?status.svg)](https://godoc.org/github.com/tomatool/tomato)
