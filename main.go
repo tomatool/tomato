@@ -11,7 +11,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/tomatool/tomato/config"
-	"github.com/tomatool/tomato/tomato"
+	"github.com/tomatool/tomato/wrapper"
 )
 
 // AppHelpTemplate is the text template for the Default help topic.
@@ -80,7 +80,7 @@ func main() {
 			conf.FeaturesPaths = strings.Split(featuresPath, ",")
 		}
 
-		t := tomato.New(conf, log)
+		t := wrapper.New(conf, log)
 
 		if err := t.Verify(); err != nil {
 			return errors.Wrap(err, "Verification failed")
