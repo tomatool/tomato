@@ -2,12 +2,14 @@ package httpclient
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"github.com/tomatool/tomato/config"
 	"github.com/tomatool/tomato/stub"
@@ -47,21 +49,21 @@ func New(cfg *config.Resource) (*Client, error) {
 		case "timeout":
 			timeout, err := time.ParseDuration(val)
 			if err != nil {
-				return nil, errors.New("timeout: get http client, invalid params value : " + err.Error())
+				return nil, fmt.Errorf("timeout: get http client, invalid params value : %w", err)
 			}
 			client.httpClient.Timeout = timeout
 		case "headers":
 			for _, h := range strings.Split(val, ";") {
 				s := strings.Split(h, "=")
 				if len(s) != 2 {
-					return nil, errors.New("httpclient: invalid headers params, expecting `[key1]=[value1];[key2]=[value2]` got `" + val + "`")
+					return nil, fmt.Errorf("httpclient: invalid headers params, expecting `[key1]=[value1];[key2]=[value2]` got `%s`", val)
 				}
 				defaultHeaders.Set(strings.TrimSpace(s[0]), strings.TrimSpace(s[1]))
 			}
 			client.requestHeaders = defaultHeaders
 		case "readiness_check":
 		default:
-			return nil, errors.New(key + ": invalid params")
+			return nil, fmt.Errorf("%s: invalid params", key)
 		}
 	}
 
@@ -129,6 +131,16 @@ func (c *Client) RequestFromFile(method, path, fileName string) error {
 }
 
 func (c *Client) Request(method, path string, body []byte) error {
+	if strings.HasPrefix(path, "ws://") {
+		c, _, err := websocket.DefaultDialer.Dial(path, nil)
+		if err != nil {
+			return fmt.Errorf("failed to dial websocket: %w", err)
+		}
+		if err := c.WriteMessage(websocket.TextMessage, body); err != nil {
+			return fmt.Errorf("failed to write a message")
+		}
+	}
+
 	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
 		return err
