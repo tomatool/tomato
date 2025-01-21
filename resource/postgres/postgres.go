@@ -44,7 +44,14 @@ func (d *PostgreSQL) Reset() error {
 		query  string
 	)
 
-	query = `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`
+	// Exclude the 'schema_migrations' table
+	query = `
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema='public'
+  AND table_type='BASE TABLE'
+  AND table_name <> 'schema_migrations'
+`
 	if err := d.db.Select(&tables, query); err != nil {
 		return err
 	}
@@ -56,7 +63,8 @@ func (d *PostgreSQL) Reset() error {
 	defer tx.Rollback()
 
 	for _, table := range tables {
-		if _, err := tx.Exec(`TRUNCATE TABLE ` + table + ` RESTART IDENTITY CASCADE`); err != nil {
+		_, err := tx.Exec(`TRUNCATE TABLE "` + table + `" RESTART IDENTITY CASCADE`)
+		if err != nil {
 			return err
 		}
 	}
