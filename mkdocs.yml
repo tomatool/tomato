@@ -1,4 +1,4 @@
-site_name: tomato
+site_name: 🍅 tomato
 site_description: Behavioral testing tool for Go with BDD support
 site_author: tomato contributors
 repo_url: https://github.com/tomatool/tomato
@@ -41,8 +41,6 @@ theme:
     - content.code.annotate
   icon:
     repo: fontawesome/brands/github
-  logo: images/tomato.svg
-  favicon: images/tomato.svg
 
 markdown_extensions:
   - pymdownx.highlight:
