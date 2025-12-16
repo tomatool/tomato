@@ -38,6 +38,10 @@ inputs:
     description: 'Hide application logs during startup'
     required: false
     default: 'false'
+  skip-validate:
+    description: 'Skip configuration validation before running tests'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -94,6 +98,14 @@ runs:
 
         echo "Tomato installed successfully"
         tomato version
+
+    - name: Validate Configuration
+      if: inputs.skip-validate != 'true'
+      shell: bash
+      run: |
+        CONFIG="${{ inputs.config }}"
+        echo "Validating configuration: ${CONFIG}"
+        tomato validate --config "${CONFIG}" --plain
 
     - name: Run Tomato Tests
       shell: bash
