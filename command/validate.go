@@ -187,10 +187,11 @@ func (v *Validator) loadStepPatterns() {
 	for _, cat := range categories {
 		for _, step := range cat.Steps {
 			// Convert pattern to regex - replace {resource} with a capture group
+			// Pattern already has quotes: "{resource}" -> "[^"]+"
 			pattern := step.Pattern
-			pattern = strings.ReplaceAll(pattern, "{resource}", `"([^"]+)"`)
-			// Escape special regex chars that aren't already part of the pattern
-			if re, err := regexp.Compile("(?i)^" + pattern + "$"); err == nil {
+			pattern = strings.ReplaceAll(pattern, "{resource}", `[^"]+`)
+			// The patterns already have ^ and $ anchors, just compile
+			if re, err := regexp.Compile("(?i)" + pattern); err == nil {
 				v.stepPatterns = append(v.stepPatterns, re)
 			}
 		}
@@ -354,12 +355,25 @@ func (v *Validator) validateContainers() {
 func (v *Validator) validateFeatureFiles() {
 	var featureFiles []string
 
+	// Get config directory for resolving relative paths
+	configDir := filepath.Dir(v.configPath)
+
 	for _, path := range v.config.Features.Paths {
-		files, _ := filepath.Glob(filepath.Join(path, "*.feature"))
-		featureFiles = append(featureFiles, files...)
-		// Also check subdirectories
-		subFiles, _ := filepath.Glob(filepath.Join(path, "**", "*.feature"))
-		featureFiles = append(featureFiles, subFiles...)
+		// Resolve path relative to config directory
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(configDir, path)
+		}
+
+		// Walk directory recursively to find all .feature files
+		filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
+			if err != nil {
+				return nil // Skip errors
+			}
+			if !info.IsDir() && strings.HasSuffix(filePath, ".feature") {
+				featureFiles = append(featureFiles, filePath)
+			}
+			return nil
+		})
 	}
 
 	if len(featureFiles) == 0 {
@@ -368,7 +382,7 @@ func (v *Validator) validateFeatureFiles() {
 			Item:       "(none)",
 			Status:     "warning",
 			Message:    "no feature files found",
-			Suggestion: "Create .feature files in your features directory",
+			Suggestion: fmt.Sprintf("Create .feature files in: %s", strings.Join(v.config.Features.Paths, ", ")),
 		})
 		return
 	}
