@@ -4,7 +4,7 @@ This guide will help you set up Tomato and run your first behavioral test.
 
 ## Prerequisites
 
-- [Go 1.25+](https://go.dev/dl/) (for installation)
+- [Go 1.24+](https://go.dev/dl/) (for installation)
 - [Docker](https://docs.docker.com/get-docker/) (for running containers)
 
 ## Installation
