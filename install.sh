@@ -1,12 +1,27 @@
 #!/bin/sh
 # Tomato Installation Script
 # Usage: curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh -s -- --rc
 
 set -e
 
 REPO="tomatool/tomato"
 BINARY_NAME="tomato"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+USE_RC=false
+
+# Parse arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --rc)
+            USE_RC=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 # Colors
 RED='\033[0;31m'
@@ -59,11 +74,25 @@ detect_platform() {
 
 # Get latest release version
 get_latest_version() {
-    VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-    if [ -z "$VERSION" ]; then
-        error "Failed to get latest version"
+    if [ "$USE_RC" = true ]; then
+        # Get latest RC (pre-release)
+        VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases" | \
+            grep '"tag_name"' | \
+            sed -E 's/.*"([^"]+)".*/\1/' | \
+            grep -E '\-rc\.[0-9]+$' | \
+            head -n1)
+        if [ -z "$VERSION" ]; then
+            error "No release candidate found. Use without --rc for stable release."
+        fi
+        info "Latest RC version: $VERSION"
+    else
+        # Get latest stable release
+        VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+        if [ -z "$VERSION" ]; then
+            error "Failed to get latest version"
+        fi
+        info "Latest version: $VERSION"
     fi
-    info "Latest version: $VERSION"
 }
 
 # Download and install
