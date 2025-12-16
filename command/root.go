@@ -21,6 +21,7 @@ One config to rule them all.`,
 			runCommand,
 			docsCommand,
 			stepsCommand,
+			versionCommand,
 		},
 	}
 

@@ -34,8 +34,8 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/tomatool/tomato/internal/version.Version={{.Version}}
-      - -X github.com/tomatool/tomato/internal/version.Commit={{.Commit}}
-      - -X github.com/tomatool/tomato/internal/version.Date={{.Date}}
+      - -X github.com/tomatool/tomato/internal/version.Commit={{.FullCommit}}
+      - -X github.com/tomatool/tomato/internal/version.BuildDate={{.Date}}
 
 archives:
   - id: default

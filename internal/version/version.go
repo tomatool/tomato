@@ -5,7 +5,7 @@ import "runtime"
 var (
 	// Set via ldflags at build time
 	Version   = "dev"
-	Commit    = "none"
+	Commit    = "unknown"
 	BuildDate = "unknown"
 )
 
