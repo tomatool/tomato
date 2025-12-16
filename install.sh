@@ -2,13 +2,14 @@
 # Tomato Installation Script
 # Usage: curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
 # Usage: curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh -s -- --rc
+# Usage: curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | USE_RC=true sh
 
 set -e
 
 REPO="tomatool/tomato"
 BINARY_NAME="tomato"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
-USE_RC=false
+USE_RC="${USE_RC:-false}"
 
 # Parse arguments
 while [ $# -gt 0 ]; do
