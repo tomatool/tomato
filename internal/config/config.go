@@ -122,6 +122,8 @@ type Resource struct {
 	Type      string         `yaml:"type"`
 	Container string         `yaml:"container"`
 	Options   map[string]any `yaml:"options"`
+	// Reset configuration
+	Reset *bool `yaml:"reset,omitempty"` // nil = use global setting, true = always reset, false = never reset
 	// Database specific
 	Database string `yaml:"database,omitempty"`
 	// HTTP specific

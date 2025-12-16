@@ -13,16 +13,18 @@ import (
 
 // Registry manages all configured handlers
 type Registry struct {
-	handlers  map[string]Handler
-	container *container.Manager
-	mu        sync.RWMutex
+	handlers    map[string]Handler
+	resetConfig map[string]*bool // per-handler reset configuration
+	container   *container.Manager
+	mu          sync.RWMutex
 }
 
 // NewRegistry creates a new handler registry
 func NewRegistry(configs map[string]config.Resource, cm *container.Manager) (*Registry, error) {
 	r := &Registry{
-		handlers:  make(map[string]Handler),
-		container: cm,
+		handlers:    make(map[string]Handler),
+		resetConfig: make(map[string]*bool),
+		container:   cm,
 	}
 
 	for name, cfg := range configs {
@@ -31,6 +33,7 @@ func NewRegistry(configs map[string]config.Resource, cm *container.Manager) (*Re
 			return nil, fmt.Errorf("creating handler %s: %w", name, err)
 		}
 		r.handlers[name] = h
+		r.resetConfig[name] = cfg.Reset
 	}
 
 	return r, nil
@@ -49,10 +52,14 @@ func (r *Registry) createHandler(name string, cfg config.Resource) (Handler, err
 		return NewRabbitMQ(name, cfg, r.container)
 	case "kafka":
 		return NewKafka(name, cfg, r.container)
-	case "http":
-		return NewHTTP(name, cfg, r.container)
-	case "websocket":
-		return NewWebSocket(name, cfg, r.container)
+	case "http-client", "http":
+		return NewHTTPClient(name, cfg, r.container)
+	case "http-server":
+		return NewHTTPServer(name, cfg, r.container)
+	case "websocket-client", "websocket":
+		return NewWebSocketClient(name, cfg, r.container)
+	case "websocket-server":
+		return NewWebSocketServer(name, cfg, r.container)
 	case "wiremock":
 		return NewWiremock(name, cfg, r.container)
 	case "shell":
@@ -100,6 +107,12 @@ func (r *Registry) ResetAll(ctx context.Context) error {
 	defer r.mu.RUnlock()
 
 	for name, h := range r.handlers {
+		// Check per-handler reset configuration
+		if resetCfg := r.resetConfig[name]; resetCfg != nil && !*resetCfg {
+			log.Debug().Str("handler", name).Msg("skipping reset (disabled)")
+			continue
+		}
+
 		log.Debug().Str("handler", name).Msg("resetting handler")
 		if err := h.Reset(ctx); err != nil {
 			return fmt.Errorf("resetting %s: %w", name, err)

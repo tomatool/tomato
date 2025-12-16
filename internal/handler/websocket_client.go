@@ -15,7 +15,7 @@ import (
 	"github.com/tomatool/tomato/internal/container"
 )
 
-type WebSocket struct {
+type WebSocketClient struct {
 	name      string
 	config    config.Resource
 	container *container.Manager
@@ -33,8 +33,8 @@ type WebSocket struct {
 	connected   bool
 }
 
-func NewWebSocket(name string, cfg config.Resource, cm *container.Manager) (*WebSocket, error) {
-	return &WebSocket{
+func NewWebSocketClient(name string, cfg config.Resource, cm *container.Manager) (*WebSocketClient, error) {
+	return &WebSocketClient{
 		name:      name,
 		config:    cfg,
 		container: cm,
@@ -43,9 +43,9 @@ func NewWebSocket(name string, cfg config.Resource, cm *container.Manager) (*Web
 	}, nil
 }
 
-func (r *WebSocket) Name() string { return r.name }
+func (r *WebSocketClient) Name() string { return r.name }
 
-func (r *WebSocket) Init(ctx context.Context) error {
+func (r *WebSocketClient) Init(ctx context.Context) error {
 	handshakeTimeout := 10 * time.Second
 	if t, ok := r.config.Options["handshake_timeout"].(string); ok {
 		if d, err := time.ParseDuration(t); err == nil {
@@ -102,11 +102,11 @@ func (r *WebSocket) Init(ctx context.Context) error {
 	return nil
 }
 
-func (r *WebSocket) Ready(ctx context.Context) error {
+func (r *WebSocketClient) Ready(ctx context.Context) error {
 	return nil
 }
 
-func (r *WebSocket) Reset(ctx context.Context) error {
+func (r *WebSocketClient) Reset(ctx context.Context) error {
 	if r.conn != nil {
 		r.disconnect()
 	}
@@ -128,7 +128,7 @@ func (r *WebSocket) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (r *WebSocket) disconnect() {
+func (r *WebSocketClient) disconnect() {
 	if r.readCancel != nil {
 		r.readCancel()
 	}
@@ -140,134 +140,134 @@ func (r *WebSocket) disconnect() {
 	r.connected = false
 }
 
-func (r *WebSocket) RegisterSteps(ctx *godog.ScenarioContext) {
+func (r *WebSocketClient) RegisterSteps(ctx *godog.ScenarioContext) {
 	RegisterStepsToGodog(ctx, r.name, r.Steps())
 }
 
-// Steps returns the structured step definitions for the WebSocket handler
-func (r *WebSocket) Steps() StepCategory {
+// Steps returns the structured step definitions for the WebSocket client handler
+func (r *WebSocketClient) Steps() StepCategory {
 	return StepCategory{
-		Name:        "WebSocket",
-		Description: "Steps for interacting with WebSocket connections",
+		Name:        "WebSocket Client",
+		Description: "Steps for connecting to WebSocket servers",
 		Steps: []StepDef{
 			// Connection management
 			{
-				Pattern:     `^I connect to websocket "{resource}"$`,
+				Pattern:     `^"{resource}" connects$`,
 				Description: "Connects to the WebSocket endpoint",
-				Example:     `I connect to websocket "{resource}"`,
+				Example:     `"{resource}" connects`,
 				Handler:     r.connect,
 			},
 			{
-				Pattern:     `^I connect to websocket "{resource}" with headers:$`,
+				Pattern:     `^"{resource}" connects with headers:$`,
 				Description: "Connects with custom headers",
-				Example:     "I connect to websocket \"{resource}\" with headers:\n  | header        | value       |\n  | Authorization | Bearer xyz  |",
+				Example:     "\"{resource}\" connects with headers:\n  | header        | value       |\n  | Authorization | Bearer xyz  |",
 				Handler:     r.connectWithHeaders,
 			},
 			{
-				Pattern:     `^I disconnect from websocket "{resource}"$`,
+				Pattern:     `^"{resource}" disconnects$`,
 				Description: "Disconnects from the WebSocket",
-				Example:     `I disconnect from websocket "{resource}"`,
+				Example:     `"{resource}" disconnects`,
 				Handler:     r.disconnectStep,
 			},
 			{
-				Pattern:     `^websocket "{resource}" should be connected$`,
+				Pattern:     `^"{resource}" is connected$`,
 				Description: "Asserts the WebSocket is connected",
-				Example:     `websocket "{resource}" should be connected`,
+				Example:     `"{resource}" is connected`,
 				Handler:     r.shouldBeConnected,
 			},
 			{
-				Pattern:     `^websocket "{resource}" should be disconnected$`,
+				Pattern:     `^"{resource}" is disconnected$`,
 				Description: "Asserts the WebSocket is disconnected",
-				Example:     `websocket "{resource}" should be disconnected`,
+				Example:     `"{resource}" is disconnected`,
 				Handler:     r.shouldBeDisconnected,
 			},
 
 			// Sending messages
 			{
-				Pattern:     `^I send message to websocket "{resource}":$`,
+				Pattern:     `^"{resource}" sends:$`,
 				Description: "Sends a text message",
-				Example:     "I send message to websocket \"{resource}\":\n  \"\"\"\n  Hello Server\n  \"\"\"",
+				Example:     "\"{resource}\" sends:\n  \"\"\"\n  Hello Server\n  \"\"\"",
 				Handler:     r.sendMessage,
 			},
 			{
-				Pattern:     `^I send text "([^"]*)" to websocket "{resource}"$`,
+				Pattern:     `^"{resource}" sends "([^"]*)"$`,
 				Description: "Sends a short text message",
-				Example:     `I send text "ping" to websocket "{resource}"`,
+				Example:     `"{resource}" sends "ping"`,
 				Handler:     r.sendText,
 			},
 			{
-				Pattern:     `^I send JSON to websocket "{resource}":$`,
+				Pattern:     `^"{resource}" sends json:$`,
 				Description: "Sends a JSON message",
-				Example:     "I send JSON to websocket \"{resource}\":\n  \"\"\"\n  {\"action\": \"subscribe\"}\n  \"\"\"",
+				Example:     "\"{resource}\" sends json:\n  \"\"\"\n  {\"action\": \"subscribe\"}\n  \"\"\"",
 				Handler:     r.sendJSON,
 			},
 
 			// Receiving messages
 			{
-				Pattern:     `^I should receive message from websocket "{resource}" within "([^"]*)":$`,
+				Pattern:     `^"{resource}" receives within "([^"]*)":$`,
 				Description: "Asserts a specific message is received within timeout",
-				Example:     "I should receive message from websocket \"{resource}\" within \"5s\":\n  \"\"\"\n  Hello Client\n  \"\"\"",
+				Example:     "\"{resource}\" receives within \"5s\":\n  \"\"\"\n  Hello Client\n  \"\"\"",
 				Handler:     r.shouldReceiveMessage,
 			},
 			{
-				Pattern:     `^I should receive message from websocket "{resource}" within "([^"]*)" containing "([^"]*)"$`,
+				Pattern:     `^"{resource}" receives within "([^"]*)" containing "([^"]*)"$`,
 				Description: "Asserts a message containing substring is received",
-				Example:     `I should receive message from websocket "{resource}" within "5s" containing "success"`,
+				Example:     `"{resource}" receives within "5s" containing "success"`,
 				Handler:     r.shouldReceiveMessageContaining,
 			},
 			{
-				Pattern:     `^I should receive JSON from websocket "{resource}" within "([^"]*)" matching:$`,
+				Pattern:     `^"{resource}" receives json within "([^"]*)" matching:$`,
 				Description: "Asserts a JSON message matching structure is received",
-				Example:     "I should receive JSON from websocket \"{resource}\" within \"5s\" matching:\n  \"\"\"\n  {\"status\": \"ok\"}\n  \"\"\"",
+				Example:     "\"{resource}\" receives json within \"5s\" matching:\n  \"\"\"\n  {\"status\": \"ok\"}\n  \"\"\"",
 				Handler:     r.shouldReceiveJSONMatching,
 			},
 			{
-				Pattern:     `^I should receive "(\d+)" messages from websocket "{resource}" within "([^"]*)"$`,
+				Pattern:     `^"{resource}" receives "(\d+)" messages within "([^"]*)"$`,
 				Description: "Asserts N messages are received within timeout",
-				Example:     `I should receive "3" messages from websocket "{resource}" within "10s"`,
+				Example:     `"{resource}" receives "3" messages within "10s"`,
 				Handler:     r.shouldReceiveNMessages,
 			},
 			{
-				Pattern:     `^I should not receive message from websocket "{resource}" within "([^"]*)"$`,
+				Pattern:     `^"{resource}" does not receive within "([^"]*)"$`,
 				Description: "Asserts no message is received within timeout",
-				Example:     `I should not receive message from websocket "{resource}" within "2s"`,
+				Example:     `"{resource}" does not receive within "2s"`,
 				Handler:     r.shouldNotReceiveMessage,
 			},
 
 			// Last message assertions
 			{
-				Pattern:     `^the last message from websocket "{resource}" should be:$`,
+				Pattern:     `^"{resource}" last message is:$`,
 				Description: "Asserts the last message matches exactly",
-				Example:     "the last message from websocket \"{resource}\" should be:\n  \"\"\"\n  pong\n  \"\"\"",
+				Example:     "\"{resource}\" last message is:\n  \"\"\"\n  pong\n  \"\"\"",
 				Handler:     r.lastMessageShouldBe,
 			},
 			{
-				Pattern:     `^the last message from websocket "{resource}" should contain "([^"]*)"$`,
+				Pattern:     `^"{resource}" last message contains "([^"]*)"$`,
 				Description: "Asserts the last message contains substring",
-				Example:     `the last message from websocket "{resource}" should contain "success"`,
+				Example:     `"{resource}" last message contains "success"`,
 				Handler:     r.lastMessageShouldContain,
 			},
 			{
-				Pattern:     `^the last message from websocket "{resource}" should be JSON matching:$`,
+				Pattern:     `^"{resource}" last message is json matching:$`,
 				Description: "Asserts the last message is JSON matching structure",
-				Example:     "the last message from websocket \"{resource}\" should be JSON matching:\n  \"\"\"\n  {\"type\": \"response\"}\n  \"\"\"",
+				Example:     "\"{resource}\" last message is json matching:\n  \"\"\"\n  {\"type\": \"response\"}\n  \"\"\"",
 				Handler:     r.lastMessageShouldBeJSONMatching,
 			},
 			{
-				Pattern:     `^websocket "{resource}" should have received "(\d+)" messages$`,
+				Pattern:     `^"{resource}" received "(\d+)" messages$`,
 				Description: "Asserts total messages received count",
-				Example:     `websocket "{resource}" should have received "5" messages`,
+				Example:     `"{resource}" received "5" messages`,
 				Handler:     r.shouldHaveReceivedNMessages,
 			},
 		},
 	}
 }
 
-func (r *WebSocket) connect() error {
+func (r *WebSocketClient) connect() error {
 	return r.connectWithHeaders(nil)
 }
 
-func (r *WebSocket) connectWithHeaders(table *godog.Table) error {
+func (r *WebSocketClient) connectWithHeaders(table *godog.Table) error {
 	if r.connected {
 		return nil
 	}
@@ -295,7 +295,7 @@ func (r *WebSocket) connectWithHeaders(table *godog.Table) error {
 	return nil
 }
 
-func (r *WebSocket) readLoop() {
+func (r *WebSocketClient) readLoop() {
 	for {
 		select {
 		case <-r.readCtx.Done():
@@ -317,26 +317,26 @@ func (r *WebSocket) readLoop() {
 	}
 }
 
-func (r *WebSocket) disconnectStep() error {
+func (r *WebSocketClient) disconnectStep() error {
 	r.disconnect()
 	return nil
 }
 
-func (r *WebSocket) shouldBeConnected() error {
+func (r *WebSocketClient) shouldBeConnected() error {
 	if !r.connected {
 		return fmt.Errorf("websocket is not connected")
 	}
 	return nil
 }
 
-func (r *WebSocket) shouldBeDisconnected() error {
+func (r *WebSocketClient) shouldBeDisconnected() error {
 	if r.connected {
 		return fmt.Errorf("websocket is still connected")
 	}
 	return nil
 }
 
-func (r *WebSocket) sendMessage(doc *godog.DocString) error {
+func (r *WebSocketClient) sendMessage(doc *godog.DocString) error {
 	if !r.connected {
 		if err := r.connect(); err != nil {
 			return err
@@ -345,7 +345,7 @@ func (r *WebSocket) sendMessage(doc *godog.DocString) error {
 	return r.conn.WriteMessage(websocket.TextMessage, []byte(doc.Content))
 }
 
-func (r *WebSocket) sendText(text string) error {
+func (r *WebSocketClient) sendText(text string) error {
 	if !r.connected {
 		if err := r.connect(); err != nil {
 			return err
@@ -354,7 +354,7 @@ func (r *WebSocket) sendText(text string) error {
 	return r.conn.WriteMessage(websocket.TextMessage, []byte(text))
 }
 
-func (r *WebSocket) sendJSON(doc *godog.DocString) error {
+func (r *WebSocketClient) sendJSON(doc *godog.DocString) error {
 	var js json.RawMessage
 	if err := json.Unmarshal([]byte(doc.Content), &js); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
@@ -368,7 +368,7 @@ func (r *WebSocket) sendJSON(doc *godog.DocString) error {
 	return r.conn.WriteMessage(websocket.TextMessage, []byte(doc.Content))
 }
 
-func (r *WebSocket) shouldReceiveMessage(timeout string, doc *godog.DocString) error {
+func (r *WebSocketClient) shouldReceiveMessage(timeout string, doc *godog.DocString) error {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout: %w", err)
@@ -394,7 +394,7 @@ func (r *WebSocket) shouldReceiveMessage(timeout string, doc *godog.DocString) e
 	return nil
 }
 
-func (r *WebSocket) shouldReceiveMessageContaining(timeout, substr string) error {
+func (r *WebSocketClient) shouldReceiveMessageContaining(timeout, substr string) error {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout: %w", err)
@@ -418,7 +418,7 @@ func (r *WebSocket) shouldReceiveMessageContaining(timeout, substr string) error
 	return nil
 }
 
-func (r *WebSocket) shouldReceiveJSONMatching(timeout string, doc *godog.DocString) error {
+func (r *WebSocketClient) shouldReceiveJSONMatching(timeout string, doc *godog.DocString) error {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout: %w", err)
@@ -452,7 +452,7 @@ func (r *WebSocket) shouldReceiveJSONMatching(timeout string, doc *godog.DocStri
 	return nil
 }
 
-func (r *WebSocket) shouldReceiveNMessages(count int, timeout string) error {
+func (r *WebSocketClient) shouldReceiveNMessages(count int, timeout string) error {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout: %w", err)
@@ -479,7 +479,7 @@ func (r *WebSocket) shouldReceiveNMessages(count int, timeout string) error {
 	return fmt.Errorf("expected %d messages, received %d within %s", count, received, timeout)
 }
 
-func (r *WebSocket) shouldNotReceiveMessage(timeout string) error {
+func (r *WebSocketClient) shouldNotReceiveMessage(timeout string) error {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
 		return fmt.Errorf("invalid timeout: %w", err)
@@ -504,7 +504,7 @@ func (r *WebSocket) shouldNotReceiveMessage(timeout string) error {
 	return nil
 }
 
-func (r *WebSocket) waitForMessage(timeout time.Duration) ([]byte, error) {
+func (r *WebSocketClient) waitForMessage(timeout time.Duration) ([]byte, error) {
 	deadline := time.Now().Add(timeout)
 	initialCount := r.getMessageCount()
 
@@ -522,13 +522,13 @@ func (r *WebSocket) waitForMessage(timeout time.Duration) ([]byte, error) {
 	return nil, fmt.Errorf("no message received within %s", timeout)
 }
 
-func (r *WebSocket) getMessageCount() int {
+func (r *WebSocketClient) getMessageCount() int {
 	r.messagesMu.RLock()
 	defer r.messagesMu.RUnlock()
 	return len(r.messages)
 }
 
-func (r *WebSocket) lastMessageShouldBe(doc *godog.DocString) error {
+func (r *WebSocketClient) lastMessageShouldBe(doc *godog.DocString) error {
 	r.messagesMu.RLock()
 	lastMsg := r.lastMessage
 	r.messagesMu.RUnlock()
@@ -546,7 +546,7 @@ func (r *WebSocket) lastMessageShouldBe(doc *godog.DocString) error {
 	return nil
 }
 
-func (r *WebSocket) lastMessageShouldContain(substr string) error {
+func (r *WebSocketClient) lastMessageShouldContain(substr string) error {
 	r.messagesMu.RLock()
 	lastMsg := r.lastMessage
 	r.messagesMu.RUnlock()
@@ -562,7 +562,7 @@ func (r *WebSocket) lastMessageShouldContain(substr string) error {
 	return nil
 }
 
-func (r *WebSocket) lastMessageShouldBeJSONMatching(doc *godog.DocString) error {
+func (r *WebSocketClient) lastMessageShouldBeJSONMatching(doc *godog.DocString) error {
 	r.messagesMu.RLock()
 	lastMsg := r.lastMessage
 	r.messagesMu.RUnlock()
@@ -588,7 +588,7 @@ func (r *WebSocket) lastMessageShouldBeJSONMatching(doc *godog.DocString) error 
 	return nil
 }
 
-func (r *WebSocket) shouldHaveReceivedNMessages(count int) error {
+func (r *WebSocketClient) shouldHaveReceivedNMessages(count int) error {
 	actual := r.getMessageCount()
 	if actual != count {
 		return fmt.Errorf("expected %d messages, got %d", count, actual)
@@ -597,7 +597,7 @@ func (r *WebSocket) shouldHaveReceivedNMessages(count int) error {
 }
 
 // WebSocketClient interface implementation
-func (r *WebSocket) Connect(ctx context.Context, headers map[string]string) error {
+func (r *WebSocketClient) Connect(ctx context.Context, headers map[string]string) error {
 	h := r.headers.Clone()
 	for k, v := range headers {
 		h.Set(k, v)
@@ -616,26 +616,26 @@ func (r *WebSocket) Connect(ctx context.Context, headers map[string]string) erro
 	return nil
 }
 
-func (r *WebSocket) Send(ctx context.Context, message []byte) error {
+func (r *WebSocketClient) Send(ctx context.Context, message []byte) error {
 	if !r.connected {
 		return fmt.Errorf("not connected")
 	}
 	return r.conn.WriteMessage(websocket.TextMessage, message)
 }
 
-func (r *WebSocket) Receive(ctx context.Context, timeout int) ([]byte, error) {
+func (r *WebSocketClient) Receive(ctx context.Context, timeout int) ([]byte, error) {
 	return r.waitForMessage(time.Duration(timeout) * time.Second)
 }
 
-func (r *WebSocket) Disconnect(ctx context.Context) error {
+func (r *WebSocketClient) Disconnect(ctx context.Context) error {
 	r.disconnect()
 	return nil
 }
 
-func (r *WebSocket) Cleanup(ctx context.Context) error {
+func (r *WebSocketClient) Cleanup(ctx context.Context) error {
 	r.disconnect()
 	return nil
 }
 
-var _ Handler = (*WebSocket)(nil)
-var _ WebSocketClient = (*WebSocket)(nil)
+var _ Handler = (*WebSocketClient)(nil)
+var _ WebSocketClientInterface = (*WebSocketClient)(nil)

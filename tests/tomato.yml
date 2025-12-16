@@ -1,0 +1,67 @@
+version: 2
+
+settings:
+  timeout: 5m
+  fail_fast: false
+  reset:
+    level: scenario
+
+containers:
+  postgres:
+    image: postgres:15-alpine
+    env:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    wait_for:
+      type: port
+      target: "5432"
+      timeout: 30s
+
+  redis:
+    image: redis:7-alpine
+    wait_for:
+      type: port
+      target: "6379"
+      timeout: 30s
+
+app:
+  command: go run ./tests/app
+  port: 8080
+  ready:
+    type: http
+    path: /health
+    timeout: 30s
+  wait: 2s
+  env:
+    DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test?sslmode=disable"
+    REDIS_URL: "redis://{{.redis.host}}:{{.redis.port.6379}}"
+
+resources:
+  db:
+    type: postgres
+    container: postgres
+    database: test
+    options:
+      user: test
+      password: test
+
+  cache:
+    type: redis
+    container: redis
+
+  api:
+    type: http-client
+    base_url: http://localhost:8080
+
+  shell:
+    type: shell
+
+  ws:
+    type: websocket-client
+    url: ws://localhost:8080/ws
+
+features:
+  paths:
+    - ./tests/features
+  tags: "~@kafka"

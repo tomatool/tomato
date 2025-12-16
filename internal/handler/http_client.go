@@ -17,7 +17,7 @@ import (
 	"github.com/tomatool/tomato/internal/container"
 )
 
-type HTTP struct {
+type HTTPClient struct {
 	name      string
 	config    config.Resource
 	container *container.Manager
@@ -32,8 +32,8 @@ type HTTP struct {
 	lastBody     []byte
 }
 
-func NewHTTP(name string, cfg config.Resource, cm *container.Manager) (*HTTP, error) {
-	return &HTTP{
+func NewHTTPClient(name string, cfg config.Resource, cm *container.Manager) (*HTTPClient, error) {
+	return &HTTPClient{
 		name:           name,
 		config:         cfg,
 		container:      cm,
@@ -42,9 +42,9 @@ func NewHTTP(name string, cfg config.Resource, cm *container.Manager) (*HTTP, er
 	}, nil
 }
 
-func (r *HTTP) Name() string { return r.name }
+func (r *HTTPClient) Name() string { return r.name }
 
-func (r *HTTP) Init(ctx context.Context) error {
+func (r *HTTPClient) Init(ctx context.Context) error {
 	timeout := 30 * time.Second
 	if t, ok := r.config.Options["timeout"].(string); ok {
 		if d, err := time.ParseDuration(t); err == nil {
@@ -91,7 +91,7 @@ func (r *HTTP) Init(ctx context.Context) error {
 	return nil
 }
 
-func (r *HTTP) Ready(ctx context.Context) error {
+func (r *HTTPClient) Ready(ctx context.Context) error {
 	if healthPath, ok := r.config.Options["health_path"].(string); ok {
 		resp, err := r.client.Get(r.baseURL + healthPath)
 		if err != nil {
@@ -106,7 +106,7 @@ func (r *HTTP) Ready(ctx context.Context) error {
 	return nil
 }
 
-func (r *HTTP) Reset(ctx context.Context) error {
+func (r *HTTPClient) Reset(ctx context.Context) error {
 	r.requestHeaders = make(map[string]string)
 	r.requestBody = nil
 	r.requestParams = make(url.Values)
@@ -115,177 +115,177 @@ func (r *HTTP) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (r *HTTP) RegisterSteps(ctx *godog.ScenarioContext) {
+func (r *HTTPClient) RegisterSteps(ctx *godog.ScenarioContext) {
 	RegisterStepsToGodog(ctx, r.name, r.Steps())
 }
 
 // Steps returns the structured step definitions for the HTTP handler
-func (r *HTTP) Steps() StepCategory {
+func (r *HTTPClient) Steps() StepCategory {
 	return StepCategory{
 		Name:        "HTTP",
 		Description: "Steps for making HTTP requests and validating responses",
 		Steps: []StepDef{
 			// Request setup steps
 			{
-				Pattern:     `^I set "{resource}" header "([^"]*)" to "([^"]*)"$`,
+				Pattern:     `^"{resource}" header "([^"]*)" is "([^"]*)"$`,
 				Description: "Sets a header for the next HTTP request",
-				Example:     `I set "{resource}" header "Content-Type" to "application/json"`,
+				Example:     `"{resource}" header "Content-Type" is "application/json"`,
 				Handler:     r.setHeader,
 			},
 			{
-				Pattern:     `^I set "{resource}" headers:$`,
+				Pattern:     `^"{resource}" headers are:$`,
 				Description: "Sets multiple headers for the next HTTP request using a table",
-				Example:     "I set \"{resource}\" headers:\n  | header       | value            |\n  | Content-Type | application/json |",
+				Example:     "\"{resource}\" headers are:\n  | header       | value            |\n  | Content-Type | application/json |",
 				Handler:     r.setHeaders,
 			},
 			{
-				Pattern:     `^I set "{resource}" query param "([^"]*)" to "([^"]*)"$`,
+				Pattern:     `^"{resource}" query param "([^"]*)" is "([^"]*)"$`,
 				Description: "Sets a query parameter for the next HTTP request",
-				Example:     `I set "{resource}" query param "page" to "1"`,
+				Example:     `"{resource}" query param "page" is "1"`,
 				Handler:     r.setQueryParam,
 			},
 			{
-				Pattern:     `^I set "{resource}" request body:$`,
+				Pattern:     `^"{resource}" body is:$`,
 				Description: "Sets the raw request body for the next HTTP request",
-				Example:     "I set \"{resource}\" request body:\n  \"\"\"\n  raw body content\n  \"\"\"",
+				Example:     "\"{resource}\" body is:\n  \"\"\"\n  raw body content\n  \"\"\"",
 				Handler:     r.setRequestBody,
 			},
 			{
-				Pattern:     `^I set "{resource}" JSON body:$`,
+				Pattern:     `^"{resource}" json body is:$`,
 				Description: "Sets a JSON request body and automatically sets Content-Type header",
-				Example:     "I set \"{resource}\" JSON body:\n  \"\"\"\n  {\"name\": \"test\"}\n  \"\"\"",
+				Example:     "\"{resource}\" json body is:\n  \"\"\"\n  {\"name\": \"test\"}\n  \"\"\"",
 				Handler:     r.setJSONBody,
 			},
 			{
-				Pattern:     `^I set "{resource}" form body:$`,
+				Pattern:     `^"{resource}" form body is:$`,
 				Description: "Sets form-encoded body from a table and sets Content-Type header",
-				Example:     "I set \"{resource}\" form body:\n  | field | value |\n  | name  | test  |",
+				Example:     "\"{resource}\" form body is:\n  | field | value |\n  | name  | test  |",
 				Handler:     r.setFormBody,
 			},
 
 			// Request execution steps
 			{
-				Pattern:     `^I send "([^"]*)" request to "{resource}" "([^"]*)"$`,
+				Pattern:     `^"{resource}" sends "([^"]*)" to "([^"]*)"$`,
 				Description: "Sends an HTTP request with the specified method to the given path",
-				Example:     `I send "GET" request to "{resource}" "/api/users"`,
+				Example:     `"{resource}" sends "GET" to "/api/users"`,
 				Handler:     r.sendRequest,
 			},
 			{
-				Pattern:     `^I send "([^"]*)" request to "{resource}" "([^"]*)" with body:$`,
+				Pattern:     `^"{resource}" sends "([^"]*)" to "([^"]*)" with body:$`,
 				Description: "Sends an HTTP request with a raw body",
-				Example:     "I send \"POST\" request to \"{resource}\" \"/api/users\" with body:\n  \"\"\"\n  raw body\n  \"\"\"",
+				Example:     "\"{resource}\" sends \"POST\" to \"/api/users\" with body:\n  \"\"\"\n  raw body\n  \"\"\"",
 				Handler:     r.sendRequestWithBody,
 			},
 			{
-				Pattern:     `^I send "([^"]*)" request to "{resource}" "([^"]*)" with JSON:$`,
+				Pattern:     `^"{resource}" sends "([^"]*)" to "([^"]*)" with json:$`,
 				Description: "Sends an HTTP request with a JSON body",
-				Example:     "I send \"POST\" request to \"{resource}\" \"/api/users\" with JSON:\n  \"\"\"\n  {\"name\": \"John\"}\n  \"\"\"",
+				Example:     "\"{resource}\" sends \"POST\" to \"/api/users\" with json:\n  \"\"\"\n  {\"name\": \"John\"}\n  \"\"\"",
 				Handler:     r.sendRequestWithJSON,
 			},
 
 			// Response status steps
 			{
-				Pattern:     `^"{resource}" response status should be "(\d+)"$`,
+				Pattern:     `^"{resource}" response status is "(\d+)"$`,
 				Description: "Asserts the response has the exact HTTP status code",
-				Example:     `"{resource}" response status should be "200"`,
+				Example:     `"{resource}" response status is "200"`,
 				Handler:     r.responseStatusShouldBe,
 			},
 			{
-				Pattern:     `^"{resource}" response status should be (success|redirect|client error|server error)$`,
+				Pattern:     `^"{resource}" response status is (success|redirect|client error|server error)$`,
 				Description: "Asserts the response status is in the given class (2xx, 3xx, 4xx, 5xx)",
-				Example:     `"{resource}" response status should be success`,
+				Example:     `"{resource}" response status is success`,
 				Handler:     r.responseStatusClassShouldBe,
 			},
 
 			// Response header steps
 			{
-				Pattern:     `^"{resource}" response header "([^"]*)" should be "([^"]*)"$`,
+				Pattern:     `^"{resource}" response header "([^"]*)" is "([^"]*)"$`,
 				Description: "Asserts a response header has the exact value",
-				Example:     `"{resource}" response header "Content-Type" should be "application/json"`,
+				Example:     `"{resource}" response header "Content-Type" is "application/json"`,
 				Handler:     r.responseHeaderShouldBe,
 			},
 			{
-				Pattern:     `^"{resource}" response header "([^"]*)" should contain "([^"]*)"$`,
+				Pattern:     `^"{resource}" response header "([^"]*)" contains "([^"]*)"$`,
 				Description: "Asserts a response header contains a substring",
-				Example:     `"{resource}" response header "Content-Type" should contain "json"`,
+				Example:     `"{resource}" response header "Content-Type" contains "json"`,
 				Handler:     r.responseHeaderShouldContain,
 			},
 			{
-				Pattern:     `^"{resource}" response header "([^"]*)" should exist$`,
+				Pattern:     `^"{resource}" response header "([^"]*)" exists$`,
 				Description: "Asserts a response header exists",
-				Example:     `"{resource}" response header "X-Request-Id" should exist`,
+				Example:     `"{resource}" response header "X-Request-Id" exists`,
 				Handler:     r.responseHeaderShouldExist,
 			},
 
 			// Response body steps
 			{
-				Pattern:     `^"{resource}" response body should be:$`,
+				Pattern:     `^"{resource}" response body is:$`,
 				Description: "Asserts the response body matches exactly",
-				Example:     "\"{resource}\" response body should be:\n  \"\"\"\n  expected body\n  \"\"\"",
+				Example:     "\"{resource}\" response body is:\n  \"\"\"\n  expected body\n  \"\"\"",
 				Handler:     r.responseBodyShouldBe,
 			},
 			{
-				Pattern:     `^"{resource}" response body should contain "([^"]*)"$`,
+				Pattern:     `^"{resource}" response body contains "([^"]*)"$`,
 				Description: "Asserts the response body contains a substring",
-				Example:     `"{resource}" response body should contain "success"`,
+				Example:     `"{resource}" response body contains "success"`,
 				Handler:     r.responseBodyShouldContain,
 			},
 			{
-				Pattern:     `^"{resource}" response body should not contain "([^"]*)"$`,
+				Pattern:     `^"{resource}" response body does not contain "([^"]*)"$`,
 				Description: "Asserts the response body does not contain a substring",
-				Example:     `"{resource}" response body should not contain "error"`,
+				Example:     `"{resource}" response body does not contain "error"`,
 				Handler:     r.responseBodyShouldNotContain,
 			},
 			{
-				Pattern:     `^"{resource}" response body should be empty$`,
+				Pattern:     `^"{resource}" response body is empty$`,
 				Description: "Asserts the response body is empty",
-				Example:     `"{resource}" response body should be empty`,
+				Example:     `"{resource}" response body is empty`,
 				Handler:     r.responseBodyShouldBeEmpty,
 			},
 
 			// Response JSON steps
 			{
-				Pattern:     `^"{resource}" response JSON "([^"]*)" should be "([^"]*)"$`,
+				Pattern:     `^"{resource}" response json "([^"]*)" is "([^"]*)"$`,
 				Description: "Asserts a JSON path in the response has the expected value",
-				Example:     `"{resource}" response JSON "data.id" should be "123"`,
+				Example:     `"{resource}" response json "data.id" is "123"`,
 				Handler:     r.responseJSONPathShouldBe,
 			},
 			{
-				Pattern:     `^"{resource}" response JSON "([^"]*)" should exist$`,
+				Pattern:     `^"{resource}" response json "([^"]*)" exists$`,
 				Description: "Asserts a JSON path exists in the response",
-				Example:     `"{resource}" response JSON "data.id" should exist`,
+				Example:     `"{resource}" response json "data.id" exists`,
 				Handler:     r.responseJSONPathShouldExist,
 			},
 			{
-				Pattern:     `^"{resource}" response JSON "([^"]*)" should not exist$`,
+				Pattern:     `^"{resource}" response json "([^"]*)" does not exist$`,
 				Description: "Asserts a JSON path does not exist in the response",
-				Example:     `"{resource}" response JSON "data.deleted" should not exist`,
+				Example:     `"{resource}" response json "data.deleted" does not exist`,
 				Handler:     r.responseJSONPathShouldNotExist,
 			},
 			{
-				Pattern:     `^"{resource}" response JSON should match:$`,
+				Pattern:     `^"{resource}" response json matches:$`,
 				Description: "Asserts the response JSON matches the expected structure. Use @string, @number, @boolean, @array, @object, @any, @null, @notnull as type matchers",
-				Example:     "\"{resource}\" response JSON should match:\n  \"\"\"\n  {\"id\": \"@number\", \"name\": \"@string\"}\n  \"\"\"",
+				Example:     "\"{resource}\" response json matches:\n  \"\"\"\n  {\"id\": \"@number\", \"name\": \"@string\"}\n  \"\"\"",
 				Handler:     r.responseJSONShouldMatch,
 			},
 
 			// Response timing steps
 			{
-				Pattern:     `^"{resource}" response time should be less than "([^"]*)"$`,
+				Pattern:     `^"{resource}" response time is less than "([^"]*)"$`,
 				Description: "Asserts the response was received within the given duration",
-				Example:     `"{resource}" response time should be less than "500ms"`,
+				Example:     `"{resource}" response time is less than "500ms"`,
 				Handler:     r.responseTimeShouldBeLessThan,
 			},
 		},
 	}
 }
 
-func (r *HTTP) setHeader(key, value string) error {
+func (r *HTTPClient) setHeader(key, value string) error {
 	r.requestHeaders[key] = value
 	return nil
 }
 
-func (r *HTTP) setHeaders(table *godog.Table) error {
+func (r *HTTPClient) setHeaders(table *godog.Table) error {
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
 			r.requestHeaders[row.Cells[0].Value] = row.Cells[1].Value
@@ -294,17 +294,17 @@ func (r *HTTP) setHeaders(table *godog.Table) error {
 	return nil
 }
 
-func (r *HTTP) setQueryParam(key, value string) error {
+func (r *HTTPClient) setQueryParam(key, value string) error {
 	r.requestParams.Set(key, value)
 	return nil
 }
 
-func (r *HTTP) setRequestBody(doc *godog.DocString) error {
+func (r *HTTPClient) setRequestBody(doc *godog.DocString) error {
 	r.requestBody = []byte(doc.Content)
 	return nil
 }
 
-func (r *HTTP) setJSONBody(doc *godog.DocString) error {
+func (r *HTTPClient) setJSONBody(doc *godog.DocString) error {
 	var js json.RawMessage
 	if err := json.Unmarshal([]byte(doc.Content), &js); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
@@ -316,7 +316,7 @@ func (r *HTTP) setJSONBody(doc *godog.DocString) error {
 	return nil
 }
 
-func (r *HTTP) setFormBody(table *godog.Table) error {
+func (r *HTTPClient) setFormBody(table *godog.Table) error {
 	form := url.Values{}
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
@@ -330,15 +330,15 @@ func (r *HTTP) setFormBody(table *godog.Table) error {
 	return nil
 }
 
-func (r *HTTP) sendRequest(method, path string) error {
+func (r *HTTPClient) sendRequest(method, path string) error {
 	return r.doRequest(method, path, nil)
 }
 
-func (r *HTTP) sendRequestWithBody(method, path string, doc *godog.DocString) error {
+func (r *HTTPClient) sendRequestWithBody(method, path string, doc *godog.DocString) error {
 	return r.doRequest(method, path, []byte(doc.Content))
 }
 
-func (r *HTTP) sendRequestWithJSON(method, path string, doc *godog.DocString) error {
+func (r *HTTPClient) sendRequestWithJSON(method, path string, doc *godog.DocString) error {
 	var js json.RawMessage
 	if err := json.Unmarshal([]byte(doc.Content), &js); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
@@ -349,7 +349,7 @@ func (r *HTTP) sendRequestWithJSON(method, path string, doc *godog.DocString) er
 	return r.doRequest(method, path, []byte(doc.Content))
 }
 
-func (r *HTTP) doRequest(method, path string, body []byte) error {
+func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 	reqURL := r.baseURL + path
 	if len(r.requestParams) > 0 {
 		reqURL += "?" + r.requestParams.Encode()
@@ -390,7 +390,7 @@ func (r *HTTP) doRequest(method, path string, body []byte) error {
 	return nil
 }
 
-func (r *HTTP) responseStatusShouldBe(expected int) error {
+func (r *HTTPClient) responseStatusShouldBe(expected int) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -400,7 +400,7 @@ func (r *HTTP) responseStatusShouldBe(expected int) error {
 	return nil
 }
 
-func (r *HTTP) responseStatusClassShouldBe(class string) error {
+func (r *HTTPClient) responseStatusClassShouldBe(class string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -427,7 +427,7 @@ func (r *HTTP) responseStatusClassShouldBe(class string) error {
 	return nil
 }
 
-func (r *HTTP) responseHeaderShouldBe(header, expected string) error {
+func (r *HTTPClient) responseHeaderShouldBe(header, expected string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -438,7 +438,7 @@ func (r *HTTP) responseHeaderShouldBe(header, expected string) error {
 	return nil
 }
 
-func (r *HTTP) responseHeaderShouldContain(header, substr string) error {
+func (r *HTTPClient) responseHeaderShouldContain(header, substr string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -449,7 +449,7 @@ func (r *HTTP) responseHeaderShouldContain(header, substr string) error {
 	return nil
 }
 
-func (r *HTTP) responseHeaderShouldExist(header string) error {
+func (r *HTTPClient) responseHeaderShouldExist(header string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -459,7 +459,7 @@ func (r *HTTP) responseHeaderShouldExist(header string) error {
 	return nil
 }
 
-func (r *HTTP) responseBodyShouldBe(doc *godog.DocString) error {
+func (r *HTTPClient) responseBodyShouldBe(doc *godog.DocString) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -471,7 +471,7 @@ func (r *HTTP) responseBodyShouldBe(doc *godog.DocString) error {
 	return nil
 }
 
-func (r *HTTP) responseBodyShouldContain(substr string) error {
+func (r *HTTPClient) responseBodyShouldContain(substr string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -481,7 +481,7 @@ func (r *HTTP) responseBodyShouldContain(substr string) error {
 	return nil
 }
 
-func (r *HTTP) responseBodyShouldNotContain(substr string) error {
+func (r *HTTPClient) responseBodyShouldNotContain(substr string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -491,7 +491,7 @@ func (r *HTTP) responseBodyShouldNotContain(substr string) error {
 	return nil
 }
 
-func (r *HTTP) responseBodyShouldBeEmpty() error {
+func (r *HTTPClient) responseBodyShouldBeEmpty() error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -501,7 +501,7 @@ func (r *HTTP) responseBodyShouldBeEmpty() error {
 	return nil
 }
 
-func (r *HTTP) responseJSONPathShouldBe(path, expected string) error {
+func (r *HTTPClient) responseJSONPathShouldBe(path, expected string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -518,7 +518,7 @@ func (r *HTTP) responseJSONPathShouldBe(path, expected string) error {
 	return nil
 }
 
-func (r *HTTP) responseJSONPathShouldExist(path string) error {
+func (r *HTTPClient) responseJSONPathShouldExist(path string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -526,7 +526,7 @@ func (r *HTTP) responseJSONPathShouldExist(path string) error {
 	return err
 }
 
-func (r *HTTP) responseJSONPathShouldNotExist(path string) error {
+func (r *HTTPClient) responseJSONPathShouldNotExist(path string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -537,7 +537,7 @@ func (r *HTTP) responseJSONPathShouldNotExist(path string) error {
 	return nil
 }
 
-func (r *HTTP) responseJSONShouldMatch(doc *godog.DocString) error {
+func (r *HTTPClient) responseJSONShouldMatch(doc *godog.DocString) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -553,7 +553,7 @@ func (r *HTTP) responseJSONShouldMatch(doc *godog.DocString) error {
 	return r.compareJSON(expected, actual, "")
 }
 
-func (r *HTTP) compareJSON(expected, actual interface{}, path string) error {
+func (r *HTTPClient) compareJSON(expected, actual interface{}, path string) error {
 	switch e := expected.(type) {
 	case map[string]interface{}:
 		a, ok := actual.(map[string]interface{})
@@ -600,7 +600,7 @@ func (r *HTTP) compareJSON(expected, actual interface{}, path string) error {
 	return nil
 }
 
-func (r *HTTP) matchSpecial(matcher string, actual interface{}, path string) error {
+func (r *HTTPClient) matchSpecial(matcher string, actual interface{}, path string) error {
 	switch matcher {
 	case "@string":
 		if _, ok := actual.(string); !ok {
@@ -638,7 +638,7 @@ func (r *HTTP) matchSpecial(matcher string, actual interface{}, path string) err
 	return nil
 }
 
-func (r *HTTP) getJSONPath(path string) (interface{}, error) {
+func (r *HTTPClient) getJSONPath(path string) (interface{}, error) {
 	var data interface{}
 	if err := json.Unmarshal(r.lastBody, &data); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
@@ -688,7 +688,7 @@ func (r *HTTP) getJSONPath(path string) (interface{}, error) {
 	return current, nil
 }
 
-func (r *HTTP) responseTimeShouldBeLessThan(duration string) error {
+func (r *HTTPClient) responseTimeShouldBeLessThan(duration string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
@@ -710,8 +710,8 @@ func (r *HTTP) responseTimeShouldBeLessThan(duration string) error {
 	return nil
 }
 
-func (r *HTTP) Cleanup(ctx context.Context) error {
+func (r *HTTPClient) Cleanup(ctx context.Context) error {
 	return nil
 }
 
-var _ Handler = (*HTTP)(nil)
+var _ Handler = (*HTTPClient)(nil)

@@ -1,4 +1,4 @@
-.PHONY: build test lint clean install run help
+.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage-all
 
 # Build variables
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -83,7 +83,8 @@ deps:
 clean:
 	@echo "Cleaning..."
 	@rm -rf ./bin
-	@rm -f coverage.out coverage.html
+	@rm -rf ./coverage ./coverage-merged
+	@rm -f coverage.out coverage.html coverage-integration.out coverage-integration.html coverage-all.out coverage-all.html
 
 ## run: Run tomato with example config
 run: build
@@ -98,6 +99,36 @@ docker-build:
 	@echo "Building Docker image..."
 	docker build -t tomatool/tomato:$(VERSION) .
 	docker tag tomatool/tomato:$(VERSION) tomatool/tomato:latest
+
+## integration-test: Run integration tests using tomato to test itself
+integration-test: build
+	@echo "Running integration tests..."
+	$(BINARY_PATH) run -c ./tests/tomato.yml
+
+## integration-test-coverage: Run integration tests with coverage (Cloudflare technique)
+integration-test-coverage:
+	@echo "Building coverage-instrumented binary..."
+	@mkdir -p ./bin
+	$(GOCMD) build -cover -covermode=atomic -coverpkg=./... $(LDFLAGS) -o ./bin/tomato-coverage .
+	@echo "Running integration tests with coverage..."
+	@mkdir -p ./coverage
+	GOCOVERDIR=./coverage ./bin/tomato-coverage run -c ./tests/tomato.yml || true
+	@echo "Converting coverage data..."
+	$(GOCMD) tool covdata textfmt -i=./coverage -o=coverage-integration.out
+	@echo "Generating coverage report..."
+	$(GOCMD) tool cover -html=coverage-integration.out -o coverage-integration.html
+	@echo "Integration coverage report: coverage-integration.html"
+
+## coverage-all: Run both unit tests and integration tests with combined coverage
+coverage-all: test-coverage integration-test-coverage
+	@echo "Merging coverage reports..."
+	@if [ -f coverage.out ] && [ -f coverage-integration.out ]; then \
+		$(GOCMD) tool covdata merge -i=./coverage -o=./coverage-merged 2>/dev/null || true; \
+		cat coverage.out > coverage-all.out; \
+		tail -n +2 coverage-integration.out >> coverage-all.out; \
+		$(GOCMD) tool cover -html=coverage-all.out -o coverage-all.html; \
+		echo "Combined coverage report: coverage-all.html"; \
+	fi
 
 ## release: Create a release build for multiple platforms
 release: clean

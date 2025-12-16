@@ -52,8 +52,8 @@ type CacheStore interface {
 	Exists(ctx context.Context, key string) (bool, error)
 }
 
-// WebSocketClient is implemented by handlers that can handle WebSocket connections
-type WebSocketClient interface {
+// WebSocketClientInterface is implemented by handlers that can handle WebSocket connections
+type WebSocketClientInterface interface {
 	Connect(ctx context.Context, headers map[string]string) error
 	Send(ctx context.Context, message []byte) error
 	Receive(ctx context.Context, timeout int) ([]byte, error)

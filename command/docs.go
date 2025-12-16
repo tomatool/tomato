@@ -64,7 +64,7 @@ func collectStepCategories() []handler.StepCategory {
 	categories := []handler.StepCategory{}
 
 	// HTTP steps
-	httpHandler, _ := handler.NewHTTP("api", handler.DummyConfig(), nil)
+	httpHandler, _ := handler.NewHTTPClient("api", handler.DummyConfig(), nil)
 	categories = append(categories, httpHandler.Steps())
 
 	// Redis steps
@@ -80,7 +80,7 @@ func collectStepCategories() []handler.StepCategory {
 	categories = append(categories, kafkaHandler.Steps())
 
 	// WebSocket steps
-	wsHandler, _ := handler.NewWebSocket("ws", handler.DummyConfig(), nil)
+	wsHandler, _ := handler.NewWebSocketClient("ws", handler.DummyConfig(), nil)
 	categories = append(categories, wsHandler.Steps())
 
 	// Shell steps
