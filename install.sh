@@ -42,9 +42,16 @@ detect_platform() {
     case "$ARCH" in
         x86_64|amd64) ARCH="amd64" ;;
         arm64|aarch64) ARCH="arm64" ;;
-        armv7l) ARCH="arm" ;;
+        i386|i686) ARCH="386" ;;
+        armv6l) ARCH="arm_6" ;;
+        armv7l) ARCH="arm_7" ;;
         *) error "Unsupported architecture: $ARCH" ;;
     esac
+
+    # Validate platform combinations
+    if [ "$OS" = "darwin" ] && [ "$ARCH" = "386" ]; then
+        error "macOS does not support 32-bit binaries"
+    fi
 
     PLATFORM="${OS}_${ARCH}"
     info "Detected platform: $PLATFORM"
@@ -61,19 +68,30 @@ get_latest_version() {
 
 # Download and install
 install() {
-    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${BINARY_NAME}_${VERSION#v}_${PLATFORM}.tar.gz"
+    if [ "$OS" = "windows" ]; then
+        EXT="zip"
+        BINARY_NAME="tomato.exe"
+    else
+        EXT="tar.gz"
+    fi
+
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/${BINARY_NAME%.*}_${VERSION#v}_${PLATFORM}.${EXT}"
 
     info "Downloading from: $DOWNLOAD_URL"
 
     TMP_DIR=$(mktemp -d)
     trap "rm -rf $TMP_DIR" EXIT
 
-    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/tomato.tar.gz"; then
+    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/tomato.${EXT}"; then
         error "Failed to download release. Please check if the release exists for your platform."
     fi
 
     info "Extracting..."
-    tar -xzf "$TMP_DIR/tomato.tar.gz" -C "$TMP_DIR"
+    if [ "$EXT" = "zip" ]; then
+        unzip -q "$TMP_DIR/tomato.zip" -d "$TMP_DIR"
+    else
+        tar -xzf "$TMP_DIR/tomato.tar.gz" -C "$TMP_DIR"
+    fi
 
     # Check if we need sudo
     if [ -w "$INSTALL_DIR" ]; then
