@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tomatool/tomato/internal/version"
 	"github.com/urfave/cli/v2"
 )
@@ -64,64 +65,322 @@ var updateCommand = &cli.Command{
 			Name:  "rc",
 			Usage: "Update to latest release candidate",
 		},
+		&cli.BoolFlag{
+			Name:    "select",
+			Aliases: []string{"s"},
+			Usage:   "Select from the last 5 releases",
+		},
 	},
 	Action: func(c *cli.Context) error {
 		useRC := c.Bool("rc")
-		return runUpdate(useRC)
+		useSelect := c.Bool("select")
+		return runUpdate(useRC, useSelect)
 	},
 }
 
 type githubRelease struct {
-	TagName    string `json:"tag_name"`
-	Prerelease bool   `json:"prerelease"`
+	TagName     string `json:"tag_name"`
+	Prerelease  bool   `json:"prerelease"`
+	PublishedAt string `json:"published_at"`
 }
 
-func runUpdate(useRC bool) error {
-	fmt.Println("Checking for updates...")
+// Update UI model
+type updateStep int
 
-	// Get current binary path
-	execPath, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("failed to get executable path: %w", err)
-	}
-	execPath, err = filepath.EvalSymlinks(execPath)
-	if err != nil {
-		return fmt.Errorf("failed to resolve symlinks: %w", err)
-	}
+const (
+	updateStepLoading updateStep = iota
+	updateStepSelect
+	updateStepConfirm
+	updateStepUpdating
+	updateStepDone
+)
 
-	// Detect platform
-	platform := fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH)
-	fmt.Printf("Platform: %s\n", platform)
-	fmt.Printf("Current version: %s\n", version.Version)
+type updateModel struct {
+	step           updateStep
+	cursor         int
+	releases       []githubRelease
+	selectedVer    string
+	currentVersion string
+	platform       string
+	execPath       string
+	err            error
+	done           bool
+	cancelled      bool
+	useSelect      bool
+	useRC          bool
+	statusMsg      string
+}
 
-	// Get latest version
-	latestVersion, err := getLatestVersion(useRC)
-	if err != nil {
-		return fmt.Errorf("failed to get latest version: %w", err)
-	}
+type releasesLoadedMsg struct {
+	releases []githubRelease
+	err      error
+}
 
-	if useRC {
-		fmt.Printf("Latest RC version: %s\n", latestVersion)
-	} else {
-		fmt.Printf("Latest version: %s\n", latestVersion)
-	}
+type updateDoneMsg struct {
+	err error
+}
 
-	// Check if update is needed
+func initialUpdateModel(useRC, useSelect bool) updateModel {
 	currentVersion := version.Version
 	if !strings.HasPrefix(currentVersion, "v") {
 		currentVersion = "v" + currentVersion
 	}
-	if currentVersion == latestVersion {
-		fmt.Println("Already up to date!")
+
+	execPath, _ := os.Executable()
+	execPath, _ = filepath.EvalSymlinks(execPath)
+	platform := fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH)
+
+	return updateModel{
+		step:           updateStepLoading,
+		currentVersion: currentVersion,
+		platform:       platform,
+		execPath:       execPath,
+		useSelect:      useSelect,
+		useRC:          useRC,
+		statusMsg:      "Fetching releases...",
+	}
+}
+
+func (m updateModel) Init() tea.Cmd {
+	return m.fetchReleases()
+}
+
+func (m updateModel) fetchReleases() tea.Cmd {
+	return func() tea.Msg {
+		releases, err := getRecentReleases(m.useRC, 5)
+		return releasesLoadedMsg{releases: releases, err: err}
+	}
+}
+
+func (m updateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			if m.step != updateStepUpdating {
+				m.cancelled = true
+				return m, tea.Quit
+			}
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "down", "j":
+			max := m.getMaxCursor()
+			if m.cursor < max {
+				m.cursor++
+			}
+		case "enter":
+			return m.handleEnter()
+		case "esc":
+			if m.step == updateStepConfirm && m.useSelect {
+				m.step = updateStepSelect
+				m.cursor = 0
+			} else if m.step == updateStepConfirm {
+				m.cancelled = true
+				return m, tea.Quit
+			}
+		}
+
+	case releasesLoadedMsg:
+		if msg.err != nil {
+			m.err = msg.err
+			return m, tea.Quit
+		}
+		m.releases = msg.releases
+		if len(m.releases) == 0 {
+			m.err = fmt.Errorf("no releases found")
+			return m, tea.Quit
+		}
+
+		if m.useSelect {
+			m.step = updateStepSelect
+		} else {
+			m.selectedVer = m.releases[0].TagName
+			if m.selectedVer == m.currentVersion {
+				m.statusMsg = "Already up to date!"
+				m.done = true
+				return m, tea.Quit
+			}
+			m.step = updateStepConfirm
+		}
+
+	case updateDoneMsg:
+		if msg.err != nil {
+			m.err = msg.err
+		} else {
+			m.done = true
+		}
+		return m, tea.Quit
+	}
+
+	return m, nil
+}
+
+func (m updateModel) getMaxCursor() int {
+	switch m.step {
+	case updateStepSelect:
+		return len(m.releases) - 1
+	case updateStepConfirm:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func (m updateModel) handleEnter() (tea.Model, tea.Cmd) {
+	switch m.step {
+	case updateStepSelect:
+		m.selectedVer = m.releases[m.cursor].TagName
+		if m.selectedVer == m.currentVersion {
+			m.statusMsg = "Already on this version!"
+			m.done = true
+			return m, tea.Quit
+		}
+		m.step = updateStepConfirm
+		m.cursor = 0
+
+	case updateStepConfirm:
+		if m.cursor == 0 {
+			m.step = updateStepUpdating
+			m.statusMsg = "Downloading..."
+			return m, m.performUpdate()
+		}
+		m.cancelled = true
+		return m, tea.Quit
+	}
+
+	return m, nil
+}
+
+func (m updateModel) performUpdate() tea.Cmd {
+	return func() tea.Msg {
+		err := downloadAndInstall(m.selectedVer, m.platform, m.execPath)
+		return updateDoneMsg{err: err}
+	}
+}
+
+func (m updateModel) View() string {
+	var s strings.Builder
+
+	s.WriteString(titleStyle.Render("🍅 Tomato Update"))
+	s.WriteString("\n\n")
+
+	// Show platform and version info
+	infoStyle := helpStyle
+	s.WriteString(infoStyle.Render(fmt.Sprintf("Platform: %s", m.platform)))
+	s.WriteString("\n")
+	s.WriteString(infoStyle.Render(fmt.Sprintf("Current:  %s", m.currentVersion)))
+	s.WriteString("\n\n")
+
+	switch m.step {
+	case updateStepLoading:
+		s.WriteString(subtitleStyle.Render(m.statusMsg))
+
+	case updateStepSelect:
+		s.WriteString(subtitleStyle.Render("Select version to install:"))
+		s.WriteString("\n\n")
+
+		for i, r := range m.releases {
+			cursor := "  "
+			if i == m.cursor {
+				cursor = "> "
+			}
+
+			style := unselectedStyle
+			if i == m.cursor {
+				style = selectedStyle
+			}
+
+			label := r.TagName
+			if r.TagName == m.currentVersion {
+				label += " (current)"
+			}
+			if i == 0 {
+				label += " (latest)"
+			}
+
+			s.WriteString(fmt.Sprintf("%s%s\n", cursor, style.Render(label)))
+		}
+
+		s.WriteString("\n")
+		s.WriteString(helpStyle.Render("↑/↓ navigate • ENTER select • q quit"))
+
+	case updateStepConfirm:
+		s.WriteString(subtitleStyle.Render("Confirm update"))
+		s.WriteString("\n\n")
+
+		s.WriteString(fmt.Sprintf("Update from %s to %s?\n\n",
+			warnStyle.Render(m.currentVersion),
+			successStyle.Render(m.selectedVer)))
+
+		options := []string{"Yes, update", "Cancel"}
+		for i, opt := range options {
+			cursor := "  "
+			if i == m.cursor {
+				cursor = "> "
+			}
+			style := unselectedStyle
+			if i == m.cursor {
+				style = selectedStyle
+			}
+			s.WriteString(fmt.Sprintf("%s%s\n", cursor, style.Render(opt)))
+		}
+
+		s.WriteString("\n")
+		if m.useSelect {
+			s.WriteString(helpStyle.Render("ENTER confirm • ESC back • q quit"))
+		} else {
+			s.WriteString(helpStyle.Render("ENTER confirm • ESC/q cancel"))
+		}
+
+	case updateStepUpdating:
+		s.WriteString(subtitleStyle.Render(m.statusMsg))
+		s.WriteString("\n\n")
+		s.WriteString(fmt.Sprintf("Installing %s...\n", m.selectedVer))
+
+	case updateStepDone:
+		s.WriteString(successStyle.Render("✓ Update complete!"))
+	}
+
+	return s.String()
+}
+
+func runUpdate(useRC, useSelect bool) error {
+	m := initialUpdateModel(useRC, useSelect)
+	p := tea.NewProgram(m)
+	result, err := p.Run()
+	if err != nil {
+		return fmt.Errorf("error running update: %w", err)
+	}
+
+	finalModel := result.(updateModel)
+
+	if finalModel.err != nil {
+		return finalModel.err
+	}
+
+	if finalModel.cancelled {
+		fmt.Println("\nCancelled.")
 		return nil
 	}
 
-	// Download new version
-	fmt.Printf("Downloading %s...\n", latestVersion)
+	if finalModel.done {
+		if finalModel.statusMsg == "Already up to date!" || finalModel.statusMsg == "Already on this version!" {
+			fmt.Println("\n" + successStyle.Render("✓ "+finalModel.statusMsg))
+		} else {
+			fmt.Println("\n" + successStyle.Render(fmt.Sprintf("✓ Successfully updated to %s!", finalModel.selectedVer)))
+		}
+	}
+
+	return nil
+}
+
+func downloadAndInstall(version, platform, execPath string) error {
 	downloadURL := fmt.Sprintf(
 		"https://github.com/tomatool/tomato/releases/download/%s/tomato_%s_%s.tar.gz",
-		latestVersion,
-		strings.TrimPrefix(latestVersion, "v"),
+		version,
+		strings.TrimPrefix(version, "v"),
 		platform,
 	)
 
@@ -136,21 +395,42 @@ func runUpdate(useRC bool) error {
 		return fmt.Errorf("failed to download: %w", err)
 	}
 
-	// Extract binary
-	fmt.Println("Extracting...")
-	binaryPath := filepath.Join(tmpDir, "tomato")
 	if err := extractTarGz(tarPath, tmpDir); err != nil {
 		return fmt.Errorf("failed to extract: %w", err)
 	}
 
-	// Replace current binary
-	fmt.Println("Installing...")
+	binaryPath := filepath.Join(tmpDir, "tomato")
 	if err := replaceBinary(binaryPath, execPath); err != nil {
 		return fmt.Errorf("failed to install: %w", err)
 	}
 
-	fmt.Printf("Successfully updated to %s!\n", latestVersion)
 	return nil
+}
+
+func getRecentReleases(includeRC bool, limit int) ([]githubRelease, error) {
+	resp, err := http.Get("https://api.github.com/repos/tomatool/tomato/releases")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var releases []githubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+		return nil, err
+	}
+
+	var filtered []githubRelease
+	for _, r := range releases {
+		isRC := strings.Contains(r.TagName, "-rc.")
+		if includeRC || !isRC {
+			filtered = append(filtered, r)
+		}
+		if len(filtered) >= limit {
+			break
+		}
+	}
+
+	return filtered, nil
 }
 
 func getLatestVersion(useRC bool) (string, error) {
