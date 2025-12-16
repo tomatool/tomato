@@ -1,17 +1,9 @@
-<p align="center">
-  <h1 align="center">Tomato</h1>
-  <p align="center">
-    <strong>Behavioral testing toolkit with built-in container orchestration</strong>
-  </p>
-  <p align="center">
-    <em>One config to rule them all.</em>
-  </p>
-</p>
+# 🍅 tomato - behavioral testing toolkit
 
 <p align="center">
   <a href="https://github.com/tomatool/tomato/actions/workflows/ci.yml"><img src="https://github.com/tomatool/tomato/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/tomatool/tomato/releases"><img src="https://img.shields.io/github/v/release/tomatool/tomato" alt="Release"></a>
   <a href="https://goreportcard.com/report/github.com/tomatool/tomato"><img src="https://goreportcard.com/badge/github.com/tomatool/tomato" alt="Go Report Card"></a>
+  <a href="https://pkg.go.dev/github.com/tomatool/tomato"><img src="https://pkg.go.dev/badge/github.com/tomatool/tomato.svg" alt="Go Reference"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/tomatool/tomato" alt="License"></a>
 </p>
 
