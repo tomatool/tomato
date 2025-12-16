@@ -73,14 +73,15 @@ tomato run
 
 ## Installation
 
+### Quick Install (recommended)
+
 ```bash
-# Quick install (recommended)
 curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
+```
 
-# Using Go
-go install github.com/tomatool/tomato@latest
+### Homebrew
 
-# Using Homebrew
+```bash
 brew install tomatool/tap/tomato
 ```
 
@@ -91,6 +92,21 @@ brew install tomatool/tap/tomato
 ```
 
 See [GitHub Action]({% link github-action.md %}) for full documentation.
+
+### Go Install
+
+```bash
+go install github.com/tomatool/tomato@latest
+```
+
+### From Source
+
+```bash
+git clone https://github.com/tomatool/tomato.git
+cd tomato
+go build -o tomato .
+sudo mv tomato /usr/local/bin/
+```
 
 ## Philosophy
 
