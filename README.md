@@ -18,7 +18,7 @@
 
 ---
 
-Tomato is a language-agnostic behavioral testing framework that manages your test infrastructure automatically. Define containers, resources, and tests in a single `tomato.yml` file.
+Tomato is a language-agnostic behavioral testing framework that manages your test infrastructure automatically.
 
 ## Features
 
@@ -31,144 +31,33 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 
 ## Installation
 
-### Quick Install
-
 ```bash
+# Quick Install
 curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
-```
 
-### Using Go
-
-```bash
+# Using Go
 go install github.com/tomatool/tomato@latest
-```
 
-### Using Homebrew
-
-```bash
+# Using Homebrew
 brew install tomatool/tap/tomato
 ```
 
 ## Quick Start
 
-### Initialize a new project
-
 ```bash
-tomato init
-```
-
-### Configure your test environment
-
-```yaml
-# tomato.yml
-version: 2
-
-containers:
-  postgres:
-    image: postgres:15
-    env:
-      POSTGRES_PASSWORD: test
-    wait_for:
-      type: port
-      target: "5432"
-
-resources:
-  db:
-    type: postgres
-    container: postgres
-    database: test
-
-  api:
-    type: http
-    base_url: http://localhost:8080
-
-features:
-  paths:
-    - ./features
-```
-
-### Write your tests
-
-```gherkin
-# features/users.feature
-Feature: User Management
-
-  Scenario: Create and retrieve a user
-    Given I set "db" table "users" with values:
-      | id | name  | email          |
-      | 1  | John  | john@test.com  |
-    When I send "GET" request to "api" "/users/1"
-    Then "api" response status should be "200"
-    And "api" response JSON "name" should be "John"
-```
-
-### Run tests
-
-```bash
-tomato run
+tomato init    # Initialize a new project
+tomato run     # Run behavioral tests
+tomato steps   # List available steps
 ```
 
 ## Documentation
 
+For complete documentation, visit **[tomatool.github.io/tomato](https://tomatool.github.io/tomato)**
+
 - [Getting Started](https://tomatool.github.io/tomato/getting-started)
 - [Configuration Reference](https://tomatool.github.io/tomato/configuration)
-- [Step Reference](https://tomatool.github.io/tomato/steps)
-
-## Available Steps
-
-Tomato provides steps for:
-
-| Handler | Description |
-|---------|-------------|
-| **HTTP** | Send requests, validate responses, check JSON paths |
-| **PostgreSQL** | Insert data, query tables, execute SQL |
-| **Redis** | Set/get keys, work with hashes, lists, sets |
-| **Kafka** | Publish/consume messages, validate ordering |
-| **WebSocket** | Connect, send/receive messages |
-| **Shell** | Execute commands, check output |
-
-List all available steps:
-
-```bash
-tomato steps
-```
-
-Filter by type:
-
-```bash
-tomato steps --type http
-tomato steps --filter json
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `tomato init` | Initialize a new tomato project |
-| `tomato run` | Run behavioral tests |
-| `tomato new <name>` | Create a new feature file |
-| `tomato steps` | List available Gherkin steps |
-| `tomato docs` | Generate step documentation |
-
-## Testing Your Application
-
-Tomato can start your application and connect it to test containers:
-
-```yaml
-app:
-  command: go run ./cmd/server
-  port: 8080
-  ready:
-    type: http
-    path: /health
-  wait: 5s
-  env:
-    DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port}}/test"
-```
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+- [Architecture](https://tomatool.github.io/tomato/architecture)
+- [Step Reference](https://tomatool.github.io/tomato/resources)
 
 ## License
 
