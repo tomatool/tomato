@@ -86,6 +86,8 @@ func (r *Runner) initializeScenario(ctx *godog.ScenarioContext) {
 			if err := r.handlers.ResetAll(ctx); err != nil {
 				return ctx, fmt.Errorf("reset failed: %w", err)
 			}
+			// Reset captured variables between scenarios
+			handler.ResetGlobalVariables()
 		}
 
 		if err := r.runHooks(ctx, r.config.Hooks.BeforeScenario); err != nil {
