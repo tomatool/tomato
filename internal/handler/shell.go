@@ -78,33 +78,134 @@ func (r *Shell) Reset(ctx context.Context) error {
 }
 
 func (r *Shell) RegisterSteps(ctx *godog.ScenarioContext) {
-	// Environment setup
-	ctx.Step(fmt.Sprintf(`^I set "%s" environment variable "([^"]*)" to "([^"]*)"$`, r.name), r.setEnvVar)
-	ctx.Step(fmt.Sprintf(`^I set "%s" working directory to "([^"]*)"$`, r.name), r.setWorkDir)
+	RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
 
-	// Command execution
-	ctx.Step(fmt.Sprintf(`^I run command on "%s":$`, r.name), r.runCommand)
-	ctx.Step(fmt.Sprintf(`^I run "([^"]*)" on "%s"$`, r.name), r.runCommandInline)
-	ctx.Step(fmt.Sprintf(`^I run script "([^"]*)" on "%s"$`, r.name), r.runScript)
-	ctx.Step(fmt.Sprintf(`^I run command on "%s" with timeout "([^"]*)":$`, r.name), r.runCommandWithTimeout)
+// Steps returns the structured step definitions for the Shell handler
+func (r *Shell) Steps() StepCategory {
+	return StepCategory{
+		Name:        "Shell",
+		Description: "Steps for executing shell commands and scripts",
+		Steps: []StepDef{
+			// Environment setup
+			{
+				Pattern:     `^I set "{resource}" environment variable "([^"]*)" to "([^"]*)"$`,
+				Description: "Sets an environment variable for commands",
+				Example:     `I set "{resource}" environment variable "API_KEY" to "secret"`,
+				Handler:     r.setEnvVar,
+			},
+			{
+				Pattern:     `^I set "{resource}" working directory to "([^"]*)"$`,
+				Description: "Sets the working directory for commands",
+				Example:     `I set "{resource}" working directory to "/tmp/test"`,
+				Handler:     r.setWorkDir,
+			},
 
-	// Exit code assertions
-	ctx.Step(fmt.Sprintf(`^"%s" exit code should be "(\d+)"$`, r.name), r.exitCodeShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" should succeed$`, r.name), r.shouldSucceed)
-	ctx.Step(fmt.Sprintf(`^"%s" should fail$`, r.name), r.shouldFail)
+			// Command execution
+			{
+				Pattern:     `^I run command on "{resource}":$`,
+				Description: "Runs a shell command",
+				Example:     "I run command on \"{resource}\":\n  \"\"\"\n  echo \"Hello World\"\n  \"\"\"",
+				Handler:     r.runCommand,
+			},
+			{
+				Pattern:     `^I run "([^"]*)" on "{resource}"$`,
+				Description: "Runs a short inline command",
+				Example:     `I run "ls -la" on "{resource}"`,
+				Handler:     r.runCommandInline,
+			},
+			{
+				Pattern:     `^I run script "([^"]*)" on "{resource}"$`,
+				Description: "Runs a script file",
+				Example:     `I run script "scripts/setup.sh" on "{resource}"`,
+				Handler:     r.runScript,
+			},
+			{
+				Pattern:     `^I run command on "{resource}" with timeout "([^"]*)":$`,
+				Description: "Runs a command with custom timeout",
+				Example:     "I run command on \"{resource}\" with timeout \"60s\":\n  \"\"\"\n  ./long-running-task\n  \"\"\"",
+				Handler:     r.runCommandWithTimeout,
+			},
 
-	// Output assertions
-	ctx.Step(fmt.Sprintf(`^"%s" stdout should contain "([^"]*)"$`, r.name), r.stdoutShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" stdout should not contain "([^"]*)"$`, r.name), r.stdoutShouldNotContain)
-	ctx.Step(fmt.Sprintf(`^"%s" stdout should be:$`, r.name), r.stdoutShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" stdout should be empty$`, r.name), r.stdoutShouldBeEmpty)
-	ctx.Step(fmt.Sprintf(`^"%s" stderr should contain "([^"]*)"$`, r.name), r.stderrShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" stderr should be empty$`, r.name), r.stderrShouldBeEmpty)
+			// Exit code assertions
+			{
+				Pattern:     `^"{resource}" exit code should be "(\d+)"$`,
+				Description: "Asserts the command exit code",
+				Example:     `"{resource}" exit code should be "0"`,
+				Handler:     r.exitCodeShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" should succeed$`,
+				Description: "Asserts the command exited with code 0",
+				Example:     `"{resource}" should succeed`,
+				Handler:     r.shouldSucceed,
+			},
+			{
+				Pattern:     `^"{resource}" should fail$`,
+				Description: "Asserts the command exited with non-zero code",
+				Example:     `"{resource}" should fail`,
+				Handler:     r.shouldFail,
+			},
 
-	// File assertions (useful after running commands)
-	ctx.Step(fmt.Sprintf(`^"%s" file "([^"]*)" should exist$`, r.name), r.fileShouldExist)
-	ctx.Step(fmt.Sprintf(`^"%s" file "([^"]*)" should not exist$`, r.name), r.fileShouldNotExist)
-	ctx.Step(fmt.Sprintf(`^"%s" file "([^"]*)" should contain "([^"]*)"$`, r.name), r.fileShouldContain)
+			// Output assertions
+			{
+				Pattern:     `^"{resource}" stdout should contain "([^"]*)"$`,
+				Description: "Asserts stdout contains substring",
+				Example:     `"{resource}" stdout should contain "success"`,
+				Handler:     r.stdoutShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" stdout should not contain "([^"]*)"$`,
+				Description: "Asserts stdout does not contain substring",
+				Example:     `"{resource}" stdout should not contain "error"`,
+				Handler:     r.stdoutShouldNotContain,
+			},
+			{
+				Pattern:     `^"{resource}" stdout should be:$`,
+				Description: "Asserts stdout matches exactly",
+				Example:     "\"{resource}\" stdout should be:\n  \"\"\"\n  Hello World\n  \"\"\"",
+				Handler:     r.stdoutShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" stdout should be empty$`,
+				Description: "Asserts stdout is empty",
+				Example:     `"{resource}" stdout should be empty`,
+				Handler:     r.stdoutShouldBeEmpty,
+			},
+			{
+				Pattern:     `^"{resource}" stderr should contain "([^"]*)"$`,
+				Description: "Asserts stderr contains substring",
+				Example:     `"{resource}" stderr should contain "warning"`,
+				Handler:     r.stderrShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" stderr should be empty$`,
+				Description: "Asserts stderr is empty",
+				Example:     `"{resource}" stderr should be empty`,
+				Handler:     r.stderrShouldBeEmpty,
+			},
+
+			// File assertions
+			{
+				Pattern:     `^"{resource}" file "([^"]*)" should exist$`,
+				Description: "Asserts a file exists",
+				Example:     `"{resource}" file "output.txt" should exist`,
+				Handler:     r.fileShouldExist,
+			},
+			{
+				Pattern:     `^"{resource}" file "([^"]*)" should not exist$`,
+				Description: "Asserts a file does not exist",
+				Example:     `"{resource}" file "temp.txt" should not exist`,
+				Handler:     r.fileShouldNotExist,
+			},
+			{
+				Pattern:     `^"{resource}" file "([^"]*)" should contain "([^"]*)"$`,
+				Description: "Asserts a file contains substring",
+				Example:     `"{resource}" file "config.json" should contain "database"`,
+				Handler:     r.fileShouldContain,
+			},
+		},
+	}
 }
 
 // Environment setup

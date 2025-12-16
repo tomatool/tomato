@@ -116,33 +116,168 @@ func (r *HTTP) Reset(ctx context.Context) error {
 }
 
 func (r *HTTP) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(fmt.Sprintf(`^I set "%s" header "([^"]*)" to "([^"]*)"$`, r.name), r.setHeader)
-	ctx.Step(fmt.Sprintf(`^I set "%s" headers:$`, r.name), r.setHeaders)
-	ctx.Step(fmt.Sprintf(`^I set "%s" query param "([^"]*)" to "([^"]*)"$`, r.name), r.setQueryParam)
-	ctx.Step(fmt.Sprintf(`^I set "%s" request body:$`, r.name), r.setRequestBody)
-	ctx.Step(fmt.Sprintf(`^I set "%s" JSON body:$`, r.name), r.setJSONBody)
-	ctx.Step(fmt.Sprintf(`^I set "%s" form body:$`, r.name), r.setFormBody)
+	RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
 
-	ctx.Step(fmt.Sprintf(`^I send "([^"]*)" request to "%s" "([^"]*)"$`, r.name), r.sendRequest)
-	ctx.Step(fmt.Sprintf(`^I send "([^"]*)" request to "%s" "([^"]*)" with body:$`, r.name), r.sendRequestWithBody)
-	ctx.Step(fmt.Sprintf(`^I send "([^"]*)" request to "%s" "([^"]*)" with JSON:$`, r.name), r.sendRequestWithJSON)
+// Steps returns the structured step definitions for the HTTP handler
+func (r *HTTP) Steps() StepCategory {
+	return StepCategory{
+		Name:        "HTTP",
+		Description: "Steps for making HTTP requests and validating responses",
+		Steps: []StepDef{
+			// Request setup steps
+			{
+				Pattern:     `^I set "{resource}" header "([^"]*)" to "([^"]*)"$`,
+				Description: "Sets a header for the next HTTP request",
+				Example:     `I set "{resource}" header "Content-Type" to "application/json"`,
+				Handler:     r.setHeader,
+			},
+			{
+				Pattern:     `^I set "{resource}" headers:$`,
+				Description: "Sets multiple headers for the next HTTP request using a table",
+				Example:     "I set \"{resource}\" headers:\n  | header       | value            |\n  | Content-Type | application/json |",
+				Handler:     r.setHeaders,
+			},
+			{
+				Pattern:     `^I set "{resource}" query param "([^"]*)" to "([^"]*)"$`,
+				Description: "Sets a query parameter for the next HTTP request",
+				Example:     `I set "{resource}" query param "page" to "1"`,
+				Handler:     r.setQueryParam,
+			},
+			{
+				Pattern:     `^I set "{resource}" request body:$`,
+				Description: "Sets the raw request body for the next HTTP request",
+				Example:     "I set \"{resource}\" request body:\n  \"\"\"\n  raw body content\n  \"\"\"",
+				Handler:     r.setRequestBody,
+			},
+			{
+				Pattern:     `^I set "{resource}" JSON body:$`,
+				Description: "Sets a JSON request body and automatically sets Content-Type header",
+				Example:     "I set \"{resource}\" JSON body:\n  \"\"\"\n  {\"name\": \"test\"}\n  \"\"\"",
+				Handler:     r.setJSONBody,
+			},
+			{
+				Pattern:     `^I set "{resource}" form body:$`,
+				Description: "Sets form-encoded body from a table and sets Content-Type header",
+				Example:     "I set \"{resource}\" form body:\n  | field | value |\n  | name  | test  |",
+				Handler:     r.setFormBody,
+			},
 
-	ctx.Step(fmt.Sprintf(`^"%s" response status should be "(\d+)"$`, r.name), r.responseStatusShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" response status should be (success|redirect|client error|server error)$`, r.name), r.responseStatusClassShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" response header "([^"]*)" should be "([^"]*)"$`, r.name), r.responseHeaderShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" response header "([^"]*)" should contain "([^"]*)"$`, r.name), r.responseHeaderShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" response header "([^"]*)" should exist$`, r.name), r.responseHeaderShouldExist)
-	ctx.Step(fmt.Sprintf(`^"%s" response body should be:$`, r.name), r.responseBodyShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" response body should contain "([^"]*)"$`, r.name), r.responseBodyShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" response body should not contain "([^"]*)"$`, r.name), r.responseBodyShouldNotContain)
-	ctx.Step(fmt.Sprintf(`^"%s" response body should be empty$`, r.name), r.responseBodyShouldBeEmpty)
+			// Request execution steps
+			{
+				Pattern:     `^I send "([^"]*)" request to "{resource}" "([^"]*)"$`,
+				Description: "Sends an HTTP request with the specified method to the given path",
+				Example:     `I send "GET" request to "{resource}" "/api/users"`,
+				Handler:     r.sendRequest,
+			},
+			{
+				Pattern:     `^I send "([^"]*)" request to "{resource}" "([^"]*)" with body:$`,
+				Description: "Sends an HTTP request with a raw body",
+				Example:     "I send \"POST\" request to \"{resource}\" \"/api/users\" with body:\n  \"\"\"\n  raw body\n  \"\"\"",
+				Handler:     r.sendRequestWithBody,
+			},
+			{
+				Pattern:     `^I send "([^"]*)" request to "{resource}" "([^"]*)" with JSON:$`,
+				Description: "Sends an HTTP request with a JSON body",
+				Example:     "I send \"POST\" request to \"{resource}\" \"/api/users\" with JSON:\n  \"\"\"\n  {\"name\": \"John\"}\n  \"\"\"",
+				Handler:     r.sendRequestWithJSON,
+			},
 
-	ctx.Step(fmt.Sprintf(`^"%s" response JSON "([^"]*)" should be "([^"]*)"$`, r.name), r.responseJSONPathShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" response JSON "([^"]*)" should exist$`, r.name), r.responseJSONPathShouldExist)
-	ctx.Step(fmt.Sprintf(`^"%s" response JSON "([^"]*)" should not exist$`, r.name), r.responseJSONPathShouldNotExist)
-	ctx.Step(fmt.Sprintf(`^"%s" response JSON should match:$`, r.name), r.responseJSONShouldMatch)
+			// Response status steps
+			{
+				Pattern:     `^"{resource}" response status should be "(\d+)"$`,
+				Description: "Asserts the response has the exact HTTP status code",
+				Example:     `"{resource}" response status should be "200"`,
+				Handler:     r.responseStatusShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" response status should be (success|redirect|client error|server error)$`,
+				Description: "Asserts the response status is in the given class (2xx, 3xx, 4xx, 5xx)",
+				Example:     `"{resource}" response status should be success`,
+				Handler:     r.responseStatusClassShouldBe,
+			},
 
-	ctx.Step(fmt.Sprintf(`^"%s" response time should be less than "([^"]*)"$`, r.name), r.responseTimeShouldBeLessThan)
+			// Response header steps
+			{
+				Pattern:     `^"{resource}" response header "([^"]*)" should be "([^"]*)"$`,
+				Description: "Asserts a response header has the exact value",
+				Example:     `"{resource}" response header "Content-Type" should be "application/json"`,
+				Handler:     r.responseHeaderShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" response header "([^"]*)" should contain "([^"]*)"$`,
+				Description: "Asserts a response header contains a substring",
+				Example:     `"{resource}" response header "Content-Type" should contain "json"`,
+				Handler:     r.responseHeaderShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" response header "([^"]*)" should exist$`,
+				Description: "Asserts a response header exists",
+				Example:     `"{resource}" response header "X-Request-Id" should exist`,
+				Handler:     r.responseHeaderShouldExist,
+			},
+
+			// Response body steps
+			{
+				Pattern:     `^"{resource}" response body should be:$`,
+				Description: "Asserts the response body matches exactly",
+				Example:     "\"{resource}\" response body should be:\n  \"\"\"\n  expected body\n  \"\"\"",
+				Handler:     r.responseBodyShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" response body should contain "([^"]*)"$`,
+				Description: "Asserts the response body contains a substring",
+				Example:     `"{resource}" response body should contain "success"`,
+				Handler:     r.responseBodyShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" response body should not contain "([^"]*)"$`,
+				Description: "Asserts the response body does not contain a substring",
+				Example:     `"{resource}" response body should not contain "error"`,
+				Handler:     r.responseBodyShouldNotContain,
+			},
+			{
+				Pattern:     `^"{resource}" response body should be empty$`,
+				Description: "Asserts the response body is empty",
+				Example:     `"{resource}" response body should be empty`,
+				Handler:     r.responseBodyShouldBeEmpty,
+			},
+
+			// Response JSON steps
+			{
+				Pattern:     `^"{resource}" response JSON "([^"]*)" should be "([^"]*)"$`,
+				Description: "Asserts a JSON path in the response has the expected value",
+				Example:     `"{resource}" response JSON "data.id" should be "123"`,
+				Handler:     r.responseJSONPathShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" response JSON "([^"]*)" should exist$`,
+				Description: "Asserts a JSON path exists in the response",
+				Example:     `"{resource}" response JSON "data.id" should exist`,
+				Handler:     r.responseJSONPathShouldExist,
+			},
+			{
+				Pattern:     `^"{resource}" response JSON "([^"]*)" should not exist$`,
+				Description: "Asserts a JSON path does not exist in the response",
+				Example:     `"{resource}" response JSON "data.deleted" should not exist`,
+				Handler:     r.responseJSONPathShouldNotExist,
+			},
+			{
+				Pattern:     `^"{resource}" response JSON should match:$`,
+				Description: "Asserts the response JSON matches the expected structure. Use @string, @number, @boolean, @array, @object, @any, @null, @notnull as type matchers",
+				Example:     "\"{resource}\" response JSON should match:\n  \"\"\"\n  {\"id\": \"@number\", \"name\": \"@string\"}\n  \"\"\"",
+				Handler:     r.responseJSONShouldMatch,
+			},
+
+			// Response timing steps
+			{
+				Pattern:     `^"{resource}" response time should be less than "([^"]*)"$`,
+				Description: "Asserts the response was received within the given duration",
+				Example:     `"{resource}" response time should be less than "500ms"`,
+				Handler:     r.responseTimeShouldBeLessThan,
+			},
+		},
+	}
 }
 
 func (r *HTTP) setHeader(key, value string) error {

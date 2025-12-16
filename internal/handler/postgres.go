@@ -98,12 +98,53 @@ func (r *Postgres) isExcluded(table string) bool {
 }
 
 func (r *Postgres) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(fmt.Sprintf(`^I set "%s" table "([^"]*)" with values:$`, r.name), r.setTableValues)
-	ctx.Step(fmt.Sprintf(`^"%s" table "([^"]*)" should contain:$`, r.name), r.tableShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" table "([^"]*)" should be empty$`, r.name), r.tableShouldBeEmpty)
-	ctx.Step(fmt.Sprintf(`^"%s" table "([^"]*)" should have "(\d+)" rows$`, r.name), r.tableShouldHaveRows)
-	ctx.Step(fmt.Sprintf(`^I execute SQL on "%s":$`, r.name), r.executeSQL)
-	ctx.Step(fmt.Sprintf(`^I execute SQL file "([^"]*)" on "%s"$`, r.name), r.executeSQLFile)
+	RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
+
+// Steps returns the structured step definitions for the Postgres handler
+func (r *Postgres) Steps() StepCategory {
+	return StepCategory{
+		Name:        "Postgres",
+		Description: "Steps for interacting with PostgreSQL databases",
+		Steps: []StepDef{
+			{
+				Pattern:     `^I set "{resource}" table "([^"]*)" with values:$`,
+				Description: "Inserts rows into a table from a data table",
+				Example:     "I set \"{resource}\" table \"users\" with values:\n  | id | name  | email           |\n  | 1  | John  | john@test.com   |",
+				Handler:     r.setTableValues,
+			},
+			{
+				Pattern:     `^"{resource}" table "([^"]*)" should contain:$`,
+				Description: "Asserts a table contains the expected rows",
+				Example:     "\"{resource}\" table \"users\" should contain:\n  | id | name  |\n  | 1  | John  |",
+				Handler:     r.tableShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" table "([^"]*)" should be empty$`,
+				Description: "Asserts a table has no rows",
+				Example:     `"{resource}" table "users" should be empty`,
+				Handler:     r.tableShouldBeEmpty,
+			},
+			{
+				Pattern:     `^"{resource}" table "([^"]*)" should have "(\d+)" rows$`,
+				Description: "Asserts a table has exactly N rows",
+				Example:     `"{resource}" table "users" should have "5" rows`,
+				Handler:     r.tableShouldHaveRows,
+			},
+			{
+				Pattern:     `^I execute SQL on "{resource}":$`,
+				Description: "Executes raw SQL query",
+				Example:     "I execute SQL on \"{resource}\":\n  \"\"\"\n  UPDATE users SET active = true WHERE id = 1\n  \"\"\"",
+				Handler:     r.executeSQL,
+			},
+			{
+				Pattern:     `^I execute SQL file "([^"]*)" on "{resource}"$`,
+				Description: "Executes SQL from a file",
+				Example:     `I execute SQL file "fixtures/seed.sql" on "{resource}"`,
+				Handler:     r.executeSQLFile,
+			},
+		},
+	}
 }
 
 func (r *Postgres) setTableValues(table string, data *godog.Table) error {

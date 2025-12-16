@@ -187,28 +187,132 @@ func (r *Kafka) stopAllConsumers() {
 }
 
 func (r *Kafka) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(fmt.Sprintf(`^kafka topic "([^"]*)" exists on "%s"$`, r.name), r.topicExists)
-	ctx.Step(fmt.Sprintf(`^I create kafka topic "([^"]*)" on "%s"$`, r.name), r.createTopic)
-	ctx.Step(fmt.Sprintf(`^I create kafka topic "([^"]*)" on "%s" with "(\d+)" partitions$`, r.name), r.createTopicWithPartitions)
+	RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
 
-	ctx.Step(fmt.Sprintf(`^I publish message to "%s" topic "([^"]*)":$`, r.name), r.publishMessage)
-	ctx.Step(fmt.Sprintf(`^I publish message to "%s" topic "([^"]*)" with key "([^"]*)":$`, r.name), r.publishMessageWithKey)
-	ctx.Step(fmt.Sprintf(`^I publish JSON to "%s" topic "([^"]*)":$`, r.name), r.publishJSON)
-	ctx.Step(fmt.Sprintf(`^I publish JSON to "%s" topic "([^"]*)" with key "([^"]*)":$`, r.name), r.publishJSONWithKey)
-	ctx.Step(fmt.Sprintf(`^I publish messages to "%s" topic "([^"]*)":$`, r.name), r.publishMessages)
+// Steps returns the structured step definitions for the Kafka handler
+func (r *Kafka) Steps() StepCategory {
+	return StepCategory{
+		Name:        "Kafka",
+		Description: "Steps for interacting with Apache Kafka message broker",
+		Steps: []StepDef{
+			// Topic management
+			{
+				Pattern:     `^kafka topic "([^"]*)" exists on "{resource}"$`,
+				Description: "Asserts a Kafka topic exists",
+				Example:     `kafka topic "events" exists on "{resource}"`,
+				Handler:     r.topicExists,
+			},
+			{
+				Pattern:     `^I create kafka topic "([^"]*)" on "{resource}"$`,
+				Description: "Creates a Kafka topic with 1 partition",
+				Example:     `I create kafka topic "events" on "{resource}"`,
+				Handler:     r.createTopic,
+			},
+			{
+				Pattern:     `^I create kafka topic "([^"]*)" on "{resource}" with "(\d+)" partitions$`,
+				Description: "Creates a Kafka topic with specified partitions",
+				Example:     `I create kafka topic "events" on "{resource}" with "3" partitions`,
+				Handler:     r.createTopicWithPartitions,
+			},
 
-	ctx.Step(fmt.Sprintf(`^I start consuming from "%s" topic "([^"]*)"$`, r.name), r.startConsuming)
-	ctx.Step(fmt.Sprintf(`^I consume message from "%s" topic "([^"]*)" within "([^"]*)"$`, r.name), r.consumeMessage)
-	ctx.Step(fmt.Sprintf(`^I should receive message from "%s" topic "([^"]*)" within "([^"]*)":$`, r.name), r.shouldReceiveMessage)
-	ctx.Step(fmt.Sprintf(`^I should receive message from "%s" topic "([^"]*)" with key "([^"]*)" within "([^"]*)"$`, r.name), r.shouldReceiveMessageWithKey)
+			// Publishing
+			{
+				Pattern:     `^I publish message to "{resource}" topic "([^"]*)":$`,
+				Description: "Publishes a message to a topic",
+				Example:     "I publish message to \"{resource}\" topic \"events\":\n  \"\"\"\n  Hello World\n  \"\"\"",
+				Handler:     r.publishMessage,
+			},
+			{
+				Pattern:     `^I publish message to "{resource}" topic "([^"]*)" with key "([^"]*)":$`,
+				Description: "Publishes a message with a key to a topic",
+				Example:     "I publish message to \"{resource}\" topic \"events\" with key \"user-123\":\n  \"\"\"\n  Hello World\n  \"\"\"",
+				Handler:     r.publishMessageWithKey,
+			},
+			{
+				Pattern:     `^I publish JSON to "{resource}" topic "([^"]*)":$`,
+				Description: "Publishes a JSON message to a topic",
+				Example:     "I publish JSON to \"{resource}\" topic \"events\":\n  \"\"\"\n  {\"type\": \"user_created\"}\n  \"\"\"",
+				Handler:     r.publishJSON,
+			},
+			{
+				Pattern:     `^I publish JSON to "{resource}" topic "([^"]*)" with key "([^"]*)":$`,
+				Description: "Publishes a JSON message with a key",
+				Example:     "I publish JSON to \"{resource}\" topic \"events\" with key \"user-123\":\n  \"\"\"\n  {\"type\": \"user_created\"}\n  \"\"\"",
+				Handler:     r.publishJSONWithKey,
+			},
+			{
+				Pattern:     `^I publish messages to "{resource}" topic "([^"]*)":$`,
+				Description: "Publishes multiple messages from a table",
+				Example:     "I publish messages to \"{resource}\" topic \"events\":\n  | key      | value           |\n  | user-1   | {\"id\": 1}     |",
+				Handler:     r.publishMessages,
+			},
 
-	ctx.Step(fmt.Sprintf(`^"%s" topic "([^"]*)" should have "(\d+)" messages$`, r.name), r.topicShouldHaveMessages)
-	ctx.Step(fmt.Sprintf(`^"%s" topic "([^"]*)" should be empty$`, r.name), r.topicShouldBeEmpty)
-	ctx.Step(fmt.Sprintf(`^the last message from "%s" should contain:$`, r.name), r.lastMessageShouldContain)
-	ctx.Step(fmt.Sprintf(`^the last message from "%s" should have key "([^"]*)"$`, r.name), r.lastMessageShouldHaveKey)
-	ctx.Step(fmt.Sprintf(`^the last message from "%s" should have header "([^"]*)" with value "([^"]*)"$`, r.name), r.lastMessageShouldHaveHeader)
+			// Consuming
+			{
+				Pattern:     `^I start consuming from "{resource}" topic "([^"]*)"$`,
+				Description: "Starts consuming messages from a topic",
+				Example:     `I start consuming from "{resource}" topic "events"`,
+				Handler:     r.startConsuming,
+			},
+			{
+				Pattern:     `^I consume message from "{resource}" topic "([^"]*)" within "([^"]*)"$`,
+				Description: "Waits for a message from a topic within timeout",
+				Example:     `I consume message from "{resource}" topic "events" within "5s"`,
+				Handler:     r.consumeMessage,
+			},
+			{
+				Pattern:     `^I should receive message from "{resource}" topic "([^"]*)" within "([^"]*)":$`,
+				Description: "Asserts a specific message is received within timeout",
+				Example:     "I should receive message from \"{resource}\" topic \"events\" within \"5s\":\n  \"\"\"\n  Hello World\n  \"\"\"",
+				Handler:     r.shouldReceiveMessage,
+			},
+			{
+				Pattern:     `^I should receive message from "{resource}" topic "([^"]*)" with key "([^"]*)" within "([^"]*)"$`,
+				Description: "Asserts a message with specific key is received",
+				Example:     `I should receive message from "{resource}" topic "events" with key "user-123" within "5s"`,
+				Handler:     r.shouldReceiveMessageWithKey,
+			},
 
-	ctx.Step(fmt.Sprintf(`^I should receive messages from "%s" topic "([^"]*)" in order:$`, r.name), r.shouldReceiveMessagesInOrder)
+			// Assertions
+			{
+				Pattern:     `^"{resource}" topic "([^"]*)" should have "(\d+)" messages$`,
+				Description: "Asserts topic has exactly N messages consumed",
+				Example:     `"{resource}" topic "events" should have "3" messages`,
+				Handler:     r.topicShouldHaveMessages,
+			},
+			{
+				Pattern:     `^"{resource}" topic "([^"]*)" should be empty$`,
+				Description: "Asserts no messages have been consumed from topic",
+				Example:     `"{resource}" topic "events" should be empty`,
+				Handler:     r.topicShouldBeEmpty,
+			},
+			{
+				Pattern:     `^the last message from "{resource}" should contain:$`,
+				Description: "Asserts the last consumed message contains content",
+				Example:     "the last message from \"{resource}\" should contain:\n  \"\"\"\n  user_created\n  \"\"\"",
+				Handler:     r.lastMessageShouldContain,
+			},
+			{
+				Pattern:     `^the last message from "{resource}" should have key "([^"]*)"$`,
+				Description: "Asserts the last consumed message has specific key",
+				Example:     `the last message from "{resource}" should have key "user-123"`,
+				Handler:     r.lastMessageShouldHaveKey,
+			},
+			{
+				Pattern:     `^the last message from "{resource}" should have header "([^"]*)" with value "([^"]*)"$`,
+				Description: "Asserts the last message has a header with value",
+				Example:     `the last message from "{resource}" should have header "content-type" with value "application/json"`,
+				Handler:     r.lastMessageShouldHaveHeader,
+			},
+			{
+				Pattern:     `^I should receive messages from "{resource}" topic "([^"]*)" in order:$`,
+				Description: "Asserts messages are received in specified order",
+				Example:     "I should receive messages from \"{resource}\" topic \"events\" in order:\n  | key    | value  |\n  | key1   | msg1   |",
+				Handler:     r.shouldReceiveMessagesInOrder,
+			},
+		},
+	}
 }
 
 func (r *Kafka) topicExists(topic string) error {

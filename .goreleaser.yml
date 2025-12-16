@@ -1,0 +1,77 @@
+version: 2
+
+project_name: tomato
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: tomato
+    main: ./main.go
+    binary: tomato
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/tomatool/tomato/internal/version.Version={{.Version}}
+      - -X github.com/tomatool/tomato/internal/version.Commit={{.Commit}}
+      - -X github.com/tomatool/tomato/internal/version.Date={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: tomatool
+    name: tomato
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"
+
+brews:
+  - name: tomato
+    repository:
+      owner: tomatool
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://tomatool.github.io/tomato
+    description: Behavioral testing toolkit with built-in container orchestration
+    license: MIT
+    install: |
+      bin.install "tomato"
+    test: |
+      system "#{bin}/tomato", "--version"

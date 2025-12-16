@@ -19,6 +19,8 @@ One config to rule them all.`,
 			initCommand,
 			newCommand,
 			runCommand,
+			docsCommand,
+			stepsCommand,
 		},
 	}
 

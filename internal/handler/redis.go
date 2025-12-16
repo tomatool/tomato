@@ -102,42 +102,178 @@ func (r *Redis) deleteByPattern(ctx context.Context, pattern string) error {
 }
 
 func (r *Redis) RegisterSteps(ctx *godog.ScenarioContext) {
-	// Basic operations
-	ctx.Step(fmt.Sprintf(`^I set "%s" key "([^"]*)" with value "([^"]*)"$`, r.name), r.setKey)
-	ctx.Step(fmt.Sprintf(`^I set "%s" key "([^"]*)" with value "([^"]*)" and TTL "([^"]*)"$`, r.name), r.setKeyWithTTL)
-	ctx.Step(fmt.Sprintf(`^I set "%s" key "([^"]*)" with JSON:$`, r.name), r.setKeyJSON)
-	ctx.Step(fmt.Sprintf(`^I delete "%s" key "([^"]*)"$`, r.name), r.deleteKey)
+	RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
 
-	// Assertions
-	ctx.Step(fmt.Sprintf(`^"%s" key "([^"]*)" should exist$`, r.name), r.keyShouldExist)
-	ctx.Step(fmt.Sprintf(`^"%s" key "([^"]*)" should not exist$`, r.name), r.keyShouldNotExist)
-	ctx.Step(fmt.Sprintf(`^"%s" key "([^"]*)" should have value "([^"]*)"$`, r.name), r.keyShouldHaveValue)
-	ctx.Step(fmt.Sprintf(`^"%s" key "([^"]*)" should contain "([^"]*)"$`, r.name), r.keyShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" key "([^"]*)" should have TTL greater than "(\d+)" seconds$`, r.name), r.keyShouldHaveTTL)
-	ctx.Step(fmt.Sprintf(`^"%s" should have "(\d+)" keys$`, r.name), r.shouldHaveKeyCount)
-	ctx.Step(fmt.Sprintf(`^"%s" should be empty$`, r.name), r.shouldBeEmpty)
+// Steps returns the structured step definitions for the Redis handler
+func (r *Redis) Steps() StepCategory {
+	return StepCategory{
+		Name:        "Redis",
+		Description: "Steps for interacting with Redis key-value store",
+		Steps: []StepDef{
+			// Basic operations
+			{
+				Pattern:     `^I set "{resource}" key "([^"]*)" with value "([^"]*)"$`,
+				Description: "Sets a string value for a key",
+				Example:     `I set "{resource}" key "user:1" with value "John"`,
+				Handler:     r.setKey,
+			},
+			{
+				Pattern:     `^I set "{resource}" key "([^"]*)" with value "([^"]*)" and TTL "([^"]*)"$`,
+				Description: "Sets a string value with expiration time",
+				Example:     `I set "{resource}" key "session:abc" with value "data" and TTL "1h"`,
+				Handler:     r.setKeyWithTTL,
+			},
+			{
+				Pattern:     `^I set "{resource}" key "([^"]*)" with JSON:$`,
+				Description: "Sets a JSON value for a key",
+				Example:     "I set \"{resource}\" key \"user:1\" with JSON:\n  \"\"\"\n  {\"name\": \"John\"}\n  \"\"\"",
+				Handler:     r.setKeyJSON,
+			},
+			{
+				Pattern:     `^I delete "{resource}" key "([^"]*)"$`,
+				Description: "Deletes a key",
+				Example:     `I delete "{resource}" key "user:1"`,
+				Handler:     r.deleteKey,
+			},
 
-	// Hash operations
-	ctx.Step(fmt.Sprintf(`^I set "%s" hash "([^"]*)" with fields:$`, r.name), r.setHash)
-	ctx.Step(fmt.Sprintf(`^"%s" hash "([^"]*)" field "([^"]*)" should be "([^"]*)"$`, r.name), r.hashFieldShouldBe)
-	ctx.Step(fmt.Sprintf(`^"%s" hash "([^"]*)" should contain:$`, r.name), r.hashShouldContain)
+			// Assertions
+			{
+				Pattern:     `^"{resource}" key "([^"]*)" should exist$`,
+				Description: "Asserts that a key exists",
+				Example:     `"{resource}" key "user:1" should exist`,
+				Handler:     r.keyShouldExist,
+			},
+			{
+				Pattern:     `^"{resource}" key "([^"]*)" should not exist$`,
+				Description: "Asserts that a key does not exist",
+				Example:     `"{resource}" key "user:1" should not exist`,
+				Handler:     r.keyShouldNotExist,
+			},
+			{
+				Pattern:     `^"{resource}" key "([^"]*)" should have value "([^"]*)"$`,
+				Description: "Asserts a key has the exact value",
+				Example:     `"{resource}" key "user:1" should have value "John"`,
+				Handler:     r.keyShouldHaveValue,
+			},
+			{
+				Pattern:     `^"{resource}" key "([^"]*)" should contain "([^"]*)"$`,
+				Description: "Asserts a key's value contains a substring",
+				Example:     `"{resource}" key "user:1" should contain "John"`,
+				Handler:     r.keyShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" key "([^"]*)" should have TTL greater than "(\d+)" seconds$`,
+				Description: "Asserts a key has TTL greater than specified seconds",
+				Example:     `"{resource}" key "session:abc" should have TTL greater than "3600" seconds`,
+				Handler:     r.keyShouldHaveTTL,
+			},
+			{
+				Pattern:     `^"{resource}" should have "(\d+)" keys$`,
+				Description: "Asserts the database has exactly N keys",
+				Example:     `"{resource}" should have "5" keys`,
+				Handler:     r.shouldHaveKeyCount,
+			},
+			{
+				Pattern:     `^"{resource}" should be empty$`,
+				Description: "Asserts the database has no keys",
+				Example:     `"{resource}" should be empty`,
+				Handler:     r.shouldBeEmpty,
+			},
 
-	// List operations
-	ctx.Step(fmt.Sprintf(`^I push "([^"]*)" to "%s" list "([^"]*)"$`, r.name), r.pushToList)
-	ctx.Step(fmt.Sprintf(`^I push values to "%s" list "([^"]*)":$`, r.name), r.pushMultipleToList)
-	ctx.Step(fmt.Sprintf(`^"%s" list "([^"]*)" should have "(\d+)" items$`, r.name), r.listShouldHaveLength)
-	ctx.Step(fmt.Sprintf(`^"%s" list "([^"]*)" should contain "([^"]*)"$`, r.name), r.listShouldContain)
+			// Hash operations
+			{
+				Pattern:     `^I set "{resource}" hash "([^"]*)" with fields:$`,
+				Description: "Sets multiple fields in a hash",
+				Example:     "I set \"{resource}\" hash \"user:1\" with fields:\n  | field | value |\n  | name  | John  |\n  | age   | 30    |",
+				Handler:     r.setHash,
+			},
+			{
+				Pattern:     `^"{resource}" hash "([^"]*)" field "([^"]*)" should be "([^"]*)"$`,
+				Description: "Asserts a hash field has the expected value",
+				Example:     `"{resource}" hash "user:1" field "name" should be "John"`,
+				Handler:     r.hashFieldShouldBe,
+			},
+			{
+				Pattern:     `^"{resource}" hash "([^"]*)" should contain:$`,
+				Description: "Asserts a hash contains the specified field-value pairs",
+				Example:     "\"{resource}\" hash \"user:1\" should contain:\n  | field | value |\n  | name  | John  |",
+				Handler:     r.hashShouldContain,
+			},
 
-	// Set operations
-	ctx.Step(fmt.Sprintf(`^I add "([^"]*)" to "%s" set "([^"]*)"$`, r.name), r.addToSet)
-	ctx.Step(fmt.Sprintf(`^I add members to "%s" set "([^"]*)":$`, r.name), r.addMultipleToSet)
-	ctx.Step(fmt.Sprintf(`^"%s" set "([^"]*)" should contain "([^"]*)"$`, r.name), r.setShouldContain)
-	ctx.Step(fmt.Sprintf(`^"%s" set "([^"]*)" should have "(\d+)" members$`, r.name), r.setShouldHaveSize)
+			// List operations
+			{
+				Pattern:     `^I push "([^"]*)" to "{resource}" list "([^"]*)"$`,
+				Description: "Pushes a value to the end of a list",
+				Example:     `I push "item1" to "{resource}" list "queue"`,
+				Handler:     r.pushToList,
+			},
+			{
+				Pattern:     `^I push values to "{resource}" list "([^"]*)":$`,
+				Description: "Pushes multiple values to a list",
+				Example:     "I push values to \"{resource}\" list \"queue\":\n  | item1 |\n  | item2 |",
+				Handler:     r.pushMultipleToList,
+			},
+			{
+				Pattern:     `^"{resource}" list "([^"]*)" should have "(\d+)" items$`,
+				Description: "Asserts a list has exactly N items",
+				Example:     `"{resource}" list "queue" should have "3" items`,
+				Handler:     r.listShouldHaveLength,
+			},
+			{
+				Pattern:     `^"{resource}" list "([^"]*)" should contain "([^"]*)"$`,
+				Description: "Asserts a list contains a value",
+				Example:     `"{resource}" list "queue" should contain "item1"`,
+				Handler:     r.listShouldContain,
+			},
 
-	// Increment/Decrement
-	ctx.Step(fmt.Sprintf(`^I increment "%s" key "([^"]*)"$`, r.name), r.incrementKey)
-	ctx.Step(fmt.Sprintf(`^I increment "%s" key "([^"]*)" by "(\d+)"$`, r.name), r.incrementKeyBy)
-	ctx.Step(fmt.Sprintf(`^I decrement "%s" key "([^"]*)"$`, r.name), r.decrementKey)
+			// Set operations
+			{
+				Pattern:     `^I add "([^"]*)" to "{resource}" set "([^"]*)"$`,
+				Description: "Adds a member to a set",
+				Example:     `I add "tag1" to "{resource}" set "tags"`,
+				Handler:     r.addToSet,
+			},
+			{
+				Pattern:     `^I add members to "{resource}" set "([^"]*)":$`,
+				Description: "Adds multiple members to a set",
+				Example:     "I add members to \"{resource}\" set \"tags\":\n  | tag1 |\n  | tag2 |",
+				Handler:     r.addMultipleToSet,
+			},
+			{
+				Pattern:     `^"{resource}" set "([^"]*)" should contain "([^"]*)"$`,
+				Description: "Asserts a set contains a member",
+				Example:     `"{resource}" set "tags" should contain "tag1"`,
+				Handler:     r.setShouldContain,
+			},
+			{
+				Pattern:     `^"{resource}" set "([^"]*)" should have "(\d+)" members$`,
+				Description: "Asserts a set has exactly N members",
+				Example:     `"{resource}" set "tags" should have "3" members`,
+				Handler:     r.setShouldHaveSize,
+			},
+
+			// Increment/Decrement
+			{
+				Pattern:     `^I increment "{resource}" key "([^"]*)"$`,
+				Description: "Increments a key's integer value by 1",
+				Example:     `I increment "{resource}" key "counter"`,
+				Handler:     r.incrementKey,
+			},
+			{
+				Pattern:     `^I increment "{resource}" key "([^"]*)" by "(\d+)"$`,
+				Description: "Increments a key's integer value by N",
+				Example:     `I increment "{resource}" key "counter" by "5"`,
+				Handler:     r.incrementKeyBy,
+			},
+			{
+				Pattern:     `^I decrement "{resource}" key "([^"]*)"$`,
+				Description: "Decrements a key's integer value by 1",
+				Example:     `I decrement "{resource}" key "counter"`,
+				Handler:     r.decrementKey,
+			},
+		},
+	}
 }
 
 func (r *Redis) setKey(key, value string) error {
