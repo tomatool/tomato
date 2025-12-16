@@ -1,5 +1,7 @@
 name: Release
 
+run-name: "Release ${{ inputs.version }}${{ inputs.prerelease && ' (RC)' || '' }}"
+
 on:
   workflow_dispatch:
     inputs:
@@ -82,6 +84,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🍅 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`${{ steps.version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Type** | ${{ inputs.prerelease && '🧪 Pre-release (RC)' || '🚀 Stable Release' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Assets" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Architecture |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | amd64, arm64 |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS | amd64, arm64 |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [Release Page](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Changelog](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
 
   update-docs:
     needs: release
