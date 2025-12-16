@@ -1223,6 +1223,22 @@
 <td><code>"api" response json contains:</code></td>
 <td>Assert JSON contains specified fields (ignores extra fields). Supports same matchers as 'matches'</td>
 </tr>
+<tr>
+<td><code>"api" response json "id" matches pattern "^[0-9a-f-]{36}$"</code></td>
+<td>Assert JSON path value matches regex pattern</td>
+</tr>
+<tr>
+<td><code>"api" response json "id" is uuid</code></td>
+<td>Assert JSON path value is a valid UUID</td>
+</tr>
+<tr>
+<td><code>"api" response json "email" is email</code></td>
+<td>Assert JSON path value is a valid email format</td>
+</tr>
+<tr>
+<td><code>"api" response json "created_at" is iso-timestamp</code></td>
+<td>Assert JSON path value is an ISO 8601 timestamp</td>
+</tr>
 </tbody>
 </table>
 <h2 id="response-timing">Response Timing<a class="headerlink" href="#response-timing" title="Permanent link">#</a></h2>

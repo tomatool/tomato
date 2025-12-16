@@ -604,6 +604,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#variables-and-dynamic-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables and Dynamic Values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Variables and Dynamic Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-value-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic Value Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capturing-response-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing Response Values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#json-matchers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -942,6 +981,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#variables-and-dynamic-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables and Dynamic Values
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Variables and Dynamic Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dynamic-value-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic Value Generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capturing-response-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing Response Values
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#json-matchers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1039,44 +1117,148 @@
 <thead>
 <tr>
 <th>Resource</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a href="http-client/">HTTP Client</a></td>
+<td><code>http</code></td>
 <td>Steps for making HTTP requests and validating responses</td>
 </tr>
 <tr>
 <td><a href="http-server/">HTTP Server</a></td>
+<td><code>http-server</code></td>
 <td>Steps for stubbing HTTP services</td>
 </tr>
 <tr>
 <td><a href="postgres/">PostgreSQL</a></td>
+<td><code>postgres</code></td>
 <td>Steps for interacting with PostgreSQL databases</td>
 </tr>
 <tr>
 <td><a href="redis/">Redis</a></td>
+<td><code>redis</code></td>
 <td>Steps for interacting with Redis key-value store</td>
 </tr>
 <tr>
 <td><a href="kafka/">Kafka</a></td>
+<td><code>kafka</code></td>
 <td>Steps for interacting with Apache Kafka message broker</td>
 </tr>
 <tr>
 <td><a href="shell/">Shell</a></td>
+<td><code>shell</code></td>
 <td>Steps for executing shell commands and scripts</td>
 </tr>
 <tr>
 <td><a href="websocket-client/">WebSocket Client</a></td>
+<td><code>websocket</code></td>
 <td>Steps for connecting to WebSocket servers</td>
 </tr>
 <tr>
 <td><a href="websocket-server/">WebSocket Server</a></td>
+<td><code>websocket-server</code></td>
 <td>Steps for stubbing WebSocket services</td>
 </tr>
 </tbody>
 </table>
+<h2 id="variables-and-dynamic-values">Variables and Dynamic Values<a class="headerlink" href="#variables-and-dynamic-values" title="Permanent link">#</a></h2>
+<p>Tomato supports variables that can be used in URLs, headers, and request bodies. Variables use the <code>{{name}}</code> syntax.</p>
+<h3 id="dynamic-value-generation">Dynamic Value Generation<a class="headerlink" href="#dynamic-value-generation" title="Permanent link">#</a></h3>
+<p>Built-in functions generate unique values on each use:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Example Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{{uuid}}</code></td>
+<td><code>f47ac10b-58cc-4372-a567-0e02b2c3d479</code></td>
+<td>Random UUID v4</td>
+</tr>
+<tr>
+<td><code>{{timestamp}}</code></td>
+<td><code>2024-01-15T10:30:00Z</code></td>
+<td>Current ISO 8601 timestamp</td>
+</tr>
+<tr>
+<td><code>{{timestamp:unix}}</code></td>
+<td><code>1705315800</code></td>
+<td>Unix timestamp in seconds</td>
+</tr>
+<tr>
+<td><code>{{random:N}}</code></td>
+<td><code>A8kL2mN9pQ</code></td>
+<td>Random alphanumeric string of length N</td>
+</tr>
+<tr>
+<td><code>{{random:N:numeric}}</code></td>
+<td><code>8472910384</code></td>
+<td>Random numeric string of length N</td>
+</tr>
+<tr>
+<td><code>{{sequence:name}}</code></td>
+<td><code>1</code>, <code>2</code>, <code>3</code>...</td>
+<td>Auto-incrementing sequence by name</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/api/users</span><span class="nf">&quot; with json:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">    &quot;id&quot;: &quot;{{uuid}}&quot;,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s">    &quot;username&quot;: &quot;user_{{random:8}}&quot;,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s">    &quot;created_at&quot;: &quot;{{timestamp}}&quot;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="s">  }</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span></code></pre></div></p>
+<h3 id="capturing-response-values">Capturing Response Values<a class="headerlink" href="#capturing-response-values" title="Permanent link">#</a></h3>
+<p>Save values from responses to use in subsequent requests:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"api" response json "path" saved as "{{var}}"</code></td>
+<td>Save JSON path value to variable</td>
+</tr>
+<tr>
+<td><code>"api" response header "Name" saved as "{{var}}"</code></td>
+<td>Save response header to variable</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example - CRUD workflow:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">Scenario:</span><span class="nf"> Create and retrieve a user</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c">  # Create user and capture the ID</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">  When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/api/users</span><span class="nf">&quot; with json:</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s">    { &quot;name&quot;: &quot;Alice&quot; }</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response status is &quot;</span><span class="s">201</span><span class="nf">&quot;</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response json &quot;</span><span class="s">id</span><span class="nf">&quot; saved as &quot;</span><span class="s">{{user_id}}</span><span class="nf">&quot;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c">  # Use captured ID in subsequent request</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">GET</span><span class="nf">&quot; to &quot;</span><span class="s">/api/users/{{user_id}}</span><span class="nf">&quot;</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response status is &quot;</span><span class="s">200</span><span class="nf">&quot;</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response json &quot;</span><span class="s">name</span><span class="nf">&quot; is &quot;</span><span class="s">Alice</span><span class="nf">&quot;</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c">  # Delete the user</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">DELETE</span><span class="nf">&quot; to &quot;</span><span class="s">/api/users/{{user_id}}</span><span class="nf">&quot;</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response status is &quot;</span><span class="s">204</span><span class="nf">&quot;</span>
+</span></code></pre></div></p>
+<p>Variables and sequences are automatically reset between scenarios.</p>
 <h2 id="json-matchers">JSON Matchers<a class="headerlink" href="#json-matchers" title="Permanent link">#</a></h2>
 <p>When using <code>response json matches:</code> or <code>response json contains:</code>, you can use these matchers:</p>
 <h3 id="type-matchers">Type Matchers<a class="headerlink" href="#type-matchers" title="Permanent link">#</a></h3>
@@ -1200,16 +1382,16 @@
 </tbody>
 </table>
 <h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h3>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response json contains:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">    &quot;id&quot;: &quot;@regex:^[0-9a-f-]{36}$&quot;,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s">    &quot;name&quot;: &quot;@notempty&quot;,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s">    &quot;email&quot;: &quot;@contains:@&quot;,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="s">    &quot;age&quot;: &quot;@gt:0&quot;,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="s">    &quot;tags&quot;: &quot;@array&quot;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="s">  }</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response json contains:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  {</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">    &quot;id&quot;: &quot;@regex:^[0-9a-f-]{36}$&quot;,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s">    &quot;name&quot;: &quot;@notempty&quot;,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s">    &quot;email&quot;: &quot;@contains:@&quot;,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">    &quot;age&quot;: &quot;@gt:0&quot;,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="s">    &quot;tags&quot;: &quot;@array&quot;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="s">  }</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
 </span></code></pre></div>
 
 
