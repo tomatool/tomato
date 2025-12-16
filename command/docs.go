@@ -201,9 +201,9 @@ const mkdocsIndexTemplate = `# Available Resources
 
 Tomato supports the following resource types for behavioral testing.
 
-| Resource | Description |
-|----------|-------------|
-{{range .}}| [{{.Name}}]({{.File}}) | {{.Description}} |
+| Resource | Type | Description |
+|----------|------|-------------|
+{{range .}}| [{{.Name}}]({{.File}}) | ` + "`" + `{{.Type}}` + "`" + ` | {{.Description}} |
 {{end}}
 
 ## Variables and Dynamic Values
@@ -328,8 +328,21 @@ Then "api" response json contains:
 
 type ResourceInfo struct {
 	Name        string
+	Type        string
 	Description string
 	File        string
+}
+
+// resourceTypeMapping maps handler names to their config type names
+var resourceTypeMapping = map[string]string{
+	"HTTP Client":      "http",
+	"HTTP Server":      "http-server",
+	"PostgreSQL":       "postgres",
+	"Redis":            "redis",
+	"Kafka":            "kafka",
+	"Shell":            "shell",
+	"WebSocket Client": "websocket",
+	"WebSocket Server": "websocket-server",
 }
 
 func generateMkDocs(outputDir string, categories []handler.StepCategory) error {
@@ -352,8 +365,14 @@ func generateMkDocs(outputDir string, categories []handler.StepCategory) error {
 			filename = strings.ToLower(strings.ReplaceAll(cat.Name, " ", "-")) + ".md"
 		}
 
+		typeName := resourceTypeMapping[cat.Name]
+		if typeName == "" {
+			typeName = strings.ToLower(strings.ReplaceAll(cat.Name, " ", "-"))
+		}
+
 		resources = append(resources, ResourceInfo{
 			Name:        cat.Name,
+			Type:        typeName,
 			Description: cat.Description,
 			File:        filename,
 		})
