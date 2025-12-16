@@ -3,11 +3,13 @@ package runner
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/cucumber/godog"
 	"github.com/rs/zerolog/log"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	_ "github.com/tomatool/tomato/internal/formatter" // Register tomato formatter
 	"github.com/tomatool/tomato/internal/handler"
 )
 
@@ -15,14 +17,16 @@ import (
 type Options struct {
 	NoReset bool
 	Watch   bool
+	Format  string // Override output format (e.g., "tomato" for structured events)
 }
 
 // Runner executes behavioral tests
 type Runner struct {
-	config    *config.Config
-	container *container.Manager
-	handlers  *handler.Registry
-	opts      Options
+	config        *config.Config
+	container     *container.Manager
+	handlers      *handler.Registry
+	opts          Options
+	scenarioRegex *regexp.Regexp
 }
 
 // New creates a new test runner
@@ -32,12 +36,25 @@ func New(cfg *config.Config, cm *container.Manager, opts Options) (*Runner, erro
 		return nil, fmt.Errorf("initializing handlers: %w", err)
 	}
 
-	return &Runner{
+	r := &Runner{
 		config:    cfg,
 		container: cm,
 		handlers:  registry,
 		opts:      opts,
-	}, nil
+	}
+
+	// Compile scenario filter regex if provided
+	if cfg.Features.Scenario != "" {
+		log.Debug().Str("pattern", cfg.Features.Scenario).Msg("compiling scenario filter regex")
+		regex, err := regexp.Compile(cfg.Features.Scenario)
+		if err != nil {
+			return nil, fmt.Errorf("invalid scenario filter regex: %w", err)
+		}
+		r.scenarioRegex = regex
+		log.Info().Str("pattern", cfg.Features.Scenario).Msg("scenario filter active")
+	}
+
+	return r, nil
 }
 
 // Run executes all tests
@@ -51,8 +68,13 @@ func (r *Runner) Run(ctx context.Context) error {
 		return fmt.Errorf("before_all hooks failed: %w", err)
 	}
 
+	format := r.config.Settings.Output
+	if r.opts.Format != "" {
+		format = r.opts.Format
+	}
+
 	opts := &godog.Options{
-		Format:        r.config.Settings.Output,
+		Format:        format,
 		Paths:         r.config.Features.Paths,
 		Tags:          r.config.Features.Tags,
 		StopOnFailure: r.config.Settings.FailFast,
@@ -81,6 +103,12 @@ func (r *Runner) Run(ctx context.Context) error {
 
 func (r *Runner) initializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+		// Skip scenarios that don't match the filter regex
+		if r.scenarioRegex != nil && !r.scenarioRegex.MatchString(sc.Name) {
+			log.Info().Str("scenario", sc.Name).Msg("skipping scenario (doesn't match filter)")
+			return ctx, godog.ErrSkip
+		}
+
 		if !r.opts.NoReset {
 			log.Debug().Str("scenario", sc.Name).Msg("resetting state")
 			if err := r.handlers.ResetAll(ctx); err != nil {

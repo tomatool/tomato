@@ -18,6 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/runlog"
 )
 
 // Runner manages the application under test
@@ -34,6 +35,10 @@ type Runner struct {
 	logMu        sync.Mutex
 	stopLogs     chan struct{}
 	stopLogsOnce sync.Once
+
+	// Run context for logging
+	runCtx  *runlog.RunContext
+	logFile *os.File
 }
 
 // NewRunner creates a new app runner
@@ -51,6 +56,19 @@ func NewRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
 // SetShowLogs enables or disables log streaming
 func (r *Runner) SetShowLogs(show bool) {
 	r.showLogs = show
+}
+
+// SetRunContext sets the run context for logging
+func (r *Runner) SetRunContext(ctx *runlog.RunContext) {
+	r.runCtx = ctx
+	if ctx != nil {
+		f, err := ctx.CreateLogFile("app")
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to create app log file")
+		} else {
+			r.logFile = f
+		}
+	}
 }
 
 // Start starts the application with injected environment variables
@@ -132,6 +150,11 @@ func (r *Runner) streamLogs(pipe io.ReadCloser, name string) {
 			r.logLines = r.logLines[1:]
 		}
 		r.logMu.Unlock()
+
+		// Write to log file if available
+		if r.logFile != nil {
+			r.logFile.WriteString(line + "\n")
+		}
 
 		// Display if enabled
 		if r.showLogs {
@@ -378,6 +401,12 @@ func (r *Runner) Stop() error {
 		close(r.stopLogs)
 	})
 
+	// Close log file
+	if r.logFile != nil {
+		r.logFile.Close()
+		r.logFile = nil
+	}
+
 	if r.config.Build != nil {
 		// Stop docker container
 		cmd := exec.Command("docker", "stop", "tomato-app")
@@ -405,4 +434,64 @@ func (r *Runner) Stop() error {
 // GetBaseURL returns the base URL for the running app
 func (r *Runner) GetBaseURL() string {
 	return fmt.Sprintf("http://%s:%d", r.appHost, r.appPort)
+}
+
+// GetRecentLogs returns the most recent log lines (useful for debugging failures)
+func (r *Runner) GetRecentLogs(n int) []string {
+	r.logMu.Lock()
+	defer r.logMu.Unlock()
+
+	if n <= 0 || len(r.logLines) == 0 {
+		return nil
+	}
+
+	start := len(r.logLines) - n
+	if start < 0 {
+		start = 0
+	}
+
+	result := make([]string, len(r.logLines)-start)
+	copy(result, r.logLines[start:])
+	return result
+}
+
+// VerifyHealthy performs a single health check to verify the app is responding
+func (r *Runner) VerifyHealthy(ctx context.Context) error {
+	if r.config.Port == 0 {
+		return nil // No port configured, skip check
+	}
+
+	// Try HTTP health check first if configured
+	if r.config.Ready != nil && r.config.Ready.Type == "http" {
+		path := r.config.Ready.Path
+		if path == "" {
+			path = "/health"
+		}
+		url := fmt.Sprintf("http://%s:%d%s", r.appHost, r.config.Port, path)
+		expectedStatus := r.config.Ready.Status
+		if expectedStatus == 0 {
+			expectedStatus = 200
+		}
+
+		client := &http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Get(url)
+		if err != nil {
+			return fmt.Errorf("health check failed: %w", err)
+		}
+		resp.Body.Close()
+
+		if resp.StatusCode != expectedStatus {
+			return fmt.Errorf("health check returned status %d, expected %d", resp.StatusCode, expectedStatus)
+		}
+		return nil
+	}
+
+	// Default: TCP port check
+	addr := fmt.Sprintf("%s:%d", r.appHost, r.config.Port)
+	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+	if err != nil {
+		return fmt.Errorf("app not responding on %s: %w", addr, err)
+	}
+	conn.Close()
+	return nil
 }

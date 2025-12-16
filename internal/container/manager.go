@@ -3,6 +3,8 @@ package container
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/runlog"
 )
 
 // Manager handles the lifecycle of test containers
@@ -20,6 +23,8 @@ type Manager struct {
 	containers map[string]testcontainers.Container
 	order      []string // startup order based on dependencies
 	mu         sync.RWMutex
+	runCtx     *runlog.RunContext
+	logFiles   map[string]*os.File
 }
 
 // NewManager creates a new container manager
@@ -27,6 +32,7 @@ func NewManager(configs map[string]config.Container) (*Manager, error) {
 	m := &Manager{
 		configs:    configs,
 		containers: make(map[string]testcontainers.Container),
+		logFiles:   make(map[string]*os.File),
 	}
 
 	// Calculate startup order based on dependencies
@@ -37,6 +43,11 @@ func NewManager(configs map[string]config.Container) (*Manager, error) {
 	m.order = order
 
 	return m, nil
+}
+
+// SetRunContext sets the run context for logging
+func (m *Manager) SetRunContext(ctx *runlog.RunContext) {
+	m.runCtx = ctx
 }
 
 // calculateStartOrder returns containers in dependency order using topological sort
@@ -138,7 +149,38 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		Dur("duration", time.Since(startTime)).
 		Msg("container ready")
 
+	// Start capturing container logs if run context is set
+	if m.runCtx != nil {
+		go m.captureContainerLogs(ctx, name, container)
+	}
+
 	return nil
+}
+
+// captureContainerLogs streams container logs to a file
+func (m *Manager) captureContainerLogs(ctx context.Context, name string, container testcontainers.Container) {
+	logFile, err := m.runCtx.CreateLogFile("container-" + name)
+	if err != nil {
+		log.Warn().Err(err).Str("container", name).Msg("failed to create container log file")
+		return
+	}
+
+	m.mu.Lock()
+	m.logFiles[name] = logFile
+	m.mu.Unlock()
+
+	// Get container logs
+	logs, err := container.Logs(ctx)
+	if err != nil {
+		log.Warn().Err(err).Str("container", name).Msg("failed to get container logs")
+		return
+	}
+
+	// Stream logs to file
+	go func() {
+		defer logs.Close()
+		io.Copy(logFile, logs)
+	}()
 }
 
 // buildWaitStrategy converts config wait strategy to testcontainers wait strategy
@@ -238,6 +280,14 @@ func (m *Manager) StopAll(ctx context.Context, removeVolumes bool) error {
 func (m *Manager) Cleanup() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
+	// Close all log files
+	m.mu.Lock()
+	for _, f := range m.logFiles {
+		f.Close()
+	}
+	m.logFiles = make(map[string]*os.File)
+	m.mu.Unlock()
 
 	if err := m.StopAll(ctx, true); err != nil {
 		log.Warn().Err(err).Msg("cleanup error")
