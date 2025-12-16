@@ -49,6 +49,8 @@ brew install tomatool/tap/tomato
 - uses: tomatool/tomato@v1
 ```
 
+See [GitHub Action documentation](https://tomatool.github.io/tomato/github-action) for all options.
+
 ### Go Install
 
 ```bash
