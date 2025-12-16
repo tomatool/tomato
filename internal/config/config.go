@@ -152,8 +152,9 @@ type Hook struct {
 }
 
 type Features struct {
-	Paths []string `yaml:"paths"`
-	Tags  string   `yaml:"tags"`
+	Paths    []string `yaml:"paths"`
+	Tags     string   `yaml:"tags"`
+	Scenario string   `yaml:"-"` // CLI only, not from config file
 }
 
 // Load reads and parses the tomato.yml configuration file
