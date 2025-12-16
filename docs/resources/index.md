@@ -2,16 +2,16 @@
 
 Tomato supports the following resource types for behavioral testing.
 
-| Resource | Description |
-|----------|-------------|
-| [HTTP Client](http-client.md) | Steps for making HTTP requests and validating responses |
-| [HTTP Server](http-server.md) | Steps for stubbing HTTP services |
-| [PostgreSQL](postgres.md) | Steps for interacting with PostgreSQL databases |
-| [Redis](redis.md) | Steps for interacting with Redis key-value store |
-| [Kafka](kafka.md) | Steps for interacting with Apache Kafka message broker |
-| [Shell](shell.md) | Steps for executing shell commands and scripts |
-| [WebSocket Client](websocket-client.md) | Steps for connecting to WebSocket servers |
-| [WebSocket Server](websocket-server.md) | Steps for stubbing WebSocket services |
+| Resource | Type | Description |
+|----------|------|-------------|
+| [http-client](http-client.md) | `http` | Steps for making HTTP requests and validating responses |
+| [http-server](http-server.md) | `http-server` | Steps for stubbing HTTP services |
+| [postgres](postgres.md) | `postgres` | Steps for interacting with PostgreSQL databases |
+| [redis](redis.md) | `redis` | Steps for interacting with Redis key-value store |
+| [kafka](kafka.md) | `kafka` | Steps for interacting with Apache Kafka message broker |
+| [shell](shell.md) | `shell` | Steps for executing shell commands and scripts |
+| [websocket-client](websocket-client.md) | `websocket` | Steps for connecting to WebSocket servers |
+| [websocket-server](websocket-server.md) | `websocket-server` | Steps for stubbing WebSocket services |
 
 
 ## JSON Matchers

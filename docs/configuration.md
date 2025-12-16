@@ -1,9 +1,3 @@
----
-layout: default
-title: Configuration
-nav_order: 3
----
-
 # Configuration Reference
 
 Complete reference for `tomato.yml` configuration options.
@@ -44,7 +38,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|postgres|redis|kafka|websocket|shell
+    type: http|http-server|postgres|redis|kafka|websocket|websocket-server|shell
     container: container_name
     options: {}
 

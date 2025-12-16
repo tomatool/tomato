@@ -1,9 +1,3 @@
----
-layout: default
-title: Getting Started
-nav_order: 2
----
-
 # Getting Started
 
 This guide will help you set up Tomato and run your first behavioral test.
@@ -186,6 +180,6 @@ The `{{.container.host}}` and `{{.container.port}}` templates are replaced with 
 
 ## Next Steps
 
-- [Configuration Reference]({% link configuration.md %}) - Full configuration options
-- [Step Reference]({% link steps.md %}) - All available Gherkin steps
+- [Configuration Reference](configuration.md) - Full configuration options
+- [Resources](resources/index.md) - All available step definitions
 - [Examples](https://github.com/tomatool/tomato/tree/main/examples) - Sample projects

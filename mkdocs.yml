@@ -71,14 +71,14 @@ nav:
   - Architecture: architecture.md
   - Resources:
     - Overview: resources/index.md
-    - HTTP Client: resources/http-client.md
-    - HTTP Server: resources/http-server.md
-    - PostgreSQL: resources/postgres.md
-    - Redis: resources/redis.md
-    - Kafka: resources/kafka.md
-    - Shell: resources/shell.md
-    - WebSocket Client: resources/websocket-client.md
-    - WebSocket Server: resources/websocket-server.md
+    - http-client: resources/http-client.md
+    - http-server: resources/http-server.md
+    - postgres: resources/postgres.md
+    - redis: resources/redis.md
+    - kafka: resources/kafka.md
+    - shell: resources/shell.md
+    - websocket-client: resources/websocket-client.md
+    - websocket-server: resources/websocket-server.md
 
 plugins:
   - search
