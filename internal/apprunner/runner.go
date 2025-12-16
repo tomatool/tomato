@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -28,10 +29,11 @@ type Runner struct {
 	appPort   int
 
 	// Log streaming
-	showLogs   bool
-	logLines   []string
-	logMu      sync.Mutex
-	stopLogs   chan struct{}
+	showLogs     bool
+	logLines     []string
+	logMu        sync.Mutex
+	stopLogs     chan struct{}
+	stopLogsOnce sync.Once
 }
 
 // NewRunner creates a new app runner
@@ -72,6 +74,9 @@ func (r *Runner) startCommand(ctx context.Context) error {
 	// Create command
 	r.cmd = exec.CommandContext(ctx, "sh", "-c", r.config.Command)
 	r.cmd.Env = append(os.Environ(), env...)
+
+	// Create a new process group so we can kill all child processes
+	r.cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
 	if r.config.WorkDir != "" {
 		r.cmd.Dir = r.config.WorkDir
@@ -368,6 +373,11 @@ func (r *Runner) waitExec(ctx context.Context, timeout time.Duration) error {
 
 // Stop stops the application
 func (r *Runner) Stop() error {
+	// Signal log streaming to stop (only once)
+	r.stopLogsOnce.Do(func() {
+		close(r.stopLogs)
+	})
+
 	if r.config.Build != nil {
 		// Stop docker container
 		cmd := exec.Command("docker", "stop", "tomato-app")
@@ -375,8 +385,18 @@ func (r *Runner) Stop() error {
 	}
 
 	if r.cmd != nil && r.cmd.Process != nil {
-		log.Debug().Int("pid", r.cmd.Process.Pid).Msg("stopping app")
-		return r.cmd.Process.Kill()
+		pid := r.cmd.Process.Pid
+		log.Debug().Int("pid", pid).Msg("stopping app process group")
+
+		// Kill the entire process group (negative PID)
+		// This ensures all child processes are terminated
+		if err := syscall.Kill(-pid, syscall.SIGTERM); err != nil {
+			log.Debug().Err(err).Msg("SIGTERM failed, trying SIGKILL")
+			syscall.Kill(-pid, syscall.SIGKILL)
+		}
+
+		// Wait for process to exit
+		r.cmd.Wait()
 	}
 
 	return nil

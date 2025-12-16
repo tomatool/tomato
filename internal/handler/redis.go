@@ -415,7 +415,7 @@ func (r *Redis) hashShouldContain(hash string, table *godog.Table) error {
 	return nil
 }
 
-func (r *Redis) pushToList(value, list string) error {
+func (r *Redis) pushToList(list, value string) error {
 	return r.client.RPush(context.Background(), list, value).Err()
 }
 
@@ -453,7 +453,7 @@ func (r *Redis) listShouldContain(list, expected string) error {
 	return fmt.Errorf("list %q does not contain %q", list, expected)
 }
 
-func (r *Redis) addToSet(member, set string) error {
+func (r *Redis) addToSet(set, member string) error {
 	return r.client.SAdd(context.Background(), set, member).Err()
 }
 
