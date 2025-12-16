@@ -13,6 +13,7 @@ import (
 	"github.com/cucumber/gherkin/go/v26"
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/handler"
 	"github.com/urfave/cli/v2"
 )
 
@@ -267,10 +268,16 @@ func (v *Validator) validateResources() {
 		return
 	}
 
-	validTypes := map[string]bool{
-		"http": true, "http-server": true,
-		"postgres": true, "redis": true, "kafka": true,
-		"shell": true, "websocket": true, "websocket-server": true,
+	// Build valid types map from handler package
+	validTypes := make(map[string]bool)
+	for _, t := range handler.ValidResourceTypes() {
+		validTypes[t] = true
+	}
+
+	// Build container-based types map from handler package
+	needsContainer := make(map[string]bool)
+	for _, t := range handler.ContainerBasedTypes() {
+		needsContainer[t] = true
 	}
 
 	for name, res := range v.config.Resources {
@@ -281,15 +288,12 @@ func (v *Validator) validateResources() {
 				Item:       name,
 				Status:     "error",
 				Message:    fmt.Sprintf("unknown type %q", res.Type),
-				Suggestion: "Valid types: http, http-server, postgres, redis, kafka, shell, websocket, websocket-server",
+				Suggestion: fmt.Sprintf("Valid types: %s", strings.Join(handler.ValidResourceTypes(), ", ")),
 			})
 			continue
 		}
 
 		// Check container reference for container-based resources
-		needsContainer := map[string]bool{
-			"postgres": true, "redis": true, "kafka": true,
-		}
 		if needsContainer[res.Type] && res.Container == "" {
 			v.results = append(v.results, ValidationResult{
 				Category:   "Resources",

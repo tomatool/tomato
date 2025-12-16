@@ -149,3 +149,24 @@ func (r *Registry) Cleanup(ctx context.Context) error {
 	}
 	return nil
 }
+
+// ValidResourceTypes returns all valid resource type names
+func ValidResourceTypes() []string {
+	return []string{
+		"http", "http-client", "http-server",
+		"postgres", "postgresql", "mysql",
+		"redis", "rabbitmq", "kafka",
+		"shell",
+		"websocket", "websocket-client", "websocket-server",
+		"wiremock",
+	}
+}
+
+// ContainerBasedTypes returns resource types that typically need a container reference
+func ContainerBasedTypes() []string {
+	return []string{
+		"postgres", "postgresql", "mysql",
+		"redis", "rabbitmq", "kafka",
+		"wiremock",
+	}
+}
