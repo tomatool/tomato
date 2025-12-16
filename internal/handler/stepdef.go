@@ -10,27 +10,27 @@ import (
 // StepDef represents a structured step definition with metadata
 type StepDef struct {
 	// Group is the category within a handler (e.g., "Request Setup", "Response Assertions")
-	Group string
+	Group string `json:"group,omitempty"`
 
 	// Pattern is the regex pattern for matching Gherkin steps
 	// Use {resource} as placeholder for the resource name
-	Pattern string
+	Pattern string `json:"pattern"`
 
 	// Description explains what this step does
-	Description string
+	Description string `json:"description"`
 
 	// Example shows how to use this step in a feature file
-	Example string
+	Example string `json:"example,omitempty"`
 
 	// Handler is the function that implements the step
-	Handler interface{}
+	Handler interface{} `json:"-"`
 }
 
 // StepCategory groups related steps together
 type StepCategory struct {
-	Name        string
-	Description string
-	Steps       []StepDef
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Steps       []StepDef `json:"steps"`
 }
 
 // StepRegistry holds all registered step definitions from all handlers
