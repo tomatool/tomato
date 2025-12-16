@@ -1,3 +1,9 @@
+---
+layout: default
+title: Architecture
+nav_order: 6
+---
+
 # Architecture
 
 This page provides an overview of tomato's internal architecture and how components interact during test execution.

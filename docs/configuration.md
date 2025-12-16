@@ -1,3 +1,9 @@
+---
+layout: default
+title: Configuration
+nav_order: 3
+---
+
 # Configuration Reference
 
 Complete reference for `tomato.yml` configuration options.
