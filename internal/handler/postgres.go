@@ -58,26 +58,54 @@ func (r *Postgres) Init(ctx context.Context) error {
 func (r *Postgres) Ready(ctx context.Context) error { return r.db.PingContext(ctx) }
 
 func (r *Postgres) Reset(ctx context.Context) error {
-	rows, err := r.db.QueryContext(ctx, "SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+	tables, err := r.getTablesToReset(ctx)
 	if err != nil {
-		return fmt.Errorf("listing tables: %w", err)
-	}
-	defer rows.Close()
-	var tables []string
-	for rows.Next() {
-		var table string
-		if err := rows.Scan(&table); err != nil {
-			return err
-		}
-		if !r.isExcluded(table) {
-			tables = append(tables, table)
-		}
+		return err
 	}
 	if len(tables) == 0 {
 		return nil
 	}
 	_, err = r.db.ExecContext(ctx, fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tables, ", ")))
 	return err
+}
+
+func (r *Postgres) getTablesToReset(ctx context.Context) ([]string, error) {
+	// If specific tables are configured, use those
+	if configuredTables := r.getConfiguredTables(); len(configuredTables) > 0 {
+		return configuredTables, nil
+	}
+
+	// Otherwise, get all tables from public schema
+	rows, err := r.db.QueryContext(ctx, "SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+	if err != nil {
+		return nil, fmt.Errorf("listing tables: %w", err)
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		if err := rows.Scan(&table); err != nil {
+			return nil, err
+		}
+		if !r.isExcluded(table) {
+			tables = append(tables, table)
+		}
+	}
+	return tables, nil
+}
+
+func (r *Postgres) getConfiguredTables() []string {
+	if tables, ok := r.config.Options["tables"].([]interface{}); ok {
+		result := make([]string, 0, len(tables))
+		for _, t := range tables {
+			if s, ok := t.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
+	}
+	return nil
 }
 
 func (r *Postgres) isExcluded(table string) bool {
@@ -114,6 +142,20 @@ func (r *Postgres) Steps() StepCategory {
 				Description: "Insert rows from table",
 				Example:     `"db" table "users" has values:`,
 				Handler:     r.setTableValues,
+			},
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" clears table "([^"]*)"$`,
+				Description: "Truncate a table (removes all rows)",
+				Example:     `"db" clears table "users"`,
+				Handler:     r.clearTable,
+			},
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" clears tables:$`,
+				Description: "Truncate multiple tables from list",
+				Example:     `"db" clears tables:`,
+				Handler:     r.clearTables,
 			},
 			{
 				Group:       "Data Setup",
@@ -154,6 +196,25 @@ func (r *Postgres) Steps() StepCategory {
 			},
 		},
 	}
+}
+
+func (r *Postgres) clearTable(table string) error {
+	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table))
+	return err
+}
+
+func (r *Postgres) clearTables(data *godog.Table) error {
+	var tables []string
+	for _, row := range data.Rows {
+		if len(row.Cells) > 0 {
+			tables = append(tables, row.Cells[0].Value)
+		}
+	}
+	if len(tables) == 0 {
+		return nil
+	}
+	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tables, ", ")))
+	return err
 }
 
 func (r *Postgres) setTableValues(table string, data *godog.Table) error {
