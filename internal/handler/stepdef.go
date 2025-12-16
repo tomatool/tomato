@@ -9,6 +9,9 @@ import (
 
 // StepDef represents a structured step definition with metadata
 type StepDef struct {
+	// Group is the category within a handler (e.g., "Request Setup", "Response Assertions")
+	Group string
+
 	// Pattern is the regex pattern for matching Gherkin steps
 	// Use {resource} as placeholder for the resource name
 	Pattern string

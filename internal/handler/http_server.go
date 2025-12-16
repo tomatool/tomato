@@ -167,26 +167,30 @@ func (r *HTTPServer) Steps() StepCategory {
 		Name:        "HTTP Server",
 		Description: "Steps for stubbing HTTP services",
 		Steps: []StepDef{
-			// Stub setup
+			// Stub Setup
 			{
+				Group:       "Stub Setup",
 				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)"$`,
 				Description: "Creates a stub that returns a status code",
 				Example:     `"{resource}" stub "GET" "/users" returns "200"`,
 				Handler:     r.stubReturnsStatus,
 			},
 			{
+				Group:       "Stub Setup",
 				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)" with body:$`,
 				Description: "Creates a stub that returns a status code and body",
 				Example:     "\"{resource}\" stub \"GET\" \"/users\" returns \"200\" with body:\n  \"\"\"\n  [{\"id\": 1}]\n  \"\"\"",
 				Handler:     r.stubReturnsBody,
 			},
 			{
+				Group:       "Stub Setup",
 				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)" with json:$`,
 				Description: "Creates a stub that returns JSON (auto sets Content-Type)",
 				Example:     "\"{resource}\" stub \"GET\" \"/users\" returns \"200\" with json:\n  \"\"\"\n  [{\"id\": 1}]\n  \"\"\"",
 				Handler:     r.stubReturnsJSON,
 			},
 			{
+				Group:       "Stub Setup",
 				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)" with headers:$`,
 				Description: "Creates a stub that returns with custom headers",
 				Example:     "\"{resource}\" stub \"GET\" \"/users\" returns \"200\" with headers:\n  | header       | value            |\n  | X-Custom     | value            |",
@@ -195,44 +199,51 @@ func (r *HTTPServer) Steps() StepCategory {
 
 			// Verification
 			{
+				Group:       "Verification",
 				Pattern:     `^"{resource}" received "([^"]*)" "([^"]*)"$`,
 				Description: "Asserts a request was received",
 				Example:     `"{resource}" received "GET" "/users"`,
 				Handler:     r.receivedRequest,
 			},
 			{
+				Group:       "Verification",
 				Pattern:     `^"{resource}" received "([^"]*)" "([^"]*)" "(\d+)" times$`,
 				Description: "Asserts a request was received N times",
 				Example:     `"{resource}" received "GET" "/users" "2" times`,
 				Handler:     r.receivedRequestTimes,
 			},
 			{
+				Group:       "Verification",
 				Pattern:     `^"{resource}" did not receive "([^"]*)" "([^"]*)"$`,
 				Description: "Asserts a request was not received",
 				Example:     `"{resource}" did not receive "DELETE" "/users"`,
 				Handler:     r.didNotReceiveRequest,
 			},
 			{
+				Group:       "Verification",
 				Pattern:     `^"{resource}" received request with header "([^"]*)" containing "([^"]*)"$`,
 				Description: "Asserts any request was received with header containing value",
 				Example:     `"{resource}" received request with header "Authorization" containing "Bearer"`,
 				Handler:     r.receivedRequestWithHeader,
 			},
 			{
+				Group:       "Verification",
 				Pattern:     `^"{resource}" received request with body containing "([^"]*)"$`,
 				Description: "Asserts any request was received with body containing value",
 				Example:     `"{resource}" received request with body containing "name"`,
 				Handler:     r.receivedRequestWithBody,
 			},
 			{
+				Group:       "Verification",
 				Pattern:     `^"{resource}" received "(\d+)" requests$`,
 				Description: "Asserts total number of requests received",
 				Example:     `"{resource}" received "5" requests`,
 				Handler:     r.receivedTotalRequests,
 			},
 
-			// Server info
+			// Server Info
 			{
+				Group:       "Server Info",
 				Pattern:     `^"{resource}" url is stored in "([^"]*)"$`,
 				Description: "Stores the server URL in a variable for use in other steps",
 				Example:     `"{resource}" url is stored in "SERVER_URL"`,

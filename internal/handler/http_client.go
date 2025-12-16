@@ -122,158 +122,181 @@ func (r *HTTPClient) RegisterSteps(ctx *godog.ScenarioContext) {
 // Steps returns the structured step definitions for the HTTP handler
 func (r *HTTPClient) Steps() StepCategory {
 	return StepCategory{
-		Name:        "HTTP",
+		Name:        "HTTP Client",
 		Description: "Steps for making HTTP requests and validating responses",
 		Steps: []StepDef{
-			// Request setup steps
+			// Request Setup
 			{
+				Group:       "Request Setup",
 				Pattern:     `^"{resource}" header "([^"]*)" is "([^"]*)"$`,
-				Description: "Sets a header for the next HTTP request",
-				Example:     `"{resource}" header "Content-Type" is "application/json"`,
+				Description: "Set a header",
+				Example:     `"api" header "Content-Type" is "application/json"`,
 				Handler:     r.setHeader,
 			},
 			{
+				Group:       "Request Setup",
 				Pattern:     `^"{resource}" headers are:$`,
-				Description: "Sets multiple headers for the next HTTP request using a table",
-				Example:     "\"{resource}\" headers are:\n  | header       | value            |\n  | Content-Type | application/json |",
+				Description: "Set multiple headers from table",
+				Example:     `"api" headers are:`,
 				Handler:     r.setHeaders,
 			},
 			{
+				Group:       "Request Setup",
 				Pattern:     `^"{resource}" query param "([^"]*)" is "([^"]*)"$`,
-				Description: "Sets a query parameter for the next HTTP request",
-				Example:     `"{resource}" query param "page" is "1"`,
+				Description: "Set a query parameter",
+				Example:     `"api" query param "page" is "1"`,
 				Handler:     r.setQueryParam,
 			},
 			{
+				Group:       "Request Setup",
 				Pattern:     `^"{resource}" body is:$`,
-				Description: "Sets the raw request body for the next HTTP request",
-				Example:     "\"{resource}\" body is:\n  \"\"\"\n  raw body content\n  \"\"\"",
+				Description: "Set raw request body (docstring)",
+				Example:     `"api" body is:`,
 				Handler:     r.setRequestBody,
 			},
 			{
+				Group:       "Request Setup",
 				Pattern:     `^"{resource}" json body is:$`,
-				Description: "Sets a JSON request body and automatically sets Content-Type header",
-				Example:     "\"{resource}\" json body is:\n  \"\"\"\n  {\"name\": \"test\"}\n  \"\"\"",
+				Description: "Set JSON body + Content-Type header",
+				Example:     `"api" json body is:`,
 				Handler:     r.setJSONBody,
 			},
 			{
+				Group:       "Request Setup",
 				Pattern:     `^"{resource}" form body is:$`,
-				Description: "Sets form-encoded body from a table and sets Content-Type header",
-				Example:     "\"{resource}\" form body is:\n  | field | value |\n  | name  | test  |",
+				Description: "Set form-encoded body from table",
+				Example:     `"api" form body is:`,
 				Handler:     r.setFormBody,
 			},
 
-			// Request execution steps
+			// Request Execution
 			{
+				Group:       "Request Execution",
 				Pattern:     `^"{resource}" sends "([^"]*)" to "([^"]*)"$`,
-				Description: "Sends an HTTP request with the specified method to the given path",
-				Example:     `"{resource}" sends "GET" to "/api/users"`,
+				Description: "Send HTTP request",
+				Example:     `"api" sends "GET" to "/users"`,
 				Handler:     r.sendRequest,
 			},
 			{
+				Group:       "Request Execution",
 				Pattern:     `^"{resource}" sends "([^"]*)" to "([^"]*)" with body:$`,
-				Description: "Sends an HTTP request with a raw body",
-				Example:     "\"{resource}\" sends \"POST\" to \"/api/users\" with body:\n  \"\"\"\n  raw body\n  \"\"\"",
+				Description: "Send with raw body",
+				Example:     `"api" sends "POST" to "/users" with body:`,
 				Handler:     r.sendRequestWithBody,
 			},
 			{
+				Group:       "Request Execution",
 				Pattern:     `^"{resource}" sends "([^"]*)" to "([^"]*)" with json:$`,
-				Description: "Sends an HTTP request with a JSON body",
-				Example:     "\"{resource}\" sends \"POST\" to \"/api/users\" with json:\n  \"\"\"\n  {\"name\": \"John\"}\n  \"\"\"",
+				Description: "Send with JSON body",
+				Example:     `"api" sends "POST" to "/users" with json:`,
 				Handler:     r.sendRequestWithJSON,
 			},
 
-			// Response status steps
+			// Response Status
 			{
+				Group:       "Response Status",
 				Pattern:     `^"{resource}" response status is "(\d+)"$`,
-				Description: "Asserts the response has the exact HTTP status code",
-				Example:     `"{resource}" response status is "200"`,
+				Description: "Assert exact status code",
+				Example:     `"api" response status is "200"`,
 				Handler:     r.responseStatusShouldBe,
 			},
 			{
+				Group:       "Response Status",
 				Pattern:     `^"{resource}" response status is (success|redirect|client error|server error)$`,
-				Description: "Asserts the response status is in the given class (2xx, 3xx, 4xx, 5xx)",
-				Example:     `"{resource}" response status is success`,
+				Description: "Assert status class (2xx, 3xx, 4xx, 5xx)",
+				Example:     `"api" response status is success`,
 				Handler:     r.responseStatusClassShouldBe,
 			},
 
-			// Response header steps
+			// Response Headers
 			{
+				Group:       "Response Headers",
 				Pattern:     `^"{resource}" response header "([^"]*)" is "([^"]*)"$`,
-				Description: "Asserts a response header has the exact value",
-				Example:     `"{resource}" response header "Content-Type" is "application/json"`,
+				Description: "Assert exact header value",
+				Example:     `"api" response header "Content-Type" is "application/json"`,
 				Handler:     r.responseHeaderShouldBe,
 			},
 			{
+				Group:       "Response Headers",
 				Pattern:     `^"{resource}" response header "([^"]*)" contains "([^"]*)"$`,
-				Description: "Asserts a response header contains a substring",
-				Example:     `"{resource}" response header "Content-Type" contains "json"`,
+				Description: "Assert header contains substring",
+				Example:     `"api" response header "Content-Type" contains "json"`,
 				Handler:     r.responseHeaderShouldContain,
 			},
 			{
+				Group:       "Response Headers",
 				Pattern:     `^"{resource}" response header "([^"]*)" exists$`,
-				Description: "Asserts a response header exists",
-				Example:     `"{resource}" response header "X-Request-Id" exists`,
+				Description: "Assert header exists",
+				Example:     `"api" response header "X-Request-Id" exists`,
 				Handler:     r.responseHeaderShouldExist,
 			},
 
-			// Response body steps
+			// Response Body
 			{
+				Group:       "Response Body",
 				Pattern:     `^"{resource}" response body is:$`,
-				Description: "Asserts the response body matches exactly",
-				Example:     "\"{resource}\" response body is:\n  \"\"\"\n  expected body\n  \"\"\"",
+				Description: "Assert exact body match",
+				Example:     `"api" response body is:`,
 				Handler:     r.responseBodyShouldBe,
 			},
 			{
+				Group:       "Response Body",
 				Pattern:     `^"{resource}" response body contains "([^"]*)"$`,
-				Description: "Asserts the response body contains a substring",
-				Example:     `"{resource}" response body contains "success"`,
+				Description: "Assert body contains substring",
+				Example:     `"api" response body contains "success"`,
 				Handler:     r.responseBodyShouldContain,
 			},
 			{
+				Group:       "Response Body",
 				Pattern:     `^"{resource}" response body does not contain "([^"]*)"$`,
-				Description: "Asserts the response body does not contain a substring",
-				Example:     `"{resource}" response body does not contain "error"`,
+				Description: "Assert body doesn't contain substring",
+				Example:     `"api" response body does not contain "error"`,
 				Handler:     r.responseBodyShouldNotContain,
 			},
 			{
+				Group:       "Response Body",
 				Pattern:     `^"{resource}" response body is empty$`,
-				Description: "Asserts the response body is empty",
-				Example:     `"{resource}" response body is empty`,
+				Description: "Assert empty body",
+				Example:     `"api" response body is empty`,
 				Handler:     r.responseBodyShouldBeEmpty,
 			},
 
-			// Response JSON steps
+			// Response JSON
 			{
+				Group:       "Response JSON",
 				Pattern:     `^"{resource}" response json "([^"]*)" is "([^"]*)"$`,
-				Description: "Asserts a JSON path in the response has the expected value",
-				Example:     `"{resource}" response json "data.id" is "123"`,
+				Description: "Assert JSON path value",
+				Example:     `"api" response json "data.id" is "123"`,
 				Handler:     r.responseJSONPathShouldBe,
 			},
 			{
+				Group:       "Response JSON",
 				Pattern:     `^"{resource}" response json "([^"]*)" exists$`,
-				Description: "Asserts a JSON path exists in the response",
-				Example:     `"{resource}" response json "data.id" exists`,
+				Description: "Assert JSON path exists",
+				Example:     `"api" response json "data.id" exists`,
 				Handler:     r.responseJSONPathShouldExist,
 			},
 			{
+				Group:       "Response JSON",
 				Pattern:     `^"{resource}" response json "([^"]*)" does not exist$`,
-				Description: "Asserts a JSON path does not exist in the response",
-				Example:     `"{resource}" response json "data.deleted" does not exist`,
+				Description: "Assert JSON path doesn't exist",
+				Example:     `"api" response json "data.deleted" does not exist`,
 				Handler:     r.responseJSONPathShouldNotExist,
 			},
 			{
+				Group:       "Response JSON",
 				Pattern:     `^"{resource}" response json matches:$`,
-				Description: "Asserts the response JSON matches the expected structure. Use @string, @number, @boolean, @array, @object, @any, @null, @notnull as type matchers",
-				Example:     "\"{resource}\" response json matches:\n  \"\"\"\n  {\"id\": \"@number\", \"name\": \"@string\"}\n  \"\"\"",
+				Description: "Assert JSON structure with type matchers (@string, @number, @boolean, @array, @object, @any, @null, @notnull)",
+				Example:     `"api" response json matches:`,
 				Handler:     r.responseJSONShouldMatch,
 			},
 
-			// Response timing steps
+			// Response Timing
 			{
+				Group:       "Response Timing",
 				Pattern:     `^"{resource}" response time is less than "([^"]*)"$`,
-				Description: "Asserts the response was received within the given duration",
-				Example:     `"{resource}" response time is less than "500ms"`,
+				Description: "Assert response time",
+				Example:     `"api" response time is less than "500ms"`,
 				Handler:     r.responseTimeShouldBeLessThan,
 			},
 		},

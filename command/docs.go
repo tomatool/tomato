@@ -96,31 +96,53 @@ title: Step Reference
 nav_order: 4
 ---
 
-# Tomato Step Reference
+# Step Reference
 
-This document lists all available Gherkin steps in Tomato.
+This document lists all available Gherkin steps organized by resource type.
 
-{: .note }
-This documentation is auto-generated from the source code. Run ` + "`tomato docs`" + ` to regenerate.
+> **Note:** This documentation is auto-generated from the source code. Run ` + "`tomato docs`" + ` to regenerate.
 
-{{range .}}
+{{range .Categories}}
+---
+
 ## {{.Name}}
 
 {{.Description}}
 
-{{range .Steps}}
-### {{.Description}}
+{{range .Groups}}
+### {{.Name}}
 
-**Pattern:** ` + "`" + `{{.Pattern}}` + "`" + `
-
-**Example:**
-` + "```gherkin" + `
-{{.Example}}
-` + "```" + `
-
+| Step | Description |
+|------|-------------|
+{{range .Steps}}| ` + "`" + `{{.Example}}` + "`" + ` | {{.Description}} |
+{{end}}
 {{end}}
 {{end}}
 `
+
+// GroupedStep is a step with processed fields for docs
+type GroupedStep struct {
+	Example     string
+	Description string
+}
+
+// StepGroup groups steps by their group name
+type StepGroup struct {
+	Name  string
+	Steps []GroupedStep
+}
+
+// CategoryWithGroups is a category with steps grouped
+type CategoryWithGroups struct {
+	Name        string
+	Description string
+	Groups      []StepGroup
+}
+
+// DocsData is the data structure for the docs template
+type DocsData struct {
+	Categories []CategoryWithGroups
+}
 
 func generateMarkdown(w io.Writer, categories []handler.StepCategory) error {
 	tmpl, err := template.New("docs").Parse(markdownTemplate)
@@ -128,15 +150,49 @@ func generateMarkdown(w io.Writer, categories []handler.StepCategory) error {
 		return fmt.Errorf("parsing template: %w", err)
 	}
 
-	// Replace {resource} with example resource name for docs
-	for i := range categories {
-		for j := range categories[i].Steps {
-			categories[i].Steps[j].Pattern = strings.ReplaceAll(categories[i].Steps[j].Pattern, "{resource}", "<resource>")
-			categories[i].Steps[j].Example = strings.ReplaceAll(categories[i].Steps[j].Example, "{resource}", "api")
+	// Build grouped data structure
+	data := DocsData{Categories: make([]CategoryWithGroups, 0)}
+
+	for _, cat := range categories {
+		catWithGroups := CategoryWithGroups{
+			Name:        cat.Name,
+			Description: cat.Description,
+			Groups:      make([]StepGroup, 0),
 		}
+
+		// Group steps by their Group field
+		groupMap := make(map[string][]GroupedStep)
+		groupOrder := make([]string, 0)
+
+		for _, step := range cat.Steps {
+			groupName := step.Group
+			if groupName == "" {
+				groupName = "General"
+			}
+
+			// Track order of groups
+			if _, exists := groupMap[groupName]; !exists {
+				groupOrder = append(groupOrder, groupName)
+			}
+
+			groupMap[groupName] = append(groupMap[groupName], GroupedStep{
+				Example:     step.Example,
+				Description: step.Description,
+			})
+		}
+
+		// Build groups in order
+		for _, groupName := range groupOrder {
+			catWithGroups.Groups = append(catWithGroups.Groups, StepGroup{
+				Name:  groupName,
+				Steps: groupMap[groupName],
+			})
+		}
+
+		data.Categories = append(data.Categories, catWithGroups)
 	}
 
-	return tmpl.Execute(w, categories)
+	return tmpl.Execute(w, data)
 }
 
 const htmlTemplate = `<!DOCTYPE html>

@@ -104,44 +104,53 @@ func (r *Postgres) RegisterSteps(ctx *godog.ScenarioContext) {
 // Steps returns the structured step definitions for the Postgres handler
 func (r *Postgres) Steps() StepCategory {
 	return StepCategory{
-		Name:        "Postgres",
+		Name:        "PostgreSQL",
 		Description: "Steps for interacting with PostgreSQL databases",
 		Steps: []StepDef{
+			// Data Setup
 			{
+				Group:       "Data Setup",
 				Pattern:     `^"{resource}" table "([^"]*)" has values:$`,
-				Description: "Inserts rows into a table from a data table",
-				Example:     "\"{resource}\" table \"users\" has values:\n  | id | name  | email           |\n  | 1  | John  | john@test.com   |",
+				Description: "Insert rows from table",
+				Example:     `"db" table "users" has values:`,
 				Handler:     r.setTableValues,
 			},
 			{
-				Pattern:     `^"{resource}" table "([^"]*)" contains:$`,
-				Description: "Asserts a table contains the expected rows",
-				Example:     "\"{resource}\" table \"users\" contains:\n  | id | name  |\n  | 1  | John  |",
-				Handler:     r.tableShouldContain,
-			},
-			{
-				Pattern:     `^"{resource}" table "([^"]*)" is empty$`,
-				Description: "Asserts a table has no rows",
-				Example:     `"{resource}" table "users" is empty`,
-				Handler:     r.tableShouldBeEmpty,
-			},
-			{
-				Pattern:     `^"{resource}" table "([^"]*)" has "(\d+)" rows$`,
-				Description: "Asserts a table has exactly N rows",
-				Example:     `"{resource}" table "users" has "5" rows`,
-				Handler:     r.tableShouldHaveRows,
-			},
-			{
+				Group:       "Data Setup",
 				Pattern:     `^"{resource}" executes:$`,
-				Description: "Executes raw SQL query",
-				Example:     "\"{resource}\" executes:\n  \"\"\"\n  UPDATE users SET active = true WHERE id = 1\n  \"\"\"",
+				Description: "Execute raw SQL",
+				Example:     `"db" executes:`,
 				Handler:     r.executeSQL,
 			},
 			{
+				Group:       "Data Setup",
 				Pattern:     `^"{resource}" executes file "([^"]*)"$`,
-				Description: "Executes SQL from a file",
-				Example:     `"{resource}" executes file "fixtures/seed.sql"`,
+				Description: "Execute SQL from file",
+				Example:     `"db" executes file "fixtures/seed.sql"`,
 				Handler:     r.executeSQLFile,
+			},
+
+			// Assertions
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" table "([^"]*)" contains:$`,
+				Description: "Assert table contains rows",
+				Example:     `"db" table "users" contains:`,
+				Handler:     r.tableShouldContain,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" table "([^"]*)" is empty$`,
+				Description: "Assert table is empty",
+				Example:     `"db" table "users" is empty`,
+				Handler:     r.tableShouldBeEmpty,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" table "([^"]*)" has "(\d+)" rows$`,
+				Description: "Assert row count",
+				Example:     `"db" table "users" has "5" rows`,
+				Handler:     r.tableShouldHaveRows,
 			},
 		},
 	}

@@ -111,166 +111,191 @@ func (r *Redis) Steps() StepCategory {
 		Name:        "Redis",
 		Description: "Steps for interacting with Redis key-value store",
 		Steps: []StepDef{
-			// Basic operations
+			// String Operations
 			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is "([^"]*)"$`,
-				Description: "Sets a string value for a key",
-				Example:     `"{resource}" key "user:1" is "John"`,
+				Description: "Set a string value",
+				Example:     `"cache" key "user:1" is "John"`,
 				Handler:     r.setKey,
 			},
 			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is "([^"]*)" with TTL "([^"]*)"$`,
-				Description: "Sets a string value with expiration time",
-				Example:     `"{resource}" key "session:abc" is "data" with TTL "1h"`,
+				Description: "Set a string value with expiration",
+				Example:     `"cache" key "session:abc" is "data" with TTL "1h"`,
 				Handler:     r.setKeyWithTTL,
 			},
 			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is:$`,
-				Description: "Sets a JSON value for a key",
-				Example:     "\"{resource}\" key \"user:1\" is:\n  \"\"\"\n  {\"name\": \"John\"}\n  \"\"\"",
+				Description: "Set a JSON/multiline value",
+				Example:     `"cache" key "user:1" is:`,
 				Handler:     r.setKeyJSON,
 			},
 			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is deleted$`,
-				Description: "Deletes a key",
-				Example:     `"{resource}" key "user:1" is deleted`,
+				Description: "Delete a key",
+				Example:     `"cache" key "user:1" is deleted`,
 				Handler:     r.deleteKey,
 			},
-
-			// Assertions
 			{
-				Pattern:     `^"{resource}" key "([^"]*)" exists$`,
-				Description: "Asserts that a key exists",
-				Example:     `"{resource}" key "user:1" exists`,
-				Handler:     r.keyShouldExist,
-			},
-			{
-				Pattern:     `^"{resource}" key "([^"]*)" does not exist$`,
-				Description: "Asserts that a key does not exist",
-				Example:     `"{resource}" key "user:1" does not exist`,
-				Handler:     r.keyShouldNotExist,
-			},
-			{
-				Pattern:     `^"{resource}" key "([^"]*)" has value "([^"]*)"$`,
-				Description: "Asserts a key has the exact value",
-				Example:     `"{resource}" key "user:1" has value "John"`,
-				Handler:     r.keyShouldHaveValue,
-			},
-			{
-				Pattern:     `^"{resource}" key "([^"]*)" contains "([^"]*)"$`,
-				Description: "Asserts a key's value contains a substring",
-				Example:     `"{resource}" key "user:1" contains "John"`,
-				Handler:     r.keyShouldContain,
-			},
-			{
-				Pattern:     `^"{resource}" key "([^"]*)" has TTL greater than "(\d+)" seconds$`,
-				Description: "Asserts a key has TTL greater than specified seconds",
-				Example:     `"{resource}" key "session:abc" has TTL greater than "3600" seconds`,
-				Handler:     r.keyShouldHaveTTL,
-			},
-			{
-				Pattern:     `^"{resource}" has "(\d+)" keys$`,
-				Description: "Asserts the database has exactly N keys",
-				Example:     `"{resource}" has "5" keys`,
-				Handler:     r.shouldHaveKeyCount,
-			},
-			{
-				Pattern:     `^"{resource}" is empty$`,
-				Description: "Asserts the database has no keys",
-				Example:     `"{resource}" is empty`,
-				Handler:     r.shouldBeEmpty,
-			},
-
-			// Hash operations
-			{
-				Pattern:     `^"{resource}" hash "([^"]*)" has fields:$`,
-				Description: "Sets multiple fields in a hash",
-				Example:     "\"{resource}\" hash \"user:1\" has fields:\n  | field | value |\n  | name  | John  |\n  | age   | 30    |",
-				Handler:     r.setHash,
-			},
-			{
-				Pattern:     `^"{resource}" hash "([^"]*)" field "([^"]*)" is "([^"]*)"$`,
-				Description: "Asserts a hash field has the expected value",
-				Example:     `"{resource}" hash "user:1" field "name" is "John"`,
-				Handler:     r.hashFieldShouldBe,
-			},
-			{
-				Pattern:     `^"{resource}" hash "([^"]*)" contains:$`,
-				Description: "Asserts a hash contains the specified field-value pairs",
-				Example:     "\"{resource}\" hash \"user:1\" contains:\n  | field | value |\n  | name  | John  |",
-				Handler:     r.hashShouldContain,
-			},
-
-			// List operations
-			{
-				Pattern:     `^"{resource}" list "([^"]*)" has "([^"]*)"$`,
-				Description: "Pushes a value to the end of a list",
-				Example:     `"{resource}" list "queue" has "item1"`,
-				Handler:     r.pushToList,
-			},
-			{
-				Pattern:     `^"{resource}" list "([^"]*)" has values:$`,
-				Description: "Pushes multiple values to a list",
-				Example:     "\"{resource}\" list \"queue\" has values:\n  | item1 |\n  | item2 |",
-				Handler:     r.pushMultipleToList,
-			},
-			{
-				Pattern:     `^"{resource}" list "([^"]*)" has "(\d+)" items$`,
-				Description: "Asserts a list has exactly N items",
-				Example:     `"{resource}" list "queue" has "3" items`,
-				Handler:     r.listShouldHaveLength,
-			},
-			{
-				Pattern:     `^"{resource}" list "([^"]*)" contains "([^"]*)"$`,
-				Description: "Asserts a list contains a value",
-				Example:     `"{resource}" list "queue" contains "item1"`,
-				Handler:     r.listShouldContain,
-			},
-
-			// Set operations
-			{
-				Pattern:     `^"{resource}" set "([^"]*)" has "([^"]*)"$`,
-				Description: "Adds a member to a set",
-				Example:     `"{resource}" set "tags" has "tag1"`,
-				Handler:     r.addToSet,
-			},
-			{
-				Pattern:     `^"{resource}" set "([^"]*)" has members:$`,
-				Description: "Adds multiple members to a set",
-				Example:     "\"{resource}\" set \"tags\" has members:\n  | tag1 |\n  | tag2 |",
-				Handler:     r.addMultipleToSet,
-			},
-			{
-				Pattern:     `^"{resource}" set "([^"]*)" contains "([^"]*)"$`,
-				Description: "Asserts a set contains a member",
-				Example:     `"{resource}" set "tags" contains "tag1"`,
-				Handler:     r.setShouldContain,
-			},
-			{
-				Pattern:     `^"{resource}" set "([^"]*)" has "(\d+)" members$`,
-				Description: "Asserts a set has exactly N members",
-				Example:     `"{resource}" set "tags" has "3" members`,
-				Handler:     r.setShouldHaveSize,
-			},
-
-			// Increment/Decrement
-			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is incremented$`,
-				Description: "Increments a key's integer value by 1",
-				Example:     `"{resource}" key "counter" is incremented`,
+				Description: "Increment integer value by 1",
+				Example:     `"cache" key "counter" is incremented`,
 				Handler:     r.incrementKey,
 			},
 			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is incremented by "(\d+)"$`,
-				Description: "Increments a key's integer value by N",
-				Example:     `"{resource}" key "counter" is incremented by "5"`,
+				Description: "Increment integer value by N",
+				Example:     `"cache" key "counter" is incremented by "5"`,
 				Handler:     r.incrementKeyBy,
 			},
 			{
+				Group:       "String Operations",
 				Pattern:     `^"{resource}" key "([^"]*)" is decremented$`,
-				Description: "Decrements a key's integer value by 1",
-				Example:     `"{resource}" key "counter" is decremented`,
+				Description: "Decrement integer value by 1",
+				Example:     `"cache" key "counter" is decremented`,
 				Handler:     r.decrementKey,
+			},
+
+			// String Assertions
+			{
+				Group:       "String Assertions",
+				Pattern:     `^"{resource}" key "([^"]*)" exists$`,
+				Description: "Assert key exists",
+				Example:     `"cache" key "user:1" exists`,
+				Handler:     r.keyShouldExist,
+			},
+			{
+				Group:       "String Assertions",
+				Pattern:     `^"{resource}" key "([^"]*)" does not exist$`,
+				Description: "Assert key doesn't exist",
+				Example:     `"cache" key "user:1" does not exist`,
+				Handler:     r.keyShouldNotExist,
+			},
+			{
+				Group:       "String Assertions",
+				Pattern:     `^"{resource}" key "([^"]*)" has value "([^"]*)"$`,
+				Description: "Assert exact value",
+				Example:     `"cache" key "user:1" has value "John"`,
+				Handler:     r.keyShouldHaveValue,
+			},
+			{
+				Group:       "String Assertions",
+				Pattern:     `^"{resource}" key "([^"]*)" contains "([^"]*)"$`,
+				Description: "Assert value contains substring",
+				Example:     `"cache" key "user:1" contains "John"`,
+				Handler:     r.keyShouldContain,
+			},
+			{
+				Group:       "String Assertions",
+				Pattern:     `^"{resource}" key "([^"]*)" has TTL greater than "(\d+)" seconds$`,
+				Description: "Assert TTL greater than N seconds",
+				Example:     `"cache" key "session:abc" has TTL greater than "3600" seconds`,
+				Handler:     r.keyShouldHaveTTL,
+			},
+
+			// Hash Operations
+			{
+				Group:       "Hash Operations",
+				Pattern:     `^"{resource}" hash "([^"]*)" has fields:$`,
+				Description: "Set hash fields from table",
+				Example:     `"cache" hash "user:1" has fields:`,
+				Handler:     r.setHash,
+			},
+			{
+				Group:       "Hash Operations",
+				Pattern:     `^"{resource}" hash "([^"]*)" field "([^"]*)" is "([^"]*)"$`,
+				Description: "Assert hash field value",
+				Example:     `"cache" hash "user:1" field "name" is "John"`,
+				Handler:     r.hashFieldShouldBe,
+			},
+			{
+				Group:       "Hash Operations",
+				Pattern:     `^"{resource}" hash "([^"]*)" contains:$`,
+				Description: "Assert hash contains fields",
+				Example:     `"cache" hash "user:1" contains:`,
+				Handler:     r.hashShouldContain,
+			},
+
+			// List Operations
+			{
+				Group:       "List Operations",
+				Pattern:     `^"{resource}" list "([^"]*)" has "([^"]*)"$`,
+				Description: "Push value to list",
+				Example:     `"cache" list "queue" has "item1"`,
+				Handler:     r.pushToList,
+			},
+			{
+				Group:       "List Operations",
+				Pattern:     `^"{resource}" list "([^"]*)" has values:$`,
+				Description: "Push multiple values to list",
+				Example:     `"cache" list "queue" has values:`,
+				Handler:     r.pushMultipleToList,
+			},
+			{
+				Group:       "List Operations",
+				Pattern:     `^"{resource}" list "([^"]*)" has "(\d+)" items$`,
+				Description: "Assert list length",
+				Example:     `"cache" list "queue" has "3" items`,
+				Handler:     r.listShouldHaveLength,
+			},
+			{
+				Group:       "List Operations",
+				Pattern:     `^"{resource}" list "([^"]*)" contains "([^"]*)"$`,
+				Description: "Assert list contains value",
+				Example:     `"cache" list "queue" contains "item1"`,
+				Handler:     r.listShouldContain,
+			},
+
+			// Set Operations
+			{
+				Group:       "Set Operations",
+				Pattern:     `^"{resource}" set "([^"]*)" has "([^"]*)"$`,
+				Description: "Add member to set",
+				Example:     `"cache" set "tags" has "tag1"`,
+				Handler:     r.addToSet,
+			},
+			{
+				Group:       "Set Operations",
+				Pattern:     `^"{resource}" set "([^"]*)" has members:$`,
+				Description: "Add multiple members to set",
+				Example:     `"cache" set "tags" has members:`,
+				Handler:     r.addMultipleToSet,
+			},
+			{
+				Group:       "Set Operations",
+				Pattern:     `^"{resource}" set "([^"]*)" contains "([^"]*)"$`,
+				Description: "Assert set contains member",
+				Example:     `"cache" set "tags" contains "tag1"`,
+				Handler:     r.setShouldContain,
+			},
+			{
+				Group:       "Set Operations",
+				Pattern:     `^"{resource}" set "([^"]*)" has "(\d+)" members$`,
+				Description: "Assert set size",
+				Example:     `"cache" set "tags" has "3" members`,
+				Handler:     r.setShouldHaveSize,
+			},
+
+			// Database
+			{
+				Group:       "Database",
+				Pattern:     `^"{resource}" has "(\d+)" keys$`,
+				Description: "Assert total key count",
+				Example:     `"cache" has "5" keys`,
+				Handler:     r.shouldHaveKeyCount,
+			},
+			{
+				Group:       "Database",
+				Pattern:     `^"{resource}" is empty$`,
+				Description: "Assert database is empty",
+				Example:     `"cache" is empty`,
+				Handler:     r.shouldBeEmpty,
 			},
 		},
 	}

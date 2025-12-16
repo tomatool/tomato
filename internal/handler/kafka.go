@@ -196,20 +196,23 @@ func (r *Kafka) Steps() StepCategory {
 		Name:        "Kafka",
 		Description: "Steps for interacting with Apache Kafka message broker",
 		Steps: []StepDef{
-			// Topic management
+			// Topic Management
 			{
+				Group:       "Topic Management",
 				Pattern:     `^"{resource}" topic "([^"]*)" exists$`,
 				Description: "Asserts a Kafka topic exists",
 				Example:     `"{resource}" topic "events" exists`,
 				Handler:     r.topicExists,
 			},
 			{
+				Group:       "Topic Management",
 				Pattern:     `^"{resource}" creates topic "([^"]*)"$`,
 				Description: "Creates a Kafka topic with 1 partition",
 				Example:     `"{resource}" creates topic "events"`,
 				Handler:     r.createTopic,
 			},
 			{
+				Group:       "Topic Management",
 				Pattern:     `^"{resource}" creates topic "([^"]*)" with "(\d+)" partitions$`,
 				Description: "Creates a Kafka topic with specified partitions",
 				Example:     `"{resource}" creates topic "events" with "3" partitions`,
@@ -218,30 +221,35 @@ func (r *Kafka) Steps() StepCategory {
 
 			// Publishing
 			{
+				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes to "([^"]*)":$`,
 				Description: "Publishes a message to a topic",
 				Example:     "\"{resource}\" publishes to \"events\":\n  \"\"\"\n  Hello World\n  \"\"\"",
 				Handler:     r.publishMessage,
 			},
 			{
+				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes to "([^"]*)" with key "([^"]*)":$`,
 				Description: "Publishes a message with a key to a topic",
 				Example:     "\"{resource}\" publishes to \"events\" with key \"user-123\":\n  \"\"\"\n  Hello World\n  \"\"\"",
 				Handler:     r.publishMessageWithKey,
 			},
 			{
+				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes json to "([^"]*)":$`,
 				Description: "Publishes a JSON message to a topic",
 				Example:     "\"{resource}\" publishes json to \"events\":\n  \"\"\"\n  {\"type\": \"user_created\"}\n  \"\"\"",
 				Handler:     r.publishJSON,
 			},
 			{
+				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes json to "([^"]*)" with key "([^"]*)":$`,
 				Description: "Publishes a JSON message with a key",
 				Example:     "\"{resource}\" publishes json to \"events\" with key \"user-123\":\n  \"\"\"\n  {\"type\": \"user_created\"}\n  \"\"\"",
 				Handler:     r.publishJSONWithKey,
 			},
 			{
+				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes messages to "([^"]*)":$`,
 				Description: "Publishes multiple messages from a table",
 				Example:     "\"{resource}\" publishes messages to \"events\":\n  | key      | value           |\n  | user-1   | {\"id\": 1}     |",
@@ -250,24 +258,28 @@ func (r *Kafka) Steps() StepCategory {
 
 			// Consuming
 			{
+				Group:       "Consuming",
 				Pattern:     `^"{resource}" consumes from "([^"]*)"$`,
 				Description: "Starts consuming messages from a topic",
 				Example:     `"{resource}" consumes from "events"`,
 				Handler:     r.startConsuming,
 			},
 			{
+				Group:       "Consuming",
 				Pattern:     `^"{resource}" receives from "([^"]*)" within "([^"]*)"$`,
 				Description: "Waits for a message from a topic within timeout",
 				Example:     `"{resource}" receives from "events" within "5s"`,
 				Handler:     r.consumeMessage,
 			},
 			{
+				Group:       "Consuming",
 				Pattern:     `^"{resource}" receives from "([^"]*)" within "([^"]*)":$`,
 				Description: "Asserts a specific message is received within timeout",
 				Example:     "\"{resource}\" receives from \"events\" within \"5s\":\n  \"\"\"\n  Hello World\n  \"\"\"",
 				Handler:     r.shouldReceiveMessage,
 			},
 			{
+				Group:       "Consuming",
 				Pattern:     `^"{resource}" receives from "([^"]*)" with key "([^"]*)" within "([^"]*)"$`,
 				Description: "Asserts a message with specific key is received",
 				Example:     `"{resource}" receives from "events" with key "user-123" within "5s"`,
@@ -276,36 +288,42 @@ func (r *Kafka) Steps() StepCategory {
 
 			// Assertions
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" topic "([^"]*)" has "(\d+)" messages$`,
 				Description: "Asserts topic has exactly N messages consumed",
 				Example:     `"{resource}" topic "events" has "3" messages`,
 				Handler:     r.topicShouldHaveMessages,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" topic "([^"]*)" is empty$`,
 				Description: "Asserts no messages have been consumed from topic",
 				Example:     `"{resource}" topic "events" is empty`,
 				Handler:     r.topicShouldBeEmpty,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" last message contains:$`,
 				Description: "Asserts the last consumed message contains content",
 				Example:     "\"{resource}\" last message contains:\n  \"\"\"\n  user_created\n  \"\"\"",
 				Handler:     r.lastMessageShouldContain,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" last message has key "([^"]*)"$`,
 				Description: "Asserts the last consumed message has specific key",
 				Example:     `"{resource}" last message has key "user-123"`,
 				Handler:     r.lastMessageShouldHaveKey,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" last message has header "([^"]*)" with value "([^"]*)"$`,
 				Description: "Asserts the last message has a header with value",
 				Example:     `"{resource}" last message has header "content-type" with value "application/json"`,
 				Handler:     r.lastMessageShouldHaveHeader,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" receives messages from "([^"]*)" in order:$`,
 				Description: "Asserts messages are received in specified order",
 				Example:     "\"{resource}\" receives messages from \"events\" in order:\n  | key    | value  |\n  | key1   | msg1   |",

@@ -182,20 +182,23 @@ func (r *WebSocketServer) Steps() StepCategory {
 		Name:        "WebSocket Server",
 		Description: "Steps for stubbing WebSocket services",
 		Steps: []StepDef{
-			// Setup behaviors
+			// Setup
 			{
+				Group:       "Setup",
 				Pattern:     `^"{resource}" on connect sends:$`,
 				Description: "Sends a message when a client connects",
 				Example:     "\"{resource}\" on connect sends:\n  \"\"\"\n  {\"type\": \"welcome\"}\n  \"\"\"",
 				Handler:     r.onConnectSends,
 			},
 			{
+				Group:       "Setup",
 				Pattern:     `^"{resource}" on message "([^"]*)" replies:$`,
 				Description: "Replies to an exact message",
 				Example:     "\"{resource}\" on message \"ping\" replies:\n  \"\"\"\n  pong\n  \"\"\"",
 				Handler:     r.onMessageReplies,
 			},
 			{
+				Group:       "Setup",
 				Pattern:     `^"{resource}" on message matching "([^"]*)" replies:$`,
 				Description: "Replies to messages matching a regex pattern",
 				Example:     "\"{resource}\" on message matching \".*subscribe.*\" replies:\n  \"\"\"\n  {\"status\": \"subscribed\"}\n  \"\"\"",
@@ -204,12 +207,14 @@ func (r *WebSocketServer) Steps() StepCategory {
 
 			// Broadcast
 			{
+				Group:       "Broadcast",
 				Pattern:     `^"{resource}" broadcasts:$`,
 				Description: "Broadcasts a message to all connected clients",
 				Example:     "\"{resource}\" broadcasts:\n  \"\"\"\n  {\"event\": \"update\"}\n  \"\"\"",
 				Handler:     r.broadcast,
 			},
 			{
+				Group:       "Broadcast",
 				Pattern:     `^"{resource}" broadcasts "([^"]*)"$`,
 				Description: "Broadcasts a short message to all connected clients",
 				Example:     `"{resource}" broadcasts "ping"`,
@@ -218,18 +223,21 @@ func (r *WebSocketServer) Steps() StepCategory {
 
 			// Assertions
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" has "(\d+)" connections$`,
 				Description: "Asserts the number of connected clients",
 				Example:     `"{resource}" has "2" connections`,
 				Handler:     r.hasConnections,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" received message "([^"]*)"$`,
 				Description: "Asserts a specific message was received",
 				Example:     `"{resource}" received message "ping"`,
 				Handler:     r.receivedMessage,
 			},
 			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" received "(\d+)" messages$`,
 				Description: "Asserts the total number of messages received",
 				Example:     `"{resource}" received "3" messages`,
