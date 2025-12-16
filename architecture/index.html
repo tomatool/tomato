@@ -13,10 +13,10 @@
       
       
       
-        <link rel="prev" href="../architecture/">
+        <link rel="prev" href="../configuration/">
       
       
-        <link rel="next" href="http-client/">
+        <link rel="next" href="../resources/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Overview - tomato</title>
+        <title>Architecture - tomato</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#available-resources" class="md-skip">
+        <a href="#architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -111,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Architecture
             
           </span>
         </div>
@@ -289,9 +289,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../architecture/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -308,13 +310,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../resources/" class="md-tabs__link">
           
   
   
@@ -455,90 +455,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Resources
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Resources
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
     
   
   
@@ -558,7 +474,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    Architecture
   
 
     
@@ -576,7 +492,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    Architecture
   
 
     
@@ -602,74 +518,101 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#json-matchers" class="md-nav__link">
+  <a href="#high-level-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JSON Matchers
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="JSON Matchers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#type-matchers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Type Matchers
+        High-Level Overview
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#string-matchers" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#test-execution-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        String Matchers
+        Test Execution Flow
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#numeric-matchers" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#handler-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Numeric Matchers
+        Handler Architecture
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#length-matcher" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#resource-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Length Matcher
+        Resource Lifecycle
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#container-orchestration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Container Orchestration
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-requestresponse-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP Request/Response Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
   
 </li>
       
@@ -677,6 +620,87 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resources
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Resources
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -689,7 +713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-client/" class="md-nav__link">
+      <a href="../resources/http-client/" class="md-nav__link">
         
   
   
@@ -717,7 +741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="http-server/" class="md-nav__link">
+      <a href="../resources/http-server/" class="md-nav__link">
         
   
   
@@ -745,7 +769,7 @@
   
   
     <li class="md-nav__item">
-      <a href="postgres/" class="md-nav__link">
+      <a href="../resources/postgres/" class="md-nav__link">
         
   
   
@@ -773,7 +797,7 @@
   
   
     <li class="md-nav__item">
-      <a href="redis/" class="md-nav__link">
+      <a href="../resources/redis/" class="md-nav__link">
         
   
   
@@ -801,7 +825,7 @@
   
   
     <li class="md-nav__item">
-      <a href="kafka/" class="md-nav__link">
+      <a href="../resources/kafka/" class="md-nav__link">
         
   
   
@@ -829,7 +853,7 @@
   
   
     <li class="md-nav__item">
-      <a href="shell/" class="md-nav__link">
+      <a href="../resources/shell/" class="md-nav__link">
         
   
   
@@ -857,7 +881,7 @@
   
   
     <li class="md-nav__item">
-      <a href="websocket-client/" class="md-nav__link">
+      <a href="../resources/websocket-client/" class="md-nav__link">
         
   
   
@@ -885,7 +909,7 @@
   
   
     <li class="md-nav__item">
-      <a href="websocket-server/" class="md-nav__link">
+      <a href="../resources/websocket-server/" class="md-nav__link">
         
   
   
@@ -940,74 +964,101 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#json-matchers" class="md-nav__link">
+  <a href="#high-level-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JSON Matchers
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="JSON Matchers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#type-matchers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Type Matchers
+        High-Level Overview
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#string-matchers" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#test-execution-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        String Matchers
+        Test Execution Flow
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#numeric-matchers" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#handler-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Numeric Matchers
+        Handler Architecture
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#length-matcher" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#resource-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Length Matcher
+        Resource Lifecycle
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#container-orchestration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example
+        Container Orchestration
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Flow Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#http-requestresponse-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTP Request/Response Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1031,184 +1082,272 @@
   
 
 
-<h1 id="available-resources">Available Resources<a class="headerlink" href="#available-resources" title="Permanent link">#</a></h1>
-<p>Tomato supports the following resource types for behavioral testing.</p>
-<table>
-<thead>
-<tr>
-<th>Resource</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="http-client/">HTTP Client</a></td>
-<td>Steps for making HTTP requests and validating responses</td>
-</tr>
-<tr>
-<td><a href="http-server/">HTTP Server</a></td>
-<td>Steps for stubbing HTTP services</td>
-</tr>
-<tr>
-<td><a href="postgres/">PostgreSQL</a></td>
-<td>Steps for interacting with PostgreSQL databases</td>
-</tr>
-<tr>
-<td><a href="redis/">Redis</a></td>
-<td>Steps for interacting with Redis key-value store</td>
-</tr>
-<tr>
-<td><a href="kafka/">Kafka</a></td>
-<td>Steps for interacting with Apache Kafka message broker</td>
-</tr>
-<tr>
-<td><a href="shell/">Shell</a></td>
-<td>Steps for executing shell commands and scripts</td>
-</tr>
-<tr>
-<td><a href="websocket-client/">WebSocket Client</a></td>
-<td>Steps for connecting to WebSocket servers</td>
-</tr>
-<tr>
-<td><a href="websocket-server/">WebSocket Server</a></td>
-<td>Steps for stubbing WebSocket services</td>
-</tr>
-</tbody>
-</table>
-<h2 id="json-matchers">JSON Matchers<a class="headerlink" href="#json-matchers" title="Permanent link">#</a></h2>
-<p>When using <code>response json matches:</code> or <code>response json contains:</code>, you can use these matchers:</p>
-<h3 id="type-matchers">Type Matchers<a class="headerlink" href="#type-matchers" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>Matcher</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>@string</code></td>
-<td>Matches any string value</td>
-</tr>
-<tr>
-<td><code>@number</code></td>
-<td>Matches any numeric value</td>
-</tr>
-<tr>
-<td><code>@boolean</code></td>
-<td>Matches true or false</td>
-</tr>
-<tr>
-<td><code>@array</code></td>
-<td>Matches any array</td>
-</tr>
-<tr>
-<td><code>@object</code></td>
-<td>Matches any object</td>
-</tr>
-<tr>
-<td><code>@null</code></td>
-<td>Matches null</td>
-</tr>
-<tr>
-<td><code>@notnull</code></td>
-<td>Matches any non-null value</td>
-</tr>
-<tr>
-<td><code>@any</code></td>
-<td>Matches any value</td>
-</tr>
-<tr>
-<td><code>@empty</code></td>
-<td>Matches empty string, array, or object</td>
-</tr>
-<tr>
-<td><code>@notempty</code></td>
-<td>Matches non-empty string, array, or object</td>
-</tr>
-</tbody>
-</table>
-<h3 id="string-matchers">String Matchers<a class="headerlink" href="#string-matchers" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>Matcher</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>@regex:pattern</code></td>
-<td>Matches string against regex pattern</td>
-</tr>
-<tr>
-<td><code>@contains:text</code></td>
-<td>Matches if string contains text</td>
-</tr>
-<tr>
-<td><code>@startswith:text</code></td>
-<td>Matches if string starts with text</td>
-</tr>
-<tr>
-<td><code>@endswith:text</code></td>
-<td>Matches if string ends with text</td>
-</tr>
-</tbody>
-</table>
-<h3 id="numeric-matchers">Numeric Matchers<a class="headerlink" href="#numeric-matchers" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>Matcher</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>@gt:n</code></td>
-<td>Matches if value &gt; n</td>
-</tr>
-<tr>
-<td><code>@gte:n</code></td>
-<td>Matches if value &gt;= n</td>
-</tr>
-<tr>
-<td><code>@lt:n</code></td>
-<td>Matches if value &lt; n</td>
-</tr>
-<tr>
-<td><code>@lte:n</code></td>
-<td>Matches if value &lt;= n</td>
-</tr>
-</tbody>
-</table>
-<h3 id="length-matcher">Length Matcher<a class="headerlink" href="#length-matcher" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>Matcher</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>@len:n</code></td>
-<td>Matches if length equals n (for strings, arrays, objects)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h3>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response json contains:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">    &quot;id&quot;: &quot;@regex:^[0-9a-f-]{36}$&quot;,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s">    &quot;name&quot;: &quot;@notempty&quot;,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s">    &quot;email&quot;: &quot;@contains:@&quot;,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="s">    &quot;age&quot;: &quot;@gt:0&quot;,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="s">    &quot;tags&quot;: &quot;@array&quot;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="s">  }</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
-</span></code></pre></div>
+<h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">#</a></h1>
+<p>This page provides an overview of tomato's internal architecture and how components interact during test execution.</p>
+<h2 id="high-level-overview">High-Level Overview<a class="headerlink" href="#high-level-overview" title="Permanent link">#</a></h2>
+<p>tomato is designed around three core concepts:</p>
+<ol>
+<li><strong>Containers</strong> - Docker containers managed via Testcontainers</li>
+<li><strong>Resources</strong> - Abstractions over external services (databases, APIs, message queues)</li>
+<li><strong>Handlers</strong> - Step definitions that interact with resources</li>
+</ol>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Config["tomato.yml"]
+        C[Containers]
+        R[Resources]
+        F[Features]
+    end
+
+    subgraph Runtime["tomato Runtime"]
+        TC[Testcontainers]
+        H[Handlers]
+        G[Gherkin Parser]
+    end
+
+    subgraph External["External Services"]
+        DB[(PostgreSQL)]
+        REDIS[(Redis)]
+        KAFKA[(Kafka)]
+        HTTP[HTTP Server]
+        WS[WebSocket]
+    end
+
+    C --&gt; TC
+    R --&gt; H
+    F --&gt; G
+
+    TC --&gt; DB
+    TC --&gt; REDIS
+    TC --&gt; KAFKA
+
+    H --&gt; DB
+    H --&gt; REDIS
+    H --&gt; KAFKA
+    H --&gt; HTTP
+    H --&gt; WS
+
+    G --&gt; H</code></pre>
+<h2 id="test-execution-flow">Test Execution Flow<a class="headerlink" href="#test-execution-flow" title="Permanent link">#</a></h2>
+<p>When you run <code>tomato run</code>, the following sequence occurs:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant User
+    participant CLI
+    participant Config
+    participant TC as Testcontainers
+    participant App as Application
+    participant Handler
+    participant Godog
+
+    User-&gt;&gt;CLI: tomato run
+    CLI-&gt;&gt;Config: Parse tomato.yml
+
+    rect rgb(40, 40, 40)
+        Note over TC: Container Setup
+        Config-&gt;&gt;TC: Start containers
+        TC--&gt;&gt;TC: Wait for readiness
+        TC--&gt;&gt;Config: Container endpoints
+    end
+
+    rect rgb(40, 40, 40)
+        Note over App: App Setup (optional)
+        Config-&gt;&gt;App: Start application
+        App--&gt;&gt;App: Wait for ready check
+    end
+
+    rect rgb(40, 40, 40)
+        Note over Handler: Resource Setup
+        Config-&gt;&gt;Handler: Initialize handlers
+        Handler--&gt;&gt;Handler: Connect to services
+    end
+
+    rect rgb(40, 40, 40)
+        Note over Godog: Test Execution
+        CLI-&gt;&gt;Godog: Run features
+        loop Each Scenario
+            Godog-&gt;&gt;Handler: Reset resources
+            loop Each Step
+                Godog-&gt;&gt;Handler: Execute step
+                Handler--&gt;&gt;Godog: Result
+            end
+        end
+    end
+
+    Godog--&gt;&gt;CLI: Test results
+    CLI-&gt;&gt;TC: Stop containers
+    CLI-&gt;&gt;App: Stop application
+    CLI--&gt;&gt;User: Exit code</code></pre>
+<h2 id="handler-architecture">Handler Architecture<a class="headerlink" href="#handler-architecture" title="Permanent link">#</a></h2>
+<p>Handlers are responsible for translating Gherkin steps into actions against resources:</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph Steps["Gherkin Steps"]
+        S1["Given I set 'db' table..."]
+        S2["When I send 'GET' request..."]
+        S3["Then response status is '200'"]
+    end
+
+    subgraph Handlers["Handler Registry"]
+        PG[PostgreSQL Handler]
+        HTTP[HTTP Client Handler]
+        REDIS[Redis Handler]
+        KAFKA[Kafka Handler]
+        WS[WebSocket Handler]
+        SHELL[Shell Handler]
+    end
+
+    subgraph Resources["Resources"]
+        DB[(Database)]
+        API[HTTP API]
+        CACHE[(Cache)]
+        MQ[(Message Queue)]
+        WSS[WebSocket Server]
+        CMD[Shell]
+    end
+
+    S1 --&gt; PG
+    S2 --&gt; HTTP
+    S3 --&gt; HTTP
+
+    PG --&gt; DB
+    HTTP --&gt; API
+    REDIS --&gt; CACHE
+    KAFKA --&gt; MQ
+    WS --&gt; WSS
+    SHELL --&gt; CMD</code></pre>
+<h2 id="resource-lifecycle">Resource Lifecycle<a class="headerlink" href="#resource-lifecycle" title="Permanent link">#</a></h2>
+<p>Each resource follows a consistent lifecycle:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Configured: Parse config
+    Configured --&gt; Initialized: Initialize handler
+    Initialized --&gt; Connected: Connect to service
+    Connected --&gt; Ready: Ready for tests
+
+    Ready --&gt; Reset: Before scenario
+    Reset --&gt; Ready: Clean state
+
+    Ready --&gt; Closed: Tests complete
+    Closed --&gt; [*]</code></pre>
+<h2 id="container-orchestration">Container Orchestration<a class="headerlink" href="#container-orchestration" title="Permanent link">#</a></h2>
+<p>tomato uses Testcontainers to manage Docker containers:</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph Config["Configuration"]
+        YAML["tomato.yml"]
+    end
+
+    subgraph Testcontainers["Testcontainers Runtime"]
+        CM[Container Manager]
+        NW[Network]
+
+        subgraph Containers
+            C1[postgres:15]
+            C2[redis:7]
+            C3[kafka:latest]
+        end
+    end
+
+    subgraph WaitStrategies["Wait Strategies"]
+        PORT[Port Check]
+        HTTP_CHECK[HTTP Check]
+        LOG[Log Pattern]
+    end
+
+    YAML --&gt; CM
+    CM --&gt; NW
+    CM --&gt; C1
+    CM --&gt; C2
+    CM --&gt; C3
+
+    C1 --&gt; PORT
+    C2 --&gt; PORT
+    C3 --&gt; LOG</code></pre>
+<h2 id="data-flow-example">Data Flow Example<a class="headerlink" href="#data-flow-example" title="Permanent link">#</a></h2>
+<p>Here's how a typical database test scenario flows through the system:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Feature as Feature File
+    participant Godog
+    participant PG as PostgreSQL Handler
+    participant DB as PostgreSQL
+
+    Note over Feature: Scenario: Create user
+
+    Feature-&gt;&gt;Godog: Given I set "db" table "users"...
+    Godog-&gt;&gt;PG: SetTableValues(table, data)
+    PG-&gt;&gt;DB: INSERT INTO users...
+    DB--&gt;&gt;PG: OK
+    PG--&gt;&gt;Godog: Success
+
+    Feature-&gt;&gt;Godog: When I execute on "db" query...
+    Godog-&gt;&gt;PG: ExecuteQuery(query)
+    PG-&gt;&gt;DB: SELECT * FROM users
+    DB--&gt;&gt;PG: Results
+    PG--&gt;&gt;Godog: Store results
+
+    Feature-&gt;&gt;Godog: Then "db" query result should be...
+    Godog-&gt;&gt;PG: AssertQueryResult(expected)
+    PG--&gt;&gt;Godog: Match/No match</code></pre>
+<h2 id="http-requestresponse-flow">HTTP Request/Response Flow<a class="headerlink" href="#http-requestresponse-flow" title="Permanent link">#</a></h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant Feature as Feature File
+    participant HTTP as HTTP Handler
+    participant API as Target API
+
+    Feature-&gt;&gt;HTTP: Given I set request header...
+    HTTP--&gt;&gt;HTTP: Store header
+
+    Feature-&gt;&gt;HTTP: When I send "POST" to "/users"
+    HTTP-&gt;&gt;API: POST /users
+    API--&gt;&gt;HTTP: 201 Created + JSON body
+    HTTP--&gt;&gt;HTTP: Store response
+
+    Feature-&gt;&gt;HTTP: Then response status is "201"
+    HTTP--&gt;&gt;HTTP: Assert status
+
+    Feature-&gt;&gt;HTTP: And response JSON "id" exists
+    HTTP--&gt;&gt;HTTP: Assert JSON path</code></pre>
+<h2 id="configuration-structure">Configuration Structure<a class="headerlink" href="#configuration-structure" title="Permanent link">#</a></h2>
+<pre class="mermaid"><code>flowchart TB
+    subgraph tomato.yml
+        direction TB
+        V[version: 2]
+
+        subgraph containers
+            C1[name: postgres&lt;br/&gt;image: postgres:15&lt;br/&gt;env: ...&lt;br/&gt;wait_for: ...]
+            C2[name: redis&lt;br/&gt;image: redis:7]
+        end
+
+        subgraph resources
+            R1[name: db&lt;br/&gt;type: postgres&lt;br/&gt;container: postgres]
+            R2[name: cache&lt;br/&gt;type: redis&lt;br/&gt;container: redis]
+            R3[name: api&lt;br/&gt;type: http&lt;br/&gt;base_url: ...]
+        end
+
+        subgraph app
+            A[command: go run ./cmd/server&lt;br/&gt;port: 8080&lt;br/&gt;ready: http /health&lt;br/&gt;env: ...]
+        end
+
+        subgraph features
+            F[paths:&lt;br/&gt;  - ./features]
+        end
+    end</code></pre>
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">#</a></h2>
+<p>When a step fails, tomato provides detailed error information:</p>
+<pre class="mermaid"><code>flowchart TB
+    Step[Step Execution] --&gt; Check{Success?}
+    Check --&gt;|Yes| Next[Next Step]
+    Check --&gt;|No| Error[Error Details]
+
+    Error --&gt; Type{Error Type}
+    Type --&gt;|Connection| Conn[Connection failed to resource]
+    Type --&gt;|Assertion| Assert[Expected vs Actual mismatch]
+    Type --&gt;|Timeout| Timeout[Operation timed out]
+    Type --&gt;|Syntax| Syntax[Invalid step syntax]
+
+    Conn --&gt; Report[Report to User]
+    Assert --&gt; Report
+    Timeout --&gt; Report
+    Syntax --&gt; Report
+
+    Report --&gt; Cleanup[Cleanup Resources]
+    Cleanup --&gt; Exit[Exit with error code]</code></pre>
 
 
 
