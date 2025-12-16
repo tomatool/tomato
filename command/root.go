@@ -17,7 +17,6 @@ in a single tomato.yml file.
 One config to rule them all.`,
 		Commands: []*cli.Command{
 			initCommand,
-			newCommand,
 			runCommand,
 			docsCommand,
 			stepsCommand,
