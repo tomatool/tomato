@@ -13,8 +13,9 @@ import (
 )
 
 var docsCommand = &cli.Command{
-	Name:  "docs",
-	Usage: "Generate documentation for available steps",
+	Name:   "docs",
+	Usage:  "Generate documentation for available steps",
+	Hidden: true,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "output",
