@@ -206,6 +206,67 @@ Tomato supports the following resource types for behavioral testing.
 {{range .}}| [{{.Name}}]({{.File}}) | {{.Description}} |
 {{end}}
 
+## Variables and Dynamic Values
+
+Tomato supports variables that can be used in URLs, headers, and request bodies. Variables use the ` + "`" + `{{"{{name}}"}}` + "`" + ` syntax.
+
+### Dynamic Value Generation
+
+Built-in functions generate unique values on each use:
+
+| Function | Example Output | Description |
+|----------|----------------|-------------|
+| ` + "`" + `{{"{{uuid}}"}}` + "`" + ` | ` + "`f47ac10b-58cc-4372-a567-0e02b2c3d479`" + ` | Random UUID v4 |
+| ` + "`" + `{{"{{timestamp}}"}}` + "`" + ` | ` + "`2024-01-15T10:30:00Z`" + ` | Current ISO 8601 timestamp |
+| ` + "`" + `{{"{{timestamp:unix}}"}}` + "`" + ` | ` + "`1705315800`" + ` | Unix timestamp in seconds |
+| ` + "`" + `{{"{{random:N}}"}}` + "`" + ` | ` + "`A8kL2mN9pQ`" + ` | Random alphanumeric string of length N |
+| ` + "`" + `{{"{{random:N:numeric}}"}}` + "`" + ` | ` + "`8472910384`" + ` | Random numeric string of length N |
+| ` + "`" + `{{"{{sequence:name}}"}}` + "`" + ` | ` + "`1`" + `, ` + "`2`" + `, ` + "`3`" + `... | Auto-incrementing sequence by name |
+
+**Example:**
+` + "```gherkin" + `
+When "api" sends "POST" to "/api/users" with json:
+  """
+  {
+    "id": "{{"{{uuid}}"}}",
+    "username": "user_{{"{{random:8}}"}}",
+    "created_at": "{{"{{timestamp}}"}}"
+  }
+  """
+` + "```" + `
+
+### Capturing Response Values
+
+Save values from responses to use in subsequent requests:
+
+| Step | Description |
+|------|-------------|
+| ` + "`" + `"api" response json "path" saved as "{{"{{var}}"}}"` + "`" + ` | Save JSON path value to variable |
+| ` + "`" + `"api" response header "Name" saved as "{{"{{var}}"}}"` + "`" + ` | Save response header to variable |
+
+**Example - CRUD workflow:**
+` + "```gherkin" + `
+Scenario: Create and retrieve a user
+  # Create user and capture the ID
+  When "api" sends "POST" to "/api/users" with json:
+    """
+    { "name": "Alice" }
+    """
+  Then "api" response status is "201"
+  And "api" response json "id" saved as "{{"{{user_id}}"}}"
+
+  # Use captured ID in subsequent request
+  When "api" sends "GET" to "/api/users/{{"{{user_id}}"}}"
+  Then "api" response status is "200"
+  And "api" response json "name" is "Alice"
+
+  # Delete the user
+  When "api" sends "DELETE" to "/api/users/{{"{{user_id}}"}}"
+  Then "api" response status is "204"
+` + "```" + `
+
+Variables and sequences are automatically reset between scenarios.
+
 ## JSON Matchers
 
 When using ` + "`" + `response json matches:` + "`" + ` or ` + "`" + `response json contains:` + "`" + `, you can use these matchers:

@@ -60,6 +60,10 @@ Steps for making HTTP requests and validating responses
 | `"api" response json "data.deleted" does not exist` | Assert JSON path doesn't exist |
 | `"api" response json matches:` | Assert exact JSON structure with matchers: @string, @number, @boolean, @array, @object, @any, @null, @notnull, @empty, @notempty, @regex:pattern, @contains:text, @startswith:text, @endswith:text, @gt:n, @gte:n, @lt:n, @lte:n, @len:n |
 | `"api" response json contains:` | Assert JSON contains specified fields (ignores extra fields). Supports same matchers as 'matches' |
+| `"api" response json "id" matches pattern "^[0-9a-f-]{36}$"` | Assert JSON path value matches regex pattern |
+| `"api" response json "id" is uuid` | Assert JSON path value is a valid UUID |
+| `"api" response json "email" is email` | Assert JSON path value is a valid email format |
+| `"api" response json "created_at" is iso-timestamp` | Assert JSON path value is an ISO 8601 timestamp |
 
 
 ## Response Timing
@@ -67,4 +71,12 @@ Steps for making HTTP requests and validating responses
 | Step | Description |
 |------|-------------|
 | `"api" response time is less than "500ms"` | Assert response time |
+
+
+## Variable Capture
+
+| Step | Description |
+|------|-------------|
+| `"api" response json "id" saved as "{{user_id}}"` | Save JSON path value to variable for use in subsequent requests |
+| `"api" response header "Location" saved as "{{location}}"` | Save response header value to variable |
 
