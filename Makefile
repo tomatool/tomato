@@ -1,70 +1,111 @@
-project_name = tomato
-branch = $(shell git symbolic-ref HEAD 2>/dev/null)
-version = 1.2.0
-revision = $(shell git log -1 --pretty=format:"%H")
-build_user = $(USER)
-build_date = $(shell date +%FT%T%Z)
-pwd = $(shell pwd)
+.PHONY: build test lint clean install run help
 
-build_dir ?= bin/
+# Build variables
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
+BUILD_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+LDFLAGS := -ldflags "-X github.com/tomatool/tomato/version.Version=$(VERSION) \
+                     -X github.com/tomatool/tomato/version.Commit=$(COMMIT) \
+                     -X github.com/tomatool/tomato/version.BuildDate=$(BUILD_DATE)"
 
-pkgs          = ./...
-version_pkg= github.com/tomatool/tomato/version
-ldflags := "-X $(version_pkg).Version=$(version) -X $(version_pkg).Branch=$(branch) -X $(version_pkg).Revision=$(revision) -X $(version_pkg).BuildUser=$(build_user) -X $(version_pkg).BuildDate=$(build_date)"
+# Go variables
+GOCMD := go
+GOBUILD := $(GOCMD) build
+GOTEST := $(GOCMD) test
+GOGET := $(GOCMD) get
+GOMOD := $(GOCMD) mod
+BINARY_NAME := tomato
+BINARY_PATH := ./bin/$(BINARY_NAME)
 
+## help: Show this help message
+help:
+	@echo "Tomato v2 - Behavioral Testing Toolkit"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make <target>"
+	@echo ""
+	@echo "Targets:"
+	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
 
-deps:
-	@echo " > Installing dependencies"
-	@go get -u github.com/golang/dep/cmd/dep
-	@dep ensure --vendor-only
-
+## build: Build the tomato binary
 build:
-	@echo ">> building binaries"
-	@go build -mod vendor -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
-	@go build -mod vendor -ldflags $(ldflags) -o $(build_dir)/$(project_name) .
+	@echo "Building $(BINARY_NAME)..."
+	@mkdir -p ./bin
+	$(GOBUILD) $(LDFLAGS) -o $(BINARY_PATH) .
 
-build-test:
-	@echo ">> building binaries"
-	@go test -coverpkg="./..." github.com/tomatool/$(project_name) -c -tags testmain -o $(build_dir)/$(project_name).test
-	@go build -ldflags $(ldflags) -o $(build_dir)/tomatool cmd/tomatool/main.go
+## install: Install tomato to GOPATH/bin
+install:
+	@echo "Installing $(BINARY_NAME)..."
+	$(GOBUILD) $(LDFLAGS) -o $(GOPATH)/bin/$(BINARY_NAME) .
 
-build-all:
-	@echo ">> packaging releases"
-	@rm -rf dist
-	@mkdir dist
-	@for os in "linux" "darwin" ; do \
-			for arch in "amd64" "386" "arm" "arm64" ; do \
-					echo " > building $$os/$$arch" ; \
-					GOOS=$$os GOARCH=$$arch go build -ldflags $(ldflags) -o $(build_dir)/$(project_name).$(version).$$os-$$arch cmd/$(project_name)/main.go ; \
-			done ; \
-	done
-
+## test: Run tests
 test:
-	@docker-compose down
-	@docker volume ls -q | grep tomato | xargs docker volume rm -f
-	@docker-compose up --build --exit-code-from tomato
+	@echo "Running tests..."
+	$(GOTEST) -v -race -cover ./...
 
-check:
-	@go run cmd/tomatool/main.go generate docs -t markdown -o /tmp/docs
-	@diff -q /tmp/docs docs/resources.md || (echo "$$? inconsistent dictionary with documentation, please run 'make gen'"; exit 1)
-	@go run cmd/tomatool/main.go generate handler -o /tmp/handler
-	@git diff --exit-code || (echo "$$? inconsistent dictionary with handler, please run 'make gen'"; exit 1)
+## test-coverage: Run tests with coverage report
+test-coverage:
+	@echo "Running tests with coverage..."
+	$(GOTEST) -v -race -coverprofile=coverage.out ./...
+	$(GOCMD) tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: coverage.html"
 
-gen:
-	@echo ">> generating markdown documentation"
-	@go run cmd/tomatool/main.go generate docs -t markdown
-	@echo ">> generating handler"
-	@go run cmd/tomatool/main.go generate handler
-	@echo ">> generating mocks"
-	@mockgen -destination=handler/queue/mocks/Resource.go -package=mocks -source=handler/queue/queue.go
+## lint: Run linters
+lint:
+	@echo "Running linters..."
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run ./...; \
+	else \
+		echo "golangci-lint not installed. Run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
+	fi
 
-package-releases:
-	@echo ">> packaging releases"
-	@rm -rf dist
-	@mkdir dist
-	@for f in $(shell ls bin) ; do \
-			cp bin/$$f tomato ; \
-			tar -czvf $$f.tar.gz tomato ; \
-			mv $$f.tar.gz dist ; \
-			rm -rf tomato ; \
-	done
+## fmt: Format code
+fmt:
+	@echo "Formatting code..."
+	$(GOCMD) fmt ./...
+
+## vet: Run go vet
+vet:
+	@echo "Running go vet..."
+	$(GOCMD) vet ./...
+
+## tidy: Tidy go modules
+tidy:
+	@echo "Tidying modules..."
+	$(GOMOD) tidy
+
+## deps: Download dependencies
+deps:
+	@echo "Downloading dependencies..."
+	$(GOMOD) download
+
+## clean: Clean build artifacts
+clean:
+	@echo "Cleaning..."
+	@rm -rf ./bin
+	@rm -f coverage.out coverage.html
+
+## run: Run tomato with example config
+run: build
+	$(BINARY_PATH) run
+
+## dev: Build and run in development mode
+dev: build
+	$(BINARY_PATH) --help
+
+## docker-build: Build Docker image
+docker-build:
+	@echo "Building Docker image..."
+	docker build -t tomatool/tomato:$(VERSION) .
+	docker tag tomatool/tomato:$(VERSION) tomatool/tomato:latest
+
+## release: Create a release build for multiple platforms
+release: clean
+	@echo "Building releases..."
+	@mkdir -p ./bin/release
+	GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./bin/release/$(BINARY_NAME)-linux-amd64 .
+	GOOS=linux GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./bin/release/$(BINARY_NAME)-linux-arm64 .
+	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./bin/release/$(BINARY_NAME)-darwin-amd64 .
+	GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o ./bin/release/$(BINARY_NAME)-darwin-arm64 .
+	GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ./bin/release/$(BINARY_NAME)-windows-amd64.exe .
+	@echo "Releases built in ./bin/release/"

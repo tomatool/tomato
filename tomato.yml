@@ -1,0 +1,21 @@
+version: 2
+
+settings:
+  timeout: 5m
+  parallel: 1
+  fail_fast: false
+  output: pretty
+  reset:
+    level: scenario
+
+containers:
+resources:
+hooks:
+  before_all: []
+  after_all: []
+  before_scenario: []
+  after_scenario: []
+
+features:
+  paths:
+    - ./features

@@ -1,0 +1,111 @@
+version: 2
+
+settings:
+  timeout: 5m
+  parallel: 1
+  fail_fast: true
+  output: pretty
+  reset:
+    level: scenario
+
+containers:
+  postgres:
+    image: postgres:16-alpine
+    env:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432/tcp"
+    wait_for:
+      type: port
+      target: "5432/tcp"
+      timeout: 30s
+    reset:
+      strategy: truncate
+      exclude:
+        - schema_migrations
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379/tcp"
+    wait_for:
+      type: port
+      target: "6379/tcp"
+      timeout: 30s
+    reset:
+      strategy: flush
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    env:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      CLUSTER_ID: tomato-test-cluster-001
+    ports:
+      - "9092/tcp"
+    wait_for:
+      type: port
+      target: "9092/tcp"
+      timeout: 60s
+    reset:
+      strategy: delete_recreate
+
+resources:
+  db:
+    type: postgres
+    container: postgres
+    database: testdb
+    options:
+      user: postgres
+      password: postgres
+
+  cache:
+    type: redis
+    container: redis
+    options:
+      reset_strategy: flush
+
+  kafka:
+    type: kafka
+    container: kafka
+    options:
+      topics:
+        - orders
+        - events
+        - notifications
+      partitions: 1
+      replication_factor: 1
+      reset_strategy: delete_recreate
+
+hooks:
+  before_all:
+    - sql: |
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS orders (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          status VARCHAR(50) NOT NULL,
+          total DECIMAL(10,2),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      resource: db
+
+features:
+  paths:
+    - ./features
