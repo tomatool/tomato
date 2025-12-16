@@ -298,6 +298,34 @@ func (r *HTTPClient) Steps() StepCategory {
 				Example:     `"api" response json contains:`,
 				Handler:     r.responseJSONShouldContain,
 			},
+			{
+				Group:       "Response JSON",
+				Pattern:     `^"{resource}" response json "([^"]*)" matches pattern "([^"]*)"$`,
+				Description: "Assert JSON path value matches regex pattern",
+				Example:     `"api" response json "id" matches pattern "^[0-9a-f-]{36}$"`,
+				Handler:     r.responseJSONPathMatchesPattern,
+			},
+			{
+				Group:       "Response JSON",
+				Pattern:     `^"{resource}" response json "([^"]*)" is uuid$`,
+				Description: "Assert JSON path value is a valid UUID",
+				Example:     `"api" response json "id" is uuid`,
+				Handler:     r.responseJSONPathIsUUID,
+			},
+			{
+				Group:       "Response JSON",
+				Pattern:     `^"{resource}" response json "([^"]*)" is email$`,
+				Description: "Assert JSON path value is a valid email format",
+				Example:     `"api" response json "email" is email`,
+				Handler:     r.responseJSONPathIsEmail,
+			},
+			{
+				Group:       "Response JSON",
+				Pattern:     `^"{resource}" response json "([^"]*)" is iso-timestamp$`,
+				Description: "Assert JSON path value is an ISO 8601 timestamp",
+				Example:     `"api" response json "created_at" is iso-timestamp`,
+				Handler:     r.responseJSONPathIsISOTimestamp,
+			},
 
 			// Response Timing
 			{
@@ -590,6 +618,40 @@ func (r *HTTPClient) responseJSONPathShouldNotExist(path string) error {
 		return fmt.Errorf("JSON path %q exists but should not", path)
 	}
 	return nil
+}
+
+func (r *HTTPClient) responseJSONPathMatchesPattern(path, pattern string) error {
+	if r.lastResponse == nil {
+		return fmt.Errorf("no response received")
+	}
+	val, err := r.getJSONPath(path)
+	if err != nil {
+		return err
+	}
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("JSON path %q is not a string: %T", path, val)
+	}
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return fmt.Errorf("invalid regex pattern: %w", err)
+	}
+	if !re.MatchString(str) {
+		return fmt.Errorf("JSON path %q value %q does not match pattern %q", path, str, pattern)
+	}
+	return nil
+}
+
+func (r *HTTPClient) responseJSONPathIsUUID(path string) error {
+	return r.responseJSONPathMatchesPattern(path, `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+}
+
+func (r *HTTPClient) responseJSONPathIsEmail(path string) error {
+	return r.responseJSONPathMatchesPattern(path, `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+}
+
+func (r *HTTPClient) responseJSONPathIsISOTimestamp(path string) error {
+	return r.responseJSONPathMatchesPattern(path, `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(.\d+)?(Z|[+-]\d{2}:\d{2})?$`)
 }
 
 func (r *HTTPClient) responseJSONShouldMatch(doc *godog.DocString) error {

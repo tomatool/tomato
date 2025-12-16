@@ -103,8 +103,31 @@ In `app.env`, you can use templates to inject container addresses:
 
 | Template | Description |
 |----------|-------------|
-| `{{.container_name.host}}` | Container hostname |
-| `{{.container_name.port}}` | Container mapped port |
+| `{{.container_name.host}}` | Container hostname (e.g., `localhost` or Docker network IP) |
+| `{{.container_name.port}}` | Container's mapped port (dynamically assigned) |
+
+**Example with PostgreSQL:**
+```yaml
+containers:
+  postgres:
+    image: postgres:15
+    env:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
+    ports:
+      - "5432"
+
+app:
+  command: ./my-app
+  env:
+    # These are resolved at runtime when containers start
+    DB_HOST: "{{.postgres.host}}"
+    DB_PORT: "{{.postgres.port}}"
+    DATABASE_URL: "postgres://testuser:testpass@{{.postgres.host}}:{{.postgres.port}}/testdb"
+```
+
+**Note:** The `container` field in resource definitions automatically handles host/port resolution - you don't need to specify connection strings manually for resources.
 
 ## Containers
 
@@ -180,9 +203,27 @@ resources:
     options:
       user: test
       password: test
+      # Only truncate these tables during reset (if not set, truncates ALL public tables)
+      tables:
+        - users
+        - orders
+        - products
+      # Always exclude these tables from truncation
       exclude:
         - schema_migrations
+        - goose_db_version
 ```
+
+#### Reset Behavior
+
+By default, PostgreSQL resources truncate **all tables** in the public schema before each scenario. You can control this behavior:
+
+| Option | Description |
+|--------|-------------|
+| `tables` | If set, only these tables are truncated (instead of all) |
+| `exclude` | Tables to never truncate (default: `schema_migrations`, `goose_db_version`) |
+
+The `container` field automatically provides the connection details - tomato resolves the container's host and port at runtime.
 
 ### Redis
 

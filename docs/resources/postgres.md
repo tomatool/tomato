@@ -8,6 +8,8 @@ Steps for interacting with PostgreSQL databases
 | Step | Description |
 |------|-------------|
 | `"db" table "users" has values:` | Insert rows from table |
+| `"db" clears table "users"` | Truncate a table (removes all rows) |
+| `"db" clears tables:` | Truncate multiple tables from list |
 | `"db" executes:` | Execute raw SQL |
 | `"db" executes file "fixtures/seed.sql"` | Execute SQL from file |
 
