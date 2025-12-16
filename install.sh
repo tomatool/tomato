@@ -8,7 +8,7 @@ set -e
 
 REPO="tomatool/tomato"
 BINARY_NAME="tomato"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 USE_RC="${USE_RC:-false}"
 
 # Parse arguments
@@ -104,27 +104,42 @@ install() {
     info "Extracting..."
     tar -xzf "$TMP_DIR/tomato.tar.gz" -C "$TMP_DIR"
 
-    # Check if we need sudo
-    if [ -w "$INSTALL_DIR" ]; then
-        mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/"
-        chmod +x "$INSTALL_DIR/$BINARY_NAME"
-    else
-        warn "Need sudo to install to $INSTALL_DIR"
-        sudo mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/"
-        sudo chmod +x "$INSTALL_DIR/$BINARY_NAME"
-    fi
+    # Create install directory if it doesn't exist
+    mkdir -p "$INSTALL_DIR"
+
+    # Install binary
+    mv "$TMP_DIR/$BINARY_NAME" "$INSTALL_DIR/"
+    chmod +x "$INSTALL_DIR/$BINARY_NAME"
 
     info "Installed to: $INSTALL_DIR/$BINARY_NAME"
 }
 
 # Verify installation
 verify() {
-    if command -v tomato >/dev/null 2>&1; then
-        INSTALLED_VERSION=$(tomato --version 2>&1 | head -n1)
+    # Check if INSTALL_DIR is in PATH
+    case ":$PATH:" in
+        *":$INSTALL_DIR:"*) IN_PATH=true ;;
+        *) IN_PATH=false ;;
+    esac
+
+    if [ "$IN_PATH" = true ] && command -v tomato >/dev/null 2>&1; then
+        INSTALLED_VERSION=$(tomato version 2>&1 | head -n1)
         info "Successfully installed: $INSTALLED_VERSION"
     else
-        warn "Installation complete, but 'tomato' not found in PATH"
-        warn "Add $INSTALL_DIR to your PATH or run: export PATH=\"\$PATH:$INSTALL_DIR\""
+        warn "$INSTALL_DIR is not in your PATH"
+        echo ""
+        warn "Add it to your shell profile:"
+        echo ""
+        echo "  # For bash (~/.bashrc or ~/.bash_profile):"
+        echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+        echo ""
+        echo "  # For zsh (~/.zshrc):"
+        echo "  export PATH=\"\$PATH:$INSTALL_DIR\""
+        echo ""
+        echo "  # For fish (~/.config/fish/config.fish):"
+        echo "  fish_add_path $INSTALL_DIR"
+        echo ""
+        info "Then restart your shell or run: source ~/.bashrc (or ~/.zshrc)"
     fi
 }
 
