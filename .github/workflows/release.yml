@@ -107,6 +107,31 @@ jobs:
           echo "- [Release Page](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
           echo "- [Changelog](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
 
+  update-action-tag:
+    needs: release
+    runs-on: ubuntu-latest
+    if: ${{ inputs.prerelease == false }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update major version tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Extract major version (e.g., v1 from v1.2.3)
+          VERSION="${{ inputs.version }}"
+          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
+
+          echo "Updating $MAJOR_VERSION tag to point to $VERSION"
+
+          # Update major version tag (e.g., v1 -> v1.2.0)
+          git tag -fa "$MAJOR_VERSION" -m "Update $MAJOR_VERSION tag to $VERSION"
+          git push origin "$MAJOR_VERSION" --force
+
   update-docs:
     needs: release
     runs-on: ubuntu-latest

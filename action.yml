@@ -1,0 +1,130 @@
+name: 'Tomato'
+description: 'Run behavioral tests with Tomato'
+author: 'tomatool'
+branding:
+  icon: 'check-circle'
+  color: 'red'
+
+inputs:
+  version:
+    description: 'Tomato version to use (e.g., "v1.0.0"). Defaults to the action version tag.'
+    required: false
+    default: ''
+  config:
+    description: 'Config file path'
+    required: false
+    default: 'tomato.yml'
+  features:
+    description: 'Feature files or directories to run'
+    required: false
+    default: ''
+  tags:
+    description: 'Filter scenarios by tags (e.g., "@smoke and not @slow")'
+    required: false
+    default: ''
+  scenario:
+    description: 'Filter scenarios by name (regex pattern)'
+    required: false
+    default: ''
+  no-reset:
+    description: 'Skip state reset between scenarios (for debugging)'
+    required: false
+    default: 'false'
+  verbose:
+    description: 'Verbose output (show debug logs)'
+    required: false
+    default: 'false'
+  quiet:
+    description: 'Hide application logs during startup'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Tomato
+      shell: bash
+      run: |
+        VERSION="${{ inputs.version }}"
+
+        # Determine OS and architecture
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+
+        case "$ARCH" in
+          x86_64) ARCH="amd64" ;;
+          aarch64|arm64) ARCH="arm64" ;;
+        esac
+
+        # If no version specified, use the action's tag or latest
+        if [ -z "$VERSION" ]; then
+          # Try to get version from the action ref (e.g., tomatool/tomato@v1.0.0)
+          ACTION_REF="${{ github.action_ref }}"
+          if [[ "$ACTION_REF" =~ ^v[0-9] ]]; then
+            VERSION="$ACTION_REF"
+          else
+            # Fallback to latest release
+            VERSION=$(curl -s https://api.github.com/repos/tomatool/tomato/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+          fi
+        fi
+
+        # Remove 'v' prefix if present for download URL
+        VERSION_NUM=${VERSION#v}
+
+        echo "Installing Tomato ${VERSION} for ${OS}/${ARCH}"
+
+        # Download and install
+        DOWNLOAD_URL="https://github.com/tomatool/tomato/releases/download/${VERSION}/tomato_${VERSION_NUM}_${OS}_${ARCH}.tar.gz"
+        echo "Downloading from: ${DOWNLOAD_URL}"
+
+        curl -sL "$DOWNLOAD_URL" -o tomato.tar.gz
+        tar -xzf tomato.tar.gz
+        chmod +x tomato
+        sudo mv tomato /usr/local/bin/
+        rm tomato.tar.gz
+
+        echo "Tomato installed successfully"
+        tomato version
+
+    - name: Run Tomato Tests
+      shell: bash
+      run: |
+        ARGS="run"
+
+        # Config file
+        if [ -n "${{ inputs.config }}" ]; then
+          ARGS="$ARGS --config ${{ inputs.config }}"
+        fi
+
+        # Tags filter
+        if [ -n "${{ inputs.tags }}" ]; then
+          ARGS="$ARGS --tags '${{ inputs.tags }}'"
+        fi
+
+        # Scenario filter
+        if [ -n "${{ inputs.scenario }}" ]; then
+          ARGS="$ARGS --scenario '${{ inputs.scenario }}'"
+        fi
+
+        # No reset flag
+        if [ "${{ inputs.no-reset }}" = "true" ]; then
+          ARGS="$ARGS --no-reset"
+        fi
+
+        # Verbose flag
+        if [ "${{ inputs.verbose }}" = "true" ]; then
+          ARGS="$ARGS --verbose"
+        fi
+
+        # Quiet flag
+        if [ "${{ inputs.quiet }}" = "true" ]; then
+          ARGS="$ARGS --quiet"
+        fi
+
+        # Feature files
+        if [ -n "${{ inputs.features }}" ]; then
+          ARGS="$ARGS ${{ inputs.features }}"
+        fi
+
+        echo "Running: tomato $ARGS"
+        eval "tomato $ARGS"
