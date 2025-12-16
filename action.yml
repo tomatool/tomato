@@ -58,10 +58,19 @@ runs:
 
         # If no version specified, use the action's tag or latest
         if [ -z "$VERSION" ]; then
-          # Try to get version from the action ref (e.g., tomatool/tomato@v1.0.0)
           ACTION_REF="${{ github.action_ref }}"
-          if [[ "$ACTION_REF" =~ ^v[0-9] ]]; then
+
+          # Check if it's a full version tag (e.g., v2.0.0)
+          if [[ "$ACTION_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
             VERSION="$ACTION_REF"
+          # Check if it's a major version tag (e.g., v2) - get latest of that major
+          elif [[ "$ACTION_REF" =~ ^v([0-9]+)$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            VERSION=$(curl -s https://api.github.com/repos/tomatool/tomato/releases | grep '"tag_name"' | grep "\"v${MAJOR}\." | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ -z "$VERSION" ]; then
+              # Fallback to latest if no matching major version found
+              VERSION=$(curl -s https://api.github.com/repos/tomatool/tomato/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+            fi
           else
             # Fallback to latest release
             VERSION=$(curl -s https://api.github.com/repos/tomatool/tomato/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')

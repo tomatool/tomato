@@ -88,7 +88,7 @@ brew install tomatool/tap/tomato
 ### GitHub Actions
 
 ```yaml
-- uses: tomatool/tomato@v1
+- uses: tomatool/tomato@v2
 ```
 
 See [GitHub Action]({% link github-action.md %}) for full documentation.

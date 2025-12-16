@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Tomato Tests
-        uses: tomatool/tomato@v1
+        uses: tomatool/tomato@v2
 ```
 
 ## Inputs
@@ -42,7 +42,7 @@ jobs:
 ### Filter by Tags
 
 ```yaml
-- uses: tomatool/tomato@v1
+- uses: tomatool/tomato@v2
   with:
     tags: '@smoke and not @slow'
 ```
@@ -50,7 +50,7 @@ jobs:
 ### Filter by Scenario Name
 
 ```yaml
-- uses: tomatool/tomato@v1
+- uses: tomatool/tomato@v2
   with:
     scenario: 'user registration'
 ```
@@ -58,7 +58,7 @@ jobs:
 ### Run Specific Features
 
 ```yaml
-- uses: tomatool/tomato@v1
+- uses: tomatool/tomato@v2
   with:
     features: 'features/api features/auth'
 ```
@@ -66,7 +66,7 @@ jobs:
 ### Verbose Output
 
 ```yaml
-- uses: tomatool/tomato@v1
+- uses: tomatool/tomato@v2
   with:
     verbose: 'true'
 ```
@@ -74,7 +74,7 @@ jobs:
 ### Pin to Specific Version
 
 ```yaml
-- uses: tomatool/tomato@v1.0.0
+- uses: tomatool/tomato@v2.0.0
   with:
     config: 'tomato.yml'
 ```
@@ -99,7 +99,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Tomato Tests
-        uses: tomatool/tomato@v1
+        uses: tomatool/tomato@v2
         with:
           config: 'tomato.yml'
           verbose: 'true'
