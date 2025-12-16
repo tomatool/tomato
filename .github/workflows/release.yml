@@ -4,9 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., v1.0.0)'
+        description: 'Base version (e.g., v2.0.0)'
         required: true
         type: string
+      prerelease:
+        description: 'Pre-release (will append -rc.N)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -27,12 +32,41 @@ jobs:
             exit 1
           fi
 
+      - name: Determine release version
+        id: version
+        run: |
+          BASE_VERSION="${{ inputs.version }}"
+
+          if [[ "${{ inputs.prerelease }}" == "true" ]]; then
+            # Find existing RC tags for this version
+            EXISTING_RCS=$(git tag -l "${BASE_VERSION}-rc.*" | sort -V)
+
+            if [[ -z "$EXISTING_RCS" ]]; then
+              # No existing RCs, start with rc.0
+              RELEASE_VERSION="${BASE_VERSION}-rc.0"
+            else
+              # Get the highest RC number and increment
+              LAST_RC=$(echo "$EXISTING_RCS" | tail -n1)
+              LAST_RC_NUM=$(echo "$LAST_RC" | sed "s/${BASE_VERSION}-rc\.//")
+              NEXT_RC_NUM=$((LAST_RC_NUM + 1))
+              RELEASE_VERSION="${BASE_VERSION}-rc.${NEXT_RC_NUM}"
+            fi
+
+            echo "Creating pre-release: $RELEASE_VERSION"
+          else
+            RELEASE_VERSION="$BASE_VERSION"
+            echo "Creating release: $RELEASE_VERSION"
+          fi
+
+          echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+          echo "prerelease=${{ inputs.prerelease }}" >> $GITHUB_OUTPUT
+
       - name: Create and push tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ inputs.version }}" -m "Release ${{ inputs.version }}"
-          git push origin "${{ inputs.version }}"
+          git tag -a "${{ steps.version.outputs.version }}" -m "Release ${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -52,6 +86,7 @@ jobs:
   update-docs:
     needs: release
     runs-on: ubuntu-latest
+    if: ${{ inputs.prerelease == false }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,14 +96,16 @@ jobs:
         with:
           go-version: "1.21"
 
-      - name: Generate step documentation
-        run: |
-          go run main.go docs > docs/steps.md
+      - name: Build tomato
+        run: go build -o tomato .
+
+      - name: Generate documentation
+        run: ./tomato docs
 
       - name: Commit and push docs
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/steps.md
-          git diff --staged --quiet || git commit -m "docs: update step reference for ${{ inputs.version }}"
+          git add docs/
+          git diff --staged --quiet || git commit -m "docs: update documentation for ${{ inputs.version }}"
           git push origin HEAD:main

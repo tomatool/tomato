@@ -71,6 +71,7 @@ brews:
     homepage: https://tomatool.github.io/tomato
     description: Behavioral testing toolkit with built-in container orchestration
     license: MIT
+    skip_upload: auto
     install: |
       bin.install "tomato"
     test: |
