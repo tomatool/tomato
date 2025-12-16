@@ -1,9 +1,13 @@
 title: Tomato
 description: Behavioral testing toolkit with built-in container orchestration
-theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
 
 url: https://tomatool.github.io
 baseurl: /tomato
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
 
 # Repository
 aux_links:
