@@ -17,6 +17,15 @@
 
 ---
 
+> [!WARNING]
+> **v2 is currently under active development.** This version contains breaking changes and may not be stable.
+>
+> Looking for the stable version? [**v1 is available here**](https://github.com/tomatool/tomato/tree/v1), but will not receive future updates as development focuses on v2.
+>
+> **Use v2 at your own risk** - APIs and features may change without notice.
+
+---
+
 Tomato is a language-agnostic behavioral testing framework that manages your test infrastructure automatically. Define containers, resources, and tests in a single `tomato.yml` file.
 
 ## Features
