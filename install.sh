@@ -75,12 +75,13 @@ detect_platform() {
 # Get latest release version
 get_latest_version() {
     if [ "$USE_RC" = true ]; then
-        # Get latest RC (pre-release)
+        # Get highest RC version by semver
         VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases" | \
             grep '"tag_name"' | \
             sed -E 's/.*"([^"]+)".*/\1/' | \
             grep -E '\-rc\.[0-9]+$' | \
-            head -n1)
+            sort -t. -k1,1V -k2,2V -k3,3V -k4,4V | \
+            tail -n1)
         if [ -z "$VERSION" ]; then
             error "No release candidate found. Use without --rc for stable release."
         fi
