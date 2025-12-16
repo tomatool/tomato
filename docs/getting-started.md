@@ -144,6 +144,27 @@ Feature: User API
     And "db" table "users" should have "2" rows
 ```
 
+## Validate Configuration
+
+Before running tests, validate your configuration and feature files:
+
+```bash
+tomato validate
+```
+
+This checks:
+- Configuration file syntax and structure
+- Resource type validity
+- Container references
+- Feature file parsing
+- Step definitions availability
+
+Use `--plain` for CI environments without interactive output:
+
+```bash
+tomato validate --plain
+```
+
 ## Running Tests
 
 Run all tests:
