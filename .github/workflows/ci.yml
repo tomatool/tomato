@@ -23,24 +23,3 @@ jobs:
 
       - name: Build
         run: go build -v ./...
-
-  docs-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.21"
-
-      - name: Check docs are up to date
-        run: |
-          go run main.go docs > /tmp/steps.md
-          if ! diff -q docs/steps.md /tmp/steps.md > /dev/null 2>&1; then
-            echo "::error::docs/steps.md is out of date. Run 'tomato docs > docs/steps.md' and commit."
-            diff docs/steps.md /tmp/steps.md || true
-            exit 1
-          fi
-          echo "Docs are up to date!"

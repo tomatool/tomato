@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -18,39 +19,65 @@ var docsCommand = &cli.Command{
 		&cli.StringFlag{
 			Name:    "output",
 			Aliases: []string{"o"},
-			Usage:   "Output file (default: stdout)",
+			Usage:   "Output directory for mkdocs format, or file for other formats",
 		},
 		&cli.StringFlag{
 			Name:    "format",
 			Aliases: []string{"f"},
-			Value:   "markdown",
-			Usage:   "Output format: markdown, html",
+			Value:   "mkdocs",
+			Usage:   "Output format: mkdocs (generates docs/resources/), markdown (single file), html",
 		},
 	},
 	Action: runDocs,
+}
+
+// resourceFileMapping maps handler names to their output filenames
+var resourceFileMapping = map[string]string{
+	"HTTP Client":      "http-client.md",
+	"HTTP Server":      "http-server.md",
+	"PostgreSQL":       "postgres.md",
+	"Redis":            "redis.md",
+	"Kafka":            "kafka.md",
+	"Shell":            "shell.md",
+	"WebSocket Client": "websocket-client.md",
+	"WebSocket Server": "websocket-server.md",
 }
 
 func runDocs(ctx *cli.Context) error {
 	format := ctx.String("format")
 	output := ctx.String("output")
 
-	var w io.Writer = os.Stdout
-	if output != "" {
-		f, err := os.Create(output)
-		if err != nil {
-			return fmt.Errorf("creating output file: %w", err)
-		}
-		defer f.Close()
-		w = f
-	}
-
 	// Collect all step categories from handlers
 	categories := collectStepCategories()
 
 	switch format {
+	case "mkdocs":
+		outputDir := output
+		if outputDir == "" {
+			outputDir = "docs/resources"
+		}
+		return generateMkDocs(outputDir, categories)
 	case "markdown":
+		var w io.Writer = os.Stdout
+		if output != "" {
+			f, err := os.Create(output)
+			if err != nil {
+				return fmt.Errorf("creating output file: %w", err)
+			}
+			defer f.Close()
+			w = f
+		}
 		return generateMarkdown(w, categories)
 	case "html":
+		var w io.Writer = os.Stdout
+		if output != "" {
+			f, err := os.Create(output)
+			if err != nil {
+				return fmt.Errorf("creating output file: %w", err)
+			}
+			defer f.Close()
+			w = f
+		}
 		return generateHTML(w, categories)
 	default:
 		return fmt.Errorf("unknown format: %s", format)
@@ -59,66 +86,42 @@ func runDocs(ctx *cli.Context) error {
 
 // collectStepCategories returns all step categories from all handler types
 func collectStepCategories() []handler.StepCategory {
-	// Create dummy handlers to extract step definitions
-	// We use nil for dependencies since we only need the step metadata
 	categories := []handler.StepCategory{}
 
-	// HTTP steps
+	// HTTP Client
 	httpHandler, _ := handler.NewHTTPClient("api", handler.DummyConfig(), nil)
 	categories = append(categories, httpHandler.Steps())
 
-	// Redis steps
-	redisHandler, _ := handler.NewRedis("cache", handler.DummyConfig(), nil)
-	categories = append(categories, redisHandler.Steps())
+	// HTTP Server
+	httpServerHandler, _ := handler.NewHTTPServer("mock", handler.DummyConfig(), nil)
+	categories = append(categories, httpServerHandler.Steps())
 
-	// Postgres steps
+	// PostgreSQL
 	postgresHandler, _ := handler.NewPostgres("db", handler.DummyConfig(), nil)
 	categories = append(categories, postgresHandler.Steps())
 
-	// Kafka steps
-	kafkaHandler, _ := handler.NewKafka("kafka", handler.DummyConfig(), nil)
+	// Redis
+	redisHandler, _ := handler.NewRedis("cache", handler.DummyConfig(), nil)
+	categories = append(categories, redisHandler.Steps())
+
+	// Kafka
+	kafkaHandler, _ := handler.NewKafka("queue", handler.DummyConfig(), nil)
 	categories = append(categories, kafkaHandler.Steps())
 
-	// WebSocket steps
-	wsHandler, _ := handler.NewWebSocketClient("ws", handler.DummyConfig(), nil)
-	categories = append(categories, wsHandler.Steps())
-
-	// Shell steps
+	// Shell
 	shellHandler, _ := handler.NewShell("shell", handler.DummyConfig(), nil)
 	categories = append(categories, shellHandler.Steps())
 
+	// WebSocket Client
+	wsClientHandler, _ := handler.NewWebSocketClient("ws", handler.DummyConfig(), nil)
+	categories = append(categories, wsClientHandler.Steps())
+
+	// WebSocket Server
+	wsServerHandler, _ := handler.NewWebSocketServer("wsmock", handler.DummyConfig(), nil)
+	categories = append(categories, wsServerHandler.Steps())
+
 	return categories
 }
-
-const markdownTemplate = `---
-layout: default
-title: Step Reference
-nav_order: 4
----
-
-# Step Reference
-
-This document lists all available Gherkin steps organized by resource type.
-
-> **Note:** This documentation is auto-generated from the source code. Run ` + "`tomato docs`" + ` to regenerate.
-
-{{range .Categories}}
----
-
-## {{.Name}}
-
-{{.Description}}
-
-{{range .Groups}}
-### {{.Name}}
-
-| Step | Description |
-|------|-------------|
-{{range .Steps}}| ` + "`" + `{{.Example}}` + "`" + ` | {{.Description}} |
-{{end}}
-{{end}}
-{{end}}
-`
 
 // GroupedStep is a step with processed fields for docs
 type GroupedStep struct {
@@ -144,52 +147,224 @@ type DocsData struct {
 	Categories []CategoryWithGroups
 }
 
+func buildCategoryWithGroups(cat handler.StepCategory) CategoryWithGroups {
+	catWithGroups := CategoryWithGroups{
+		Name:        cat.Name,
+		Description: cat.Description,
+		Groups:      make([]StepGroup, 0),
+	}
+
+	groupMap := make(map[string][]GroupedStep)
+	groupOrder := make([]string, 0)
+
+	for _, step := range cat.Steps {
+		groupName := step.Group
+		if groupName == "" {
+			groupName = "General"
+		}
+
+		if _, exists := groupMap[groupName]; !exists {
+			groupOrder = append(groupOrder, groupName)
+		}
+
+		groupMap[groupName] = append(groupMap[groupName], GroupedStep{
+			Example:     step.Example,
+			Description: step.Description,
+		})
+	}
+
+	for _, groupName := range groupOrder {
+		catWithGroups.Groups = append(catWithGroups.Groups, StepGroup{
+			Name:  groupName,
+			Steps: groupMap[groupName],
+		})
+	}
+
+	return catWithGroups
+}
+
+const mkdocsResourceTemplate = `# {{.Name}}
+
+{{.Description}}
+
+{{range .Groups}}
+## {{.Name}}
+
+| Step | Description |
+|------|-------------|
+{{range .Steps}}| ` + "`" + `{{.Example}}` + "`" + ` | {{.Description}} |
+{{end}}
+{{end}}`
+
+const mkdocsIndexTemplate = `# Available Resources
+
+Tomato supports the following resource types for behavioral testing.
+
+| Resource | Description |
+|----------|-------------|
+{{range .}}| [{{.Name}}]({{.File}}) | {{.Description}} |
+{{end}}
+
+## JSON Matchers
+
+When using ` + "`" + `response json matches:` + "`" + ` or ` + "`" + `response json contains:` + "`" + `, you can use these matchers:
+
+### Type Matchers
+
+| Matcher | Description |
+|---------|-------------|
+| ` + "`@string`" + ` | Matches any string value |
+| ` + "`@number`" + ` | Matches any numeric value |
+| ` + "`@boolean`" + ` | Matches true or false |
+| ` + "`@array`" + ` | Matches any array |
+| ` + "`@object`" + ` | Matches any object |
+| ` + "`@null`" + ` | Matches null |
+| ` + "`@notnull`" + ` | Matches any non-null value |
+| ` + "`@any`" + ` | Matches any value |
+| ` + "`@empty`" + ` | Matches empty string, array, or object |
+| ` + "`@notempty`" + ` | Matches non-empty string, array, or object |
+
+### String Matchers
+
+| Matcher | Description |
+|---------|-------------|
+| ` + "`@regex:pattern`" + ` | Matches string against regex pattern |
+| ` + "`@contains:text`" + ` | Matches if string contains text |
+| ` + "`@startswith:text`" + ` | Matches if string starts with text |
+| ` + "`@endswith:text`" + ` | Matches if string ends with text |
+
+### Numeric Matchers
+
+| Matcher | Description |
+|---------|-------------|
+| ` + "`@gt:n`" + ` | Matches if value > n |
+| ` + "`@gte:n`" + ` | Matches if value >= n |
+| ` + "`@lt:n`" + ` | Matches if value < n |
+| ` + "`@lte:n`" + ` | Matches if value <= n |
+
+### Length Matcher
+
+| Matcher | Description |
+|---------|-------------|
+| ` + "`@len:n`" + ` | Matches if length equals n (for strings, arrays, objects) |
+
+### Example
+
+` + "```gherkin" + `
+Then "api" response json contains:
+  """
+  {
+    "id": "@regex:^[0-9a-f-]{36}$",
+    "name": "@notempty",
+    "email": "@contains:@",
+    "age": "@gt:0",
+    "tags": "@array"
+  }
+  """
+` + "```" + `
+`
+
+type ResourceInfo struct {
+	Name        string
+	Description string
+	File        string
+}
+
+func generateMkDocs(outputDir string, categories []handler.StepCategory) error {
+	// Create output directory
+	if err := os.MkdirAll(outputDir, 0755); err != nil {
+		return fmt.Errorf("creating output directory: %w", err)
+	}
+
+	tmpl, err := template.New("resource").Parse(mkdocsResourceTemplate)
+	if err != nil {
+		return fmt.Errorf("parsing resource template: %w", err)
+	}
+
+	var resources []ResourceInfo
+
+	// Generate individual resource files
+	for _, cat := range categories {
+		filename, ok := resourceFileMapping[cat.Name]
+		if !ok {
+			filename = strings.ToLower(strings.ReplaceAll(cat.Name, " ", "-")) + ".md"
+		}
+
+		resources = append(resources, ResourceInfo{
+			Name:        cat.Name,
+			Description: cat.Description,
+			File:        filename,
+		})
+
+		filePath := filepath.Join(outputDir, filename)
+		f, err := os.Create(filePath)
+		if err != nil {
+			return fmt.Errorf("creating file %s: %w", filePath, err)
+		}
+
+		catWithGroups := buildCategoryWithGroups(cat)
+		if err := tmpl.Execute(f, catWithGroups); err != nil {
+			f.Close()
+			return fmt.Errorf("executing template for %s: %w", cat.Name, err)
+		}
+		f.Close()
+
+		fmt.Printf("Generated %s\n", filePath)
+	}
+
+	// Generate index file
+	indexTmpl, err := template.New("index").Parse(mkdocsIndexTemplate)
+	if err != nil {
+		return fmt.Errorf("parsing index template: %w", err)
+	}
+
+	indexPath := filepath.Join(outputDir, "index.md")
+	indexFile, err := os.Create(indexPath)
+	if err != nil {
+		return fmt.Errorf("creating index file: %w", err)
+	}
+	defer indexFile.Close()
+
+	if err := indexTmpl.Execute(indexFile, resources); err != nil {
+		return fmt.Errorf("executing index template: %w", err)
+	}
+
+	fmt.Printf("Generated %s\n", indexPath)
+	return nil
+}
+
+const markdownTemplate = `# Step Reference
+
+This document lists all available Gherkin steps organized by resource type.
+
+> **Note:** This documentation is auto-generated from the source code.
+
+{{range .Categories}}
+---
+
+## {{.Name}}
+
+{{.Description}}
+
+{{range .Groups}}
+### {{.Name}}
+
+| Step | Description |
+|------|-------------|
+{{range .Steps}}| ` + "`" + `{{.Example}}` + "`" + ` | {{.Description}} |
+{{end}}
+{{end}}
+{{end}}`
+
 func generateMarkdown(w io.Writer, categories []handler.StepCategory) error {
 	tmpl, err := template.New("docs").Parse(markdownTemplate)
 	if err != nil {
 		return fmt.Errorf("parsing template: %w", err)
 	}
 
-	// Build grouped data structure
 	data := DocsData{Categories: make([]CategoryWithGroups, 0)}
-
 	for _, cat := range categories {
-		catWithGroups := CategoryWithGroups{
-			Name:        cat.Name,
-			Description: cat.Description,
-			Groups:      make([]StepGroup, 0),
-		}
-
-		// Group steps by their Group field
-		groupMap := make(map[string][]GroupedStep)
-		groupOrder := make([]string, 0)
-
-		for _, step := range cat.Steps {
-			groupName := step.Group
-			if groupName == "" {
-				groupName = "General"
-			}
-
-			// Track order of groups
-			if _, exists := groupMap[groupName]; !exists {
-				groupOrder = append(groupOrder, groupName)
-			}
-
-			groupMap[groupName] = append(groupMap[groupName], GroupedStep{
-				Example:     step.Example,
-				Description: step.Description,
-			})
-		}
-
-		// Build groups in order
-		for _, groupName := range groupOrder {
-			catWithGroups.Groups = append(catWithGroups.Groups, StepGroup{
-				Name:  groupName,
-				Steps: groupMap[groupName],
-			})
-		}
-
-		data.Categories = append(data.Categories, catWithGroups)
+		data.Categories = append(data.Categories, buildCategoryWithGroups(cat))
 	}
 
 	return tmpl.Execute(w, data)
@@ -204,33 +379,31 @@ const htmlTemplate = `<!DOCTYPE html>
         h1 { color: #e74c3c; }
         h2 { color: #2c3e50; border-bottom: 2px solid #e74c3c; padding-bottom: 10px; }
         h3 { color: #34495e; }
-        .pattern { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; overflow-x: auto; }
-        .example { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 4px; overflow-x: auto; }
-        .example pre { margin: 0; white-space: pre-wrap; }
-        .step { margin-bottom: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
-        .category { margin-bottom: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fa; }
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
     </style>
 </head>
 <body>
     <h1>Tomato Step Reference</h1>
-    {{range .}}
+    {{range .Categories}}
     <div class="category">
         <h2>{{.Name}}</h2>
         <p>{{.Description}}</p>
-        {{range .Steps}}
-        <div class="step">
-            <h3>{{.Description}}</h3>
-            <p><strong>Pattern:</strong></p>
-            <div class="pattern">{{.Pattern}}</div>
-            <p><strong>Example:</strong></p>
-            <div class="example"><pre>{{.Example}}</pre></div>
-        </div>
+        {{range .Groups}}
+        <h3>{{.Name}}</h3>
+        <table>
+            <tr><th>Step</th><th>Description</th></tr>
+            {{range .Steps}}
+            <tr><td><code>{{.Example}}</code></td><td>{{.Description}}</td></tr>
+            {{end}}
+        </table>
         {{end}}
     </div>
     {{end}}
 </body>
-</html>
-`
+</html>`
 
 func generateHTML(w io.Writer, categories []handler.StepCategory) error {
 	tmpl, err := template.New("docs").Parse(htmlTemplate)
@@ -238,13 +411,10 @@ func generateHTML(w io.Writer, categories []handler.StepCategory) error {
 		return fmt.Errorf("parsing template: %w", err)
 	}
 
-	// Replace {resource} with example resource name for docs
-	for i := range categories {
-		for j := range categories[i].Steps {
-			categories[i].Steps[j].Pattern = strings.ReplaceAll(categories[i].Steps[j].Pattern, "{resource}", "&lt;resource&gt;")
-			categories[i].Steps[j].Example = strings.ReplaceAll(categories[i].Steps[j].Example, "{resource}", "api")
-		}
+	data := DocsData{Categories: make([]CategoryWithGroups, 0)}
+	for _, cat := range categories {
+		data.Categories = append(data.Categories, buildCategoryWithGroups(cat))
 	}
 
-	return tmpl.Execute(w, categories)
+	return tmpl.Execute(w, data)
 }
