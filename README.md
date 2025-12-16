@@ -31,15 +31,37 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 
 ## Installation
 
+### Quick Install (recommended)
+
 ```bash
-# Quick Install
 curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
+```
 
-# Using Go
-go install github.com/tomatool/tomato@latest
+### Homebrew
 
-# Using Homebrew
+```bash
 brew install tomatool/tap/tomato
+```
+
+### GitHub Actions
+
+```yaml
+- uses: tomatool/tomato@v1
+```
+
+### Go Install
+
+```bash
+go install github.com/tomatool/tomato@latest
+```
+
+### From Source
+
+```bash
+git clone https://github.com/tomatool/tomato.git
+cd tomato
+go build -o tomato .
+sudo mv tomato /usr/local/bin/
 ```
 
 ## Quick Start
