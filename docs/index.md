@@ -84,6 +84,14 @@ go install github.com/tomatool/tomato@latest
 brew install tomatool/tap/tomato
 ```
 
+### GitHub Actions
+
+```yaml
+- uses: tomatool/tomato@v1
+```
+
+See [GitHub Action]({% link github-action.md %}) for full documentation.
+
 ## Philosophy
 
 Tomato follows these principles:
