@@ -438,7 +438,7 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 
 	r.lastResponse.Header.Set("X-Response-Time", time.Since(start).String())
 
-	r.requestHeaders = make(map[string]string)
+	// Clear single-use request data, but keep headers persistent within the scenario
 	r.requestBody = nil
 	r.requestParams = make(url.Values)
 
