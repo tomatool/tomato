@@ -1,6 +1,6 @@
-site_name: Tomato
+site_name: tomato
 site_description: Behavioral testing tool for Go with BDD support
-site_author: Tomato Contributors
+site_author: tomato contributors
 repo_url: https://github.com/tomatool/tomato
 repo_name: tomatool/tomato
 
@@ -13,14 +13,14 @@ theme:
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep orange
+      primary: black
       accent: deep orange
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep orange
+      primary: black
       accent: deep orange
       toggle:
         icon: material/brightness-4
@@ -41,7 +41,8 @@ theme:
     - content.code.annotate
   icon:
     repo: fontawesome/brands/github
-    logo: material/fruit-cherries
+  logo: images/tomato.svg
+  favicon: images/tomato.svg
 
 markdown_extensions:
   - pymdownx.highlight:
