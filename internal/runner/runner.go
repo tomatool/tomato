@@ -23,8 +23,8 @@ type Options struct {
 // Runner executes behavioral tests
 type Runner struct {
 	config        *config.Config
-	container     *container.Manager
-	handlers      *handler.Registry
+	container     ContainerExecutor
+	handlers      HandlerRegistry
 	opts          Options
 	scenarioRegex *regexp.Regexp
 }
@@ -36,10 +36,15 @@ func New(cfg *config.Config, cm *container.Manager, opts Options) (*Runner, erro
 		return nil, fmt.Errorf("initializing handlers: %w", err)
 	}
 
+	return newRunner(cfg, cm, registry, opts)
+}
+
+// newRunner is the internal constructor that allows dependency injection for testing
+func newRunner(cfg *config.Config, container ContainerExecutor, handlers HandlerRegistry, opts Options) (*Runner, error) {
 	r := &Runner{
 		config:    cfg,
-		container: cm,
-		handlers:  registry,
+		container: container,
+		handlers:  handlers,
 		opts:      opts,
 	}
 
@@ -102,6 +107,13 @@ func (r *Runner) Run(ctx context.Context) error {
 }
 
 func (r *Runner) initializeScenario(ctx *godog.ScenarioContext) {
+	r.setupScenarioHooks(ctx)
+	r.handlers.RegisterSteps(ctx)
+}
+
+// setupScenarioHooks sets up before/after hooks on the scenario context
+// This internal method accepts an interface for testability
+func (r *Runner) setupScenarioHooks(ctx ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		// Skip scenarios that don't match the filter regex
 		if r.scenarioRegex != nil && !r.scenarioRegex.MatchString(sc.Name) {
@@ -131,8 +143,6 @@ func (r *Runner) initializeScenario(ctx *godog.ScenarioContext) {
 		}
 		return ctx, nil
 	})
-
-	r.handlers.RegisterSteps(ctx)
 }
 
 func (r *Runner) runHooks(ctx context.Context, hooks []config.Hook) error {
