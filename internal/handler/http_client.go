@@ -307,6 +307,22 @@ func (r *HTTPClient) Steps() StepCategory {
 				Example:     `"api" response time is less than "500ms"`,
 				Handler:     r.responseTimeShouldBeLessThan,
 			},
+
+			// Variable Capture
+			{
+				Group:       "Variable Capture",
+				Pattern:     `^"{resource}" response json "([^"]*)" saved as "\{\{([^}]+)\}\}"$`,
+				Description: "Save JSON path value to variable for use in subsequent requests",
+				Example:     `"api" response json "id" saved as "{{user_id}}"`,
+				Handler:     r.saveJSONPathToVariable,
+			},
+			{
+				Group:       "Variable Capture",
+				Pattern:     `^"{resource}" response header "([^"]*)" saved as "\{\{([^}]+)\}\}"$`,
+				Description: "Save response header value to variable",
+				Example:     `"api" response header "Location" saved as "{{location}}"`,
+				Handler:     r.saveHeaderToVariable,
+			},
 		},
 	}
 }
@@ -381,6 +397,9 @@ func (r *HTTPClient) sendRequestWithJSON(method, path string, doc *godog.DocStri
 }
 
 func (r *HTTPClient) doRequest(method, path string, body []byte) error {
+	// Replace variables in path
+	path = ReplaceVariables(path)
+
 	reqURL := r.baseURL + path
 	if len(r.requestParams) > 0 {
 		reqURL += "?" + r.requestParams.Encode()
@@ -388,9 +407,13 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 
 	var bodyReader io.Reader
 	if body != nil {
+		// Replace variables in body
+		body = []byte(ReplaceVariables(string(body)))
 		bodyReader = bytes.NewReader(body)
 	} else if r.requestBody != nil {
-		bodyReader = bytes.NewReader(r.requestBody)
+		// Replace variables in stored body
+		replacedBody := []byte(ReplaceVariables(string(r.requestBody)))
+		bodyReader = bytes.NewReader(replacedBody)
 	}
 
 	req, err := http.NewRequest(method, reqURL, bodyReader)
@@ -399,7 +422,8 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 	}
 
 	for k, v := range r.requestHeaders {
-		req.Header.Set(k, v)
+		// Replace variables in header values
+		req.Header.Set(k, ReplaceVariables(v))
 	}
 
 	start := time.Now()
@@ -999,6 +1023,36 @@ func (r *HTTPClient) responseTimeShouldBeLessThan(duration string) error {
 	if actual >= expected {
 		return fmt.Errorf("response time %v exceeded %v", actual, expected)
 	}
+	return nil
+}
+
+func (r *HTTPClient) saveJSONPathToVariable(path, varName string) error {
+	if r.lastResponse == nil {
+		return fmt.Errorf("no response received")
+	}
+
+	value, err := r.getJSONPath(path)
+	if err != nil {
+		return fmt.Errorf("failed to get JSON path %q: %w", path, err)
+	}
+
+	// Convert to string
+	strValue := fmt.Sprintf("%v", value)
+	SetVariable(varName, strValue)
+	return nil
+}
+
+func (r *HTTPClient) saveHeaderToVariable(header, varName string) error {
+	if r.lastResponse == nil {
+		return fmt.Errorf("no response received")
+	}
+
+	value := r.lastResponse.Header.Get(header)
+	if value == "" {
+		return fmt.Errorf("header %q not found or empty", header)
+	}
+
+	SetVariable(varName, value)
 	return nil
 }
 
