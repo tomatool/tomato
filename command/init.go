@@ -39,6 +39,10 @@ var (
 	successStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4ECDC4")).
 			Bold(true)
+
+	warnStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFA500")).
+			Bold(true)
 )
 
 var initCommand = &cli.Command{

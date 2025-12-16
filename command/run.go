@@ -51,6 +51,9 @@ are reset between each scenario to ensure clean state.`,
 }
 
 func runTests(c *cli.Context) error {
+	// Check for updates (non-blocking, skipped for RC versions)
+	checkForUpdate()
+
 	// Enable debug logging if verbose
 	if c.Bool("verbose") {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)

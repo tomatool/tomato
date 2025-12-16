@@ -12,10 +12,49 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tomatool/tomato/internal/version"
 	"github.com/urfave/cli/v2"
 )
+
+// checkForUpdate checks if a newer version is available and prints a warning
+// Returns silently if check fails or is disabled via TOMATO_SKIP_UPDATE_CHECK=true
+func checkForUpdate() {
+	if os.Getenv("TOMATO_SKIP_UPDATE_CHECK") == "true" || os.Getenv("TOMATO_SKIP_UPDATE_CHECK") == "1" {
+		return
+	}
+
+	// Use a short timeout to avoid slowing down the command
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("https://api.github.com/repos/tomatool/tomato/releases/latest")
+	if err != nil {
+		return // Silently fail
+	}
+	defer resp.Body.Close()
+
+	var release githubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return
+	}
+
+	latestVersion := release.TagName
+	currentVersion := version.Version
+	if !strings.HasPrefix(currentVersion, "v") {
+		currentVersion = "v" + currentVersion
+	}
+
+	// Skip if current version is a dev build or RC
+	if currentVersion == "vdev" || strings.Contains(currentVersion, "-rc.") {
+		return
+	}
+
+	if latestVersion != currentVersion && latestVersion > currentVersion {
+		fmt.Printf("\n%s New version available: %s (current: %s)\n", warnStyle.Render("⚠"), latestVersion, currentVersion)
+		fmt.Printf("  Run 'tomato update' to upgrade\n")
+		fmt.Printf("  Set TOMATO_SKIP_UPDATE_CHECK=true to disable this check\n\n")
+	}
+}
 
 var updateCommand = &cli.Command{
 	Name:  "update",
