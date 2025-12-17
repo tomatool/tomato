@@ -1,4 +1,4 @@
-name: 'tomato'
+name: 'tomato-run'
 description: 'Run behavioral tests with Tomato'
 author: 'tomatool'
 branding:
