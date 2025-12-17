@@ -72,6 +72,7 @@ nav:
   - Configuration:
     - Reference: configuration/index.md
     - Kafka: configuration/kafka.md
+    - RabbitMQ: configuration/rabbitmq.md
   - Available Resources:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
@@ -79,6 +80,7 @@ nav:
     - PostgreSQL: resources/postgres.md
     - Redis: resources/redis.md
     - Kafka: resources/kafka.md
+    - RabbitMQ: resources/rabbitmq.md
     - Shell: resources/shell.md
     - WebSocket Client: resources/websocket-client.md
     - WebSocket Server: resources/websocket-server.md

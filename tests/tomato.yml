@@ -66,6 +66,18 @@ containers:
       target: "9092"
       timeout: 60s
 
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    ports:
+      - "5672/tcp"
+    env:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    wait_for:
+      type: port
+      target: "5672"
+      timeout: 30s
+
 app:
   # Default: run as local process
   command: go run ./tests/app
@@ -106,6 +118,14 @@ resources:
       partitions: 1
       replication_factor: 1
       reset_strategy: delete_recreate
+
+  mq:
+    type: rabbitmq
+    container: rabbitmq
+    options:
+      user: guest
+      password: guest
+      reset_strategy: purge
 
   api:
     type: http-client
