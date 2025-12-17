@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -231,15 +232,53 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	log.Debug().Str("container", name).Str("image", cfg.Image).Msg("starting container")
 	startTime := time.Now()
 
+	// Resolve environment variable templates (e.g., {{.zookeeper.host}})
+	resolvedEnv := m.resolveEnvTemplates(cfg.Env)
+
 	req := testcontainers.ContainerRequest{
 		Image:      cfg.Image,
-		Env:        cfg.Env,
+		Env:        resolvedEnv,
 		WaitingFor: m.buildWaitStrategy(cfg.WaitFor),
 	}
 
-	// Add exposed ports
-	for _, port := range cfg.Ports {
-		req.ExposedPorts = append(req.ExposedPorts, port)
+	// Parse ports - support both dynamic (9092/tcp) and fixed (9092:9092) mapping
+	fixedPorts := make(nat.PortMap)
+	for _, portSpec := range cfg.Ports {
+		if strings.Contains(portSpec, ":") {
+			// Fixed port mapping: "hostPort:containerPort" or "hostPort:containerPort/tcp"
+			parts := strings.SplitN(portSpec, ":", 2)
+			hostPort := parts[0]
+			containerPort := parts[1]
+
+			// Ensure container port has protocol suffix
+			if !strings.Contains(containerPort, "/") {
+				containerPort = containerPort + "/tcp"
+			}
+
+			req.ExposedPorts = append(req.ExposedPorts, containerPort)
+			fixedPorts[nat.Port(containerPort)] = []nat.PortBinding{
+				{HostIP: "0.0.0.0", HostPort: hostPort},
+			}
+		} else {
+			// Dynamic port mapping: "9092/tcp" or "9092"
+			port := portSpec
+			if !strings.Contains(port, "/") {
+				port = port + "/tcp"
+			}
+			req.ExposedPorts = append(req.ExposedPorts, port)
+		}
+	}
+
+	// Set fixed port bindings if any
+	if len(fixedPorts) > 0 {
+		req.HostConfigModifier = func(hc *container.HostConfig) {
+			if hc.PortBindings == nil {
+				hc.PortBindings = make(nat.PortMap)
+			}
+			for port, bindings := range fixedPorts {
+				hc.PortBindings[port] = bindings
+			}
+		}
 	}
 
 	// Attach to shared network with DNS alias
@@ -251,7 +290,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	}
 
 	// Start container
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+	ctr, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})
@@ -260,7 +299,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	}
 
 	m.mu.Lock()
-	m.containers[name] = container
+	m.containers[name] = ctr
 	m.mu.Unlock()
 
 	log.Debug().
@@ -270,10 +309,82 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 
 	// Start capturing container logs if run context is set
 	if m.runCtx != nil {
-		go m.captureContainerLogs(ctx, name, container)
+		go m.captureContainerLogs(ctx, name, ctr)
 	}
 
 	return nil
+}
+
+// resolveEnvTemplates resolves template variables in environment values
+// Supports {{.container_name.host}} and {{.container_name.port.XXXX}} patterns
+func (m *Manager) resolveEnvTemplates(env map[string]string) map[string]string {
+	if env == nil {
+		return nil
+	}
+
+	result := make(map[string]string)
+	for key, value := range env {
+		resolved := value
+
+		// Find all template patterns
+		for {
+			start := strings.Index(resolved, "{{")
+			if start == -1 {
+				break
+			}
+			end := strings.Index(resolved[start:], "}}")
+			if end == -1 {
+				break
+			}
+			end += start + 2
+
+			template := resolved[start:end]
+			replacement := m.resolveTemplate(template)
+			resolved = resolved[:start] + replacement + resolved[end:]
+		}
+
+		result[key] = resolved
+	}
+
+	return result
+}
+
+// resolveTemplate resolves a single template like {{.zookeeper.host}}
+func (m *Manager) resolveTemplate(template string) string {
+	// Remove {{ and }} and trim spaces
+	inner := strings.TrimSpace(template[2 : len(template)-2])
+
+	// Expected format: .container_name.host or .container_name.port.XXXX
+	if !strings.HasPrefix(inner, ".") {
+		return template
+	}
+
+	parts := strings.Split(inner[1:], ".")
+	if len(parts) < 2 {
+		return template
+	}
+
+	containerName := parts[0]
+	infoType := parts[1]
+
+	switch infoType {
+	case "host":
+		// Return container DNS name (for internal Docker network communication)
+		return containerName
+	case "port":
+		if len(parts) < 3 {
+			return template
+		}
+		// Return the internal port (not mapped) for container-to-container communication
+		port := parts[2]
+		// Strip /tcp suffix if present
+		if idx := strings.Index(port, "/"); idx > 0 {
+			port = port[:idx]
+		}
+		return port
+	}
+
+	return template
 }
 
 // captureContainerLogs streams container logs to a file

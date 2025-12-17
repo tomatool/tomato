@@ -3,6 +3,7 @@ version: 2
 settings:
   timeout: 5m
   fail_fast: false
+  output: pretty
   reset:
     level: scenario
 
@@ -28,6 +29,42 @@ containers:
       type: port
       target: "6379"
       timeout: 30s
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    env:
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+    ports:
+      - "2181/tcp"
+    wait_for:
+      type: port
+      target: "2181"
+      timeout: 30s
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    env:
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ZOOKEEPER_CONNECT: "{{.zookeeper.host}}:{{.zookeeper.port.2181}}"
+      # Dual listeners: internal (kafka:29092) and external (localhost:9092)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      # Fixed port for external access (host connects here)
+      - "9092:9092"
+      # Internal port for container-to-container (dynamic is fine)
+      - "29092/tcp"
+    wait_for:
+      type: port
+      target: "9092"
+      timeout: 60s
 
 app:
   # Default: run as local process
@@ -59,23 +96,29 @@ resources:
     type: redis
     container: redis
 
+  events:
+    type: kafka
+    container: kafka
+    options:
+      topics:
+        - test-events
+        - test-orders
+      partitions: 1
+      replication_factor: 1
+      reset_strategy: delete_recreate
+
   api:
     type: http-client
-    container: app
-    options:
-      port: "8080"
+    base_url: "http://localhost:8080"
 
   shell:
     type: shell
 
   ws:
     type: websocket-client
-    container: app
-    options:
-      port: "8080"
-      path: /ws
+    url: "ws://localhost:8080/ws"
 
 features:
   paths:
     - ./tests/features
-  tags: "~@kafka and ~@skip-dynamic-port"
+  tags: "~@skip-dynamic-port"
