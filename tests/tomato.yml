@@ -9,6 +9,8 @@ settings:
 containers:
   postgres:
     image: postgres:15-alpine
+    ports:
+      - "5432/tcp"
     env:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
@@ -20,18 +22,25 @@ containers:
 
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379/tcp"
     wait_for:
       type: port
       target: "6379"
       timeout: 30s
 
 app:
+  # Default: run as local process
   command: go run ./tests/app
+  # Container mode (use with --container flag):
+  # build:
+  #   dockerfile: tests/app/Dockerfile
+  #   context: .
   port: 8080
   ready:
     type: http
     path: /health
-    timeout: 30s
+    timeout: 60s
   wait: 2s
   env:
     DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test?sslmode=disable"
@@ -52,16 +61,21 @@ resources:
 
   api:
     type: http-client
-    base_url: http://localhost:8080
+    container: app
+    options:
+      port: "8080"
 
   shell:
     type: shell
 
   ws:
     type: websocket-client
-    url: ws://localhost:8080/ws
+    container: app
+    options:
+      port: "8080"
+      path: /ws
 
 features:
   paths:
     - ./tests/features
-  tags: "~@kafka"
+  tags: "~@kafka and ~@skip-dynamic-port"

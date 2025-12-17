@@ -21,12 +21,17 @@ type Config struct {
 
 // AppConfig defines how to run the application under test
 type AppConfig struct {
-	// Build from Dockerfile
-	Build *AppBuild `yaml:"build,omitempty"`
-	// Or run with command
+	// Command mode (default): run app as local process
 	Command string `yaml:"command,omitempty"`
-	// Working directory for command
 	WorkDir string `yaml:"workdir,omitempty"`
+
+	// Container mode: use pre-built Docker image
+	Image string `yaml:"image,omitempty"`
+	// Container mode: build from Dockerfile
+	Build *AppBuild `yaml:"build,omitempty"`
+
+	// Container name/alias for DNS resolution (default: "app")
+	Name string `yaml:"name,omitempty"`
 	// Port the app listens on
 	Port int `yaml:"port,omitempty"`
 	// Health check to verify app is ready
@@ -55,9 +60,22 @@ type ReadyCheck struct {
 	Command string `yaml:"command,omitempty"`
 }
 
-// IsConfigured returns true if the app section has build or command configured
+// IsConfigured returns true if the app section has any configuration
 func (a *AppConfig) IsConfigured() bool {
-	return a.Build != nil || a.Command != ""
+	return a.Command != "" || a.Image != "" || a.Build != nil
+}
+
+// UseContainer returns true if the app should run in a container (image or build specified)
+func (a *AppConfig) UseContainer() bool {
+	return a.Image != "" || a.Build != nil
+}
+
+// GetName returns the container name/alias (defaults to "app")
+func (a *AppConfig) GetName() string {
+	if a.Name != "" {
+		return a.Name
+	}
+	return "app"
 }
 
 type Settings struct {
@@ -212,6 +230,21 @@ func (c *Config) validate() error {
 		return fmt.Errorf("unsupported config version: %d (expected 2)", c.Version)
 	}
 
+	// Validate app config - only one mode allowed
+	modes := 0
+	if c.App.Command != "" {
+		modes++
+	}
+	if c.App.Image != "" {
+		modes++
+	}
+	if c.App.Build != nil {
+		modes++
+	}
+	if modes > 1 {
+		return fmt.Errorf("app config can only have one of: 'command', 'image', or 'build'")
+	}
+
 	// Validate reset level
 	validLevels := map[string]bool{"scenario": true, "feature": true, "run": true, "none": true}
 	if !validLevels[c.Settings.Reset.Level] {
@@ -221,8 +254,12 @@ func (c *Config) validate() error {
 	// Validate resource references
 	for name, res := range c.Resources {
 		if res.Container != "" {
+			// Check if it references a configured container
 			if _, ok := c.Containers[res.Container]; !ok {
-				return fmt.Errorf("resource %q references unknown container %q", name, res.Container)
+				// Also allow referencing the app container by its name
+				if !c.App.IsConfigured() || res.Container != c.App.GetName() {
+					return fmt.Errorf("resource %q references unknown container %q", name, res.Container)
+				}
 			}
 		}
 	}

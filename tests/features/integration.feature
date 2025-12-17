@@ -74,7 +74,9 @@ Feature: Integration Tests
     When "shell" runs "rm /tmp/integration-test.txt"
     Then "shell" file "/tmp/integration-test.txt" does not exist
 
+@skip-dynamic-port
   Scenario: Shell runs curl to test HTTP endpoint
+    # Note: This test is skipped when app runs on dynamic port
     # Use shell to make HTTP request via curl
     When "shell" runs "curl -s http://localhost:8080/health"
     Then "shell" succeeds

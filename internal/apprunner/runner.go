@@ -15,19 +15,38 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/docker/go-connections/nat"
 	"github.com/rs/zerolog/log"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
 	"github.com/tomatool/tomato/internal/runlog"
+)
+
+// Mode determines how the app is run
+type Mode string
+
+const (
+	ModeCommand   Mode = "command"   // Run as local process
+	ModeContainer Mode = "container" // Run in Docker container
 )
 
 // Runner manages the application under test
 type Runner struct {
 	config    config.AppConfig
 	container *container.Manager
-	cmd       *exec.Cmd
-	appHost   string
-	appPort   int
+	mode      Mode
+
+	// Command mode fields
+	cmd     *exec.Cmd
+	cmdHost string // Host for test runner (usually localhost)
+	cmdPort int    // Port from config
+
+	// Container mode fields
+	appContainer testcontainers.Container
+	appHost      string // Host for test runner (mapped port)
+	appPort      int    // Mapped port on host
 
 	// Log streaming
 	showLogs     bool
@@ -43,14 +62,35 @@ type Runner struct {
 
 // NewRunner creates a new app runner
 func NewRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
+	// Determine mode based on config
+	mode := ModeCommand
+	if cfg.UseContainer() {
+		mode = ModeContainer
+	}
+
 	return &Runner{
 		config:    cfg,
 		container: cm,
-		appHost:   "localhost",
-		appPort:   cfg.Port,
+		mode:      mode,
 		showLogs:  true,
 		stopLogs:  make(chan struct{}),
 	}
+}
+
+// SetContainerMode forces container mode (for --container flag)
+func (r *Runner) SetContainerMode(enabled bool) error {
+	if enabled {
+		if !r.config.UseContainer() {
+			return fmt.Errorf("container mode requires 'image' or 'build' in app config")
+		}
+		r.mode = ModeContainer
+	}
+	return nil
+}
+
+// GetMode returns the current running mode
+func (r *Runner) GetMode() Mode {
+	return r.mode
 }
 
 // SetShowLogs enables or disables log streaming
@@ -71,36 +111,47 @@ func (r *Runner) SetRunContext(ctx *runlog.RunContext) {
 	}
 }
 
-// Start starts the application with injected environment variables
+// Start starts the application
 func (r *Runner) Start(ctx context.Context) error {
-	if r.config.Build != nil {
-		return r.startDocker(ctx)
+	switch r.mode {
+	case ModeCommand:
+		return r.startCommand(ctx)
+	case ModeContainer:
+		return r.startContainer(ctx)
+	default:
+		return fmt.Errorf("unknown mode: %s", r.mode)
 	}
-	return r.startCommand(ctx)
 }
 
-// startCommand runs the app using a shell command
+// startCommand starts the app as a local process
 func (r *Runner) startCommand(ctx context.Context) error {
-	log.Debug().Str("command", r.config.Command).Msg("starting app with command")
-
-	// Build environment with container connections
-	env, err := r.buildEnv(ctx)
-	if err != nil {
-		return fmt.Errorf("building environment: %w", err)
+	if r.config.Command == "" {
+		return fmt.Errorf("app command is required for command mode")
 	}
 
-	// Create command
-	r.cmd = exec.CommandContext(ctx, "sh", "-c", r.config.Command)
-	r.cmd.Env = append(os.Environ(), env...)
+	// Build environment with mapped host ports (for local process)
+	env := r.buildEnvForCommand()
 
-	// Create a new process group so we can kill all child processes
-	r.cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// Parse command
+	parts := strings.Fields(r.config.Command)
+	if len(parts) == 0 {
+		return fmt.Errorf("empty command")
+	}
 
+	r.cmd = exec.CommandContext(ctx, parts[0], parts[1:]...)
+
+	// Set working directory
 	if r.config.WorkDir != "" {
 		r.cmd.Dir = r.config.WorkDir
 	}
 
-	// Set up pipes for streaming output
+	// Build environment
+	r.cmd.Env = os.Environ()
+	for k, v := range env {
+		r.cmd.Env = append(r.cmd.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	// Capture output
 	stdout, err := r.cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("creating stdout pipe: %w", err)
@@ -110,124 +161,44 @@ func (r *Runner) startCommand(ctx context.Context) error {
 		return fmt.Errorf("creating stderr pipe: %w", err)
 	}
 
-	// Start the process
+	// Start process
+	log.Debug().Str("command", r.config.Command).Msg("starting app process")
 	if err := r.cmd.Start(); err != nil {
 		return fmt.Errorf("starting app: %w", err)
 	}
 
-	log.Debug().Int("pid", r.cmd.Process.Pid).Msg("app process started")
+	// Stream logs
+	go r.streamCommandLogs(stdout, "stdout")
+	go r.streamCommandLogs(stderr, "stderr")
 
-	// Stream logs in background
-	go r.streamLogs(stdout, "stdout")
-	go r.streamLogs(stderr, "stderr")
+	// Set host/port for test runner
+	r.cmdHost = "localhost"
+	r.cmdPort = r.config.Port
 
-	// Wait for app to be ready
-	if err := r.waitReady(ctx); err != nil {
+	// Wait for ready
+	if err := r.waitForReady(ctx); err != nil {
 		r.Stop()
-		return err
+		return fmt.Errorf("app not ready: %w", err)
 	}
+
+	// Additional wait time
+	if r.config.Wait > 0 {
+		time.Sleep(r.config.Wait)
+	}
+
+	log.Debug().
+		Str("command", r.config.Command).
+		Str("host", r.cmdHost).
+		Int("port", r.cmdPort).
+		Msg("app process ready")
 
 	return nil
 }
 
-// streamLogs reads from a pipe and displays logs
-func (r *Runner) streamLogs(pipe io.ReadCloser, name string) {
-	scanner := bufio.NewScanner(pipe)
-	for scanner.Scan() {
-		select {
-		case <-r.stopLogs:
-			return
-		default:
-		}
-
-		line := scanner.Text()
-
-		// Store log line
-		r.logMu.Lock()
-		r.logLines = append(r.logLines, line)
-		// Keep only last 100 lines
-		if len(r.logLines) > 100 {
-			r.logLines = r.logLines[1:]
-		}
-		r.logMu.Unlock()
-
-		// Write to log file if available
-		if r.logFile != nil {
-			r.logFile.WriteString(line + "\n")
-		}
-
-		// Display if enabled
-		if r.showLogs {
-			fmt.Printf("    │ %s\n", line)
-		}
-	}
-}
-
-// startDocker runs the app in a Docker container
-func (r *Runner) startDocker(ctx context.Context) error {
-	log.Debug().Str("dockerfile", r.config.Build.Dockerfile).Msg("starting app with docker")
-
-	// Build environment with container connections
-	env, err := r.buildEnv(ctx)
-	if err != nil {
-		return fmt.Errorf("building environment: %w", err)
-	}
-
-	// Build docker run command
-	args := []string{"build", "-f", r.config.Build.Dockerfile}
-
-	buildCtx := "."
-	if r.config.Build.Context != "" {
-		buildCtx = r.config.Build.Context
-	}
-	args = append(args, "-t", "tomato-app:test", buildCtx)
-
-	// Build the image
-	buildCmd := exec.CommandContext(ctx, "docker", args...)
-	buildCmd.Stdout = os.Stdout
-	buildCmd.Stderr = os.Stderr
-
-	if err := buildCmd.Run(); err != nil {
-		return fmt.Errorf("building docker image: %w", err)
-	}
-
-	// Run the container
-	runArgs := []string{"run", "-d", "--rm", "--name", "tomato-app"}
-
-	// Add port mapping
-	if r.config.Port > 0 {
-		runArgs = append(runArgs, "-p", fmt.Sprintf("%d:%d", r.config.Port, r.config.Port))
-	}
-
-	// Add environment variables
-	for _, e := range env {
-		runArgs = append(runArgs, "-e", e)
-	}
-
-	// Connect to the same network as other containers (if using testcontainers network)
-	runArgs = append(runArgs, "--network", "host")
-	runArgs = append(runArgs, "tomato-app:test")
-
-	runCmd := exec.CommandContext(ctx, "docker", runArgs...)
-	if err := runCmd.Run(); err != nil {
-		return fmt.Errorf("starting docker container: %w", err)
-	}
-
-	// Wait for app to be ready
-	if err := r.waitReady(ctx); err != nil {
-		r.Stop()
-		return err
-	}
-
-	return nil
-}
-
-// buildEnv creates environment variables with container connection info
-func (r *Runner) buildEnv(ctx context.Context) ([]string, error) {
-	var env []string
-
-	// Get connection info for all containers
-	connInfo := make(map[string]map[string]string)
+// buildEnvForCommand creates environment variables with mapped host ports
+// Templates like {{.postgres.host}} resolve to localhost and mapped ports
+func (r *Runner) buildEnvForCommand() map[string]string {
+	env := make(map[string]string)
 
 	// Template pattern: {{.container_name.host}} or {{.container_name.port.5432}}
 	templatePattern := regexp.MustCompile(`\{\{\s*\.(\w+)\.(host|port)(?:\.(\d+(?:/tcp)?))?\s*\}\}`)
@@ -243,55 +214,237 @@ func (r *Runner) buildEnv(ctx context.Context) ([]string, error) {
 			infoType := matches[2]
 			port := matches[3]
 
-			// Cache container info
-			if _, ok := connInfo[containerName]; !ok {
-				connInfo[containerName] = make(map[string]string)
-
-				host, err := r.container.GetHost(ctx, containerName)
-				if err != nil {
-					log.Warn().Str("container", containerName).Err(err).Msg("failed to get host")
-					return match
-				}
-				connInfo[containerName]["host"] = host
-			}
-
 			switch infoType {
 			case "host":
-				return connInfo[containerName]["host"]
+				// Return localhost for command mode
+				return "localhost"
 			case "port":
+				// Return mapped host port
 				if port == "" {
-					return match // need port number
+					return match
 				}
-				// Normalize port format
+				// Ensure port has /tcp suffix for lookup
 				if !strings.Contains(port, "/") {
 					port = port + "/tcp"
 				}
-				mappedPort, err := r.container.GetPort(ctx, containerName, port)
-				if err != nil {
-					log.Warn().Str("container", containerName).Str("port", port).Err(err).Msg("failed to get port")
+				mappedPort := r.container.GetMappedPort(containerName, port)
+				if mappedPort == 0 {
+					log.Warn().Str("container", containerName).Str("port", port).Msg("could not find mapped port")
 					return match
 				}
-				return mappedPort
+				return fmt.Sprintf("%d", mappedPort)
 			}
 			return match
 		})
 
-		env = append(env, fmt.Sprintf("%s=%s", key, resolved))
+		env[key] = resolved
 	}
 
-	return env, nil
+	return env
 }
 
-// waitReady waits for the app to be ready
-func (r *Runner) waitReady(ctx context.Context) error {
+// streamCommandLogs reads from a pipe and stores/displays logs
+func (r *Runner) streamCommandLogs(pipe io.Reader, source string) {
+	scanner := bufio.NewScanner(pipe)
+	for scanner.Scan() {
+		select {
+		case <-r.stopLogs:
+			return
+		default:
+		}
+
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+
+		// Store log line
+		r.logMu.Lock()
+		r.logLines = append(r.logLines, line)
+		if len(r.logLines) > 100 {
+			r.logLines = r.logLines[1:]
+		}
+		r.logMu.Unlock()
+
+		// Write to log file
+		if r.logFile != nil {
+			r.logFile.WriteString(fmt.Sprintf("[%s] %s\n", source, line))
+		}
+
+		// Display if enabled
+		if r.showLogs {
+			fmt.Printf("    │ %s\n", line)
+		}
+	}
+}
+
+// waitForReady waits for the app to be ready (command mode)
+func (r *Runner) waitForReady(ctx context.Context) error {
+	if r.config.Ready == nil && r.config.Port == 0 {
+		return nil // No ready check configured
+	}
+
+	timeout := 30 * time.Second
+	if r.config.Ready != nil && r.config.Ready.Timeout > 0 {
+		timeout = r.config.Ready.Timeout
+	}
+
+	deadline := time.Now().Add(timeout)
+
+	for time.Now().Before(deadline) {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		if r.config.Ready != nil && r.config.Ready.Type == "http" {
+			path := r.config.Ready.Path
+			if path == "" {
+				path = "/health"
+			}
+			url := fmt.Sprintf("http://%s:%d%s", r.cmdHost, r.cmdPort, path)
+			expectedStatus := r.config.Ready.Status
+			if expectedStatus == 0 {
+				expectedStatus = 200
+			}
+
+			client := &http.Client{Timeout: 2 * time.Second}
+			resp, err := client.Get(url)
+			if err == nil {
+				resp.Body.Close()
+				if resp.StatusCode == expectedStatus {
+					return nil
+				}
+			}
+		} else if r.config.Port > 0 {
+			// Default: TCP port check
+			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", r.cmdHost, r.cmdPort), 2*time.Second)
+			if err == nil {
+				conn.Close()
+				return nil
+			}
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return fmt.Errorf("timeout waiting for app to be ready")
+}
+
+// startContainer starts the app as a testcontainer
+func (r *Runner) startContainer(ctx context.Context) error {
+	// Build environment with container DNS names (for internal Docker communication)
+	env := r.buildEnvForDocker()
+
+	// Get network from container manager
+	networkName := r.container.GetNetworkName()
+
+	var req testcontainers.ContainerRequest
+
+	if r.config.Image != "" {
+		// Use pre-built image
+		log.Debug().Str("image", r.config.Image).Msg("starting app with image")
+		req = testcontainers.ContainerRequest{
+			Image: r.config.Image,
+		}
+	} else if r.config.Build != nil {
+		// Build from Dockerfile
+		log.Debug().Str("dockerfile", r.config.Build.Dockerfile).Msg("starting app with dockerfile")
+
+		buildCtx := "."
+		if r.config.Build.Context != "" {
+			buildCtx = r.config.Build.Context
+		}
+
+		req = testcontainers.ContainerRequest{
+			FromDockerfile: testcontainers.FromDockerfile{
+				Context:       buildCtx,
+				Dockerfile:    r.config.Build.Dockerfile,
+				PrintBuildLog: true,
+			},
+		}
+	} else {
+		return fmt.Errorf("container mode requires 'image' or 'build' in app config")
+	}
+
+	// Container name/alias
+	appName := r.config.GetName()
+
+	// Attach to shared network with DNS alias
+	req.Networks = []string{networkName}
+	req.NetworkAliases = map[string][]string{
+		networkName: {appName},
+	}
+
+	// Set environment variables
+	req.Env = env
+
+	// Expose port
+	if r.config.Port > 0 {
+		req.ExposedPorts = []string{fmt.Sprintf("%d/tcp", r.config.Port)}
+	}
+
+	// Build wait strategy from config
+	req.WaitingFor = r.buildWaitStrategy()
+
+	// Start container
+	startTime := time.Now()
+	appContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		return fmt.Errorf("starting app container: %w", err)
+	}
+
+	r.appContainer = appContainer
+
+	// Get mapped port for test runner to connect
+	if r.config.Port > 0 {
+		host, err := appContainer.Host(ctx)
+		if err != nil {
+			r.Stop()
+			return fmt.Errorf("getting app host: %w", err)
+		}
+		r.appHost = host
+
+		mappedPort, err := appContainer.MappedPort(ctx, nat.Port(fmt.Sprintf("%d/tcp", r.config.Port)))
+		if err != nil {
+			r.Stop()
+			return fmt.Errorf("getting mapped port: %w", err)
+		}
+		r.appPort = mappedPort.Int()
+	}
+
+	log.Debug().
+		Str("name", appName).
+		Str("host", r.appHost).
+		Int("port", r.appPort).
+		Dur("duration", time.Since(startTime)).
+		Msg("app container ready")
+
+	// Start log capture
+	go r.captureContainerLogs(ctx)
+
+	// Apply additional wait time if configured
+	if r.config.Wait > 0 {
+		time.Sleep(r.config.Wait)
+	}
+
+	return nil
+}
+
+// buildWaitStrategy creates a testcontainers wait strategy from config
+func (r *Runner) buildWaitStrategy() wait.Strategy {
 	if r.config.Ready == nil {
 		// Default: wait for TCP port if configured
 		if r.config.Port > 0 {
-			return r.waitTCP(ctx, r.appHost, r.config.Port, 30*time.Second)
+			return wait.ForListeningPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+				WithStartupTimeout(30 * time.Second)
 		}
-		// No ready check configured, assume ready after short delay
-		time.Sleep(2 * time.Second)
-		return nil
+		// No ready check, just wait briefly
+		return wait.ForLog("").WithStartupTimeout(5 * time.Second)
 	}
 
 	timeout := r.config.Ready.Timeout
@@ -301,97 +454,135 @@ func (r *Runner) waitReady(ctx context.Context) error {
 
 	switch r.config.Ready.Type {
 	case "http":
-		return r.waitHTTP(ctx, timeout)
+		path := r.config.Ready.Path
+		if path == "" {
+			path = "/health"
+		}
+		expectedStatus := r.config.Ready.Status
+		if expectedStatus == 0 {
+			expectedStatus = 200
+		}
+		return wait.ForHTTP(path).
+			WithPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+			WithStatusCodeMatcher(func(status int) bool { return status == expectedStatus }).
+			WithStartupTimeout(timeout)
+
 	case "tcp":
-		return r.waitTCP(ctx, r.appHost, r.config.Port, timeout)
+		return wait.ForListeningPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+			WithStartupTimeout(timeout)
+
 	case "exec":
-		return r.waitExec(ctx, timeout)
+		return wait.ForExec([]string{"sh", "-c", r.config.Ready.Command}).
+			WithStartupTimeout(timeout)
+
 	default:
-		return fmt.Errorf("unknown ready check type: %s", r.config.Ready.Type)
+		return wait.ForListeningPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+			WithStartupTimeout(timeout)
 	}
 }
 
-func (r *Runner) waitHTTP(ctx context.Context, timeout time.Duration) error {
-	path := r.config.Ready.Path
-	if path == "" {
-		path = "/health"
+// buildEnvForDocker creates environment variables with container DNS names
+// Templates like {{.postgres.host}} resolve to container names (not mapped ports)
+func (r *Runner) buildEnvForDocker() map[string]string {
+	env := make(map[string]string)
+
+	// Template pattern: {{.container_name.host}} or {{.container_name.port.5432}}
+	templatePattern := regexp.MustCompile(`\{\{\s*\.(\w+)\.(host|port)(?:\.(\d+(?:/tcp)?))?\s*\}\}`)
+
+	for key, value := range r.config.Env {
+		resolved := templatePattern.ReplaceAllStringFunc(value, func(match string) string {
+			matches := templatePattern.FindStringSubmatch(match)
+			if len(matches) < 3 {
+				return match
+			}
+
+			containerName := matches[1]
+			infoType := matches[2]
+			port := matches[3]
+
+			switch infoType {
+			case "host":
+				// Return container DNS name (accessible within Docker network)
+				return containerName
+			case "port":
+				// Return internal port (not mapped host port)
+				if port == "" {
+					return match // need port number
+				}
+				// Strip /tcp suffix if present
+				if idx := strings.Index(port, "/"); idx > 0 {
+					port = port[:idx]
+				}
+				return port
+			}
+			return match
+		})
+
+		env[key] = resolved
 	}
 
-	url := fmt.Sprintf("http://%s:%d%s", r.appHost, r.config.Port, path)
-	expectedStatus := r.config.Ready.Status
-	if expectedStatus == 0 {
-		expectedStatus = 200
+	return env
+}
+
+// captureContainerLogs streams container logs to file and memory
+func (r *Runner) captureContainerLogs(ctx context.Context) {
+	if r.appContainer == nil {
+		return
 	}
 
-	deadline := time.Now().Add(timeout)
-	client := &http.Client{Timeout: 2 * time.Second}
+	logs, err := r.appContainer.Logs(ctx)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to get app container logs")
+		return
+	}
+	defer logs.Close()
 
-	for time.Now().Before(deadline) {
+	buf := make([]byte, 4096)
+	for {
 		select {
+		case <-r.stopLogs:
+			return
 		case <-ctx.Done():
-			return ctx.Err()
+			return
 		default:
 		}
 
-		resp, err := client.Get(url)
-		if err == nil {
-			resp.Body.Close()
-			if resp.StatusCode == expectedStatus {
-				log.Debug().Str("url", url).Int("status", resp.StatusCode).Msg("app ready")
-				return nil
+		n, err := logs.Read(buf)
+		if err != nil {
+			if err != io.EOF {
+				log.Debug().Err(err).Msg("error reading app logs")
+			}
+			return
+		}
+
+		if n > 0 {
+			lines := strings.Split(string(buf[:n]), "\n")
+			for _, line := range lines {
+				if line == "" {
+					continue
+				}
+
+				// Store log line
+				r.logMu.Lock()
+				r.logLines = append(r.logLines, line)
+				// Keep only last 100 lines
+				if len(r.logLines) > 100 {
+					r.logLines = r.logLines[1:]
+				}
+				r.logMu.Unlock()
+
+				// Write to log file if available
+				if r.logFile != nil {
+					r.logFile.WriteString(line + "\n")
+				}
+
+				// Display if enabled
+				if r.showLogs {
+					fmt.Printf("    │ %s\n", line)
+				}
 			}
 		}
-
-		time.Sleep(500 * time.Millisecond)
 	}
-
-	return fmt.Errorf("app not ready after %s (waiting for HTTP %d at %s)", timeout, expectedStatus, url)
-}
-
-func (r *Runner) waitTCP(ctx context.Context, host string, port int, timeout time.Duration) error {
-	addr := fmt.Sprintf("%s:%d", host, port)
-	deadline := time.Now().Add(timeout)
-
-	for time.Now().Before(deadline) {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
-		if err == nil {
-			conn.Close()
-			log.Debug().Str("addr", addr).Msg("app ready (TCP)")
-			return nil
-		}
-
-		time.Sleep(500 * time.Millisecond)
-	}
-
-	return fmt.Errorf("app not ready after %s (waiting for TCP %s)", timeout, addr)
-}
-
-func (r *Runner) waitExec(ctx context.Context, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-
-	for time.Now().Before(deadline) {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		cmd := exec.CommandContext(ctx, "sh", "-c", r.config.Ready.Command)
-		if err := cmd.Run(); err == nil {
-			log.Debug().Str("command", r.config.Ready.Command).Msg("app ready (exec)")
-			return nil
-		}
-
-		time.Sleep(500 * time.Millisecond)
-	}
-
-	return fmt.Errorf("app not ready after %s (exec check failed)", timeout)
 }
 
 // Stop stops the application
@@ -407,36 +598,109 @@ func (r *Runner) Stop() error {
 		r.logFile = nil
 	}
 
-	if r.config.Build != nil {
-		// Stop docker container
-		cmd := exec.Command("docker", "stop", "tomato-app")
-		return cmd.Run()
+	switch r.mode {
+	case ModeCommand:
+		return r.stopCommand()
+	case ModeContainer:
+		return r.stopContainer()
 	}
-
-	if r.cmd != nil && r.cmd.Process != nil {
-		pid := r.cmd.Process.Pid
-		log.Debug().Int("pid", pid).Msg("stopping app process group")
-
-		// Kill the entire process group (negative PID)
-		// This ensures all child processes are terminated
-		if err := syscall.Kill(-pid, syscall.SIGTERM); err != nil {
-			log.Debug().Err(err).Msg("SIGTERM failed, trying SIGKILL")
-			syscall.Kill(-pid, syscall.SIGKILL)
-		}
-
-		// Wait for process to exit
-		r.cmd.Wait()
-	}
-
 	return nil
 }
 
-// GetBaseURL returns the base URL for the running app
-func (r *Runner) GetBaseURL() string {
-	return fmt.Sprintf("http://%s:%d", r.appHost, r.appPort)
+// stopCommand stops the local process
+func (r *Runner) stopCommand() error {
+	if r.cmd == nil || r.cmd.Process == nil {
+		return nil
+	}
+
+	log.Debug().Int("pid", r.cmd.Process.Pid).Msg("stopping app process")
+
+	// Try graceful shutdown first
+	if err := r.cmd.Process.Signal(syscall.SIGTERM); err != nil {
+		log.Debug().Err(err).Msg("failed to send SIGTERM, trying SIGKILL")
+		if err := r.cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("killing app process: %w", err)
+		}
+	}
+
+	// Wait for process to exit
+	done := make(chan error, 1)
+	go func() {
+		_, err := r.cmd.Process.Wait()
+		done <- err
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		// Force kill if graceful shutdown takes too long
+		r.cmd.Process.Kill()
+		<-done
+	}
+
+	r.cmd = nil
+	return nil
 }
 
-// GetRecentLogs returns the most recent log lines (useful for debugging failures)
+// stopContainer stops the Docker container
+func (r *Runner) stopContainer() error {
+	if r.appContainer == nil {
+		return nil
+	}
+
+	log.Debug().Msg("stopping app container")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := r.appContainer.Terminate(ctx); err != nil {
+		log.Warn().Err(err).Msg("failed to terminate app container")
+		return err
+	}
+	r.appContainer = nil
+	return nil
+}
+
+// GetBaseURL returns the base URL for the running app (for test runner to connect)
+func (r *Runner) GetBaseURL() string {
+	host, port := r.GetHostPort()
+	return fmt.Sprintf("http://%s:%d", host, port)
+}
+
+// GetHost returns the host address for the running app
+func (r *Runner) GetHost() string {
+	if r.mode == ModeContainer {
+		return r.appHost
+	}
+	return r.cmdHost
+}
+
+// GetPort returns the port for the running app
+func (r *Runner) GetPort() int {
+	if r.mode == ModeContainer {
+		return r.appPort
+	}
+	return r.cmdPort
+}
+
+// GetHostPort returns both host and port
+func (r *Runner) GetHostPort() (string, int) {
+	if r.mode == ModeContainer {
+		return r.appHost, r.appPort
+	}
+	return r.cmdHost, r.cmdPort
+}
+
+// GetContainer returns the underlying testcontainer (nil in command mode)
+func (r *Runner) GetContainer() testcontainers.Container {
+	return r.appContainer
+}
+
+// GetInternalPort returns the internal container port (same as config port)
+func (r *Runner) GetInternalPort() int {
+	return r.config.Port
+}
+
+// GetRecentLogs returns the most recent log lines
 func (r *Runner) GetRecentLogs(n int) []string {
 	r.logMu.Lock()
 	defer r.logMu.Unlock()
@@ -457,7 +721,8 @@ func (r *Runner) GetRecentLogs(n int) []string {
 
 // VerifyHealthy performs a single health check to verify the app is responding
 func (r *Runner) VerifyHealthy(ctx context.Context) error {
-	if r.config.Port == 0 {
+	host, port := r.GetHostPort()
+	if port == 0 {
 		return nil // No port configured, skip check
 	}
 
@@ -467,7 +732,7 @@ func (r *Runner) VerifyHealthy(ctx context.Context) error {
 		if path == "" {
 			path = "/health"
 		}
-		url := fmt.Sprintf("http://%s:%d%s", r.appHost, r.config.Port, path)
+		url := fmt.Sprintf("http://%s:%d%s", host, port, path)
 		expectedStatus := r.config.Ready.Status
 		if expectedStatus == 0 {
 			expectedStatus = 200
@@ -487,7 +752,7 @@ func (r *Runner) VerifyHealthy(ctx context.Context) error {
 	}
 
 	// Default: TCP port check
-	addr := fmt.Sprintf("%s:%d", r.appHost, r.config.Port)
+	addr := fmt.Sprintf("%s:%d", host, port)
 	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("app not responding on %s: %w", addr, err)

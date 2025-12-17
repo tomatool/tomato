@@ -1,14 +1,18 @@
 name: Release
 
-run-name: "Release ${{ inputs.version }}${{ inputs.prerelease && ' (RC)' || '' }}"
+run-name: "Release ${{ inputs.bump }}${{ inputs.prerelease && ' (RC)' || '' }}"
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Base version (e.g., v2.0.0)'
+      bump:
+        description: 'Version bump type'
         required: true
-        type: string
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
       prerelease:
         description: 'Pre-release (will append -rc.N)'
         required: false
@@ -27,41 +31,82 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate version format
-        run: |
-          if [[ ! "${{ inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Version must be in format v1.0.0"
-            exit 1
-          fi
-
       - name: Determine release version
         id: version
         run: |
-          BASE_VERSION="${{ inputs.version }}"
+          # Get latest stable tag (exclude RCs)
+          LATEST_STABLE=$(git tag -l 'v*' | grep -v '\-rc\.' | sort -V | tail -n1)
+
+          if [[ -z "$LATEST_STABLE" ]]; then
+            # No stable tags exist, start from v0.0.0
+            LATEST_STABLE="v0.0.0"
+          fi
+
+          echo "Latest stable: $LATEST_STABLE"
+
+          # Parse version components
+          VERSION_NUM=${LATEST_STABLE#v}
+          MAJOR=$(echo "$VERSION_NUM" | cut -d. -f1)
+          MINOR=$(echo "$VERSION_NUM" | cut -d. -f2)
+          PATCH=$(echo "$VERSION_NUM" | cut -d. -f3)
+
+          # Calculate next version based on bump type
+          case "${{ inputs.bump }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "Next version: $NEXT_VERSION"
 
           if [[ "${{ inputs.prerelease }}" == "true" ]]; then
-            # Find existing RC tags for this version
-            EXISTING_RCS=$(git tag -l "${BASE_VERSION}-rc.*" | sort -V)
+            # Pre-release: find existing RCs and create next one
+            EXISTING_RCS=$(git tag -l "${NEXT_VERSION}-rc.*" | sort -V)
 
             if [[ -z "$EXISTING_RCS" ]]; then
-              # No existing RCs, start with rc.0
-              RELEASE_VERSION="${BASE_VERSION}-rc.0"
+              RELEASE_VERSION="${NEXT_VERSION}-rc.0"
             else
-              # Get the highest RC number and increment
               LAST_RC=$(echo "$EXISTING_RCS" | tail -n1)
-              LAST_RC_NUM=$(echo "$LAST_RC" | sed "s/${BASE_VERSION}-rc\.//")
+              LAST_RC_NUM=$(echo "$LAST_RC" | sed "s/${NEXT_VERSION}-rc\.//")
               NEXT_RC_NUM=$((LAST_RC_NUM + 1))
-              RELEASE_VERSION="${BASE_VERSION}-rc.${NEXT_RC_NUM}"
+              RELEASE_VERSION="${NEXT_VERSION}-rc.${NEXT_RC_NUM}"
             fi
 
             echo "Creating pre-release: $RELEASE_VERSION"
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
           else
-            RELEASE_VERSION="$BASE_VERSION"
-            echo "Creating release: $RELEASE_VERSION"
+            # Stable release
+            EXISTING_RCS=$(git tag -l "${NEXT_VERSION}-rc.*" | sort -V)
+
+            if [[ -n "$EXISTING_RCS" ]]; then
+              echo "Promoting from RC to stable: $NEXT_VERSION"
+            else
+              echo "Creating fresh release: $NEXT_VERSION"
+            fi
+
+            RELEASE_VERSION="$NEXT_VERSION"
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
           echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
-          echo "prerelease=${{ inputs.prerelease }}" >> $GITHUB_OUTPUT
+          echo "base_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        run: |
+          if git rev-parse "${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "::error::Tag ${{ steps.version.outputs.version }} already exists!"
+            exit 1
+          fi
 
       - name: Create and push tag
         run: |
@@ -92,7 +137,8 @@ jobs:
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| **Version** | \`${{ steps.version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Type** | ${{ inputs.prerelease && '🧪 Pre-release (RC)' || '🚀 Stable Release' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Bump Type** | \`${{ inputs.bump }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Type** | ${{ steps.version.outputs.is_prerelease == 'true' && '🧪 Pre-release (RC)' || '🚀 Stable Release' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Assets" >> $GITHUB_STEP_SUMMARY
@@ -105,7 +151,6 @@ jobs:
           echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- [Release Page](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Changelog](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
 
   update-action-tag:
     needs: release
@@ -122,14 +167,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Extract major version (e.g., v1 from v1.2.3)
-          VERSION="${{ inputs.version }}"
-          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
+          # Get the version we just released
+          LATEST_TAG=$(git tag -l 'v*' | grep -v '\-rc\.' | sort -V | tail -n1)
+          MAJOR_VERSION=$(echo "$LATEST_TAG" | cut -d. -f1)
 
-          echo "Updating $MAJOR_VERSION tag to point to $VERSION"
+          echo "Updating $MAJOR_VERSION tag to point to $LATEST_TAG"
 
-          # Update major version tag (e.g., v1 -> v1.2.0)
-          git tag -fa "$MAJOR_VERSION" -m "Update $MAJOR_VERSION tag to $VERSION"
+          # Update major version tag (e.g., v2 -> v2.1.0)
+          git tag -fa "$MAJOR_VERSION" -m "Update $MAJOR_VERSION tag to $LATEST_TAG"
           git push origin "$MAJOR_VERSION" --force
 
   update-docs:
@@ -155,6 +200,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Get the version we just released
+          LATEST_TAG=$(git tag -l 'v*' | grep -v '\-rc\.' | sort -V | tail -n1)
+
           git add docs/
-          git diff --staged --quiet || git commit -m "docs: update documentation for ${{ inputs.version }}"
+          git diff --staged --quiet || git commit -m "docs: update documentation for $LATEST_TAG"
           git push origin HEAD:main

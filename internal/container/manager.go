@@ -5,34 +5,97 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"runtime"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/network"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/runlog"
 )
 
+// ErrDockerNotRunning is returned when Docker daemon is not available
+var ErrDockerNotRunning = fmt.Errorf("docker is not running")
+
+// CheckDockerAvailable verifies that Docker daemon is running and accessible
+func CheckDockerAvailable() error {
+	cmd := exec.Command("docker", "info")
+	if err := cmd.Run(); err != nil {
+		return &DockerNotRunningError{}
+	}
+	return nil
+}
+
+// DockerNotRunningError provides helpful instructions for starting Docker
+type DockerNotRunningError struct{}
+
+func (e *DockerNotRunningError) Error() string {
+	var instructions string
+
+	switch runtime.GOOS {
+	case "darwin":
+		instructions = `Docker is not running. To fix this:
+
+  1. Open Docker Desktop application
+  2. Wait for Docker to start (whale icon in menu bar stops animating)
+  3. Run tomato again
+
+  Or start Docker from terminal:
+    open -a Docker`
+
+	case "linux":
+		instructions = `Docker is not running. To fix this:
+
+  1. Start Docker daemon:
+       sudo systemctl start docker
+
+  2. Make sure your user is in the docker group:
+       sudo usermod -aG docker $USER
+       (log out and back in after this)
+
+  3. Run tomato again`
+
+	case "windows":
+		instructions = `Docker is not running. To fix this:
+
+  1. Open Docker Desktop application
+  2. Wait for Docker to start
+  3. Run tomato again`
+
+	default:
+		instructions = `Docker is not running. Please start Docker and try again.`
+	}
+
+	return instructions
+}
+
 // Manager handles the lifecycle of test containers
 type Manager struct {
-	configs    map[string]config.Container
-	containers map[string]testcontainers.Container
-	order      []string // startup order based on dependencies
-	mu         sync.RWMutex
-	runCtx     *runlog.RunContext
-	logFiles   map[string]*os.File
+	configs     map[string]config.Container
+	containers  map[string]testcontainers.Container
+	order       []string // startup order based on dependencies
+	mu          sync.RWMutex
+	runCtx      *runlog.RunContext
+	logFiles    map[string]*os.File
+	network     *testcontainers.DockerNetwork
+	networkName string
 }
 
 // NewManager creates a new container manager
 func NewManager(configs map[string]config.Container) (*Manager, error) {
 	m := &Manager{
-		configs:    configs,
-		containers: make(map[string]testcontainers.Container),
-		logFiles:   make(map[string]*os.File),
+		configs:     configs,
+		containers:  make(map[string]testcontainers.Container),
+		logFiles:    make(map[string]*os.File),
+		networkName: fmt.Sprintf("tomato-%s", uuid.New().String()[:8]),
 	}
 
 	// Calculate startup order based on dependencies
@@ -48,6 +111,49 @@ func NewManager(configs map[string]config.Container) (*Manager, error) {
 // SetRunContext sets the run context for logging
 func (m *Manager) SetRunContext(ctx *runlog.RunContext) {
 	m.runCtx = ctx
+}
+
+// CreateNetwork creates the shared Docker network for all containers
+func (m *Manager) CreateNetwork(ctx context.Context) error {
+	if m.network != nil {
+		return nil // Already created
+	}
+
+	log.Debug().Str("network", m.networkName).Msg("creating docker network")
+
+	net, err := network.New(ctx, network.WithCheckDuplicate(), network.WithDriver("bridge"))
+	if err != nil {
+		return fmt.Errorf("creating network: %w", err)
+	}
+
+	m.network = net
+	m.networkName = net.Name
+
+	log.Debug().Str("network", m.networkName).Msg("docker network created")
+	return nil
+}
+
+// GetNetworkName returns the shared network name
+func (m *Manager) GetNetworkName() string {
+	return m.networkName
+}
+
+// GetInternalAddress returns the internal Docker DNS address for a container
+// This is used by containers to communicate with each other within the network
+func (m *Manager) GetInternalAddress(name, port string) string {
+	// Strip /tcp or /udp suffix if present
+	if idx := strings.Index(port, "/"); idx > 0 {
+		port = port[:idx]
+	}
+	return fmt.Sprintf("%s:%s", name, port)
+}
+
+// RegisterContainer adds an externally managed container to the manager
+// This allows resources to reference containers started by apprunner
+func (m *Manager) RegisterContainer(name string, container testcontainers.Container) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.containers[name] = container
 }
 
 // calculateStartOrder returns containers in dependency order using topological sort
@@ -102,6 +208,11 @@ func (m *Manager) calculateStartOrder() ([]string, error) {
 
 // StartAll starts all containers in dependency order
 func (m *Manager) StartAll(ctx context.Context) error {
+	// Create the shared network first
+	if err := m.CreateNetwork(ctx); err != nil {
+		return fmt.Errorf("creating network: %w", err)
+	}
+
 	for _, name := range m.order {
 		if err := m.Start(ctx, name); err != nil {
 			return fmt.Errorf("starting container %s: %w", name, err)
@@ -129,6 +240,14 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	// Add exposed ports
 	for _, port := range cfg.Ports {
 		req.ExposedPorts = append(req.ExposedPorts, port)
+	}
+
+	// Attach to shared network with DNS alias
+	if m.network != nil {
+		req.Networks = []string{m.networkName}
+		req.NetworkAliases = map[string][]string{
+			m.networkName: {name}, // Container accessible via its config name
+		}
 	}
 
 	// Start container
@@ -243,6 +362,20 @@ func (m *Manager) GetPort(ctx context.Context, name, port string) (string, error
 	return mappedPort.Port(), nil
 }
 
+// GetMappedPort returns the mapped host port as an integer (used by apprunner for command mode)
+func (m *Manager) GetMappedPort(name, port string) int {
+	ctx := context.Background()
+	container, err := m.Get(name)
+	if err != nil {
+		return 0
+	}
+	mappedPort, err := container.MappedPort(ctx, nat.Port(port))
+	if err != nil {
+		return 0
+	}
+	return mappedPort.Int()
+}
+
 // GetConnectionString builds a connection string for a container
 func (m *Manager) GetConnectionString(ctx context.Context, name, port string) (string, error) {
 	host, err := m.GetHost(ctx, name)
@@ -291,6 +424,15 @@ func (m *Manager) Cleanup() {
 
 	if err := m.StopAll(ctx, true); err != nil {
 		log.Warn().Err(err).Msg("cleanup error")
+	}
+
+	// Remove the shared network
+	if m.network != nil {
+		log.Debug().Str("network", m.networkName).Msg("removing docker network")
+		if err := m.network.Remove(ctx); err != nil {
+			log.Warn().Err(err).Str("network", m.networkName).Msg("failed to remove network")
+		}
+		m.network = nil
 	}
 }
 

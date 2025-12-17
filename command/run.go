@@ -1,9 +1,13 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -58,6 +62,15 @@ are reset between each scenario to ensure clean state.`,
 			Name:   "format",
 			Usage:  "output format (pretty, progress, tomato)",
 			Hidden: true, // Internal use for UI
+		},
+		&cli.BoolFlag{
+			Name:    "keep-alive",
+			Aliases: []string{"k"},
+			Usage:   "keep containers running after tests and print connection info",
+		},
+		&cli.BoolFlag{
+			Name:  "container",
+			Usage: "run application in container (requires 'image' or 'build' in app config)",
 		},
 	},
 	Action: runTests,
@@ -126,6 +139,19 @@ func runTests(c *cli.Context) error {
 	}
 	fmt.Println()
 
+	// Check if Docker is needed and available
+	needsDocker := len(cfg.Containers) > 0 || cfg.App.UseContainer() || c.Bool("container")
+	if needsDocker {
+		if err := container.CheckDockerAvailable(); err != nil {
+			fmt.Println()
+			fmt.Println(errorStyle.Render("Docker Error"))
+			fmt.Println()
+			fmt.Println(err.Error())
+			fmt.Println()
+			return fmt.Errorf("docker is not available")
+		}
+	}
+
 	// Step 1: Start dependency containers
 	if len(cfg.Containers) > 0 {
 		fmt.Println(subtitleStyle.Render("Starting dependencies..."))
@@ -136,7 +162,12 @@ func runTests(c *cli.Context) error {
 		return fmt.Errorf("failed to initialize container manager: %w", err)
 	}
 	cm.SetRunContext(runCtx)
-	defer cm.Cleanup()
+
+	// Only auto-cleanup if not in keep-alive mode
+	keepAlive := c.Bool("keep-alive")
+	if !keepAlive {
+		defer cm.Cleanup()
+	}
 
 	if err := cm.StartAll(c.Context); err != nil {
 		return fmt.Errorf("failed to start containers: %w", err)
@@ -161,6 +192,20 @@ func runTests(c *cli.Context) error {
 		appRunner.SetRunContext(runCtx)
 		appRunner.SetShowLogs(!c.Bool("quiet"))
 
+		// Force container mode if --container flag is set
+		if c.Bool("container") {
+			if err := appRunner.SetContainerMode(true); err != nil {
+				return fmt.Errorf("cannot use container mode: %w", err)
+			}
+		}
+
+		// Show which mode we're using
+		if appRunner.GetMode() == apprunner.ModeContainer {
+			fmt.Printf("  %s running app in container mode\n", helpStyle.Render("🐳"))
+		} else {
+			fmt.Printf("  %s running app as local process\n", helpStyle.Render("⚡"))
+		}
+
 		if err := appRunner.Start(c.Context); err != nil {
 			// Show recent logs on failure (even in quiet mode)
 			fmt.Println()
@@ -183,7 +228,10 @@ func runTests(c *cli.Context) error {
 
 			return fmt.Errorf("failed to start application: %w", err)
 		}
-		defer appRunner.Stop()
+		// Only auto-stop if not in keep-alive mode
+		if !keepAlive {
+			defer appRunner.Stop()
+		}
 
 		if !c.Bool("quiet") {
 			fmt.Println()
@@ -206,6 +254,11 @@ func runTests(c *cli.Context) error {
 			return fmt.Errorf("app health check failed: %w", err)
 		}
 		fmt.Printf("  %s health check passed\n", checkStyle.Render("✓"))
+
+		// Register app container with container manager so resources can reference it
+		if appContainer := appRunner.GetContainer(); appContainer != nil {
+			cm.RegisterContainer(cfg.App.GetName(), appContainer)
+		}
 	}
 
 	// Step 3: Initialize test resources
@@ -230,5 +283,90 @@ func runTests(c *cli.Context) error {
 	fmt.Println(subtitleStyle.Render("Running tests..."))
 	fmt.Println()
 
-	return r.Run(c.Context)
+	testErr := r.Run(c.Context)
+
+	// Handle keep-alive mode
+	if keepAlive {
+		printKeepAliveInfo(cm, appRunner, cfg)
+		waitForInterrupt()
+
+		// Cleanup after user interrupts
+		fmt.Println()
+		fmt.Println(subtitleStyle.Render("Shutting down..."))
+		if appRunner != nil {
+			appRunner.Stop()
+		}
+		cm.Cleanup()
+	}
+
+	return testErr
+}
+
+// printKeepAliveInfo prints connection info for all running containers
+func printKeepAliveInfo(cm *container.Manager, app *apprunner.Runner, cfg *config.Config) {
+	fmt.Println()
+	fmt.Println(subtitleStyle.Render("Containers are running. Press Ctrl+C to stop."))
+	fmt.Println()
+
+	// Print app connection info if configured
+	if app != nil && cfg.App.IsConfigured() {
+		fmt.Println("Application:")
+		fmt.Printf("  URL: http://%s:%d\n", app.GetHost(), app.GetPort())
+		fmt.Printf("  curl http://%s:%d/health\n", app.GetHost(), app.GetPort())
+		fmt.Println()
+	}
+
+	// Print container connection info
+	cm.PrintConnectionInfo()
+
+	// Print example commands based on container types
+	fmt.Println("Example commands:")
+	ctx := context.Background()
+	for name, cont := range cfg.Containers {
+		if strings.Contains(cont.Image, "postgres") {
+			host, _ := cm.GetHost(ctx, name)
+			port, _ := cm.GetPort(ctx, name, "5432/tcp")
+			user := "postgres"
+			if u, ok := cont.Env["POSTGRES_USER"]; ok {
+				user = u
+			}
+			db := "postgres"
+			if d, ok := cont.Env["POSTGRES_DB"]; ok {
+				db = d
+			}
+			fmt.Printf("  psql -h %s -p %s -U %s -d %s\n", host, port, user, db)
+		}
+		if strings.Contains(cont.Image, "redis") {
+			host, _ := cm.GetHost(ctx, name)
+			port, _ := cm.GetPort(ctx, name, "6379/tcp")
+			fmt.Printf("  redis-cli -h %s -p %s\n", host, port)
+		}
+		if strings.Contains(cont.Image, "mysql") || strings.Contains(cont.Image, "mariadb") {
+			host, _ := cm.GetHost(ctx, name)
+			port, _ := cm.GetPort(ctx, name, "3306/tcp")
+			user := "root"
+			if u, ok := cont.Env["MYSQL_USER"]; ok {
+				user = u
+			}
+			fmt.Printf("  mysql -h %s -P %s -u %s -p\n", host, port, user)
+		}
+		if strings.Contains(cont.Image, "mongo") {
+			host, _ := cm.GetHost(ctx, name)
+			port, _ := cm.GetPort(ctx, name, "27017/tcp")
+			fmt.Printf("  mongosh mongodb://%s:%s\n", host, port)
+		}
+	}
+
+	// Print app curl example if configured
+	if app != nil && cfg.App.IsConfigured() {
+		fmt.Printf("  curl http://%s:%d/\n", app.GetHost(), app.GetPort())
+	}
+	fmt.Println()
+}
+
+// waitForInterrupt blocks until the user presses Ctrl+C
+func waitForInterrupt() {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	<-sigChan
 }
