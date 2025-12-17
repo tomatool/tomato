@@ -191,6 +191,7 @@ func runTests(c *cli.Context) error {
 		appRunner = apprunner.NewRunner(cfg.App, cm)
 		appRunner.SetRunContext(runCtx)
 		appRunner.SetShowLogs(!c.Bool("quiet"))
+		appRunner.SetResources(cfg.Resources)
 
 		// Force container mode if --container flag is set
 		if c.Bool("container") {

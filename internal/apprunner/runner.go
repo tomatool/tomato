@@ -36,6 +36,7 @@ const (
 type Runner struct {
 	config    config.AppConfig
 	container *container.Manager
+	resources map[string]config.Resource
 	mode      Mode
 
 	// Command mode fields
@@ -71,10 +72,16 @@ func NewRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
 	return &Runner{
 		config:    cfg,
 		container: cm,
+		resources: make(map[string]config.Resource),
 		mode:      mode,
 		showLogs:  true,
 		stopLogs:  make(chan struct{}),
 	}
+}
+
+// SetResources sets resource configurations for template resolution
+func (r *Runner) SetResources(resources map[string]config.Resource) {
+	r.resources = resources
 }
 
 // SetContainerMode forces container mode (for --container flag)
@@ -197,15 +204,36 @@ func (r *Runner) startCommand(ctx context.Context) error {
 
 // buildEnvForCommand creates environment variables with mapped host ports
 // Templates like {{.postgres.host}} resolve to localhost and mapped ports
+// Resource templates like {{.mock.url}} resolve to http-server URLs
 func (r *Runner) buildEnvForCommand() map[string]string {
 	env := make(map[string]string)
 
-	// Template pattern: {{.container_name.host}} or {{.container_name.port.5432}}
-	templatePattern := regexp.MustCompile(`\{\{\s*\.(\w+)\.(host|port)(?:\.(\d+(?:/tcp)?))?\s*\}\}`)
+	// Container template pattern: {{.container_name.host}} or {{.container_name.port.5432}}
+	containerPattern := regexp.MustCompile(`\{\{\s*\.(\w[\w-]*)\.(host|port)(?:\.(\d+(?:/tcp)?))?\s*\}\}`)
+
+	// Resource template pattern: {{.resource_name.url}}
+	resourcePattern := regexp.MustCompile(`\{\{\s*\.([\w-]+)\.url\s*\}\}`)
 
 	for key, value := range r.config.Env {
-		resolved := templatePattern.ReplaceAllStringFunc(value, func(match string) string {
-			matches := templatePattern.FindStringSubmatch(match)
+		resolved := value
+
+		// First resolve resource templates (e.g., {{.mock.url}})
+		resolved = resourcePattern.ReplaceAllStringFunc(resolved, func(match string) string {
+			matches := resourcePattern.FindStringSubmatch(match)
+			if len(matches) < 2 {
+				return match
+			}
+
+			resourceName := matches[1]
+			if url := r.getResourceURL(resourceName); url != "" {
+				return url
+			}
+			return match
+		})
+
+		// Then resolve container templates (e.g., {{.postgres.host}})
+		resolved = containerPattern.ReplaceAllStringFunc(resolved, func(match string) string {
+			matches := containerPattern.FindStringSubmatch(match)
 			if len(matches) < 3 {
 				return match
 			}
@@ -241,6 +269,29 @@ func (r *Runner) buildEnvForCommand() map[string]string {
 	}
 
 	return env
+}
+
+// getResourceURL returns the URL for a resource if it's an http-server type
+func (r *Runner) getResourceURL(name string) string {
+	res, ok := r.resources[name]
+	if !ok {
+		return ""
+	}
+
+	switch res.Type {
+	case "http-server":
+		port := 0
+		if p, ok := res.Options["port"].(int); ok {
+			port = p
+		}
+		if port == 0 {
+			log.Warn().Str("resource", name).Msg("http-server resource has no port configured, cannot resolve URL template")
+			return ""
+		}
+		return fmt.Sprintf("http://localhost:%d", port)
+	}
+
+	return ""
 }
 
 // streamCommandLogs reads from a pipe and stores/displays logs
@@ -483,15 +534,37 @@ func (r *Runner) buildWaitStrategy() wait.Strategy {
 
 // buildEnvForDocker creates environment variables with container DNS names
 // Templates like {{.postgres.host}} resolve to container names (not mapped ports)
+// Resource templates like {{.mock.url}} resolve to http-server URLs (using host.docker.internal)
 func (r *Runner) buildEnvForDocker() map[string]string {
 	env := make(map[string]string)
 
-	// Template pattern: {{.container_name.host}} or {{.container_name.port.5432}}
-	templatePattern := regexp.MustCompile(`\{\{\s*\.(\w+)\.(host|port)(?:\.(\d+(?:/tcp)?))?\s*\}\}`)
+	// Container template pattern: {{.container_name.host}} or {{.container_name.port.5432}}
+	containerPattern := regexp.MustCompile(`\{\{\s*\.(\w[\w-]*)\.(host|port)(?:\.(\d+(?:/tcp)?))?\s*\}\}`)
+
+	// Resource template pattern: {{.resource_name.url}}
+	resourcePattern := regexp.MustCompile(`\{\{\s*\.([\w-]+)\.url\s*\}\}`)
 
 	for key, value := range r.config.Env {
-		resolved := templatePattern.ReplaceAllStringFunc(value, func(match string) string {
-			matches := templatePattern.FindStringSubmatch(match)
+		resolved := value
+
+		// First resolve resource templates (e.g., {{.mock.url}})
+		// For Docker mode, use host.docker.internal to reach host services
+		resolved = resourcePattern.ReplaceAllStringFunc(resolved, func(match string) string {
+			matches := resourcePattern.FindStringSubmatch(match)
+			if len(matches) < 2 {
+				return match
+			}
+
+			resourceName := matches[1]
+			if url := r.getResourceURLForDocker(resourceName); url != "" {
+				return url
+			}
+			return match
+		})
+
+		// Then resolve container templates (e.g., {{.postgres.host}})
+		resolved = containerPattern.ReplaceAllStringFunc(resolved, func(match string) string {
+			matches := containerPattern.FindStringSubmatch(match)
 			if len(matches) < 3 {
 				return match
 			}
@@ -522,6 +595,30 @@ func (r *Runner) buildEnvForDocker() map[string]string {
 	}
 
 	return env
+}
+
+// getResourceURLForDocker returns the URL for a resource accessible from Docker container
+func (r *Runner) getResourceURLForDocker(name string) string {
+	res, ok := r.resources[name]
+	if !ok {
+		return ""
+	}
+
+	switch res.Type {
+	case "http-server":
+		port := 0
+		if p, ok := res.Options["port"].(int); ok {
+			port = p
+		}
+		if port == 0 {
+			log.Warn().Str("resource", name).Msg("http-server resource has no port configured, cannot resolve URL template")
+			return ""
+		}
+		// Use host.docker.internal for Docker containers to reach host services
+		return fmt.Sprintf("http://host.docker.internal:%d", port)
+	}
+
+	return ""
 }
 
 // captureContainerLogs streams container logs to file and memory
