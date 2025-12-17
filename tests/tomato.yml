@@ -138,6 +138,16 @@ resources:
     type: websocket-client
     url: "ws://localhost:8080/ws"
 
+  mock:
+    type: http-server
+    options:
+      port: 9999
+
+  mock2:
+    type: http-server
+    options:
+      port: 9998
+
 features:
   paths:
     - ./tests/features

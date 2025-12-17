@@ -71,6 +71,7 @@ nav:
     - GitHub Action: getting-started/github-action.md
   - Configuration:
     - Reference: configuration/index.md
+    - HTTP Server: configuration/http-server.md
     - Kafka: configuration/kafka.md
     - RabbitMQ: configuration/rabbitmq.md
     - Redis: configuration/redis.md
