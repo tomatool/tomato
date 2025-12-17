@@ -77,3 +77,6 @@ Feature: Redis Handler
     Given "cache" key "a" is "1"
     And "cache" key "b" is "2"
     Then "cache" has "2" keys
+
+  Scenario: Check database is empty
+    Then "cache" is empty

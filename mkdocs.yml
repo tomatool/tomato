@@ -73,6 +73,7 @@ nav:
     - Reference: configuration/index.md
     - Kafka: configuration/kafka.md
     - RabbitMQ: configuration/rabbitmq.md
+    - Redis: configuration/redis.md
   - Available Resources:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
