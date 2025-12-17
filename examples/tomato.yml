@@ -37,23 +37,37 @@ containers:
     reset:
       strategy: flush
 
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
     env:
-      KAFKA_NODE_ID: "1"
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
-      CLUSTER_ID: tomato-test-cluster-001
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
     ports:
-      - "9092/tcp"
+      - "2181/tcp"
+    wait_for:
+      type: port
+      target: "2181/tcp"
+      timeout: 30s
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    env:
+      KAFKA_BROKER_ID: "1"
+      KAFKA_ZOOKEEPER_CONNECT: "{{.zookeeper.host}}:{{.zookeeper.port.2181}}"
+      # Dual listeners: internal (kafka:29092) and external (localhost:9092)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      # Fixed port for host access - Kafka advertises localhost:9092
+      - "9092:9092"
+      # Internal port for container-to-container communication
+      - "29092/tcp"
     wait_for:
       type: port
       target: "9092/tcp"

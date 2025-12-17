@@ -66,20 +66,24 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
-  - Configuration: configuration.md
-  - GitHub Action: github-action.md
-  - Architecture: architecture.md
-  - Resources:
+  - Getting Started:
+    - Overview: getting-started/index.md
+    - GitHub Action: getting-started/github-action.md
+  - Configuration:
+    - Reference: configuration/index.md
+    - Kafka: configuration/kafka.md
+  - Available Resources:
     - Overview: resources/index.md
-    - http-client: resources/http-client.md
-    - http-server: resources/http-server.md
-    - postgres: resources/postgres.md
-    - redis: resources/redis.md
-    - kafka: resources/kafka.md
-    - shell: resources/shell.md
-    - websocket-client: resources/websocket-client.md
-    - websocket-server: resources/websocket-server.md
+    - HTTP Client: resources/http-client.md
+    - HTTP Server: resources/http-server.md
+    - PostgreSQL: resources/postgres.md
+    - Redis: resources/redis.md
+    - Kafka: resources/kafka.md
+    - Shell: resources/shell.md
+    - WebSocket Client: resources/websocket-client.md
+    - WebSocket Server: resources/websocket-server.md
+  - Developer Guide:
+    - Architecture: developer-guide/architecture.md
 
 plugins:
   - search
