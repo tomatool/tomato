@@ -44,7 +44,32 @@ jobs:
         run: go mod download
 
       - name: Run integration tests with coverage
-        run: make integration-test-coverage
+        id: tests
+        run: |
+          # Build coverage-instrumented binary
+          echo "Building coverage-instrumented binary..."
+          mkdir -p ./bin
+          go build -cover -covermode=atomic -coverpkg=./... -o ./bin/tomato-coverage .
+
+          # Run tests and capture exit code
+          echo "Running integration tests with coverage..."
+          mkdir -p ./coverage
+          set +e
+          GOCOVERDIR=./coverage ./bin/tomato-coverage run -c ./tests/tomato.yml
+          TEST_EXIT_CODE=$?
+          set -e
+
+          # Generate coverage reports regardless of test result
+          echo "Converting coverage data..."
+          go tool covdata textfmt -i=./coverage -o=coverage-integration.out
+          echo "Generating coverage report..."
+          go tool cover -html=coverage-integration.out -o coverage-integration.html
+
+          # Save test result for later
+          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "::warning::Integration tests failed with exit code $TEST_EXIT_CODE"
+          fi
 
       - name: Generate coverage summary
         id: coverage
@@ -141,3 +166,9 @@ jobs:
                 body: body
               });
             }
+
+      - name: Fail if tests failed
+        if: steps.tests.outputs.test_exit_code != '0'
+        run: |
+          echo "Integration tests failed with exit code ${{ steps.tests.outputs.test_exit_code }}"
+          exit 1
