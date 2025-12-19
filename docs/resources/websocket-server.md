@@ -11,30 +11,31 @@ Steps for stubbing WebSocket services
 | Step | Description |
 |------|-------------|
 | `"{resource}" on connect sends:` | Sends a message when a client connects |
-| `"{resource}" on message "{message}" replies:` | Replies to an exact message |
-| `"{resource}" on message matching "{pattern}" replies:` | Replies to messages matching a regex pattern |
+| `"{resource}" on message "ping" replies:` | Replies to an exact message |
+| `"{resource}" on message matching ".*subscribe.*" replies:` | Replies to messages matching a regex pattern |
+
 
 ### Examples
 
-**Send welcome message on connect:**
+**Sends a message when a client connects:**
 ```gherkin
-Given "ws-mock" on connect sends:
+"{resource}" on connect sends:
   """
-  {"type": "welcome", "version": "1.0"}
+  {"type": "welcome"}
   """
 ```
 
-**Reply to exact message:**
+**Replies to an exact message:**
 ```gherkin
-Given "ws-mock" on message "ping" replies:
+"{resource}" on message "ping" replies:
   """
   pong
   """
 ```
 
-**Reply to pattern:**
+**Replies to messages matching a regex pattern:**
 ```gherkin
-Given "ws-mock" on message matching ".*subscribe.*" replies:
+"{resource}" on message matching ".*subscribe.*" replies:
   """
   {"status": "subscribed"}
   """
@@ -46,21 +47,17 @@ Given "ws-mock" on message matching ".*subscribe.*" replies:
 | Step | Description |
 |------|-------------|
 | `"{resource}" broadcasts:` | Broadcasts a message to all connected clients |
-| `"{resource}" broadcasts "{message}"` | Broadcasts a short message to all connected clients |
+| `"{resource}" broadcasts "ping"` | Broadcasts a short message to all connected clients |
+
 
 ### Examples
 
-**Broadcast message:**
+**Broadcasts a message to all connected clients:**
 ```gherkin
-When "ws-mock" broadcasts:
+"{resource}" broadcasts:
   """
-  {"event": "update", "data": {"id": 1}}
+  {"event": "update"}
   """
-```
-
-**Broadcast short message:**
-```gherkin
-When "ws-mock" broadcasts "ping"
 ```
 
 
@@ -68,6 +65,8 @@ When "ws-mock" broadcasts "ping"
 
 | Step | Description |
 |------|-------------|
-| `"{resource}" has "{n}" connections` | Asserts the number of connected clients |
-| `"{resource}" received message "{message}"` | Asserts a specific message was received |
-| `"{resource}" received "{n}" messages` | Asserts the total number of messages received |
+| `"{resource}" has "2" connections` | Asserts the number of connected clients |
+| `"{resource}" received message "ping"` | Asserts a specific message was received |
+| `"{resource}" received "3" messages` | Asserts the total number of messages received |
+
+

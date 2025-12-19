@@ -2,6 +2,9 @@
 
 Steps for interacting with Redis key-value store
 
+!!! tip "Multi-line Content"
+    Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
+
 
 ## String Operations
 
@@ -16,6 +19,7 @@ Steps for interacting with Redis key-value store
 | `"cache" key "counter" is decremented` | Decrement integer value by 1 |
 
 
+
 ## String Assertions
 
 | Step | Description |
@@ -27,6 +31,7 @@ Steps for interacting with Redis key-value store
 | `"cache" key "session:abc" has TTL greater than "3600" seconds` | Assert TTL greater than N seconds |
 
 
+
 ## Hash Operations
 
 | Step | Description |
@@ -34,6 +39,7 @@ Steps for interacting with Redis key-value store
 | `"cache" hash "user:1" has fields:` | Set hash fields from table |
 | `"cache" hash "user:1" field "name" is "John"` | Assert hash field value |
 | `"cache" hash "user:1" contains:` | Assert hash contains fields |
+
 
 
 ## List Operations
@@ -46,6 +52,7 @@ Steps for interacting with Redis key-value store
 | `"cache" list "queue" contains "item1"` | Assert list contains value |
 
 
+
 ## Set Operations
 
 | Step | Description |
@@ -56,10 +63,12 @@ Steps for interacting with Redis key-value store
 | `"cache" set "tags" has "3" members` | Assert set size |
 
 
+
 ## Database
 
 | Step | Description |
 |------|-------------|
 | `"cache" has "5" keys` | Assert total key count |
 | `"cache" is empty` | Assert database is empty |
+
 

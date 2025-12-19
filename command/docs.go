@@ -126,8 +126,10 @@ func collectStepCategories() []handler.StepCategory {
 
 // GroupedStep is a step with processed fields for docs
 type GroupedStep struct {
-	Example     string
-	Description string
+	Example      string // Full example including docstring
+	TableExample string // Short form for table (first line only, with : suffix if multiline)
+	Description  string
+	IsMultiline  bool // Whether the example has multiline content
 }
 
 // StepGroup groups steps by their group name
@@ -168,9 +170,20 @@ func buildCategoryWithGroups(cat handler.StepCategory) CategoryWithGroups {
 			groupOrder = append(groupOrder, groupName)
 		}
 
+		// Check if example has multiple lines
+		isMultiline := strings.Contains(step.Example, "\n")
+		tableExample := step.Example
+		if isMultiline {
+			// Get just the first line for the table
+			lines := strings.SplitN(step.Example, "\n", 2)
+			tableExample = lines[0]
+		}
+
 		groupMap[groupName] = append(groupMap[groupName], GroupedStep{
-			Example:     step.Example,
-			Description: step.Description,
+			Example:      step.Example,
+			TableExample: tableExample,
+			Description:  step.Description,
+			IsMultiline:  isMultiline,
 		})
 	}
 
@@ -188,13 +201,24 @@ const mkdocsResourceTemplate = `# {{.Name}}
 
 {{.Description}}
 
+!!! tip "Multi-line Content"
+    Steps ending with ` + "`:`" + ` accept multi-line content using Gherkin's docstring syntax (` + "`\"\"\"`" + `). See examples below each section.
+
 {{range .Groups}}
 ## {{.Name}}
 
 | Step | Description |
 |------|-------------|
-{{range .Steps}}| ` + "`" + `{{.Example}}` + "`" + ` | {{.Description}} |
+{{range .Steps}}| ` + "`" + `{{.TableExample}}` + "`" + ` | {{.Description}} |
 {{end}}
+{{$hasMultiline := false}}{{range .Steps}}{{if .IsMultiline}}{{$hasMultiline = true}}{{end}}{{end}}{{if $hasMultiline}}
+### Examples
+{{range .Steps}}{{if .IsMultiline}}
+**{{.Description}}:**
+` + "```gherkin" + `
+{{.Example}}
+` + "```" + `
+{{end}}{{end}}{{end}}
 {{end}}`
 
 const mkdocsIndexTemplate = `# Available Resources
