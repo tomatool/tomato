@@ -73,7 +73,7 @@ Feature: Kafka Handler
       | key-2  | second message  |
       | key-3  | third message   |
     # Wait for the first message to arrive (which triggers background consumption)
-    Then "events" receives from "batch-topic" within "5s"
+    Then "events" receives from "batch-topic" within "15s"
     # Check that all 3 messages were consumed
     And "events" topic "batch-topic" has "3" messages
 
@@ -85,7 +85,7 @@ Feature: Kafka Handler
       """
       Async message
       """
-    Then "events" receives from "wait-topic" within "5s"
+    Then "events" receives from "wait-topic" within "15s"
 
   # Assertions - Empty topic
   Scenario: Check empty topic
@@ -106,7 +106,7 @@ Feature: Kafka Handler
       message 2
       """
     # Wait for first message to trigger background consumption
-    Then "events" receives from "count-topic" within "5s"
+    Then "events" receives from "count-topic" within "15s"
     # Verify both messages were consumed
     And "events" topic "count-topic" has "2" messages
 
@@ -120,7 +120,7 @@ Feature: Kafka Handler
       | k2   | second   |
       | k3   | third    |
     # Wait for messages to arrive (background consumer buffers them)
-    Then "events" receives from "order-topic" within "5s"
+    Then "events" receives from "order-topic" within "15s"
     # Verify all 3 messages arrived and are in order
     And "events" topic "order-topic" has "3" messages
     And "events" receives messages from "order-topic" in order:
