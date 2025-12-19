@@ -54,7 +54,7 @@ This creates:
 
 ## Project Structure
 
-```
+```text
 my-project/
 ├── tomato.yml           # Main configuration
 ├── features/
