@@ -2,6 +2,9 @@
 
 Steps for executing shell commands and scripts
 
+!!! tip "Multi-line Content"
+    Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
+
 
 ## Setup
 
@@ -9,6 +12,7 @@ Steps for executing shell commands and scripts
 |------|-------------|
 | `"shell" env "API_KEY" is "secret"` | Set environment variable |
 | `"shell" workdir is "/tmp/test"` | Set working directory |
+
 
 
 ## Execution
@@ -21,6 +25,7 @@ Steps for executing shell commands and scripts
 | `"shell" runs with timeout "60s":` | Run with custom timeout |
 
 
+
 ## Exit Code
 
 | Step | Description |
@@ -28,6 +33,7 @@ Steps for executing shell commands and scripts
 | `"shell" exit code is "0"` | Assert exit code |
 | `"shell" succeeds` | Assert exit code 0 |
 | `"shell" fails` | Assert non-zero exit code |
+
 
 
 ## Output
@@ -42,6 +48,7 @@ Steps for executing shell commands and scripts
 | `"shell" stderr is empty` | Assert stderr empty |
 
 
+
 ## Files
 
 | Step | Description |
@@ -49,4 +56,5 @@ Steps for executing shell commands and scripts
 | `"shell" file "output.txt" exists` | Assert file exists |
 | `"shell" file "temp.txt" does not exist` | Assert file doesn't exist |
 | `"shell" file "config.json" contains "database"` | Assert file contains substring |
+
 

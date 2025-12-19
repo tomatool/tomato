@@ -2,6 +2,9 @@
 
 Steps for interacting with PostgreSQL databases
 
+!!! tip "Multi-line Content"
+    Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
+
 
 ## Data Setup
 
@@ -14,6 +17,7 @@ Steps for interacting with PostgreSQL databases
 | `"db" executes file "fixtures/seed.sql"` | Execute SQL from file |
 
 
+
 ## Assertions
 
 | Step | Description |
@@ -21,4 +25,5 @@ Steps for interacting with PostgreSQL databases
 | `"db" table "users" contains:` | Assert table contains rows |
 | `"db" table "users" is empty` | Assert table is empty |
 | `"db" table "users" has "5" rows` | Assert row count |
+
 
