@@ -44,7 +44,32 @@ jobs:
         run: go mod download
 
       - name: Run integration tests with coverage
-        run: make integration-test-coverage
+        id: tests
+        run: |
+          # Build coverage-instrumented binary
+          echo "Building coverage-instrumented binary..."
+          mkdir -p ./bin
+          go build -cover -covermode=atomic -coverpkg=./... -o ./bin/tomato-coverage .
+
+          # Run tests and capture exit code
+          echo "Running integration tests with coverage..."
+          mkdir -p ./coverage
+          set +e
+          GOCOVERDIR=./coverage ./bin/tomato-coverage run -c ./tests/tomato.yml
+          TEST_EXIT_CODE=$?
+          set -e
+
+          # Generate coverage reports regardless of test result
+          echo "Converting coverage data..."
+          go tool covdata textfmt -i=./coverage -o=coverage-integration.out
+          echo "Generating coverage report..."
+          go tool cover -html=coverage-integration.out -o coverage-integration.html
+
+          # Save test result for later
+          echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "::warning::Integration tests failed with exit code $TEST_EXIT_CODE"
+          fi
 
       - name: Generate coverage summary
         id: coverage
@@ -53,22 +78,27 @@ jobs:
           TOTAL=$(go tool cover -func=coverage-integration.out | grep total | awk '{print $3}')
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
 
-          # Generate detailed coverage by package
-          DETAILS=$(go tool cover -func=coverage-integration.out | grep -v "total:" | head -30)
-          echo "details<<EOF" >> $GITHUB_OUTPUT
-          echo "$DETAILS" >> $GITHUB_OUTPUT
+          # Generate coverage table by package (excluding internal/handler)
+          TABLE=$(go tool cover -func=coverage-integration.out | grep -v "total:" | grep -v "internal/handler" | \
+            awk -F'[:\t ]+' 'BEGIN{} {path=$1; pct=$NF; gsub(/%/, "", pct); gsub(/github.com\/tomatool\/tomato\//, "", path); n=split(path, parts, "/"); if (n > 1) {pkg = parts[1]; for (i=2; i<n; i++) pkg = pkg "/" parts[i]} else {pkg = "root"} funcs[pkg]++; total[pkg]+=pct} END {for(p in funcs) {avg = total[p]/funcs[p]; printf "%s|%d|%.1f\n", p, funcs[p], avg}}' | sort -t'|' -k3 -rn)
+          echo "table<<EOF" >> $GITHUB_OUTPUT
+          echo "$TABLE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          # Count covered vs total statements
-          COVERED=$(go tool cover -func=coverage-integration.out | grep -v "total:" | awk '{sum += $3} END {print NR " functions analyzed"}')
-          echo "summary=$COVERED" >> $GITHUB_OUTPUT
+          # Generate coverage table for internal/handler by file
+          HANDLER_TABLE=$(go tool cover -func=coverage-integration.out | grep "internal/handler" | \
+            awk -F'[:\t ]+' 'BEGIN{} {path=$1; pct=$NF; gsub(/%/, "", pct); gsub(/github.com\/tomatool\/tomato\/internal\/handler\//, "", path); n=split(path, parts, "/"); file=parts[1]; funcs[file]++; total[file]+=pct} END {for(f in funcs) {avg = total[f]/funcs[f]; printf "%s|%d|%.1f\n", f, funcs[f], avg}}' | sort -t'|' -k3 -rn)
+          echo "handler_table<<EOF" >> $GITHUB_OUTPUT
+          echo "$HANDLER_TABLE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Post coverage comment
         uses: actions/github-script@v7
         with:
           script: |
             const total = '${{ steps.coverage.outputs.total }}';
-            const details = `${{ steps.coverage.outputs.details }}`;
+            const tableData = `${{ steps.coverage.outputs.table }}`;
+            const handlerTableData = `${{ steps.coverage.outputs.handler_table }}`;
 
             // Determine emoji based on coverage
             let emoji = '🔴';
@@ -77,16 +107,33 @@ jobs:
             else if (coverageNum >= 60) emoji = '🟡';
             else if (coverageNum >= 40) emoji = '🟠';
 
+            // Helper to build table rows
+            const buildRows = (data) => data.trim().split('\n').filter(r => r).map(row => {
+              const [name, funcs, avg] = row.split('|');
+              const pct = parseFloat(avg);
+              let icon = '🔴';
+              if (pct >= 80) icon = '🟢';
+              else if (pct >= 60) icon = '🟡';
+              else if (pct >= 40) icon = '🟠';
+              return `| ${icon} | \`${name}\` | ${funcs} | ${avg}% |`;
+            }).join('\n');
+
+            const packageRows = buildRows(tableData);
+            const handlerRows = buildRows(handlerTableData);
+
             const body = `## ${emoji} Integration Test Coverage: **${total}**
 
-            <details>
-            <summary>📊 Coverage by function (top 30)</summary>
+            ### By Package
 
-            \`\`\`
-            ${details}
-            \`\`\`
+            | | Package | Functions | Coverage |
+            |---|---------|-----------|----------|
+            ${packageRows}
 
-            </details>
+            ### Handler Files (\`internal/handler\`)
+
+            | | File | Functions | Coverage |
+            |---|------|-----------|----------|
+            ${handlerRows}
 
             ---
             *Coverage generated from \`make integration-test-coverage\`*
@@ -119,3 +166,9 @@ jobs:
                 body: body
               });
             }
+
+      - name: Fail if tests failed
+        if: steps.tests.outputs.test_exit_code != '0'
+        run: |
+          echo "Integration tests failed with exit code ${{ steps.tests.outputs.test_exit_code }}"
+          exit 1

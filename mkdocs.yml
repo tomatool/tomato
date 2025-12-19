@@ -88,6 +88,7 @@ nav:
     - WebSocket Server: resources/websocket-server.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
+    - Integration Test Coverage: developer-guide/integration-test-coverage.md
 
 plugins:
   - search

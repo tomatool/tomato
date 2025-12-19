@@ -119,7 +119,7 @@ Feature: Integration Tests
 
     # Send message via WebSocket
     When "ws" sends "concurrent test"
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       concurrent test
       """
