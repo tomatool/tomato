@@ -2,6 +2,9 @@
 
 Steps for connecting to WebSocket servers
 
+!!! tip "Multi-line Content"
+    Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
+
 
 ## Connection
 
@@ -14,6 +17,7 @@ Steps for connecting to WebSocket servers
 | `"ws" is disconnected` | Assert disconnected |
 
 
+
 ## Sending
 
 | Step | Description |
@@ -21,6 +25,7 @@ Steps for connecting to WebSocket servers
 | `"ws" sends:` | Send text message (docstring) |
 | `"ws" sends "ping"` | Send short text message |
 | `"ws" sends json:` | Send JSON message |
+
 
 
 ## Receiving
@@ -34,6 +39,7 @@ Steps for connecting to WebSocket servers
 | `"ws" does not receive within "2s"` | Assert no message received |
 
 
+
 ## Assertions
 
 | Step | Description |
@@ -42,4 +48,5 @@ Steps for connecting to WebSocket servers
 | `"ws" last message contains "success"` | Assert last message contains substring |
 | `"ws" last message is json matching:` | Assert last message is JSON matching structure |
 | `"ws" received "5" messages` | Assert total message count |
+
 

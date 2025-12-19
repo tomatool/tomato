@@ -2,6 +2,9 @@
 
 Steps for making HTTP requests and validating responses
 
+!!! tip "Multi-line Content"
+    Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
+
 
 ## Request Setup
 
@@ -15,6 +18,7 @@ Steps for making HTTP requests and validating responses
 | `"api" form body is:` | Set form-encoded body from table |
 
 
+
 ## Request Execution
 
 | Step | Description |
@@ -24,12 +28,14 @@ Steps for making HTTP requests and validating responses
 | `"api" sends "POST" to "/users" with json:` | Send with JSON body |
 
 
+
 ## Response Status
 
 | Step | Description |
 |------|-------------|
 | `"api" response status is "200"` | Assert exact status code |
 | `"api" response status is success` | Assert status class (2xx, 3xx, 4xx, 5xx) |
+
 
 
 ## Response Headers
@@ -41,6 +47,7 @@ Steps for making HTTP requests and validating responses
 | `"api" response header "X-Request-Id" exists` | Assert header exists |
 
 
+
 ## Response Body
 
 | Step | Description |
@@ -49,6 +56,7 @@ Steps for making HTTP requests and validating responses
 | `"api" response body contains "success"` | Assert body contains substring |
 | `"api" response body does not contain "error"` | Assert body doesn't contain substring |
 | `"api" response body is empty` | Assert empty body |
+
 
 
 ## Response JSON
@@ -66,11 +74,13 @@ Steps for making HTTP requests and validating responses
 | `"api" response json "created_at" is iso-timestamp` | Assert JSON path value is an ISO 8601 timestamp |
 
 
+
 ## Response Timing
 
 | Step | Description |
 |------|-------------|
 | `"api" response time is less than "500ms"` | Assert response time |
+
 
 
 ## Variable Capture
@@ -79,4 +89,5 @@ Steps for making HTTP requests and validating responses
 |------|-------------|
 | `"api" response json "id" saved as "{{user_id}}"` | Save JSON path value to variable for use in subsequent requests |
 | `"api" response header "Location" saved as "{{location}}"` | Save response header value to variable |
+
 
