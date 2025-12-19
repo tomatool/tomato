@@ -908,6 +908,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Stub Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1268,6 +1285,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Stub Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1314,6 +1348,10 @@
 
 <h1 id="http-server">HTTP Server<a class="headerlink" href="#http-server" title="Permanent link">#</a></h1>
 <p>Steps for stubbing HTTP services</p>
+<div class="admonition tip">
+<p class="admonition-title">Multi-line Content</p>
+<p>Steps ending with <code>:</code> accept multi-line content using Gherkin's docstring syntax (<code>"""</code>). See examples below each section.</p>
+</div>
 <h2 id="stub-setup">Stub Setup<a class="headerlink" href="#stub-setup" title="Permanent link">#</a></h2>
 <table>
 <thead>
@@ -1328,51 +1366,37 @@
 <td>Creates a stub that returns a status code</td>
 </tr>
 <tr>
-<td>`"{resource}" stub "GET" "/users" returns "200" with body:</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>[{"id": 1}]</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" stub "GET" "/users" returns "200" with body:</code></td>
 <td>Creates a stub that returns a status code and body</td>
 </tr>
 <tr>
-<td>`"{resource}" stub "GET" "/users" returns "200" with json:</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>[{"id": 1}]</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" stub "GET" "/users" returns "200" with json:</code></td>
 <td>Creates a stub that returns JSON (auto sets Content-Type)</td>
 </tr>
 <tr>
-<td>`"{resource}" stub "GET" "/users" returns "200" with headers:</td>
-<td></td>
-</tr>
-<tr>
-<td>header</td>
-<td>value</td>
-</tr>
-<tr>
-<td>X-Custom</td>
-<td>value</td>
+<td><code>"{resource}" stub "GET" "/users" returns "200" with headers:</code></td>
+<td>Creates a stub that returns with custom headers</td>
 </tr>
 </tbody>
 </table>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h3>
+<p><strong>Creates a stub that returns a status code and body:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; stub &quot;</span><span class="s">GET</span><span class="nf">&quot; &quot;</span><span class="s">/users</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot; with body:</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  [{&quot;id&quot;: 1}]</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span></code></pre></div></p>
+<p><strong>Creates a stub that returns JSON (auto sets Content-Type):</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; stub &quot;</span><span class="s">GET</span><span class="nf">&quot; &quot;</span><span class="s">/users</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot; with json:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  [{&quot;id&quot;: 1}]</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span></code></pre></div></p>
+<p><strong>Creates a stub that returns with custom headers:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; stub &quot;</span><span class="s">GET</span><span class="nf">&quot; &quot;</span><span class="s">/users</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot; with headers:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">  |</span><span class="s"> header</span><span class="k">       |</span><span class="s"> value</span><span class="k">            |</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">  |</span><span class="s"> X-Custom</span><span class="k">     |</span><span class="s"> value</span><span class="k">            |</span>
+</span></code></pre></div></p>
 <h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">#</a></h2>
 <table>
 <thead>
