@@ -428,7 +428,16 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 	// Replace variables in path
 	path = ReplaceVariables(path)
 
-	reqURL := r.baseURL + path
+	// Check if path is already a full URL
+	var reqURL string
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		// Use the full URL as-is
+		reqURL = path
+	} else {
+		// Concatenate with base URL
+		reqURL = r.baseURL + path
+	}
+
 	if len(r.requestParams) > 0 {
 		reqURL += "?" + r.requestParams.Encode()
 	}
