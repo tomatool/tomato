@@ -1,0 +1,107 @@
+stubs:
+  # Simple stub with inline body
+  - id: get-user
+    method: GET
+    path: /api/user
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      body: '{"id": 123, "login": "octocat", "name": "The Octocat"}'
+
+  # Stub with body from file
+  - id: list-repos
+    method: GET
+    path: /api/user/repos
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      bodyFile: responses/repos.json
+
+  # Stub with path pattern (regex)
+  - id: get-repo-by-owner-name
+    method: GET
+    pathPattern: ^/api/repos/[^/]+/[^/]+$
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      bodyFile: responses/repo-detail.json
+
+  # Stub with header condition
+  - id: authenticated-endpoint
+    method: GET
+    path: /api/user/emails
+    conditions:
+      headers:
+        Authorization:
+          contains: "Bearer "
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      body: '[{"email": "octocat@github.com", "primary": true, "verified": true}]'
+
+  # Stub without auth returns 401
+  - id: unauthenticated-endpoint
+    method: GET
+    path: /api/user/emails
+    response:
+      status: 401
+      headers:
+        Content-Type: application/json
+      body: '{"message": "Requires authentication"}'
+
+  # Stub with query parameter condition
+  - id: search-repos-page-1
+    method: GET
+    path: /api/search/repositories
+    conditions:
+      query:
+        page: "1"
+        per_page: "10"
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      bodyFile: responses/search-page-1.json
+
+  # Stub with body condition (JSONPath)
+  - id: create-issue-with-label
+    method: POST
+    path: /api/repos/owner/repo/issues
+    conditions:
+      body:
+        jsonPath: $.labels[0]
+        equals: "bug"
+    response:
+      status: 201
+      headers:
+        Content-Type: application/json
+      body: '{"id": 1, "number": 42, "title": "Bug issue", "labels": [{"name": "bug"}]}'
+
+  # Stub with body regex matching
+  - id: webhook-push-event
+    method: POST
+    path: /api/webhook
+    conditions:
+      headers:
+        X-GitHub-Event:
+          equals: "push"
+      body:
+        jsonPath: $.ref
+        matches: "^refs/heads/.*"
+    response:
+      status: 202
+      body: '{"status": "accepted"}'
+
+  # Generic fallback for unmatched repos
+  - id: repo-not-found
+    method: GET
+    pathPattern: ^/api/repos/.*
+    response:
+      status: 404
+      headers:
+        Content-Type: application/json
+      body: '{"message": "Not Found"}'

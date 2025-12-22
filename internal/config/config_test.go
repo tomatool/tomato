@@ -338,8 +338,8 @@ func TestApplyDefaults(t *testing.T) {
 				if cfg.Settings.Parallel != 1 {
 					t.Errorf("expected default parallel 1, got %d", cfg.Settings.Parallel)
 				}
-				if cfg.Settings.Output != "pretty" {
-					t.Errorf("expected default output pretty, got %s", cfg.Settings.Output)
+				if cfg.Settings.Output != "pretty-fixed" {
+					t.Errorf("expected default output pretty-fixed, got %s", cfg.Settings.Output)
 				}
 				if cfg.Settings.Reset.Level != "scenario" {
 					t.Errorf("expected default reset level scenario, got %s", cfg.Settings.Reset.Level)
