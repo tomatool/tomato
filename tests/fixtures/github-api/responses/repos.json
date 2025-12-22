@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Hello-World",
+    "full_name": "octocat/Hello-World",
+    "private": false,
+    "owner": {
+      "login": "octocat",
+      "id": 123
+    },
+    "description": "My first repository on GitHub!",
+    "fork": false,
+    "url": "https://api.github.com/repos/octocat/Hello-World",
+    "created_at": "2011-01-26T19:01:12Z",
+    "updated_at": "2023-01-01T00:00:00Z",
+    "pushed_at": "2023-01-01T00:00:00Z",
+    "stargazers_count": 1500,
+    "watchers_count": 1500,
+    "language": "Go",
+    "forks_count": 9,
+    "open_issues_count": 0
+  },
+  {
+    "id": 2,
+    "name": "tomato",
+    "full_name": "octocat/tomato",
+    "private": false,
+    "owner": {
+      "login": "octocat",
+      "id": 123
+    },
+    "description": "BDD testing framework",
+    "fork": false,
+    "url": "https://api.github.com/repos/octocat/tomato",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-12-01T00:00:00Z",
+    "pushed_at": "2023-12-01T00:00:00Z",
+    "stargazers_count": 500,
+    "watchers_count": 500,
+    "language": "Go",
+    "forks_count": 25,
+    "open_issues_count": 5
+  }
+]

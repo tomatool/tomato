@@ -1,0 +1,32 @@
+{
+  "total_count": 42,
+  "incomplete_results": false,
+  "items": [
+    {
+      "id": 1,
+      "name": "Hello-World",
+      "full_name": "octocat/Hello-World",
+      "owner": {
+        "login": "octocat",
+        "id": 123
+      },
+      "description": "My first repository on GitHub!",
+      "stargazers_count": 1500,
+      "language": "Go",
+      "score": 1.0
+    },
+    {
+      "id": 2,
+      "name": "Spoon-Knife",
+      "full_name": "octocat/Spoon-Knife",
+      "owner": {
+        "login": "octocat",
+        "id": 123
+      },
+      "description": "This repo is for demonstration purposes only.",
+      "stargazers_count": 12000,
+      "language": "HTML",
+      "score": 0.9
+    }
+  ]
+}
