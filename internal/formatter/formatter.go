@@ -245,34 +245,42 @@ func (f *TomatoFormatter) Ambiguous(pickle *messages.Pickle, step *messages.Pick
 	})
 }
 
-// PrettyFixedFormatter wraps godog's pretty formatter but fixes false "undefined" warnings
+// PrettyFixedFormatter is a custom formatter that shows clean output without false undefined warnings
 type PrettyFixedFormatter struct {
-	base formatters.Formatter
+	out io.Writer
 
-	// Track steps that have executed (passed/failed/skipped) to avoid counting them as undefined
+	// Track steps that have executed
 	executedSteps map[string]bool
 
-	// Track actual results
-	scenarioTotal   int
-	scenarioPassed  int
-	scenarioFailed  int
-	scenarioSkipped int
+	// Track current context
+	currentFeature   *messages.GherkinDocument
+	currentFeatureURI string
+	currentPickle    *messages.Pickle
 
+	// Scenario state
 	currentScenarioFailed bool
+	failedStep            *stepResult
+
+	// Counters
+	scenarioTotal  int
+	scenarioPassed int
+	scenarioFailed int
+
+	stepsPassed  int
+	stepsFailed  int
+	stepsSkipped int
+}
+
+type stepResult struct {
+	pickle *messages.Pickle
+	step   *messages.PickleStep
+	err    error
 }
 
 // PrettyFixedFormatterFunc creates a new PrettyFixedFormatter
 func PrettyFixedFormatterFunc(suite string, out io.Writer) formatters.Formatter {
-	// Create the base pretty formatter
-	prettyFunc := formatters.FindFmt("pretty")
-	if prettyFunc == nil {
-		// Fallback to a simple formatter if pretty is not available
-		return &TomatoFormatter{out: out}
-	}
-	baseFmt := prettyFunc(suite, out)
-
 	return &PrettyFixedFormatter{
-		base:          baseFmt,
+		out:           out,
 		executedSteps: make(map[string]bool),
 	}
 }
@@ -281,78 +289,152 @@ func (f *PrettyFixedFormatter) stepKey(pickle *messages.Pickle, step *messages.P
 	return fmt.Sprintf("%s::%s", pickle.Id, step.Id)
 }
 
-func (f *PrettyFixedFormatter) TestRunStarted() {
-	f.base.TestRunStarted()
+func (f *PrettyFixedFormatter) getStepKeyword(step *messages.PickleStep) string {
+	// Get the keyword from the AST node
+	if f.currentFeature != nil && len(step.AstNodeIds) > 0 {
+		for _, child := range f.currentFeature.Feature.Children {
+			if child.Scenario != nil {
+				for _, s := range child.Scenario.Steps {
+					if s.Id == step.AstNodeIds[0] {
+						return s.Keyword
+					}
+				}
+			}
+		}
+	}
+	return "Step"
 }
 
+func (f *PrettyFixedFormatter) TestRunStarted() {}
+
 func (f *PrettyFixedFormatter) Feature(doc *messages.GherkinDocument, uri string, content []byte) {
-	f.base.Feature(doc, uri, content)
+	if doc.Feature != nil {
+		f.currentFeature = doc
+		f.currentFeatureURI = uri
+		fmt.Fprintf(f.out, "\n\033[1;37mFeature:\033[0m %s\n", doc.Feature.Name)
+	}
 }
 
 func (f *PrettyFixedFormatter) Pickle(pickle *messages.Pickle) {
-	f.base.Pickle(pickle)
-	f.scenarioTotal++
+	if f.currentPickle != nil {
+		// End previous scenario
+		f.endScenario()
+	}
+
+	f.currentPickle = pickle
 	f.currentScenarioFailed = false
+	f.failedStep = nil
+	f.scenarioTotal++
+
+	fmt.Fprintf(f.out, "\n  \033[1;37mScenario:\033[0m %s\n", pickle.Name)
 }
 
-func (f *PrettyFixedFormatter) Defined(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
-	f.base.Defined(pickle, step, def)
+func (f *PrettyFixedFormatter) endScenario() {
+	if f.currentScenarioFailed {
+		f.scenarioFailed++
+		if f.failedStep != nil && f.failedStep.err != nil {
+			fmt.Fprintf(f.out, "      \033[31mError: \033[0m\033[1;31m%s\033[0m\n", f.failedStep.err.Error())
+		}
+	} else {
+		f.scenarioPassed++
+	}
 }
+
+func (f *PrettyFixedFormatter) Defined(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {}
 
 func (f *PrettyFixedFormatter) Passed(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	key := f.stepKey(pickle, step)
 	f.executedSteps[key] = true
-	f.base.Passed(pickle, step, def)
+	f.stepsPassed++
+	keyword := f.getStepKeyword(step)
+	fmt.Fprintf(f.out, "    \033[32m%s\033[0m \033[32m%s\033[0m\n", keyword, step.Text)
 }
 
 func (f *PrettyFixedFormatter) Failed(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition, err error) {
 	key := f.stepKey(pickle, step)
 	f.executedSteps[key] = true
+	f.stepsFailed++
 	f.currentScenarioFailed = true
-	f.base.Failed(pickle, step, def, err)
+	f.failedStep = &stepResult{pickle: pickle, step: step, err: err}
+	keyword := f.getStepKeyword(step)
+	fmt.Fprintf(f.out, "    \033[31m%s\033[0m \033[31m%s\033[0m\n", keyword, step.Text)
 }
 
 func (f *PrettyFixedFormatter) Skipped(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	key := f.stepKey(pickle, step)
 	f.executedSteps[key] = true
-	f.base.Skipped(pickle, step, def)
+	f.stepsSkipped++
+	keyword := f.getStepKeyword(step)
+	fmt.Fprintf(f.out, "    \033[36m%s\033[0m \033[36m%s\033[0m\n", keyword, step.Text)
 }
 
 func (f *PrettyFixedFormatter) Undefined(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	key := f.stepKey(pickle, step)
-
-	// Only mark as undefined if the step didn't actually execute
+	// Only mark as undefined if the step didn't actually execute (ignore false positives)
 	if !f.executedSteps[key] {
+		f.stepsFailed++
 		f.currentScenarioFailed = true
-		f.base.Undefined(pickle, step, def)
+		keyword := f.getStepKeyword(step)
+		fmt.Fprintf(f.out, "    \033[33m%s\033[0m \033[33m%s\033[0m\n", keyword, step.Text)
 	}
-	// Otherwise ignore - it's a false positive from godog
 }
 
 func (f *PrettyFixedFormatter) Pending(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	key := f.stepKey(pickle, step)
 	f.executedSteps[key] = true
-	f.base.Pending(pickle, step, def)
+	f.stepsSkipped++
+	keyword := f.getStepKeyword(step)
+	fmt.Fprintf(f.out, "    \033[33m%s\033[0m \033[33m%s\033[0m\n", keyword, step.Text)
 }
 
 func (f *PrettyFixedFormatter) Ambiguous(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition, err error) {
 	key := f.stepKey(pickle, step)
 	f.executedSteps[key] = true
+	f.stepsFailed++
 	f.currentScenarioFailed = true
-	f.base.Ambiguous(pickle, step, def, err)
+	f.failedStep = &stepResult{pickle: pickle, step: step, err: err}
+	keyword := f.getStepKeyword(step)
+	fmt.Fprintf(f.out, "    \033[31m%s\033[0m \033[31m%s\033[0m\n", keyword, step.Text)
 }
 
 func (f *PrettyFixedFormatter) Summary() {
-	// Update scenario counters based on what we tracked
-	if f.currentScenarioFailed {
-		f.scenarioFailed++
-	} else {
-		f.scenarioPassed++
+	// End last scenario
+	if f.currentPickle != nil {
+		f.endScenario()
 	}
 
-	// Let the base formatter print its summary (it will include some undefined,
-	// but at least our wrapper prevents marking executed steps as undefined)
-	f.base.Summary()
+	// Print summary
+	fmt.Fprintln(f.out)
+	fmt.Fprintf(f.out, "%d scenarios (", f.scenarioTotal)
+	if f.scenarioPassed > 0 {
+		fmt.Fprintf(f.out, "\033[32m%d passed\033[0m", f.scenarioPassed)
+	}
+	if f.scenarioFailed > 0 {
+		if f.scenarioPassed > 0 {
+			fmt.Fprint(f.out, ", ")
+		}
+		fmt.Fprintf(f.out, "\033[31m%d failed\033[0m", f.scenarioFailed)
+	}
+	fmt.Fprintln(f.out, ")")
+
+	totalSteps := f.stepsPassed + f.stepsFailed + f.stepsSkipped
+	fmt.Fprintf(f.out, "%d steps (", totalSteps)
+	if f.stepsPassed > 0 {
+		fmt.Fprintf(f.out, "\033[32m%d passed\033[0m", f.stepsPassed)
+	}
+	if f.stepsFailed > 0 {
+		if f.stepsPassed > 0 {
+			fmt.Fprint(f.out, ", ")
+		}
+		fmt.Fprintf(f.out, "\033[31m%d failed\033[0m", f.stepsFailed)
+	}
+	if f.stepsSkipped > 0 {
+		if f.stepsPassed > 0 || f.stepsFailed > 0 {
+			fmt.Fprint(f.out, ", ")
+		}
+		fmt.Fprintf(f.out, "\033[36m%d skipped\033[0m", f.stepsSkipped)
+	}
+	fmt.Fprintln(f.out, ")")
 }
 
 // Summary is called after all tests complete

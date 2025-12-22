@@ -4,7 +4,6 @@ settings:
   timeout: 5m
   parallel: 1
   fail_fast: false
-  output: pretty
   reset:
     level: scenario
 
