@@ -266,7 +266,7 @@ func (r *Postgres) tableShouldContain(table string, expected *godog.Table) error
 		}
 		row := make([]string, len(columns))
 		for i, v := range values {
-			row[i] = fmt.Sprintf("%v", v)
+			row[i] = formatDBValue(v)
 		}
 		actual = append(actual, row)
 	}
@@ -336,6 +336,23 @@ func (r *Postgres) Cleanup(ctx context.Context) error {
 		return r.db.Close()
 	}
 	return nil
+}
+
+// formatDBValue converts a database value to its string representation.
+// This handles special types like []byte (used for UUIDs) that need
+// to be converted to strings rather than byte array representations.
+func formatDBValue(v interface{}) string {
+	if v == nil {
+		return "<nil>"
+	}
+	switch val := v.(type) {
+	case []byte:
+		// PostgreSQL returns UUIDs and other binary types as []byte
+		// Convert to string for proper comparison
+		return string(val)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 var _ Handler = (*Postgres)(nil)
