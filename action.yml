@@ -159,11 +159,14 @@ runs:
         echo "Running: tomato $ARGS"
 
         if [ "${{ inputs.comment }}" = "true" ]; then
+          START_TIME=$(date +%s)
           set +e
           eval "tomato $ARGS" 2>&1 | tee .tomato-output.log
           TOMATO_EXIT_CODE=${PIPESTATUS[0]}
           set -e
+          DURATION=$(( $(date +%s) - START_TIME ))
           echo "$TOMATO_EXIT_CODE" > .tomato-exit-code
+          echo "$DURATION" > .tomato-duration
         else
           eval "tomato $ARGS"
         fi
@@ -179,30 +182,50 @@ runs:
         SKIPPED=0
         STATUS="success"
         DETAILS=""
+        FEATURES=0
+        STEPS_PASSED=0
+        STEPS_FAILED=0
+        STEPS_SKIPPED=0
+        SCENARIOS=""
 
         if [ -f .tomato-output.log ]; then
           while IFS= read -r line; do
-            # Strip the TOMATO_EVENT: prefix
             json="${line#TOMATO_EVENT:}"
-
             event_type=$(echo "$json" | jq -r '.type // empty' 2>/dev/null)
 
-            if [ "$event_type" = "summary" ]; then
-              TOTAL=$(echo "$json" | jq -r '.total // 0')
-              PASSED=$(echo "$json" | jq -r '.passed // 0')
-              FAILED=$(echo "$json" | jq -r '.failed // 0')
-              SKIPPED=$(echo "$json" | jq -r '.skipped // 0')
-            fi
-
-            if [ "$event_type" = "scenario_end" ]; then
-              scenario_status=$(echo "$json" | jq -r '.status // empty')
-              if [ "$scenario_status" = "failed" ]; then
+            case "$event_type" in
+              summary)
+                TOTAL=$(echo "$json" | jq -r '.total // 0')
+                PASSED=$(echo "$json" | jq -r '.passed // 0')
+                FAILED=$(echo "$json" | jq -r '.failed // 0')
+                SKIPPED=$(echo "$json" | jq -r '.skipped // 0')
+                ;;
+              feature_start)
+                FEATURES=$((FEATURES + 1))
+                ;;
+              scenario_end)
                 feature=$(echo "$json" | jq -r '.feature // "Unknown"')
                 scenario=$(echo "$json" | jq -r '.scenario // "Unknown"')
-                error=$(echo "$json" | jq -r '.error // "No error message"')
-                DETAILS="${DETAILS}\n**Feature: ${feature}** — \`Scenario: ${scenario}\`\n> ${error}\n"
-              fi
-            fi
+                scenario_status=$(echo "$json" | jq -r '.status // empty')
+                if [ "$scenario_status" = "failed" ]; then
+                  error=$(echo "$json" | jq -r '.error // "No error message"')
+                  DETAILS="${DETAILS}\n❌ **${feature}** — \`${scenario}\`\n> ${error}\n"
+                  SCENARIOS="${SCENARIOS}| ❌ | ${feature} | ${scenario} |\n"
+                elif [ "$scenario_status" = "passed" ]; then
+                  SCENARIOS="${SCENARIOS}| ✅ | ${feature} | ${scenario} |\n"
+                else
+                  SCENARIOS="${SCENARIOS}| ⏭️ | ${feature} | ${scenario} |\n"
+                fi
+                ;;
+              step_end)
+                step_status=$(echo "$json" | jq -r '.status // empty')
+                case "$step_status" in
+                  passed) STEPS_PASSED=$((STEPS_PASSED + 1)) ;;
+                  failed|undefined|ambiguous) STEPS_FAILED=$((STEPS_FAILED + 1)) ;;
+                  skipped|pending) STEPS_SKIPPED=$((STEPS_SKIPPED + 1)) ;;
+                esac
+                ;;
+            esac
           done < <(grep '^TOMATO_EVENT:' .tomato-output.log)
         fi
 
@@ -210,75 +233,103 @@ runs:
           STATUS="failure"
         fi
 
+        # Read duration
+        DURATION="0"
+        if [ -f .tomato-duration ]; then
+          DURATION=$(cat .tomato-duration)
+        fi
+
         echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
         echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
         echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
         echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
         echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+        echo "features=$FEATURES" >> "$GITHUB_OUTPUT"
+        echo "steps_passed=$STEPS_PASSED" >> "$GITHUB_OUTPUT"
+        echo "steps_failed=$STEPS_FAILED" >> "$GITHUB_OUTPUT"
+        echo "steps_skipped=$STEPS_SKIPPED" >> "$GITHUB_OUTPUT"
+        echo "duration=$DURATION" >> "$GITHUB_OUTPUT"
 
-        # Use a delimiter for multi-line output
+        # Use delimiters for multi-line outputs
         EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
         echo "details<<$EOF" >> "$GITHUB_OUTPUT"
         echo -e "$DETAILS" >> "$GITHUB_OUTPUT"
         echo "$EOF" >> "$GITHUB_OUTPUT"
 
+        EOF2=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+        echo "scenarios<<$EOF2" >> "$GITHUB_OUTPUT"
+        echo -e "$SCENARIOS" >> "$GITHUB_OUTPUT"
+        echo "$EOF2" >> "$GITHUB_OUTPUT"
+
+    - name: Build Comment Body
+      if: inputs.comment == 'true' && always()
+      id: build-comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const total = parseInt('${{ steps.parse-results.outputs.total }}') || 0;
+          const passed = parseInt('${{ steps.parse-results.outputs.passed }}') || 0;
+          const failed = parseInt('${{ steps.parse-results.outputs.failed }}') || 0;
+          const skipped = parseInt('${{ steps.parse-results.outputs.skipped }}') || 0;
+          const features = parseInt('${{ steps.parse-results.outputs.features }}') || 0;
+          const stepsPassed = parseInt('${{ steps.parse-results.outputs.steps_passed }}') || 0;
+          const stepsFailed = parseInt('${{ steps.parse-results.outputs.steps_failed }}') || 0;
+          const stepsSkipped = parseInt('${{ steps.parse-results.outputs.steps_skipped }}') || 0;
+          const duration = parseInt('${{ steps.parse-results.outputs.duration }}') || 0;
+          const status = '${{ steps.parse-results.outputs.status }}';
+          const details = `${{ steps.parse-results.outputs.details }}`.trim();
+          const scenarios = `${{ steps.parse-results.outputs.scenarios }}`.trim();
+
+          const emoji = status === 'success' ? '✅' : '❌';
+          const mins = Math.floor(duration / 60);
+          const secs = duration % 60;
+          const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+          const totalSteps = stepsPassed + stepsFailed + stepsSkipped;
+
+          const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+          let body = `## 🍅 Tomato Test Results\n\n`;
+          body += `${emoji} **${total} scenarios** across ${features} feature${features !== 1 ? 's' : ''} in **${durationStr}**\n\n`;
+          body += `| Scenarios | Steps |\n`;
+          body += `|-----------|-------|\n`;
+          body += `| ✅ ${passed} passed | ✅ ${stepsPassed} passed |\n`;
+
+          if (failed > 0 || stepsFailed > 0) {
+            body += `| ❌ ${failed} failed | ❌ ${stepsFailed} failed |\n`;
+          }
+          if (skipped > 0 || stepsSkipped > 0) {
+            body += `| ⏭️ ${skipped} skipped | ⏭️ ${stepsSkipped} skipped |\n`;
+          }
+
+          if (details) {
+            body += `\n<details>\n<summary>❌ Failed Scenarios</summary>\n\n${details}\n</details>\n`;
+          }
+
+          if (scenarios) {
+            body += `\n<details>\n<summary>📋 All Scenarios</summary>\n\n`;
+            body += `| | Feature | Scenario |\n|---|---------|----------|\n`;
+            body += `${scenarios}\n</details>\n`;
+          }
+
+          body += `\n[View workflow run](${runUrl}) · *Generated by [tomato](https://github.com/tomatool/tomato)*`;
+
+          core.setOutput('body', body);
+
     - name: Write Job Summary
       if: inputs.comment == 'true' && always()
       shell: bash
       run: |
-        TOTAL="${{ steps.parse-results.outputs.total }}"
-        PASSED="${{ steps.parse-results.outputs.passed }}"
-        FAILED="${{ steps.parse-results.outputs.failed }}"
-        SKIPPED="${{ steps.parse-results.outputs.skipped }}"
-        STATUS="${{ steps.parse-results.outputs.status }}"
-        DETAILS="${{ steps.parse-results.outputs.details }}"
-
-        if [ "$STATUS" = "success" ]; then
-          EMOJI="✅"
-        else
-          EMOJI="❌"
-        fi
-
-        echo "## 🍅 Tomato Test Results" >> "$GITHUB_STEP_SUMMARY"
-        echo "" >> "$GITHUB_STEP_SUMMARY"
-        echo "${EMOJI} **${TOTAL} scenarios** (${PASSED} passed, ${FAILED} failed, ${SKIPPED} skipped)" >> "$GITHUB_STEP_SUMMARY"
-
-        if [ -n "$DETAILS" ]; then
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "<details>" >> "$GITHUB_STEP_SUMMARY"
-          echo "<summary>Failed Scenarios</summary>" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo -e "$DETAILS" >> "$GITHUB_STEP_SUMMARY"
-          echo "</details>" >> "$GITHUB_STEP_SUMMARY"
-        fi
-
-        echo "" >> "$GITHUB_STEP_SUMMARY"
-        echo "---" >> "$GITHUB_STEP_SUMMARY"
-        echo "*Generated by [tomato](https://github.com/tomatool/tomato)*" >> "$GITHUB_STEP_SUMMARY"
+        cat <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+        ${{ steps.build-comment.outputs.body }}
+        EOF
 
     - name: Post PR Comment
       if: inputs.comment == 'true' && github.event_name == 'pull_request' && always()
       uses: actions/github-script@v7
       with:
         script: |
-          const total = '${{ steps.parse-results.outputs.total }}';
-          const passed = '${{ steps.parse-results.outputs.passed }}';
-          const failed = '${{ steps.parse-results.outputs.failed }}';
-          const skipped = '${{ steps.parse-results.outputs.skipped }}';
-          const status = '${{ steps.parse-results.outputs.status }}';
-          const details = `${{ steps.parse-results.outputs.details }}`.trim();
-
-          const emoji = status === 'success' ? '✅' : '❌';
           const marker = '<!-- tomato-test-results -->';
-
-          let body = `${marker}\n## 🍅 Tomato Test Results\n\n`;
-          body += `${emoji} **${total} scenarios** (${passed} passed, ${failed} failed, ${skipped} skipped)\n`;
-
-          if (details) {
-            body += `\n<details>\n<summary>Failed Scenarios</summary>\n\n${details}\n</details>\n`;
-          }
-
-          body += `\n---\n*Generated by [tomato](https://github.com/tomatool/tomato)*`;
+          const body = marker + '\n' + `${{ steps.build-comment.outputs.body }}`;
 
           const { data: comments } = await github.rest.issues.listComments({
             owner: context.repo.owner,
