@@ -185,7 +185,7 @@ runs:
             # Strip the TOMATO_EVENT: prefix
             json="${line#TOMATO_EVENT:}"
 
-            event_type=$(echo "$json" | jq -r '.event // empty' 2>/dev/null)
+            event_type=$(echo "$json" | jq -r '.type // empty' 2>/dev/null)
 
             if [ "$event_type" = "summary" ]; then
               TOTAL=$(echo "$json" | jq -r '.total // 0')
