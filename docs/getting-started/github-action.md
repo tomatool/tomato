@@ -36,6 +36,7 @@ jobs:
 | `no-reset` | Skip state reset between scenarios | `false` |
 | `verbose` | Show debug logs | `false` |
 | `quiet` | Hide application logs | `false` |
+| `comment` | Post/update a test summary comment on the PR | `true` |
 
 ## Examples
 
@@ -70,6 +71,16 @@ jobs:
   with:
     verbose: 'true'
 ```
+
+### PR Comment with Test Results
+
+```yaml
+- uses: tomatool/tomato@v2
+  with:
+    comment: 'true'
+```
+
+When enabled on a `pull_request` workflow, the action posts (or updates) a comment on the PR with a summary of test results — including pass/fail counts and failed scenario details.
 
 ### Pin to Specific Version
 
