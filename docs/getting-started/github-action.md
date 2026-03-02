@@ -82,6 +82,8 @@ jobs:
 
 When enabled on a `pull_request` workflow, the action posts (or updates) a comment on the PR with a summary of test results — including pass/fail counts and failed scenario details.
 
+> **Note:** The `comment` feature requires `pull-requests: write` permission. See the [complete workflow example](#complete-workflow-example) below.
+
 ### Pin to Specific Version
 
 ```yaml
@@ -100,6 +102,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  pull-requests: write
 
 jobs:
   test:
