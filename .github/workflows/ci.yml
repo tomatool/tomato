@@ -64,6 +64,7 @@ jobs:
           echo "summary=$COVERED" >> $GITHUB_OUTPUT
 
       - name: Post coverage comment
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
