@@ -229,7 +229,7 @@ func (r *Postgres) setTableValues(table string, data *godog.Table) error {
 	for _, row := range data.Rows[1:] {
 		values := make([]string, len(row.Cells))
 		for i, cell := range row.Cells {
-			values[i] = fmt.Sprintf("'%s'", cell.Value)
+			values[i] = fmt.Sprintf("'%s'", ReplaceVariables(cell.Value))
 		}
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", table, strings.Join(columns, ", "), strings.Join(values, ", "))
 		if _, err := r.db.Exec(query); err != nil {
@@ -275,8 +275,9 @@ func (r *Postgres) tableShouldContain(table string, expected *godog.Table) error
 			return fmt.Errorf("missing row %d", i+1)
 		}
 		for j, cell := range expectedRow.Cells {
-			if actual[i][j] != cell.Value {
-				return fmt.Errorf("row %d, column %s: expected %q, got %q", i+1, columns[j], cell.Value, actual[i][j])
+			expected := ReplaceVariables(cell.Value)
+			if actual[i][j] != expected {
+				return fmt.Errorf("row %d, column %s: expected %q, got %q", i+1, columns[j], expected, actual[i][j])
 			}
 		}
 	}
@@ -306,7 +307,7 @@ func (r *Postgres) tableShouldHaveRows(table string, expected int) error {
 }
 
 func (r *Postgres) executeSQL(query *godog.DocString) error {
-	_, err := r.db.Exec(query.Content)
+	_, err := r.db.Exec(ReplaceVariables(query.Content))
 	return err
 }
 
