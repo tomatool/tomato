@@ -39,3 +39,33 @@ Feature: PostgreSQL Handler
     Then "db" table "users" contains:
       | id | name     |
       | 10 | Franklin |
+
+  Scenario: Query returns exact result
+    Given "db" table "users" has values:
+      | id | name  | email           |
+      | 1  | Alice | alice@test.com  |
+      | 2  | Bob   | bob@test.com    |
+    Then "db" query "SELECT name, email FROM users ORDER BY id" returns:
+      | name  | email           |
+      | Alice | alice@test.com  |
+      | Bob   | bob@test.com    |
+
+  Scenario: Query result contains expected rows
+    Given "db" table "users" has values:
+      | id | name    | email              |
+      | 1  | Alice   | alice@test.com     |
+      | 2  | Bob     | bob@test.com       |
+      | 3  | Charlie | charlie@test.com   |
+    Then "db" query result of "SELECT name, email FROM users ORDER BY id" contains:
+      | name  | email          |
+      | Alice | alice@test.com |
+      | Bob   | bob@test.com   |
+
+  Scenario: Query returns single scalar value
+    Given "db" table "users" has values:
+      | id | name  | email           |
+      | 1  | Alice | alice@test.com  |
+      | 2  | Bob   | bob@test.com    |
+    Then "db" query "SELECT count(*) as cnt FROM users" returns:
+      | cnt |
+      | 2   |
