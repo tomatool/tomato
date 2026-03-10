@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 	_ "github.com/lib/pq"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
@@ -194,6 +195,20 @@ func (r *Postgres) Steps() StepCategory {
 				Example:     `"db" table "users" has "5" rows`,
 				Handler:     r.tableShouldHaveRows,
 			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" query "([^"]*)" returns:$`,
+				Description: "Assert exact match of query result rows",
+				Example:     `"db" query "SELECT id, name FROM users" returns:`,
+				Handler:     r.queryReturns,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" query result of "([^"]*)" contains:$`,
+				Description: "Assert query result contains expected rows (superset)",
+				Example:     `"db" query result of "SELECT id, name FROM users" contains:`,
+				Handler:     r.queryResultContains,
+			},
 		},
 	}
 }
@@ -329,6 +344,104 @@ func (r *Postgres) ExecSQLFile(ctx context.Context, path string) error {
 	}
 	_, err = r.db.ExecContext(ctx, string(content))
 	return err
+}
+
+func (r *Postgres) queryReturns(query string, expected *godog.Table) error {
+	if len(expected.Rows) < 2 {
+		return fmt.Errorf("expected table must have headers and at least one data row")
+	}
+	actual, columns, err := r.executeQuery(ReplaceVariables(query), expected.Rows[0])
+	if err != nil {
+		return err
+	}
+	expectedRows := expected.Rows[1:]
+	if len(actual) != len(expectedRows) {
+		return fmt.Errorf("expected %d rows, got %d", len(expectedRows), len(actual))
+	}
+	return r.compareRows(actual, expectedRows, columns)
+}
+
+func (r *Postgres) queryResultContains(query string, expected *godog.Table) error {
+	if len(expected.Rows) < 2 {
+		return fmt.Errorf("expected table must have headers and at least one data row")
+	}
+	actual, columns, err := r.executeQuery(ReplaceVariables(query), expected.Rows[0])
+	if err != nil {
+		return err
+	}
+	for i, expectedRow := range expected.Rows[1:] {
+		found := false
+		for _, actualRow := range actual {
+			if r.rowMatches(actualRow, expectedRow, columns) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			vals := make([]string, len(expectedRow.Cells))
+			for j, cell := range expectedRow.Cells {
+				vals[j] = fmt.Sprintf("%s=%q", columns[j], ReplaceVariables(cell.Value))
+			}
+			return fmt.Errorf("expected row %d not found in results: %s", i+1, strings.Join(vals, ", "))
+		}
+	}
+	return nil
+}
+
+func (r *Postgres) executeQuery(query string, headerRow *messages.PickleTableRow) ([][]string, []string, error) {
+	columns := make([]string, len(headerRow.Cells))
+	for i, cell := range headerRow.Cells {
+		columns[i] = cell.Value
+	}
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("executing query: %w", err)
+	}
+	defer rows.Close()
+	var actual [][]string
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return nil, nil, fmt.Errorf("scanning row: %w", err)
+		}
+		row := make([]string, len(columns))
+		for i, v := range values {
+			row[i] = formatDBValue(v)
+		}
+		actual = append(actual, row)
+	}
+	return actual, columns, nil
+}
+
+func (r *Postgres) compareRows(actual [][]string, expectedRows []*messages.PickleTableRow, columns []string) error {
+	for i, expectedRow := range expectedRows {
+		if i >= len(actual) {
+			return fmt.Errorf("missing row %d", i+1)
+		}
+		for j, cell := range expectedRow.Cells {
+			expected := ReplaceVariables(cell.Value)
+			if actual[i][j] != expected {
+				return fmt.Errorf("row %d, column %s: expected %q, got %q", i+1, columns[j], expected, actual[i][j])
+			}
+		}
+	}
+	return nil
+}
+
+func (r *Postgres) rowMatches(actualRow []string, expectedRow *messages.PickleTableRow, columns []string) bool {
+	if len(actualRow) != len(expectedRow.Cells) {
+		return false
+	}
+	for j, cell := range expectedRow.Cells {
+		if actualRow[j] != ReplaceVariables(cell.Value) {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *Postgres) Cleanup(ctx context.Context) error {
