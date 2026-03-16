@@ -25,12 +25,13 @@ type RabbitMQ struct {
 	channel *amqp.Channel
 
 	// Message storage
-	messages     map[string][]*amqp.Delivery // queue -> messages
-	messagesMu   sync.RWMutex
-	lastMessage  *amqp.Delivery
-	consuming    map[string]bool
-	consumingMu  sync.RWMutex
-	stopChannels map[string]chan struct{}
+	messages      map[string][]*amqp.Delivery // queue -> messages
+	messagesMu    sync.RWMutex
+	lastMessage   *amqp.Delivery
+	lastSeenIndex map[string]int // track last seen message index per queue
+	consuming     map[string]bool
+	consumingMu   sync.RWMutex
+	stopChannels  map[string]chan struct{}
 
 	// Track declared resources for reset
 	declaredQueues    []string
@@ -195,6 +196,7 @@ func (r *RabbitMQ) Reset(ctx context.Context) error {
 	r.messagesMu.Lock()
 	r.messages = make(map[string][]*amqp.Delivery)
 	r.lastMessage = nil
+	r.lastSeenIndex = make(map[string]int)
 	r.messagesMu.Unlock()
 
 	strategy := "purge"
@@ -706,11 +708,28 @@ func (r *RabbitMQ) receiveMessage(queue, timeout string) error {
 		return err
 	}
 
+	// Track which message index we've already "seen" for this queue
+	r.messagesMu.RLock()
+	lastSeenIndex, hasLastSeen := r.lastSeenIndex[queue]
+	r.messagesMu.RUnlock()
+
+	if !hasLastSeen {
+		lastSeenIndex = -1
+	}
+
 	deadline := time.Now().Add(duration)
-	initialCount := r.getMessageCount(queue)
 
 	for time.Now().Before(deadline) {
-		if r.getMessageCount(queue) > initialCount {
+		currentCount := r.getMessageCount(queue)
+		// Check if there are any new messages since our last seen index
+		if currentCount > lastSeenIndex+1 {
+			// Update last seen index
+			r.messagesMu.Lock()
+			if r.lastSeenIndex == nil {
+				r.lastSeenIndex = make(map[string]int)
+			}
+			r.lastSeenIndex[queue] = currentCount - 1
+			r.messagesMu.Unlock()
 			return nil
 		}
 		time.Sleep(100 * time.Millisecond)
@@ -724,8 +743,13 @@ func (r *RabbitMQ) shouldReceiveMessage(queue, timeout string, doc *godog.DocStr
 		return err
 	}
 
+	// Get the last message from this specific queue, not the global lastMessage
 	r.messagesMu.RLock()
-	lastMsg := r.lastMessage
+	queueMessages := r.messages[queue]
+	var lastMsg *amqp.Delivery
+	if len(queueMessages) > 0 {
+		lastMsg = queueMessages[len(queueMessages)-1]
+	}
 	r.messagesMu.RUnlock()
 
 	if lastMsg == nil {

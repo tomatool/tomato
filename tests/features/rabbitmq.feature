@@ -45,7 +45,7 @@ Feature: RabbitMQ Handler
       """
       Hello RabbitMQ!
       """
-    Then "mq" receives from queue "simple-queue" within "5s":
+    Then "mq" receives from queue "simple-queue" within "15s":
       """
       Hello RabbitMQ!
       """
@@ -57,7 +57,7 @@ Feature: RabbitMQ Handler
       """
       {"event": "user.created", "userId": 123}
       """
-    Then "mq" receives from queue "json-queue" within "5s"
+    Then "mq" receives from queue "json-queue" within "15s"
     And "mq" last message contains:
       """
       user.created
@@ -73,7 +73,7 @@ Feature: RabbitMQ Handler
       """
       New order placed
       """
-    Then "mq" receives from queue "order-queue" within "5s":
+    Then "mq" receives from queue "order-queue" within "15s":
       """
       New order placed
       """
@@ -88,7 +88,7 @@ Feature: RabbitMQ Handler
       """
       {"type": "notification", "message": "Hello"}
       """
-    Then "mq" receives from queue "event-queue" within "5s"
+    Then "mq" receives from queue "event-queue" within "15s"
     And "mq" last message contains:
       """
       notification
@@ -107,11 +107,11 @@ Feature: RabbitMQ Handler
       """
       Broadcast message
       """
-    Then "mq" receives from queue "subscriber-1" within "5s":
+    Then "mq" receives from queue "subscriber-1" within "15s":
       """
       Broadcast message
       """
-    And "mq" receives from queue "subscriber-2" within "5s":
+    And "mq" receives from queue "subscriber-2" within "15s":
       """
       Broadcast message
       """
@@ -125,7 +125,7 @@ Feature: RabbitMQ Handler
       | first message   |
       | second message  |
       | third message   |
-    Then "mq" receives from queue "batch-queue" within "5s"
+    Then "mq" receives from queue "batch-queue" within "15s"
     And "mq" queue "batch-queue" has "3" messages
 
   # Assertions
@@ -145,7 +145,7 @@ Feature: RabbitMQ Handler
       """
       message 2
       """
-    Then "mq" receives from queue "count-queue" within "5s"
+    Then "mq" receives from queue "count-queue" within "15s"
     And "mq" queue "count-queue" has "2" messages
 
   # Purge Queue

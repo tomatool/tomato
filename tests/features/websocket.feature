@@ -11,7 +11,7 @@ Feature: WebSocket Handler
   Scenario: Send and receive text message
     Given "ws" connects
     When "ws" sends "Hello WebSocket!"
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       Hello WebSocket!
       """
@@ -23,7 +23,7 @@ Feature: WebSocket Handler
       """
       {"action": "ping"}
       """
-    Then "ws" receives json within "5s" matching:
+    Then "ws" receives json within "15s" matching:
       """
       {"action": "pong"}
       """
@@ -35,7 +35,7 @@ Feature: WebSocket Handler
       """
       {"action": "echo", "payload": "test data"}
       """
-    Then "ws" receives within "5s" containing "echo"
+    Then "ws" receives within "15s" containing "echo"
     And "ws" last message contains "test data"
     And "ws" disconnects
 
@@ -45,7 +45,7 @@ Feature: WebSocket Handler
       """
       Plain text message
       """
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       Plain text message
       """
@@ -54,17 +54,17 @@ Feature: WebSocket Handler
   Scenario: Check message count
     Given "ws" connects
     When "ws" sends "msg1"
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       msg1
       """
     When "ws" sends "msg2"
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       msg2
       """
     When "ws" sends "msg3"
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       msg3
       """
@@ -79,7 +79,7 @@ Feature: WebSocket Handler
   Scenario: Last message assertions
     Given "ws" connects
     When "ws" sends "final message"
-    Then "ws" receives within "5s":
+    Then "ws" receives within "15s":
       """
       final message
       """

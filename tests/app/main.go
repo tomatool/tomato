@@ -77,6 +77,11 @@ func main() {
 	mux.HandleFunc("/cache", cacheHandler)
 	mux.HandleFunc("/echo", echoHandler)
 	mux.HandleFunc("/ws", wsHandler)
+	mux.HandleFunc("/empty", emptyHandler)
+	mux.HandleFunc("/redirect", redirectHandler)
+	mux.HandleFunc("/error", errorHandler)
+	mux.HandleFunc("/complex", complexJSONHandler)
+	mux.HandleFunc("/form", formHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -403,4 +408,75 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			conn.WriteMessage(messageType, message)
 		}
 	}
+}
+
+// emptyHandler returns an empty response body
+func emptyHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// redirectHandler returns a redirect response
+func redirectHandler(w http.ResponseWriter, r *http.Request) {
+	target := r.URL.Query().Get("to")
+	if target == "" {
+		target = "/health"
+	}
+	http.Redirect(w, r, target, http.StatusFound)
+}
+
+// errorHandler returns a server error
+func errorHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error":   "Internal Server Error",
+		"message": "Something went wrong",
+	})
+}
+
+// complexJSONHandler returns a complex JSON response with various types
+func complexJSONHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", "550e8400-e29b-41d4-a716-446655440000")
+	w.Header().Set("X-Custom-Header", "custom-value")
+
+	response := map[string]interface{}{
+		"id":         "550e8400-e29b-41d4-a716-446655440000",
+		"email":      "test@example.com",
+		"created_at": "2024-01-15T10:30:00Z",
+		"count":      42,
+		"price":      19.99,
+		"active":     true,
+		"tags":       []string{"api", "test", "json"},
+		"metadata": map[string]interface{}{
+			"version": "1.0",
+			"nested": map[string]interface{}{
+				"deep": "value",
+			},
+		},
+		"items": []map[string]interface{}{
+			{"name": "item1", "qty": 10},
+			{"name": "item2", "qty": 20},
+		},
+		"empty_string": "",
+		"empty_array":  []interface{}{},
+		"empty_object": map[string]interface{}{},
+		"null_value":   nil,
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+// formHandler handles form-encoded requests
+func formHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"received": r.PostForm,
+	}
+	json.NewEncoder(w).Encode(response)
 }
