@@ -62,3 +62,11 @@ Steps for stubbing HTTP services
 | `"{resource}" url is stored in "SERVER_URL"` | Stores the server URL in a variable for use in other steps |
 
 
+
+## Fixture Management
+
+| Step | Description |
+|------|-------------|
+| `"{resource}" loads fixtures from "fixtures/github-api"` | Loads fixture stubs from the specified directory path |
+
+

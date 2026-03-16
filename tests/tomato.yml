@@ -3,7 +3,6 @@ version: 2
 settings:
   timeout: 5m
   fail_fast: false
-  output: pretty
   reset:
     level: scenario
 
@@ -131,6 +130,9 @@ resources:
     type: http-client
     base_url: "http://localhost:8080"
 
+  client:
+    type: http-client
+
   shell:
     type: shell
 
@@ -147,6 +149,13 @@ resources:
     type: http-server
     options:
       port: 9998
+
+  github-api:
+    type: http-server
+    options:
+      port: 9997
+      fixturesPath: tests/fixtures/github-api
+      autoLoad: true
 
 features:
   paths:

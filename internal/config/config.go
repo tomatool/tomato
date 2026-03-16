@@ -212,7 +212,7 @@ func (c *Config) applyDefaults() {
 		c.Settings.Parallel = 1
 	}
 	if c.Settings.Output == "" {
-		c.Settings.Output = "pretty"
+		c.Settings.Output = "pretty-fixed"
 	}
 	if c.Settings.Reset.Level == "" {
 		c.Settings.Reset.Level = "scenario"
