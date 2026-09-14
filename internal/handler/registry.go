@@ -62,6 +62,8 @@ func (r *Registry) createHandler(name string, cfg config.Resource) (Handler, err
 		return NewWebSocketServer(name, cfg, r.container)
 	case "wiremock":
 		return NewWiremock(name, cfg, r.container)
+	case "s3", "minio":
+		return NewS3(name, cfg, r.container)
 	case "shell":
 		return NewShell(name, cfg, r.container)
 	default:
@@ -159,6 +161,7 @@ func ValidResourceTypes() []string {
 		"shell",
 		"websocket", "websocket-client", "websocket-server",
 		"wiremock",
+		"s3", "minio",
 	}
 }
 
@@ -168,5 +171,6 @@ func ContainerBasedTypes() []string {
 		"postgres", "postgresql", "mysql",
 		"redis", "rabbitmq", "kafka",
 		"wiremock",
+		"s3", "minio",
 	}
 }
