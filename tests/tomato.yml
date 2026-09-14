@@ -66,6 +66,19 @@ containers:
       target: "9092"
       timeout: 60s
 
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data"]
+    ports:
+      - "9000/tcp"
+    env:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    wait_for:
+      type: port
+      target: "9000"
+      timeout: 30s
+
   rabbitmq:
     image: rabbitmq:3-alpine
     ports:
@@ -126,6 +139,14 @@ resources:
       user: guest
       password: guest
       reset_strategy: purge
+
+  files:
+    type: s3
+    container: minio
+    options:
+      buckets:
+        - uploads
+        - reports
 
   api:
     type: http-client

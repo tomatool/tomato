@@ -75,6 +75,7 @@ nav:
     - Kafka: configuration/kafka.md
     - RabbitMQ: configuration/rabbitmq.md
     - Redis: configuration/redis.md
+    - S3: configuration/s3.md
   - Available Resources:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
@@ -86,6 +87,7 @@ nav:
     - Shell: resources/shell.md
     - WebSocket Client: resources/websocket-client.md
     - WebSocket Server: resources/websocket-server.md
+    - S3: resources/s3.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
 

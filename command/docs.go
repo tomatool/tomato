@@ -121,6 +121,10 @@ func collectStepCategories() []handler.StepCategory {
 	wsServerHandler, _ := handler.NewWebSocketServer("wsmock", handler.DummyConfig(), nil)
 	categories = append(categories, wsServerHandler.Steps())
 
+	// S3
+	s3Handler, _ := handler.NewS3("files", handler.DummyConfig(), nil)
+	categories = append(categories, s3Handler.Steps())
+
 	return categories
 }
 

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -94,12 +95,39 @@ type ResetSettings struct {
 type Container struct {
 	Image     string            `yaml:"image"`
 	Build     *BuildConfig      `yaml:"build,omitempty"`
+	Command   StringList        `yaml:"command,omitempty"`
 	Env       map[string]string `yaml:"env"`
 	Ports     []string          `yaml:"ports"`
 	Volumes   []string          `yaml:"volumes"`
 	DependsOn []string          `yaml:"depends_on"`
 	WaitFor   WaitStrategy      `yaml:"wait_for"`
 	Reset     ContainerReset    `yaml:"reset"`
+}
+
+// StringList accepts either a YAML sequence or a single scalar string, so both
+// shell form (command: redis-server --appendonly yes) and exec form
+// (command: ["server", "/data"]) work.
+type StringList []string
+
+func (s *StringList) UnmarshalYAML(value *yaml.Node) error {
+	switch value.Kind {
+	case yaml.ScalarNode:
+		var str string
+		if err := value.Decode(&str); err != nil {
+			return err
+		}
+		*s = strings.Fields(str)
+		return nil
+	case yaml.SequenceNode:
+		var list []string
+		if err := value.Decode(&list); err != nil {
+			return err
+		}
+		*s = list
+		return nil
+	default:
+		return fmt.Errorf("line %d: expected a string or a list of strings", value.Line)
+	}
 }
 
 type BuildConfig struct {

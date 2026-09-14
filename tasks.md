@@ -196,7 +196,7 @@
   [ ] MongoDB
   [ ] Elasticsearch
   [ ] Wiremock (HTTP mocking)
-  [ ] LocalStack (AWS)
+  [ ] S3 / MinIO
   ```
 - [ ] Per-resource configuration:
   - Database name, user, password
@@ -294,8 +294,13 @@
   - [ ] Step definitions (index, search, assert)
 
 ### Cloud Emulation
-- [ ] **LocalStack**
-  - [ ] S3 operations (put, get, list, delete)
+- [x] **S3** (works against MinIO, LocalStack, or a real bucket)
+  - [x] Bucket operations (create, empty, delete)
+  - [x] Object operations (put, get, delete, upload from file, bulk seed)
+  - [x] Assertions (existence, content, JSON matching, size, content type, metadata, counts)
+  - [x] Async assertions (`should exist within`, `should have N objects within`)
+  - [x] Reset strategies (purge, delete, none) with bucket scoping
+- [ ] **LocalStack** (beyond S3)
   - [ ] SQS operations (send, receive, purge)
   - [ ] DynamoDB operations (put, get, query)
   - [ ] Reset strategy per service
