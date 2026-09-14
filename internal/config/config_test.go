@@ -989,3 +989,96 @@ func contains(s, substr string) bool {
 	}
 	return false
 }
+
+func TestContainerCommand(t *testing.T) {
+	tests := []struct {
+		name    string
+		yaml    string
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "exec form as a sequence",
+			yaml: `version: 2
+containers:
+  minio:
+    image: minio/minio
+    command: ["server", "/data", "--console-address", ":9001"]
+`,
+			want: []string{"server", "/data", "--console-address", ":9001"},
+		},
+		{
+			name: "shell form as a scalar",
+			yaml: `version: 2
+containers:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+`,
+			want: []string{"redis-server", "--appendonly", "yes"},
+		},
+		{
+			name: "scalar with extra whitespace",
+			yaml: `version: 2
+containers:
+  redis:
+    image: redis:7-alpine
+    command: "  redis-server    --requirepass secret  "
+`,
+			want: []string{"redis-server", "--requirepass", "secret"},
+		},
+		{
+			name: "omitted command is nil",
+			yaml: `version: 2
+containers:
+  redis:
+    image: redis:7-alpine
+`,
+			want: nil,
+		},
+		{
+			name: "mapping is rejected",
+			yaml: `version: 2
+containers:
+  redis:
+    image: redis:7-alpine
+    command:
+      run: server
+`,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "tomato.yml")
+			if err := os.WriteFile(path, []byte(tt.yaml), 0o644); err != nil {
+				t.Fatal(err)
+			}
+
+			cfg, err := Load(path)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected an error, got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Load: %v", err)
+			}
+
+			var got []string
+			for _, c := range cfg.Containers {
+				got = c.Command
+			}
+			if len(got) != len(tt.want) {
+				t.Fatalf("command = %v, want %v", got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("command[%d] = %q, want %q", i, got[i], tt.want[i])
+				}
+			}
+		})
+	}
+}

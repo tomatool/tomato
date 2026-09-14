@@ -35,6 +35,7 @@ app:                    # Application under test (optional)
 containers:             # Container definitions
   name:
     image: image:tag
+    command: []         # Optional startup command (list or string)
     env: {}
     ports: []
     volumes: []
@@ -44,7 +45,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|postgres|redis|kafka|websocket|websocket-server|shell
+    type: http|http-server|postgres|redis|kafka|s3|websocket|websocket-server|shell
     container: container_name
     options: {}
 
@@ -278,6 +279,21 @@ resources:
       headers:
         Authorization: Bearer token
 ```
+
+### S3
+
+```yaml
+resources:
+  files:
+    type: s3
+    container: minio
+    options:
+      buckets:
+        - uploads
+      reset_strategy: purge   # purge, delete, or none
+```
+
+See [S3 Configuration](s3.md) for MinIO and LocalStack setup.
 
 ### Shell
 
