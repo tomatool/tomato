@@ -237,6 +237,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 
 	req := testcontainers.ContainerRequest{
 		Image:      cfg.Image,
+		Cmd:        cfg.Command,
 		Env:        resolvedEnv,
 		WaitingFor: m.buildWaitStrategy(cfg.WaitFor),
 	}
