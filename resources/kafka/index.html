@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -713,6 +713,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configuration/s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1199,6 +1227,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1498,33 +1554,33 @@
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h3>
 <p><strong>Publishes a message to a topic:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; publishes to &quot;</span><span class="s">events</span><span class="nf">&quot;:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to "</span><span class="s">events</span><span class="nf">":</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  Hello World</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Publishes a message with a key to a topic:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; publishes to &quot;</span><span class="s">events</span><span class="nf">&quot; with key &quot;</span><span class="s">user-123</span><span class="nf">&quot;:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to "</span><span class="s">events</span><span class="nf">" with key "</span><span class="s">user-123</span><span class="nf">":</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  Hello World</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Publishes a JSON message to a topic:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; publishes json to &quot;</span><span class="s">events</span><span class="nf">&quot;:</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  {&quot;type&quot;: &quot;user_created&quot;}</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to "</span><span class="s">events</span><span class="nf">":</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  {"type": "user_created"}</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Publishes a JSON message with a key:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; publishes json to &quot;</span><span class="s">events</span><span class="nf">&quot; with key &quot;</span><span class="s">user-123</span><span class="nf">&quot;:</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {&quot;type&quot;: &quot;user_created&quot;}</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to "</span><span class="s">events</span><span class="nf">" with key "</span><span class="s">user-123</span><span class="nf">":</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"type": "user_created"}</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Publishes multiple messages from a table:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; publishes messages to &quot;</span><span class="s">events</span><span class="nf">&quot;:</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes messages to "</span><span class="s">events</span><span class="nf">":</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">      |</span><span class="s"> value</span><span class="k">           |</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> user-1</span><span class="k">   |</span><span class="s"> {&quot;id&quot;: 1}</span><span class="k">     |</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> user-1</span><span class="k">   |</span><span class="s"> {"id": 1}</span><span class="k">     |</span>
 </span></code></pre></div></p>
 <h2 id="consuming">Consuming<a class="headerlink" href="#consuming" title="Permanent link">#</a></h2>
 <table>
@@ -1555,10 +1611,10 @@
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">#</a></h3>
 <p><strong>Asserts a specific message is received within timeout:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; receives from &quot;</span><span class="s">events</span><span class="nf">&quot; within &quot;</span><span class="s">5s</span><span class="nf">&quot;:</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives from "</span><span class="s">events</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">"""</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">  Hello World</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <h2 id="assertions">Assertions<a class="headerlink" href="#assertions" title="Permanent link">#</a></h2>
 <table>
@@ -1597,13 +1653,13 @@
 </table>
 <h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">#</a></h3>
 <p><strong>Asserts the last consumed message contains content:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; last message contains:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">&quot;&quot;&quot;</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message contains:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">"""</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  user_created</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Asserts messages are received in specified order:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nf">&quot;</span><span class="s">{resource}</span><span class="nf">&quot; receives messages from &quot;</span><span class="s">events</span><span class="nf">&quot; in order:</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives messages from "</span><span class="s">events</span><span class="nf">" in order:</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">    |</span><span class="s"> value</span><span class="k">  |</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">  |</span><span class="s"> key1</span><span class="k">   |</span><span class="s"> msg1</span><span class="k">   |</span>
 </span></code></pre></div></p>
@@ -1676,7 +1732,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

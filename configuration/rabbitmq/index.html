@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1002,6 +1002,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1330,6 +1358,34 @@
     
   
     WebSocket Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
   
 
     
@@ -1788,13 +1844,13 @@
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">rabbitmq</span><span class="p">:</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq:3-alpine</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5672/tcp&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"5672/tcp"</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">RABBITMQ_DEFAULT_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guest</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">RABBITMQ_DEFAULT_PASS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guest</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;5672&quot;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"5672"</span>
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span></code></pre></div>
 <h3 id="management-ui-optional">Management UI (Optional)<a class="headerlink" href="#management-ui-optional" title="Permanent link">#</a></h3>
@@ -1803,14 +1859,14 @@
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">rabbitmq</span><span class="p">:</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq:3-management-alpine</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5672/tcp&quot;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;15672/tcp&quot;</span><span class="w">  </span><span class="c1"># Management UI</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"5672/tcp"</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"15672/tcp"</span><span class="w">  </span><span class="c1"># Management UI</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="nt">RABBITMQ_DEFAULT_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guest</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">RABBITMQ_DEFAULT_PASS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guest</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;5672&quot;</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"5672"</span>
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span></code></pre></div>
 <p>Access the management UI at <code>http://localhost:&lt;mapped-port&gt;</code> with credentials <code>guest/guest</code>.</p>
@@ -1928,7 +1984,7 @@
 </span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">      </span><span class="nt">bindings</span><span class="p">:</span>
 </span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">queue</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">orders</span>
 </span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">          </span><span class="nt">exchange</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">events</span>
-</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">          </span><span class="nt">routing_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;order.*&quot;</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">          </span><span class="nt">routing_key</span><span class="p">:</span><span class="w"> </span><span class="s">"order.*"</span>
 </span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">queue</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notifications</span>
 </span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">          </span><span class="nt">exchange</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broadcast</span>
 </span></code></pre></div>
@@ -1947,13 +2003,13 @@
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">rabbitmq</span><span class="p">:</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq:3-alpine</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5672/tcp&quot;</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"5672/tcp"</span>
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">      </span><span class="nt">RABBITMQ_DEFAULT_USER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guest</span>
 </span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">      </span><span class="nt">RABBITMQ_DEFAULT_PASS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guest</span>
 </span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;5672&quot;</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"5672"</span>
 </span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>
 </span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="nt">resources</span><span class="p">:</span>
@@ -1974,58 +2030,58 @@
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">Feature:</span><span class="nf"> Order Processing</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Orders are queued for processing</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">    Given </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares queue &quot;</span><span class="s">orders</span><span class="nf">&quot;</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nf">    </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; consumes from queue &quot;</span><span class="s">orders</span><span class="nf">&quot;</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">    </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; publishes json to queue &quot;</span><span class="s">orders</span><span class="nf">&quot;:</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">      {&quot;order_id&quot;: &quot;123&quot;, &quot;amount&quot;: 99.99}</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; receives from queue &quot;</span><span class="s">orders</span><span class="nf">&quot; within &quot;</span><span class="s">5s</span><span class="nf">&quot;</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; last message contains:</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nf">      </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares queue "</span><span class="s">orders</span><span class="nf">"</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" consumes from queue "</span><span class="s">orders</span><span class="nf">"</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" publishes json to queue "</span><span class="s">orders</span><span class="nf">":</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">      </span><span class="k">"""</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">      {"order_id": "123", "amount": 99.99}</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">      </span><span class="k">"""</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" receives from queue "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">"</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" last message contains:</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nf">      </span><span class="k">"""</span>
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="s">      order_id</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s">      </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s">      </span><span class="k">"""</span>
 </span></code></pre></div>
 <h3 id="topic-exchange-routing">Topic Exchange Routing<a class="headerlink" href="#topic-exchange-routing" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Scenario:</span><span class="nf"> Route orders by type</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares exchange &quot;</span><span class="s">orders</span><span class="nf">&quot; of type &quot;</span><span class="s">topic</span><span class="nf">&quot;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares queue &quot;</span><span class="s">domestic-orders</span><span class="nf">&quot;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares queue &quot;</span><span class="s">international-orders</span><span class="nf">&quot;</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; binds queue &quot;</span><span class="s">domestic-orders</span><span class="nf">&quot; to exchange &quot;</span><span class="s">orders</span><span class="nf">&quot; with routing key &quot;</span><span class="s">order.domestic.*</span><span class="nf">&quot;</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; binds queue &quot;</span><span class="s">international-orders</span><span class="nf">&quot; to exchange &quot;</span><span class="s">orders</span><span class="nf">&quot; with routing key &quot;</span><span class="s">order.international.*</span><span class="nf">&quot;</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; consumes from queue &quot;</span><span class="s">domestic-orders</span><span class="nf">&quot;</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; publishes to exchange &quot;</span><span class="s">orders</span><span class="nf">&quot; with routing key &quot;</span><span class="s">order.domestic.new</span><span class="nf">&quot;:</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares exchange "</span><span class="s">orders</span><span class="nf">" of type "</span><span class="s">topic</span><span class="nf">"</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares queue "</span><span class="s">domestic-orders</span><span class="nf">"</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares queue "</span><span class="s">international-orders</span><span class="nf">"</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" binds queue "</span><span class="s">domestic-orders</span><span class="nf">" to exchange "</span><span class="s">orders</span><span class="nf">" with routing key "</span><span class="s">order.domestic.*</span><span class="nf">"</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" binds queue "</span><span class="s">international-orders</span><span class="nf">" to exchange "</span><span class="s">orders</span><span class="nf">" with routing key "</span><span class="s">order.international.*</span><span class="nf">"</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" consumes from queue "</span><span class="s">domestic-orders</span><span class="nf">"</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" publishes to exchange "</span><span class="s">orders</span><span class="nf">" with routing key "</span><span class="s">order.domestic.new</span><span class="nf">":</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="nf">    </span><span class="k">"""</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s">    New domestic order</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; receives from queue &quot;</span><span class="s">domestic-orders</span><span class="nf">&quot; within &quot;</span><span class="s">5s</span><span class="nf">&quot;:</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" receives from queue "</span><span class="s">domestic-orders</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="nf">    </span><span class="k">"""</span>
 </span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="s">    New domestic order</span>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="s">    </span><span class="k">"""</span>
 </span></code></pre></div>
 <h3 id="fanout-exchange-broadcasting">Fanout Exchange Broadcasting<a class="headerlink" href="#fanout-exchange-broadcasting" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Scenario:</span><span class="nf"> Broadcast notifications to all subscribers</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares exchange &quot;</span><span class="s">notifications</span><span class="nf">&quot; of type &quot;</span><span class="s">fanout</span><span class="nf">&quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares queue &quot;</span><span class="s">email-service</span><span class="nf">&quot;</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares queue &quot;</span><span class="s">push-service</span><span class="nf">&quot;</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; declares queue &quot;</span><span class="s">sms-service</span><span class="nf">&quot;</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; binds queue &quot;</span><span class="s">email-service</span><span class="nf">&quot; to exchange &quot;</span><span class="s">notifications</span><span class="nf">&quot;</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; binds queue &quot;</span><span class="s">push-service</span><span class="nf">&quot; to exchange &quot;</span><span class="s">notifications</span><span class="nf">&quot;</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; binds queue &quot;</span><span class="s">sms-service</span><span class="nf">&quot; to exchange &quot;</span><span class="s">notifications</span><span class="nf">&quot;</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; consumes from queue &quot;</span><span class="s">email-service</span><span class="nf">&quot;</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; consumes from queue &quot;</span><span class="s">push-service</span><span class="nf">&quot;</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; publishes to exchange &quot;</span><span class="s">notifications</span><span class="nf">&quot; with routing key &quot;&quot;:</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares exchange "</span><span class="s">notifications</span><span class="nf">" of type "</span><span class="s">fanout</span><span class="nf">"</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares queue "</span><span class="s">email-service</span><span class="nf">"</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares queue "</span><span class="s">push-service</span><span class="nf">"</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" declares queue "</span><span class="s">sms-service</span><span class="nf">"</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" binds queue "</span><span class="s">email-service</span><span class="nf">" to exchange "</span><span class="s">notifications</span><span class="nf">"</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" binds queue "</span><span class="s">push-service</span><span class="nf">" to exchange "</span><span class="s">notifications</span><span class="nf">"</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" binds queue "</span><span class="s">sms-service</span><span class="nf">" to exchange "</span><span class="s">notifications</span><span class="nf">"</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" consumes from queue "</span><span class="s">email-service</span><span class="nf">"</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" consumes from queue "</span><span class="s">push-service</span><span class="nf">"</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" publishes to exchange "</span><span class="s">notifications</span><span class="nf">" with routing key "":</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nf">    </span><span class="k">"""</span>
 </span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="s">    System maintenance in 1 hour</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; receives from queue &quot;</span><span class="s">email-service</span><span class="nf">&quot; within &quot;</span><span class="s">5s</span><span class="nf">&quot;:</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" receives from queue "</span><span class="s">email-service</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="nf">    </span><span class="k">"""</span>
 </span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="s">    System maintenance in 1 hour</span>
-</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">mq</span><span class="nf">&quot; receives from queue &quot;</span><span class="s">push-service</span><span class="nf">&quot; within &quot;</span><span class="s">5s</span><span class="nf">&quot;:</span>
-</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">mq</span><span class="nf">" receives from queue "</span><span class="s">push-service</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="nf">    </span><span class="k">"""</span>
 </span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="s">    System maintenance in 1 hour</span>
-</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="s">    </span><span class="k">"""</span>
 </span></code></pre></div>
 <p>See <a href="../../resources/rabbitmq/">RabbitMQ Steps</a> for the complete list of available steps.</p>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">#</a></h2>
@@ -2119,7 +2175,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

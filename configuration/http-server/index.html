@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -990,6 +990,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1318,6 +1346,34 @@
     
   
     WebSocket Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
   
 
     
@@ -1756,14 +1812,14 @@
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="c1"># Use template syntax to reference mock server URLs</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="nt">PAYMENT_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{.payment-api.url}}&quot;</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="nt">NOTIFICATION_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{.notification-api.url}}&quot;</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="nt">PAYMENT_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"{{.payment-api.url}}"</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="nt">NOTIFICATION_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"{{.notification-api.url}}"</span>
 </span></code></pre></div>
 <p>The templates resolve to:
 - <strong>Command mode</strong>: <code>http://localhost:{port}</code> (e.g., <code>http://localhost:9001</code>)
 - <strong>Container mode</strong>: <code>http://host.docker.internal:{port}</code> (accessible from Docker)</p>
 <p>Your application code should read these URLs from environment variables:</p>
-<div class="language-go highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">paymentAPIURL</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Getenv</span><span class="p">(</span><span class="s">&quot;PAYMENT_API_URL&quot;</span><span class="p">)</span>
+<div class="language-go highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">paymentAPIURL</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">os</span><span class="p">.</span><span class="nx">Getenv</span><span class="p">(</span><span class="s">"PAYMENT_API_URL"</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1">// Use paymentAPIURL when making HTTP calls to payment service</span>
 </span></code></pre></div>
 <div class="admonition note">
@@ -1797,15 +1853,15 @@
 </span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">  </span><span class="c1"># HTTP client to test your app</span>
 </span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="w">  </span><span class="nt">api</span><span class="p">:</span>
 </span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http-client</span>
-</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">    </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;http://localhost:8080&quot;</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">    </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">"http://localhost:8080"</span>
 </span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>
 </span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="nt">app</span><span class="p">:</span>
 </span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
 </span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
 </span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
 </span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span><span class="c1"># Templates resolve to http://localhost:9001, http://localhost:9002</span>
-</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="w">    </span><span class="nt">PAYMENT_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{.payment-api.url}}&quot;</span>
-</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="w">    </span><span class="nt">NOTIFICATION_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{.notification-api.url}}&quot;</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a><span class="w">    </span><span class="nt">PAYMENT_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"{{.payment-api.url}}"</span>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="w">    </span><span class="nt">NOTIFICATION_API_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"{{.notification-api.url}}"</span>
 </span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="w">  </span><span class="nt">ready</span><span class="p">:</span>
 </span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
 </span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/health</span>
@@ -1821,70 +1877,70 @@
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Process successful payment</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c">    # Stub the payment gateway</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">    Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot; with json:</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nf">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s">      {&quot;transaction_id&quot;: &quot;txn_123&quot;, &quot;status&quot;: &quot;success&quot;}</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">      </span><span class="k">&quot;&quot;&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">" with json:</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nf">      </span><span class="k">"""</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s">      {"transaction_id": "txn_123", "status": "success"}</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s">      </span><span class="k">"""</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c">    # Your app calls the payment gateway</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nf">    </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/process-payment</span><span class="nf">&quot; with json:</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nf">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="s">      {&quot;amount&quot;: 100, &quot;currency&quot;: &quot;USD&quot;}</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="s">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response status is &quot;</span><span class="s">200</span><span class="nf">&quot;</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="nf">    </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response json &quot;</span><span class="s">status</span><span class="nf">&quot; is &quot;</span><span class="s">completed</span><span class="nf">&quot;</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/process-payment</span><span class="nf">" with json:</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nf">      </span><span class="k">"""</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="s">      {"amount": 100, "currency": "USD"}</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="s">      </span><span class="k">"""</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response json "</span><span class="s">status</span><span class="nf">" is "</span><span class="s">completed</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="stubbing-different-responses">Stubbing Different Responses<a class="headerlink" href="#stubbing-different-responses" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">Scenario:</span><span class="nf"> Handle payment gateway error</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot; returns &quot;</span><span class="s">500</span><span class="nf">&quot; with json:</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">    {&quot;error&quot;: &quot;Gateway unavailable&quot;}</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/process-payment</span><span class="nf">&quot; with json:</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">    {&quot;amount&quot;: 100}</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response status is &quot;</span><span class="s">503</span><span class="nf">&quot;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">" returns "</span><span class="s">500</span><span class="nf">" with json:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">    {"error": "Gateway unavailable"}</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/process-payment</span><span class="nf">" with json:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">    {"amount": 100}</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">503</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="custom-response-headers">Custom Response Headers<a class="headerlink" href="#custom-response-headers" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Scenario:</span><span class="nf"> API returns rate limit headers</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">GET</span><span class="nf">&quot; &quot;</span><span class="s">/balance</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot; with headers:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">GET</span><span class="nf">" "</span><span class="s">/balance</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">" with headers:</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">    |</span><span class="s"> header</span><span class="k">           |</span><span class="s"> value</span><span class="k"> |</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">    |</span><span class="s"> X-RateLimit-Remaining</span><span class="k"> |</span><span class="s"> 99</span><span class="k">    |</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">    |</span><span class="s"> X-RateLimit-Reset</span><span class="k">     |</span><span class="s"> 3600</span><span class="k">  |</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">GET</span><span class="nf">&quot; to &quot;</span><span class="s">/check-balance</span><span class="nf">&quot;</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; response status is &quot;</span><span class="s">200</span><span class="nf">&quot;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/check-balance</span><span class="nf">"</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="verifying-requests">Verifying Requests<a class="headerlink" href="#verifying-requests" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Scenario:</span><span class="nf"> Verify authorization header is sent</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/process-payment</span><span class="nf">&quot; with json:</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s">    {&quot;amount&quot;: 50}</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; received &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot;</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; received request with header &quot;</span><span class="s">Authorization</span><span class="nf">&quot; containing &quot;</span><span class="s">Bearer</span><span class="nf">&quot;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">"</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/process-payment</span><span class="nf">" with json:</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s">    {"amount": 50}</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" received "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">"</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" received request with header "</span><span class="s">Authorization</span><span class="nf">" containing "</span><span class="s">Bearer</span><span class="nf">"</span>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="k">Scenario:</span><span class="nf"> Verify request body</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot;</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/process-payment</span><span class="nf">&quot; with json:</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="nf">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">    {&quot;amount&quot;: 75, &quot;currency&quot;: &quot;EUR&quot;}</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="s">    </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; received request with body containing &quot;</span><span class="s">EUR</span><span class="nf">&quot;</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">"</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/process-payment</span><span class="nf">" with json:</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">    {"amount": 75, "currency": "EUR"}</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" received request with body containing "</span><span class="s">EUR</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="request-counting">Request Counting<a class="headerlink" href="#request-counting" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">Scenario:</span><span class="nf"> Verify retry behavior</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c">  # Stub fails first two times, succeeds third</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot; returns &quot;</span><span class="s">503</span><span class="nf">&quot;</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">POST</span><span class="nf">&quot; to &quot;</span><span class="s">/process-payment-with-retry</span><span class="nf">&quot;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">" returns "</span><span class="s">503</span><span class="nf">"</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/process-payment-with-retry</span><span class="nf">"</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c">  # App should have retried 3 times</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; received &quot;</span><span class="s">POST</span><span class="nf">&quot; &quot;</span><span class="s">/charge</span><span class="nf">&quot; &quot;</span><span class="s">3</span><span class="nf">&quot; times</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" received "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/charge</span><span class="nf">" "</span><span class="s">3</span><span class="nf">" times</span>
 </span></code></pre></div>
 <h3 id="negative-assertions">Negative Assertions<a class="headerlink" href="#negative-assertions" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">Scenario:</span><span class="nf"> Verify no unauthorized calls</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; stub &quot;</span><span class="s">GET</span><span class="nf">&quot; &quot;</span><span class="s">/balance</span><span class="nf">&quot; returns &quot;</span><span class="s">200</span><span class="nf">&quot;</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">api</span><span class="nf">&quot; sends &quot;</span><span class="s">GET</span><span class="nf">&quot; to &quot;</span><span class="s">/public-info</span><span class="nf">&quot;</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">payment-api</span><span class="nf">&quot; did not receive &quot;</span><span class="s">GET</span><span class="nf">&quot; &quot;</span><span class="s">/balance</span><span class="nf">&quot;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" stub "</span><span class="s">GET</span><span class="nf">" "</span><span class="s">/balance</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">"</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/public-info</span><span class="nf">"</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">payment-api</span><span class="nf">" did not receive "</span><span class="s">GET</span><span class="nf">" "</span><span class="s">/balance</span><span class="nf">"</span>
 </span></code></pre></div>
 <p>See <a href="../../resources/http-server/">HTTP Server Steps</a> for the complete list of available steps.</p>
 <h2 id="multiple-mock-servers">Multiple Mock Servers<a class="headerlink" href="#multiple-mock-servers" title="Permanent link">#</a></h2>
@@ -1994,7 +2050,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>

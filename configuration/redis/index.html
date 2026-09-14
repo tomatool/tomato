@@ -16,14 +16,14 @@
         <link rel="prev" href="../rabbitmq/">
       
       
-        <link rel="next" href="../../resources/">
+        <link rel="next" href="../s3/">
       
       
         
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -996,6 +996,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1324,6 +1352,34 @@
     
   
     WebSocket Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/s3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S3
   
 
     
@@ -1722,10 +1778,10 @@
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">redis</span><span class="p">:</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:7-alpine</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;6379/tcp&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"6379/tcp"</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;6379&quot;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"6379"</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span></code></pre></div>
 <h3 id="with-password-authentication">With Password Authentication<a class="headerlink" href="#with-password-authentication" title="Permanent link">#</a></h3>
@@ -1734,10 +1790,10 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:7-alpine</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-server --requirepass mysecretpassword</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;6379/tcp&quot;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"6379/tcp"</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;6379&quot;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"6379"</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span></code></pre></div>
 <h3 id="with-persistence-optional">With Persistence (Optional)<a class="headerlink" href="#with-persistence-optional" title="Permanent link">#</a></h3>
@@ -1747,12 +1803,12 @@
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:7-alpine</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-server --appendonly yes</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;6379/tcp&quot;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"6379/tcp"</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-data:/data</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;6379&quot;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"6379"</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span></code></pre></div>
 <h2 id="resource-configuration">Resource Configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">#</a></h2>
@@ -1763,7 +1819,7 @@
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">      </span><span class="nt">db</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="s">""</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">      </span><span class="nt">reset_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">flush</span>
 </span></code></pre></div>
 <h3 id="resource-options">Resource Options<a class="headerlink" href="#resource-options" title="Permanent link">#</a></h3>
@@ -1837,10 +1893,10 @@
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">redis</span><span class="p">:</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis:7-alpine</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;6379/tcp&quot;</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"6379/tcp"</span>
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">port</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;6379&quot;</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"6379"</span>
 </span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30s</span>
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
 </span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="nt">resources</span><span class="p">:</span>
@@ -1860,58 +1916,58 @@
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">Feature:</span><span class="nf"> Caching</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Cache user data</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">    Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">user:123</span><span class="nf">&quot; is &quot;</span><span class="s">John Doe</span><span class="nf">&quot;</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">user:123</span><span class="nf">&quot; exists</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">    </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">user:123</span><span class="nf">&quot; has value &quot;</span><span class="s">John Doe</span><span class="nf">&quot;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">user:123</span><span class="nf">" is "</span><span class="s">John Doe</span><span class="nf">"</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">user:123</span><span class="nf">" exists</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">user:123</span><span class="nf">" has value "</span><span class="s">John Doe</span><span class="nf">"</span>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Cache with expiration</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="k">    Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">session:abc</span><span class="nf">&quot; is &quot;</span><span class="s">token123</span><span class="nf">&quot; with TTL &quot;</span><span class="s">1h</span><span class="nf">&quot;</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">session:abc</span><span class="nf">&quot; has TTL greater than &quot;</span><span class="s">3500</span><span class="nf">&quot; seconds</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">session:abc</span><span class="nf">" is "</span><span class="s">token123</span><span class="nf">" with TTL "</span><span class="s">1h</span><span class="nf">"</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">session:abc</span><span class="nf">" has TTL greater than "</span><span class="s">3500</span><span class="nf">" seconds</span>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Store JSON data</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="k">    Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">config</span><span class="nf">&quot; is:</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="nf">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="s">      {&quot;debug&quot;: true, &quot;timeout&quot;: 30}</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s">      </span><span class="k">&quot;&quot;&quot;</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">config</span><span class="nf">&quot; contains &quot;</span><span class="s">debug</span><span class="nf">&quot;</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">config</span><span class="nf">" is:</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="nf">      </span><span class="k">"""</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="s">      {"debug": true, "timeout": 30}</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s">      </span><span class="k">"""</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">config</span><span class="nf">" contains "</span><span class="s">debug</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="hash-operations">Hash Operations<a class="headerlink" href="#hash-operations" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Scenario:</span><span class="nf"> Store user profile as hash</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; hash &quot;</span><span class="s">user:100</span><span class="nf">&quot; has fields:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" hash "</span><span class="s">user:100</span><span class="nf">" has fields:</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">    |</span><span class="s"> field</span><span class="k"> |</span><span class="s"> value</span><span class="k">           |</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">    |</span><span class="s"> name</span><span class="k">  |</span><span class="s"> Alice</span><span class="k">           |</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">    |</span><span class="s"> email</span><span class="k"> |</span><span class="s"> alice@test.com</span><span class="k">  |</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="k">    |</span><span class="s"> role</span><span class="k">  |</span><span class="s"> admin</span><span class="k">           |</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; hash &quot;</span><span class="s">user:100</span><span class="nf">&quot; field &quot;</span><span class="s">name</span><span class="nf">&quot; is &quot;</span><span class="s">Alice</span><span class="nf">&quot;</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; hash &quot;</span><span class="s">user:100</span><span class="nf">&quot; contains:</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" hash "</span><span class="s">user:100</span><span class="nf">" field "</span><span class="s">name</span><span class="nf">" is "</span><span class="s">Alice</span><span class="nf">"</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" hash "</span><span class="s">user:100</span><span class="nf">" contains:</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">    |</span><span class="s"> field</span><span class="k"> |</span><span class="s"> value</span><span class="k">          |</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="k">    |</span><span class="s"> email</span><span class="k"> |</span><span class="s"> alice@test.com</span><span class="k"> |</span>
 </span></code></pre></div>
 <h3 id="list-operations">List Operations<a class="headerlink" href="#list-operations" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Scenario:</span><span class="nf"> Manage task queue</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; list &quot;</span><span class="s">tasks</span><span class="nf">&quot; has values:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" list "</span><span class="s">tasks</span><span class="nf">" has values:</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">    |</span><span class="s"> process-order-1</span><span class="k"> |</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">    |</span><span class="s"> process-order-2</span><span class="k"> |</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">    |</span><span class="s"> send-email-3</span><span class="k">    |</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; list &quot;</span><span class="s">tasks</span><span class="nf">&quot; has &quot;</span><span class="s">3</span><span class="nf">&quot; items</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; list &quot;</span><span class="s">tasks</span><span class="nf">&quot; contains &quot;</span><span class="s">process-order-1</span><span class="nf">&quot;</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" list "</span><span class="s">tasks</span><span class="nf">" has "</span><span class="s">3</span><span class="nf">" items</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" list "</span><span class="s">tasks</span><span class="nf">" contains "</span><span class="s">process-order-1</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="set-operations">Set Operations<a class="headerlink" href="#set-operations" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">Scenario:</span><span class="nf"> Track unique visitors</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; set &quot;</span><span class="s">visitors</span><span class="nf">&quot; has members:</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" set "</span><span class="s">visitors</span><span class="nf">" has members:</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="k">    |</span><span class="s"> user-1</span><span class="k"> |</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">    |</span><span class="s"> user-2</span><span class="k"> |</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">    |</span><span class="s"> user-3</span><span class="k"> |</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; set &quot;</span><span class="s">visitors</span><span class="nf">&quot; has &quot;</span><span class="s">3</span><span class="nf">&quot; members</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; set &quot;</span><span class="s">visitors</span><span class="nf">&quot; contains &quot;</span><span class="s">user-2</span><span class="nf">&quot;</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" set "</span><span class="s">visitors</span><span class="nf">" has "</span><span class="s">3</span><span class="nf">" members</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" set "</span><span class="s">visitors</span><span class="nf">" contains "</span><span class="s">user-2</span><span class="nf">"</span>
 </span></code></pre></div>
 <h3 id="counter-operations">Counter Operations<a class="headerlink" href="#counter-operations" title="Permanent link">#</a></h3>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">Scenario:</span><span class="nf"> Track page views</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">  Given </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">pageviews</span><span class="nf">&quot; is &quot;</span><span class="s">100</span><span class="nf">&quot;</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">pageviews</span><span class="nf">&quot; is incremented</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">pageviews</span><span class="nf">&quot; has value &quot;</span><span class="s">101</span><span class="nf">&quot;</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nf">  </span><span class="k">When </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">pageviews</span><span class="nf">&quot; is incremented by &quot;</span><span class="s">10</span><span class="nf">&quot;</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">&quot;</span><span class="s">cache</span><span class="nf">&quot; key &quot;</span><span class="s">pageviews</span><span class="nf">&quot; has value &quot;</span><span class="s">111</span><span class="nf">&quot;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">pageviews</span><span class="nf">" is "</span><span class="s">100</span><span class="nf">"</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">pageviews</span><span class="nf">" is incremented</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">pageviews</span><span class="nf">" has value "</span><span class="s">101</span><span class="nf">"</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">pageviews</span><span class="nf">" is incremented by "</span><span class="s">10</span><span class="nf">"</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">cache</span><span class="nf">" key "</span><span class="s">pageviews</span><span class="nf">" has value "</span><span class="s">111</span><span class="nf">"</span>
 </span></code></pre></div>
 <p>See <a href="../../resources/redis/">Redis Steps</a> for the complete list of available steps.</p>
 <h2 id="multiple-redis-databases">Multiple Redis Databases<a class="headerlink" href="#multiple-redis-databases" title="Permanent link">#</a></h2>
@@ -2021,7 +2077,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
