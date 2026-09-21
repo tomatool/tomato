@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -130,10 +131,77 @@ func (r *Runner) Start(ctx context.Context) error {
 	}
 }
 
+// killProcessOnPort kills any process listening on the specified port
+// Works on macOS and Linux
+func killProcessOnPort(port int) error {
+	if port == 0 {
+		return nil // No port specified
+	}
+
+	log.Debug().Int("port", port).Msg("checking for processes on port")
+
+	// Try lsof first (works on macOS and most Linux distributions)
+	cmd := exec.Command("lsof", "-ti", fmt.Sprintf(":%d", port))
+	output, err := cmd.Output()
+
+	// If lsof failed, try fuser on Linux as fallback
+	if err != nil {
+		if runtime.GOOS == "linux" {
+			log.Debug().Int("port", port).Msg("lsof not available, trying fuser")
+			fuserCmd := exec.Command("fuser", "-k", fmt.Sprintf("%d/tcp", port))
+			if err := fuserCmd.Run(); err != nil {
+				// Both lsof and fuser failed, port is likely free
+				log.Debug().Int("port", port).Msg("no process found on port")
+				return nil
+			}
+			// fuser with -k already killed the process
+			log.Debug().Int("port", port).Msg("killed process using fuser")
+			time.Sleep(500 * time.Millisecond)
+			return nil
+		}
+
+		// Not Linux and lsof failed, assume port is free
+		log.Debug().Int("port", port).Msg("no process found on port")
+		return nil
+	}
+
+	pids := strings.TrimSpace(string(output))
+	if pids == "" {
+		log.Debug().Int("port", port).Msg("no process found on port")
+		return nil
+	}
+
+	// Kill each PID found by lsof
+	for _, pidStr := range strings.Split(pids, "\n") {
+		pidStr = strings.TrimSpace(pidStr)
+		if pidStr == "" {
+			continue
+		}
+
+		log.Debug().Str("pid", pidStr).Int("port", port).Msg("killing process on port")
+		killCmd := exec.Command("kill", "-9", pidStr)
+		if err := killCmd.Run(); err != nil {
+			log.Warn().Err(err).Str("pid", pidStr).Msg("failed to kill process")
+		} else {
+			log.Debug().Str("pid", pidStr).Msg("killed process")
+		}
+	}
+
+	// Wait a bit for the port to be released
+	time.Sleep(500 * time.Millisecond)
+
+	return nil
+}
+
 // startCommand starts the app as a local process
 func (r *Runner) startCommand(ctx context.Context) error {
 	if r.config.Command == "" {
 		return fmt.Errorf("app command is required for command mode")
+	}
+
+	// Kill any process on the port before starting
+	if err := killProcessOnPort(r.config.Port); err != nil {
+		return fmt.Errorf("cleaning up port %d: %w", r.config.Port, err)
 	}
 
 	// Build environment with mapped host ports (for local process)
