@@ -25,5 +25,7 @@ Steps for interacting with PostgreSQL databases
 | `"db" table "users" contains:` | Assert table contains rows |
 | `"db" table "users" is empty` | Assert table is empty |
 | `"db" table "users" has "5" rows` | Assert row count |
+| `"db" query "SELECT id, name FROM users" returns:` | Assert exact match of query result rows |
+| `"db" query result of "SELECT id, name FROM users" contains:` | Assert query result contains expected rows (superset) |
 
 
