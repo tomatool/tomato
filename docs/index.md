@@ -26,7 +26,7 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 - **Built-in Container Orchestration** - Automatically manage test containers with Testcontainers
 - **Clean State Testing** - Reset resources between scenarios for reliable tests
 - **BDD/Gherkin Support** - Write tests in plain English using Cucumber syntax
-- **Multiple Resource Types** - HTTP, PostgreSQL, Redis, Kafka, S3, WebSocket, Shell
+- **Multiple Resource Types** - HTTP, gRPC, PostgreSQL, Redis, Kafka, S3, WebSocket, Shell
 - **Auto-generated Documentation** - Keep docs in sync with code
 
 ## Quick Example

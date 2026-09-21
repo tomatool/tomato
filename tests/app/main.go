@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,11 +18,15 @@ import (
 	"github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 )
 
 var (
-	db    *sql.DB
-	rdb   *redis.Client
+	db  *sql.DB
+	rdb *redis.Client
 
 	// WebSocket
 	upgrader = websocket.Upgrader{
@@ -78,6 +83,8 @@ func main() {
 	mux.HandleFunc("/echo", echoHandler)
 	mux.HandleFunc("/ws", wsHandler)
 
+	startGRPC()
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -103,6 +110,39 @@ func main() {
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("Server error: %v", err)
 	}
+}
+
+// startGRPC serves grpc.health.v1.Health with reflection enabled, which is
+// what the grpc resource's feature file drives.
+//
+// The health service is used rather than a bespoke one on purpose: it ships
+// inside grpc-go, so the test app gains a real gRPC surface — unary method,
+// enum response, NOT_FOUND path, and a streaming method to refuse — without
+// adding a .proto file, protoc, or generated code to this repository.
+func startGRPC() {
+	addr := os.Getenv("GRPC_PORT")
+	if addr == "" {
+		addr = "9090"
+	}
+
+	lis, err := net.Listen("tcp", ":"+addr)
+	if err != nil {
+		log.Fatalf("gRPC listen error: %v", err)
+	}
+
+	srv := grpc.NewServer()
+	hs := health.NewServer()
+	hs.SetServingStatus("tomato", healthpb.HealthCheckResponse_SERVING)
+	hs.SetServingStatus("degraded", healthpb.HealthCheckResponse_NOT_SERVING)
+	healthpb.RegisterHealthServer(srv, hs)
+	reflection.Register(srv)
+
+	go func() {
+		log.Printf("gRPC server starting on port %s", addr)
+		if err := srv.Serve(lis); err != nil {
+			log.Printf("gRPC server error: %v", err)
+		}
+	}()
 }
 
 func initDB() error {
