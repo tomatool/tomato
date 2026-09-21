@@ -179,6 +179,9 @@ type Resource struct {
 	ConsumerGroup string   `yaml:"consumer_group,omitempty"`
 	// WebSocket specific
 	URL string `yaml:"url,omitempty"`
+	// gRPC specific — a dial target (host:port), not a URL. Omit it to dial
+	// a managed container instead.
+	Address string `yaml:"address,omitempty"`
 }
 
 type Hooks struct {

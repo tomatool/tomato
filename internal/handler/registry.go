@@ -54,6 +54,8 @@ func (r *Registry) createHandler(name string, cfg config.Resource) (Handler, err
 		return NewKafka(name, cfg, r.container)
 	case "http-client", "http":
 		return NewHTTPClient(name, cfg, r.container)
+	case "grpc", "grpc-client":
+		return NewGRPC(name, cfg, r.container)
 	case "http-server":
 		return NewHTTPServer(name, cfg, r.container)
 	case "websocket-client", "websocket":

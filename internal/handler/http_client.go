@@ -1016,54 +1016,11 @@ func matchNotEmpty(actual interface{}, path string) error {
 	return nil
 }
 
+// getJSONPath reads a dotted path out of the last response body. The
+// traversal itself is shared with the other resources that assert on JSON —
+// see jsonPathValue.
 func (r *HTTPClient) getJSONPath(path string) (interface{}, error) {
-	var data interface{}
-	if err := json.Unmarshal(r.lastBody, &data); err != nil {
-		return nil, fmt.Errorf("invalid JSON: %w", err)
-	}
-
-	parts := strings.Split(path, ".")
-	current := data
-
-	for _, part := range parts {
-		if idx := strings.Index(part, "["); idx != -1 {
-			key := part[:idx]
-			indexStr := part[idx+1 : len(part)-1]
-			index, err := strconv.Atoi(indexStr)
-			if err != nil {
-				return nil, fmt.Errorf("invalid array index: %s", indexStr)
-			}
-
-			if key != "" {
-				obj, ok := current.(map[string]interface{})
-				if !ok {
-					return nil, fmt.Errorf("expected object at %s", key)
-				}
-				current = obj[key]
-			}
-
-			arr, ok := current.([]interface{})
-			if !ok {
-				return nil, fmt.Errorf("expected array at %s", part)
-			}
-			if index >= len(arr) {
-				return nil, fmt.Errorf("array index out of bounds: %d", index)
-			}
-			current = arr[index]
-		} else {
-			obj, ok := current.(map[string]interface{})
-			if !ok {
-				return nil, fmt.Errorf("expected object at %s", part)
-			}
-			var exists bool
-			current, exists = obj[part]
-			if !exists {
-				return nil, fmt.Errorf("key not found: %s", part)
-			}
-		}
-	}
-
-	return current, nil
+	return jsonPathValue(r.lastBody, path)
 }
 
 func (r *HTTPClient) responseTimeShouldBeLessThan(duration string) error {
