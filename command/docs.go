@@ -125,6 +125,10 @@ func collectStepCategories() []handler.StepCategory {
 	s3Handler, _ := handler.NewS3("files", handler.DummyConfig(), nil)
 	categories = append(categories, s3Handler.Steps())
 
+	// gRPC
+	grpcHandler, _ := handler.NewGRPC("grpc", handler.DummyConfig(), nil)
+	categories = append(categories, grpcHandler.Steps())
+
 	return categories
 }
 
