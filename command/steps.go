@@ -21,7 +21,7 @@ var stepsCommand = &cli.Command{
 		&cli.StringFlag{
 			Name:    "type",
 			Aliases: []string{"t"},
-			Usage:   "Filter by handler type (http, redis, postgres, kafka, websocket, shell, s3)",
+			Usage:   "Filter by handler type (http, grpc, redis, postgres, kafka, websocket, shell, s3)",
 		},
 		&cli.BoolFlag{
 			Name:  "json",

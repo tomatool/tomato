@@ -45,7 +45,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|postgres|redis|kafka|s3|websocket|websocket-server|shell
+    type: http|http-server|grpc|postgres|redis|kafka|s3|websocket|websocket-server|shell
     container: container_name
     options: {}
 
@@ -279,6 +279,20 @@ resources:
       headers:
         Authorization: Bearer token
 ```
+
+### gRPC
+
+```yaml
+resources:
+  grpc:
+    type: grpc
+    address: "localhost:9090"   # or: container: myservice
+    options:
+      timeout: 30s
+```
+
+The server must register the gRPC reflection service. See
+[gRPC Configuration](grpc.md).
 
 ### S3
 

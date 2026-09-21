@@ -152,6 +152,10 @@ resources:
     type: http-client
     base_url: "http://localhost:8080"
 
+  grpc:
+    type: grpc
+    address: "localhost:9090"
+
   shell:
     type: shell
 
