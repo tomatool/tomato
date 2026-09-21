@@ -13,10 +13,10 @@
       
       
       
-        <link rel="prev" href="../postgres/">
+        <link rel="prev" href="../http-server/">
       
       
-        <link rel="next" href="../kafka/">
+        <link rel="next" href="../postgres/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Redis - 🍅 tomato</title>
+        <title>gRPC - 🍅 tomato</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#redis" class="md-skip">
+        <a href="#grpc" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Redis
+              gRPC
             
           </span>
         </div>
@@ -921,10 +921,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../grpc/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gRPC
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -940,6 +967,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#request-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request Execution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-body" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Body
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response JSON
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service Discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Timing
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -977,37 +1101,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Redis
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../redis/" class="md-nav__link">
         
   
   
@@ -1023,92 +1120,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#string-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        String Operations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#string-assertions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        String Assertions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hash-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Hash Operations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#list-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        List Operations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#set-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Set Operations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#database" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Database
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1405,10 +1416,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#string-operations" class="md-nav__link">
+  <a href="#request-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        String Operations
+        Request Setup
       
     </span>
   </a>
@@ -1416,10 +1427,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#string-assertions" class="md-nav__link">
+  <a href="#request-execution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        String Assertions
+        Request Execution
       
     </span>
   </a>
@@ -1427,10 +1438,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hash-operations" class="md-nav__link">
+  <a href="#response-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hash Operations
+        Response Status
       
     </span>
   </a>
@@ -1438,10 +1449,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#list-operations" class="md-nav__link">
+  <a href="#response-body" class="md-nav__link">
     <span class="md-ellipsis">
       
-        List Operations
+        Response Body
       
     </span>
   </a>
@@ -1449,10 +1460,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#set-operations" class="md-nav__link">
+  <a href="#response-json" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Set Operations
+        Response JSON
       
     </span>
   </a>
@@ -1460,10 +1471,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#database" class="md-nav__link">
+  <a href="#service-discovery" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Database
+        Service Discovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#response-timing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Timing
       
     </span>
   </a>
@@ -1490,13 +1512,13 @@
   
 
 
-<h1 id="redis">Redis<a class="headerlink" href="#redis" title="Permanent link">#</a></h1>
-<p>Steps for interacting with Redis key-value store</p>
+<h1 id="grpc">gRPC<a class="headerlink" href="#grpc" title="Permanent link">#</a></h1>
+<p>Steps for calling unary gRPC methods and validating responses</p>
 <div class="admonition tip">
 <p class="admonition-title">Multi-line Content</p>
 <p>Steps ending with <code>:</code> accept multi-line content using Gherkin's docstring syntax (<code>"""</code>). See examples below each section.</p>
 </div>
-<h2 id="string-operations">String Operations<a class="headerlink" href="#string-operations" title="Permanent link">#</a></h2>
+<h2 id="request-setup">Request Setup<a class="headerlink" href="#request-setup" title="Permanent link">#</a></h2>
 <table>
 <thead>
 <tr>
@@ -1506,36 +1528,20 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" key "user:1" is "John"</code></td>
-<td>Set a string value</td>
+<td><code>"grpc" metadata "authorization" is "Bearer token"</code></td>
+<td>Set a request metadata entry</td>
 </tr>
 <tr>
-<td><code>"cache" key "session:abc" is "data" with TTL "1h"</code></td>
-<td>Set a string value with expiration</td>
+<td><code>"grpc" metadata are:</code></td>
+<td>Set multiple metadata entries from table</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" is:</code></td>
-<td>Set a JSON/multiline value</td>
-</tr>
-<tr>
-<td><code>"cache" key "user:1" is deleted</code></td>
-<td>Delete a key</td>
-</tr>
-<tr>
-<td><code>"cache" key "counter" is incremented</code></td>
-<td>Increment integer value by 1</td>
-</tr>
-<tr>
-<td><code>"cache" key "counter" is incremented by "5"</code></td>
-<td>Increment integer value by N</td>
-</tr>
-<tr>
-<td><code>"cache" key "counter" is decremented</code></td>
-<td>Decrement integer value by 1</td>
+<td><code>"grpc" request is:</code></td>
+<td>Set the request message as JSON (docstring)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="string-assertions">String Assertions<a class="headerlink" href="#string-assertions" title="Permanent link">#</a></h2>
+<h2 id="request-execution">Request Execution<a class="headerlink" href="#request-execution" title="Permanent link">#</a></h2>
 <table>
 <thead>
 <tr>
@@ -1545,28 +1551,16 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" key "user:1" exists</code></td>
-<td>Assert key exists</td>
+<td><code>"grpc" calls "helloworld.Greeter/SayHello"</code></td>
+<td>Call a unary method using the previously set request</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" does not exist</code></td>
-<td>Assert key doesn't exist</td>
-</tr>
-<tr>
-<td><code>"cache" key "user:1" has value "John"</code></td>
-<td>Assert exact value</td>
-</tr>
-<tr>
-<td><code>"cache" key "user:1" contains "John"</code></td>
-<td>Assert value contains substring</td>
-</tr>
-<tr>
-<td><code>"cache" key "session:abc" has TTL greater than "3600" seconds</code></td>
-<td>Assert TTL greater than N seconds</td>
+<td><code>"grpc" calls "helloworld.Greeter/SayHello" with:</code></td>
+<td>Call a unary method with a JSON request (docstring)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="hash-operations">Hash Operations<a class="headerlink" href="#hash-operations" title="Permanent link">#</a></h2>
+<h2 id="response-status">Response Status<a class="headerlink" href="#response-status" title="Permanent link">#</a></h2>
 <table>
 <thead>
 <tr>
@@ -1576,20 +1570,24 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" hash "user:1" has fields:</code></td>
-<td>Set hash fields from table</td>
+<td><code>"grpc" response status is "OK"</code></td>
+<td>Assert the gRPC status code by name (OK, NOT_FOUND, INVALID_ARGUMENT, ...)</td>
 </tr>
 <tr>
-<td><code>"cache" hash "user:1" field "name" is "John"</code></td>
-<td>Assert hash field value</td>
+<td><code>"grpc" call succeeds</code></td>
+<td>Assert the call returned OK</td>
 </tr>
 <tr>
-<td><code>"cache" hash "user:1" contains:</code></td>
-<td>Assert hash contains fields</td>
+<td><code>"grpc" call fails</code></td>
+<td>Assert the call returned any non-OK status</td>
+</tr>
+<tr>
+<td><code>"grpc" response error contains "not found"</code></td>
+<td>Assert the status message contains a substring</td>
 </tr>
 </tbody>
 </table>
-<h2 id="list-operations">List Operations<a class="headerlink" href="#list-operations" title="Permanent link">#</a></h2>
+<h2 id="response-body">Response Body<a class="headerlink" href="#response-body" title="Permanent link">#</a></h2>
 <table>
 <thead>
 <tr>
@@ -1599,24 +1597,16 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" list "queue" has "item1"</code></td>
-<td>Push value to list</td>
+<td><code>"grpc" response contains "SERVING"</code></td>
+<td>Assert the JSON-rendered response contains a substring</td>
 </tr>
 <tr>
-<td><code>"cache" list "queue" has values:</code></td>
-<td>Push multiple values to list</td>
-</tr>
-<tr>
-<td><code>"cache" list "queue" has "3" items</code></td>
-<td>Assert list length</td>
-</tr>
-<tr>
-<td><code>"cache" list "queue" contains "item1"</code></td>
-<td>Assert list contains value</td>
+<td><code>"grpc" response does not contain "error"</code></td>
+<td>Assert the JSON-rendered response does not contain a substring</td>
 </tr>
 </tbody>
 </table>
-<h2 id="set-operations">Set Operations<a class="headerlink" href="#set-operations" title="Permanent link">#</a></h2>
+<h2 id="response-json">Response JSON<a class="headerlink" href="#response-json" title="Permanent link">#</a></h2>
 <table>
 <thead>
 <tr>
@@ -1626,24 +1616,28 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" set "tags" has "tag1"</code></td>
-<td>Add member to set</td>
+<td><code>"grpc" response json "status" is "SERVING"</code></td>
+<td>Assert a JSON path value on the response message</td>
 </tr>
 <tr>
-<td><code>"cache" set "tags" has members:</code></td>
-<td>Add multiple members to set</td>
+<td><code>"grpc" response json "employees[0].email" exists</code></td>
+<td>Assert a JSON path exists on the response message</td>
 </tr>
 <tr>
-<td><code>"cache" set "tags" contains "tag1"</code></td>
-<td>Assert set contains member</td>
+<td><code>"grpc" response json "nextPageToken" does not exist</code></td>
+<td>Assert a JSON path is absent from the response message</td>
 </tr>
 <tr>
-<td><code>"cache" set "tags" has "3" members</code></td>
-<td>Assert set size</td>
+<td><code>"grpc" response json matches:</code></td>
+<td>Assert the exact response structure, with the same matchers the HTTP handler supports</td>
+</tr>
+<tr>
+<td><code>"grpc" response json contains:</code></td>
+<td>Assert the response contains the given fields, ignoring extras</td>
 </tr>
 </tbody>
 </table>
-<h2 id="database">Database<a class="headerlink" href="#database" title="Permanent link">#</a></h2>
+<h2 id="service-discovery">Service Discovery<a class="headerlink" href="#service-discovery" title="Permanent link">#</a></h2>
 <table>
 <thead>
 <tr>
@@ -1653,12 +1647,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" has "5" keys</code></td>
-<td>Assert total key count</td>
+<td><code>"grpc" exposes service "grpc.health.v1.Health"</code></td>
+<td>Assert the server advertises a service via reflection</td>
 </tr>
 <tr>
-<td><code>"cache" is empty</code></td>
-<td>Assert database is empty</td>
+<td><code>"grpc" service "grpc.health.v1.Health" has method "Check"</code></td>
+<td>Assert a service exposes a method</td>
+</tr>
+</tbody>
+</table>
+<h2 id="response-timing">Response Timing<a class="headerlink" href="#response-timing" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"grpc" response time is less than "500ms"</code></td>
+<td>Assert the call completed within a time budget</td>
 </tr>
 </tbody>
 </table>
