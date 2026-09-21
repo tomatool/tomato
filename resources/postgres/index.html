@@ -1404,6 +1404,14 @@
 <td><code>"db" table "users" has "5" rows</code></td>
 <td>Assert row count</td>
 </tr>
+<tr>
+<td><code>"db" query "SELECT id, name FROM users" returns:</code></td>
+<td>Assert exact match of query result rows</td>
+</tr>
+<tr>
+<td><code>"db" query result of "SELECT id, name FROM users" contains:</code></td>
+<td>Assert query result contains expected rows (superset)</td>
+</tr>
 </tbody>
 </table>
 
