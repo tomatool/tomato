@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/cucumber/godog"
@@ -39,38 +40,57 @@ func NewRegistry(configs map[string]config.Resource, cm *container.Manager) (*Re
 	return r, nil
 }
 
+// handlerFactory builds one resource handler.
+type handlerFactory func(name string, cfg config.Resource, cm *container.Manager) (Handler, error)
+
+// factory adapts a concrete constructor — they return *Postgres, *GRPC and so
+// on — to the common signature, so every resource can live in one table.
+func factory[T Handler](f func(string, config.Resource, *container.Manager) (T, error)) handlerFactory {
+	return func(name string, cfg config.Resource, cm *container.Manager) (Handler, error) {
+		h, err := f(name, cfg, cm)
+		if err != nil {
+			return nil, err
+		}
+		return h, nil
+	}
+}
+
+// handlerFactories is the ONE place a resource type is registered.
+//
+// It is a map rather than a switch because ValidResourceTypes is derived from
+// it. While those were two hand-maintained lists, a type could be added to
+// one and not the other — which is exactly what happened when the grpc
+// resource landed: `tomato run` constructed it happily while `tomato validate`
+// rejected it as unknown, so the failure only appeared in CI, where the
+// GitHub Action validates before running.
+var handlerFactories = map[string]handlerFactory{
+	"postgres":         factory(NewPostgres),
+	"postgresql":       factory(NewPostgres),
+	"mysql":            factory(NewMySQL),
+	"redis":            factory(NewRedis),
+	"rabbitmq":         factory(NewRabbitMQ),
+	"kafka":            factory(NewKafka),
+	"http":             factory(NewHTTPClient),
+	"http-client":      factory(NewHTTPClient),
+	"http-server":      factory(NewHTTPServer),
+	"grpc":             factory(NewGRPC),
+	"grpc-client":      factory(NewGRPC),
+	"websocket":        factory(NewWebSocketClient),
+	"websocket-client": factory(NewWebSocketClient),
+	"websocket-server": factory(NewWebSocketServer),
+	"wiremock":         factory(NewWiremock),
+	"s3":               factory(NewS3),
+	"minio":            factory(NewS3),
+	"shell":            factory(NewShell),
+}
+
 // createHandler instantiates a handler based on its type
 func (r *Registry) createHandler(name string, cfg config.Resource) (Handler, error) {
-	switch cfg.Type {
-	case "postgres", "postgresql":
-		return NewPostgres(name, cfg, r.container)
-	case "mysql":
-		return NewMySQL(name, cfg, r.container)
-	case "redis":
-		return NewRedis(name, cfg, r.container)
-	case "rabbitmq":
-		return NewRabbitMQ(name, cfg, r.container)
-	case "kafka":
-		return NewKafka(name, cfg, r.container)
-	case "http-client", "http":
-		return NewHTTPClient(name, cfg, r.container)
-	case "grpc", "grpc-client":
-		return NewGRPC(name, cfg, r.container)
-	case "http-server":
-		return NewHTTPServer(name, cfg, r.container)
-	case "websocket-client", "websocket":
-		return NewWebSocketClient(name, cfg, r.container)
-	case "websocket-server":
-		return NewWebSocketServer(name, cfg, r.container)
-	case "wiremock":
-		return NewWiremock(name, cfg, r.container)
-	case "s3", "minio":
-		return NewS3(name, cfg, r.container)
-	case "shell":
-		return NewShell(name, cfg, r.container)
-	default:
+	build, ok := handlerFactories[cfg.Type]
+	if !ok {
 		return nil, fmt.Errorf("unknown handler type: %s", cfg.Type)
 	}
+	return build(name, cfg, r.container)
 }
 
 // Get returns a handler by name
@@ -156,15 +176,12 @@ func (r *Registry) Cleanup(ctx context.Context) error {
 
 // ValidResourceTypes returns all valid resource type names
 func ValidResourceTypes() []string {
-	return []string{
-		"http", "http-client", "http-server",
-		"postgres", "postgresql", "mysql",
-		"redis", "rabbitmq", "kafka",
-		"shell",
-		"websocket", "websocket-client", "websocket-server",
-		"wiremock",
-		"s3", "minio",
+	types := make([]string, 0, len(handlerFactories))
+	for t := range handlerFactories {
+		types = append(types, t)
 	}
+	sort.Strings(types)
+	return types
 }
 
 // ContainerBasedTypes returns resource types that typically need a container reference
