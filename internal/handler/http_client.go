@@ -26,6 +26,7 @@ type HTTPClient struct {
 	baseURL   string
 
 	requestHeaders map[string]string
+	requestCookies map[string]string
 	requestBody    []byte
 	requestParams  url.Values
 
@@ -39,6 +40,7 @@ func NewHTTPClient(name string, cfg config.Resource, cm *container.Manager) (*HT
 		config:         cfg,
 		container:      cm,
 		requestHeaders: make(map[string]string),
+		requestCookies: make(map[string]string),
 		requestParams:  make(url.Values),
 	}, nil
 }
@@ -109,6 +111,7 @@ func (r *HTTPClient) Ready(ctx context.Context) error {
 
 func (r *HTTPClient) Reset(ctx context.Context) error {
 	r.requestHeaders = make(map[string]string)
+	r.requestCookies = make(map[string]string)
 	r.requestBody = nil
 	r.requestParams = make(url.Values)
 	r.lastResponse = nil
@@ -130,7 +133,7 @@ func (r *HTTPClient) Steps() StepCategory {
 			{
 				Group:       "Request Setup",
 				Pattern:     `^"{resource}" header "([^"]*)" is "([^"]*)"$`,
-				Description: "Set a header",
+				Description: "Set a header (a \"Host\" header sets the request host)",
 				Example:     `"api" header "Content-Type" is "application/json"`,
 				Handler:     r.setHeader,
 			},
@@ -140,6 +143,13 @@ func (r *HTTPClient) Steps() StepCategory {
 				Description: "Set multiple headers from table",
 				Example:     `"api" headers are:`,
 				Handler:     r.setHeaders,
+			},
+			{
+				Group:       "Request Setup",
+				Pattern:     `^"{resource}" cookie "([^"]*)" is "([^"]*)"$`,
+				Description: "Set a request cookie (kept for the rest of the scenario, like headers)",
+				Example:     `"api" cookie "session" is "{{session}}"`,
+				Handler:     r.setCookie,
 			},
 			{
 				Group:       "Request Setup",
@@ -249,6 +259,13 @@ func (r *HTTPClient) Steps() StepCategory {
 			},
 			{
 				Group:       "Response Body",
+				Pattern:     `^"{resource}" response body contains:$`,
+				Description: "Assert body contains the docstring text (use for text with quotes)",
+				Example:     `"api" response body contains:`,
+				Handler:     r.responseBodyShouldContainDoc,
+			},
+			{
+				Group:       "Response Body",
 				Pattern:     `^"{resource}" response body does not contain "([^"]*)"$`,
 				Description: "Assert body doesn't contain substring",
 				Example:     `"api" response body does not contain "error"`,
@@ -256,10 +273,40 @@ func (r *HTTPClient) Steps() StepCategory {
 			},
 			{
 				Group:       "Response Body",
+				Pattern:     `^"{resource}" response body does not contain:$`,
+				Description: "Assert body doesn't contain the docstring text",
+				Example:     `"api" response body does not contain:`,
+				Handler:     r.responseBodyShouldNotContainDoc,
+			},
+			{
+				Group:       "Response Body",
 				Pattern:     `^"{resource}" response body is empty$`,
 				Description: "Assert empty body",
 				Example:     `"api" response body is empty`,
 				Handler:     r.responseBodyShouldBeEmpty,
+			},
+
+			// Response Cookies
+			{
+				Group:       "Response Cookies",
+				Pattern:     `^"{resource}" response cookie "([^"]*)" exists$`,
+				Description: "Assert the response sets a cookie",
+				Example:     `"api" response cookie "session" exists`,
+				Handler:     r.responseCookieShouldExist,
+			},
+			{
+				Group:       "Response Cookies",
+				Pattern:     `^"{resource}" response cookie "([^"]*)" is "([^"]*)"$`,
+				Description: "Assert a cookie's value (an empty value means the cookie is cleared)",
+				Example:     `"api" response cookie "session" is ""`,
+				Handler:     r.responseCookieShouldBe,
+			},
+			{
+				Group:       "Response Cookies",
+				Pattern:     `^"{resource}" response cookie "([^"]*)" saved as "\{\{([^}]+)\}\}"$`,
+				Description: "Save a cookie's value to a variable",
+				Example:     `"api" response cookie "session" saved as "{{session}}"`,
+				Handler:     r.saveCookieToVariable,
 			},
 
 			// Response JSON
@@ -360,6 +407,11 @@ func (r *HTTPClient) setHeader(key, value string) error {
 	return nil
 }
 
+func (r *HTTPClient) setCookie(name, value string) error {
+	r.requestCookies[name] = value
+	return nil
+}
+
 func (r *HTTPClient) setHeaders(table *godog.Table) error {
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
@@ -451,7 +503,16 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 
 	for k, v := range r.requestHeaders {
 		// Replace variables in header values
-		req.Header.Set(k, ReplaceVariables(v))
+		v = ReplaceVariables(v)
+		// net/http ignores a Host header; the request's Host field is what gets sent.
+		if strings.EqualFold(k, "Host") {
+			req.Host = v
+			continue
+		}
+		req.Header.Set(k, v)
+	}
+	for name, value := range r.requestCookies {
+		req.AddCookie(&http.Cookie{Name: name, Value: ReplaceVariables(value)})
 	}
 
 	start := time.Now()
@@ -561,6 +622,57 @@ func (r *HTTPClient) responseBodyShouldContain(substr string) error {
 	if !strings.Contains(string(r.lastBody), substr) {
 		return fmt.Errorf("body does not contain %q\nbody: %s", substr, string(r.lastBody))
 	}
+	return nil
+}
+
+func (r *HTTPClient) responseBodyShouldContainDoc(doc *godog.DocString) error {
+	return r.responseBodyShouldContain(ReplaceVariables(strings.TrimSpace(doc.Content)))
+}
+
+func (r *HTTPClient) responseBodyShouldNotContainDoc(doc *godog.DocString) error {
+	return r.responseBodyShouldNotContain(ReplaceVariables(strings.TrimSpace(doc.Content)))
+}
+
+// responseCookie returns the named cookie from the response's Set-Cookie
+// headers. When set more than once, the last one wins, as in a browser.
+func (r *HTTPClient) responseCookie(name string) (*http.Cookie, error) {
+	if r.lastResponse == nil {
+		return nil, fmt.Errorf("no response received")
+	}
+	var found *http.Cookie
+	for _, c := range r.lastResponse.Cookies() {
+		if c.Name == name {
+			found = c
+		}
+	}
+	if found == nil {
+		return nil, fmt.Errorf("response does not set cookie %q", name)
+	}
+	return found, nil
+}
+
+func (r *HTTPClient) responseCookieShouldExist(name string) error {
+	_, err := r.responseCookie(name)
+	return err
+}
+
+func (r *HTTPClient) responseCookieShouldBe(name, expected string) error {
+	c, err := r.responseCookie(name)
+	if err != nil {
+		return err
+	}
+	if expected = ReplaceVariables(expected); c.Value != expected {
+		return fmt.Errorf("cookie %q: expected %q, got %q", name, expected, c.Value)
+	}
+	return nil
+}
+
+func (r *HTTPClient) saveCookieToVariable(name, varName string) error {
+	c, err := r.responseCookie(name)
+	if err != nil {
+		return err
+	}
+	SetVariable(varName, c.Value)
 	return nil
 }
 
