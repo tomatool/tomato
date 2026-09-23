@@ -10,8 +10,9 @@ Steps for making HTTP requests and validating responses
 
 | Step | Description |
 |------|-------------|
-| `"api" header "Content-Type" is "application/json"` | Set a header |
+| `"api" header "Content-Type" is "application/json"` | Set a header (a "Host" header sets the request host) |
 | `"api" headers are:` | Set multiple headers from table |
+| `"api" cookie "session" is "{{session}}"` | Set a request cookie (kept for the rest of the scenario, like headers) |
 | `"api" query param "page" is "1"` | Set a query parameter |
 | `"api" body is:` | Set raw request body (docstring) |
 | `"api" json body is:` | Set JSON body + Content-Type header |
@@ -54,8 +55,20 @@ Steps for making HTTP requests and validating responses
 |------|-------------|
 | `"api" response body is:` | Assert exact body match |
 | `"api" response body contains "success"` | Assert body contains substring |
+| `"api" response body contains:` | Assert body contains the docstring text (use for text with quotes) |
 | `"api" response body does not contain "error"` | Assert body doesn't contain substring |
+| `"api" response body does not contain:` | Assert body doesn't contain the docstring text |
 | `"api" response body is empty` | Assert empty body |
+
+
+
+## Response Cookies
+
+| Step | Description |
+|------|-------------|
+| `"api" response cookie "session" exists` | Assert the response sets a cookie |
+| `"api" response cookie "session" is ""` | Assert a cookie's value (an empty value means the cookie is cleared) |
+| `"api" response cookie "session" saved as "{{session}}"` | Save a cookie's value to a variable |
 
 
 
