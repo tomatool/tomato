@@ -983,6 +983,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#response-cookies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Cookies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#response-json" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1482,6 +1493,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#response-cookies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Response Cookies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#response-json" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1551,11 +1573,15 @@
 <tbody>
 <tr>
 <td><code>"api" header "Content-Type" is "application/json"</code></td>
-<td>Set a header</td>
+<td>Set a header (a "Host" header sets the request host)</td>
 </tr>
 <tr>
 <td><code>"api" headers are:</code></td>
 <td>Set multiple headers from table</td>
+</tr>
+<tr>
+<td><code>"api" cookie "session" is "{{session}}"</code></td>
+<td>Set a request cookie (kept for the rest of the scenario, like headers)</td>
 </tr>
 <tr>
 <td><code>"api" query param "page" is "1"</code></td>
@@ -1658,12 +1684,43 @@
 <td>Assert body contains substring</td>
 </tr>
 <tr>
+<td><code>"api" response body contains:</code></td>
+<td>Assert body contains the docstring text (use for text with quotes)</td>
+</tr>
+<tr>
 <td><code>"api" response body does not contain "error"</code></td>
 <td>Assert body doesn't contain substring</td>
 </tr>
 <tr>
+<td><code>"api" response body does not contain:</code></td>
+<td>Assert body doesn't contain the docstring text</td>
+</tr>
+<tr>
 <td><code>"api" response body is empty</code></td>
 <td>Assert empty body</td>
+</tr>
+</tbody>
+</table>
+<h2 id="response-cookies">Response Cookies<a class="headerlink" href="#response-cookies" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"api" response cookie "session" exists</code></td>
+<td>Assert the response sets a cookie</td>
+</tr>
+<tr>
+<td><code>"api" response cookie "session" is ""</code></td>
+<td>Assert a cookie's value (an empty value means the cookie is cleared)</td>
+</tr>
+<tr>
+<td><code>"api" response cookie "session" saved as "{{session}}"</code></td>
+<td>Save a cookie's value to a variable</td>
 </tr>
 </tbody>
 </table>
