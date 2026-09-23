@@ -5,7 +5,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/cucumber/godog"
 
 	"github.com/tomatool/tomato/internal/config"
 )
@@ -154,5 +157,120 @@ func TestHTTPClient_ResetClearsHeaders(t *testing.T) {
 
 	if receivedAuth[1] != "" {
 		t.Errorf("second request (after reset): expected empty, got %q", receivedAuth[1])
+	}
+}
+
+func newTestHTTPClient(t *testing.T, url string) *HTTPClient {
+	t.Helper()
+	client, err := NewHTTPClient("api", config.Resource{BaseURL: url}, nil)
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+	if err := client.Init(context.Background()); err != nil {
+		t.Fatalf("failed to init client: %v", err)
+	}
+	return client
+}
+
+func TestHTTPClient_HostHeaderSetsRequestHost(t *testing.T) {
+	var gotHost string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotHost = r.Host
+	}))
+	defer server.Close()
+
+	client := newTestHTTPClient(t, server.URL)
+	client.setHeader("Host", "go.example.com")
+	if err := client.sendRequest("GET", "/"); err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	if gotHost != "go.example.com" {
+		t.Errorf("server saw Host %q, want %q", gotHost, "go.example.com")
+	}
+}
+
+func TestHTTPClient_CookiesPersistAndUseVariables(t *testing.T) {
+	var got []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := r.Cookie("session")
+		if err != nil {
+			got = append(got, "<none>")
+			return
+		}
+		got = append(got, c.Value)
+	}))
+	defer server.Close()
+
+	client := newTestHTTPClient(t, server.URL)
+	SetVariable("session_value", "abc.123")
+	client.setCookie("session", "{{session_value}}")
+	client.sendRequest("GET", "/one")
+	client.sendRequest("GET", "/two")
+	client.Reset(context.Background())
+	client.sendRequest("GET", "/three")
+
+	want := []string{"abc.123", "abc.123", "<none>"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Errorf("cookies seen by server = %v, want %v", got, want)
+	}
+}
+
+func TestHTTPClient_ResponseCookies(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Same cookie set twice: the last one should win.
+		http.SetCookie(w, &http.Cookie{Name: "session", Value: "old"})
+		http.SetCookie(w, &http.Cookie{Name: "state", Value: "", MaxAge: -1})
+		http.SetCookie(w, &http.Cookie{Name: "session", Value: "new", HttpOnly: true})
+	}))
+	defer server.Close()
+
+	client := newTestHTTPClient(t, server.URL)
+	if err := client.sendRequest("GET", "/"); err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	if err := client.responseCookieShouldExist("session"); err != nil {
+		t.Error(err)
+	}
+	if err := client.responseCookieShouldExist("missing"); err == nil {
+		t.Error("expected error for a cookie that was not set")
+	}
+	if err := client.responseCookieShouldBe("session", "new"); err != nil {
+		t.Error(err)
+	}
+	if err := client.responseCookieShouldBe("state", ""); err != nil {
+		t.Error(err)
+	}
+	if err := client.responseCookieShouldBe("session", "old"); err == nil {
+		t.Error("expected mismatch error")
+	}
+	if err := client.saveCookieToVariable("session", "saved"); err != nil {
+		t.Fatal(err)
+	}
+	if got := ReplaceVariables("{{saved}}"); got != "new" {
+		t.Errorf("saved variable = %q, want %q", got, "new")
+	}
+}
+
+func TestHTTPClient_ResponseBodyContainsDocString(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, `requests_total{handler="GET /",code="200"} 3`)
+	}))
+	defer server.Close()
+
+	client := newTestHTTPClient(t, server.URL)
+	client.sendRequest("GET", "/metrics")
+
+	if err := client.responseBodyShouldContainDoc(&godog.DocString{Content: "\n  requests_total{handler=\"GET /\",code=\"200\"} 3\n"}); err != nil {
+		t.Error(err)
+	}
+	if err := client.responseBodyShouldContainDoc(&godog.DocString{Content: `code="500"`}); err == nil {
+		t.Error("expected error for missing text")
+	}
+	if err := client.responseBodyShouldNotContainDoc(&godog.DocString{Content: `code="500"`}); err != nil {
+		t.Error(err)
+	}
+	if err := client.responseBodyShouldNotContainDoc(&godog.DocString{Content: `code="200"`}); err == nil {
+		t.Error("expected error for present text")
 	}
 }
