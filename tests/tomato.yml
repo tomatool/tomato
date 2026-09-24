@@ -107,6 +107,17 @@ containers:
       target: "5672"
       timeout: 30s
 
+  scylla:
+    image: scylladb/scylla:6.2
+    # Single shard, small memory: enough for tests and CI runners.
+    command: ["--smp", "1", "--memory", "512M", "--overprovisioned", "1", "--developer-mode", "1"]
+    ports:
+      - "9042/tcp"
+    wait_for:
+      type: port
+      target: "9042"
+      timeout: 120s
+
 app:
   # Default: run as local process
   command: go run ./tests/app
@@ -132,6 +143,15 @@ resources:
     options:
       user: test
       password: test
+
+  scylla:
+    type: scylladb
+    container: scylla
+    options:
+      keyspace: tomato
+      schema: tests/testdata/scylla/schema.cql
+      exclude:
+        - countries
 
   cache:
     type: redis
