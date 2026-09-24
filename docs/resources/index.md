@@ -9,6 +9,7 @@ Tomato supports the following resource types for behavioral testing.
 | [PostgreSQL](postgres.md) | `postgres` | Steps for interacting with PostgreSQL databases |
 | [Redis](redis.md) | `redis` | Steps for interacting with Redis key-value store |
 | [Kafka](kafka.md) | `kafka` | Steps for interacting with Apache Kafka message broker |
+| [RabbitMQ](rabbitmq.md) | `rabbitmq` | Steps for interacting with RabbitMQ message broker |
 | [Shell](shell.md) | `shell` | Steps for executing shell commands and scripts |
 | [WebSocket Client](websocket-client.md) | `websocket` | Steps for connecting to WebSocket servers |
 | [WebSocket Server](websocket-server.md) | `websocket-server` | Steps for stubbing WebSocket services |

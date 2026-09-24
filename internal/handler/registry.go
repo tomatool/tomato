@@ -66,7 +66,6 @@ func factory[T Handler](f func(string, config.Resource, *container.Manager) (T, 
 var handlerFactories = map[string]handlerFactory{
 	"postgres":         factory(NewPostgres),
 	"postgresql":       factory(NewPostgres),
-	"mysql":            factory(NewMySQL),
 	"redis":            factory(NewRedis),
 	"rabbitmq":         factory(NewRabbitMQ),
 	"kafka":            factory(NewKafka),
@@ -78,16 +77,34 @@ var handlerFactories = map[string]handlerFactory{
 	"websocket":        factory(NewWebSocketClient),
 	"websocket-client": factory(NewWebSocketClient),
 	"websocket-server": factory(NewWebSocketServer),
-	"wiremock":         factory(NewWiremock),
 	"s3":               factory(NewS3),
 	"minio":            factory(NewS3),
 	"shell":            factory(NewShell),
+}
+
+// unimplementedTypes are resource types people reach for that tomato does not
+// support yet, each with what to use instead. They used to be registered as
+// no-op stubs, so a config naming them validated, ran, and silently tested
+// nothing; now they fail up front with a pointer.
+var unimplementedTypes = map[string]string{
+	"mysql":    "MySQL is not supported yet; use postgres, or drive MySQL through a shell resource",
+	"wiremock": "use type: http-server to mock HTTP dependencies",
+}
+
+// UnimplementedTypeHint reports whether typ is a known but unsupported resource
+// type, and what to use instead.
+func UnimplementedTypeHint(typ string) (string, bool) {
+	hint, ok := unimplementedTypes[typ]
+	return hint, ok
 }
 
 // createHandler instantiates a handler based on its type
 func (r *Registry) createHandler(name string, cfg config.Resource) (Handler, error) {
 	build, ok := handlerFactories[cfg.Type]
 	if !ok {
+		if hint, planned := unimplementedTypes[cfg.Type]; planned {
+			return nil, fmt.Errorf("resource type %q is not implemented: %s", cfg.Type, hint)
+		}
 		return nil, fmt.Errorf("unknown handler type: %s", cfg.Type)
 	}
 	return build(name, cfg, r.container)
@@ -187,9 +204,8 @@ func ValidResourceTypes() []string {
 // ContainerBasedTypes returns resource types that typically need a container reference
 func ContainerBasedTypes() []string {
 	return []string{
-		"postgres", "postgresql", "mysql",
+		"postgres", "postgresql",
 		"redis", "rabbitmq", "kafka",
-		"wiremock",
 		"s3", "minio",
 	}
 }

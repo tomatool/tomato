@@ -211,6 +211,7 @@ func runTests(c *cli.Context) error {
 			// Show recent logs on failure (even in quiet mode)
 			fmt.Println()
 			fmt.Println(errorStyle.Render("Application failed to start!"))
+			fmt.Printf("  %s\n", err)
 			fmt.Println()
 
 			recentLogs := appRunner.GetRecentLogs(20)

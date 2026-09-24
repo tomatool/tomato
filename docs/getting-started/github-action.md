@@ -84,6 +84,30 @@ When enabled on a `pull_request` workflow, the action posts (or updates) a comme
 
 > **Note:** The `comment` feature requires `pull-requests: write` permission. See the [complete workflow example](#complete-workflow-example) below.
 
+### Publish a JUnit Report
+
+Write a JUnit report from `tomato.yml`, then upload it or hand it to a test
+reporter. File outputs are kept when `comment` is enabled.
+
+```yaml
+# tomato.yml
+settings:
+  output: "pretty,junit:reports/tomato.xml"
+```
+
+```yaml
+- uses: tomatool/tomato@v2
+
+- name: Upload test report
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: tomato-report
+    path: reports/
+```
+
+See [Reports](../configuration/index.md#reports) for all formats.
+
 ### Pin to Specific Version
 
 ```yaml

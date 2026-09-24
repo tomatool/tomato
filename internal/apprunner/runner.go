@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -134,6 +135,14 @@ func (r *Runner) Start(ctx context.Context) error {
 func (r *Runner) startCommand(ctx context.Context) error {
 	if r.config.Command == "" {
 		return fmt.Errorf("app command is required for command mode")
+	}
+
+	// Refuse to start if something already answers on the app port. Otherwise
+	// the app fails to bind, but the ready check still passes against the
+	// other process (a developer's `make run`, a leftover run), and the suite
+	// tests the wrong app against the wrong database.
+	if err := checkPortFree("localhost", r.config.Port); err != nil {
+		return err
 	}
 
 	// Build environment with mapped host ports (for local process)
@@ -327,6 +336,21 @@ func (r *Runner) streamCommandLogs(pipe io.Reader, source string) {
 			fmt.Printf("    │ %s\n", line)
 		}
 	}
+}
+
+// checkPortFree returns an error if a process is already listening on
+// host:port. A port of 0 means no port is configured and always passes.
+func checkPortFree(host string, port int) error {
+	if port == 0 {
+		return nil
+	}
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
+	conn, err := net.DialTimeout("tcp", addr, 500*time.Millisecond)
+	if err != nil {
+		return nil
+	}
+	conn.Close()
+	return fmt.Errorf("app port %d is already in use by another process; stop it or change app.port (and the matching base_url)", port)
 }
 
 // waitForReady waits for the app to be ready (command mode)

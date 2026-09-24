@@ -3,7 +3,10 @@ package runner
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/rs/zerolog/log"
@@ -73,9 +76,9 @@ func (r *Runner) Run(ctx context.Context) error {
 		return fmt.Errorf("before_all hooks failed: %w", err)
 	}
 
-	format := r.config.Settings.Output
-	if r.opts.Format != "" {
-		format = r.opts.Format
+	format := resolveFormat(r.config.Settings.Output, r.opts.Format)
+	if err := ensureReportDirs(format); err != nil {
+		return err
 	}
 
 	opts := &godog.Options{
@@ -193,5 +196,43 @@ func (r *Runner) executeHook(ctx context.Context, hook config.Hook) error {
 		}
 	}
 
+	return nil
+}
+
+// resolveFormat combines the configured output with a --format override. The
+// override replaces what goes to stdout, but file outputs from the config
+// (`junit:reports/tomato.xml`) are kept: the GitHub Action forces
+// `--format tomato` to build its PR comment, and that must not silently drop
+// the JUnit report the same workflow uploads.
+func resolveFormat(configured, override string) string {
+	if override == "" {
+		return configured
+	}
+	formats := []string{override}
+	for _, part := range strings.Split(configured, ",") {
+		part = strings.TrimSpace(part)
+		if _, path, ok := strings.Cut(part, ":"); ok && path != "" {
+			formats = append(formats, part)
+		}
+	}
+	return strings.Join(formats, ",")
+}
+
+// ensureReportDirs creates the parent directory of every file output in a
+// godog format string such as "pretty,junit:reports/tomato.xml". godog opens
+// those files itself and, when the directory is missing, only prints an error
+// and writes no report — CI then uploads nothing and nobody notices.
+func ensureReportDirs(format string) error {
+	for _, part := range strings.Split(format, ",") {
+		_, path, ok := strings.Cut(strings.TrimSpace(part), ":")
+		if !ok || path == "" {
+			continue
+		}
+		if dir := filepath.Dir(path); dir != "." {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return fmt.Errorf("creating report directory for %s: %w", path, err)
+			}
+		}
+	}
 	return nil
 }
