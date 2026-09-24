@@ -480,9 +480,13 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 	// Replace variables in path
 	path = ReplaceVariables(path)
 
-	reqURL := r.baseURL + path
+	reqURL := resolveRequestURL(r.baseURL, path)
 	if len(r.requestParams) > 0 {
-		reqURL += "?" + r.requestParams.Encode()
+		sep := "?"
+		if strings.Contains(reqURL, "?") {
+			sep = "&"
+		}
+		reqURL += sep + r.requestParams.Encode()
 	}
 
 	var bodyReader io.Reader
@@ -1192,3 +1196,13 @@ func (r *HTTPClient) Cleanup(ctx context.Context) error {
 }
 
 var _ Handler = (*HTTPClient)(nil)
+
+// resolveRequestURL joins a step's path onto base_url. A path that is already
+// an absolute URL (http://localhost:9999/health, e.g. an http-server stub)
+// is used as is.
+func resolveRequestURL(baseURL, path string) string {
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		return path
+	}
+	return baseURL + path
+}

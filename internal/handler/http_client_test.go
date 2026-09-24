@@ -274,3 +274,17 @@ func TestHTTPClient_ResponseBodyContainsDocString(t *testing.T) {
 		t.Error("expected error for present text")
 	}
 }
+
+func TestResolveRequestURL(t *testing.T) {
+	cases := []struct{ base, path, want string }{
+		{"http://localhost:8080", "/users", "http://localhost:8080/users"},
+		{"http://localhost:8080", "http://localhost:9999/health", "http://localhost:9999/health"},
+		{"http://localhost:8080", "https://example.com/x?a=1", "https://example.com/x?a=1"},
+		{"", "/users", "/users"},
+	}
+	for _, c := range cases {
+		if got := resolveRequestURL(c.base, c.path); got != c.want {
+			t.Errorf("resolveRequestURL(%q, %q) = %q, want %q", c.base, c.path, got, c.want)
+		}
+	}
+}
