@@ -34,7 +34,10 @@ flowchart TB
         DB[(PostgreSQL)]
         REDIS[(Redis)]
         KAFKA[(Kafka)]
+        RMQ[(RabbitMQ)]
+        S3[(S3)]
         HTTP[HTTP Server]
+        GRPC[gRPC Server]
         WS[WebSocket]
     end
 
@@ -45,11 +48,16 @@ flowchart TB
     TC --> DB
     TC --> REDIS
     TC --> KAFKA
+    TC --> RMQ
+    TC --> S3
 
     H --> DB
     H --> REDIS
     H --> KAFKA
+    H --> RMQ
+    H --> S3
     H --> HTTP
+    H --> GRPC
     H --> WS
 
     G --> H

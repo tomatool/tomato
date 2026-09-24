@@ -109,6 +109,10 @@ func collectStepCategories() []handler.StepCategory {
 	kafkaHandler, _ := handler.NewKafka("queue", handler.DummyConfig(), nil)
 	categories = append(categories, kafkaHandler.Steps())
 
+	// RabbitMQ
+	rabbitmqHandler, _ := handler.NewRabbitMQ("broker", handler.DummyConfig(), nil)
+	categories = append(categories, rabbitmqHandler.Steps())
+
 	// Shell
 	shellHandler, _ := handler.NewShell("shell", handler.DummyConfig(), nil)
 	categories = append(categories, shellHandler.Steps())

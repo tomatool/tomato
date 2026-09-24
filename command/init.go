@@ -75,7 +75,6 @@ type resource struct {
 
 var availableResources = []resource{
 	{"PostgreSQL", "SQL database for relational data", "postgresql"},
-	{"MySQL", "SQL database for relational data", "mysql"},
 	{"Redis", "In-memory cache and key-value store", "redis"},
 	{"Kafka", "Distributed event streaming platform", "kafka"},
 	{"RabbitMQ", "Message broker for async messaging", "rabbitmq"},
@@ -576,9 +575,6 @@ func generateTomatoConfig(m initModel) string {
 		if m.selected["postgresql"] {
 			s.WriteString("    DATABASE_URL: postgres://postgres:postgres@{{.postgres.host}}:{{.postgres.port.5432}}/testdb\n")
 		}
-		if m.selected["mysql"] {
-			s.WriteString("    DATABASE_URL: mysql://root:root@{{.mysql.host}}:{{.mysql.port.3306}}/testdb\n")
-		}
 		if m.selected["redis"] {
 			s.WriteString("    REDIS_URL: redis://{{.redis.host}}:{{.redis.port.6379}}\n")
 		}
@@ -609,21 +605,6 @@ func generateTomatoConfig(m initModel) string {
 		s.WriteString("      type: port\n")
 		s.WriteString("      target: \"5432/tcp\"\n")
 		s.WriteString("      timeout: 30s\n")
-		s.WriteString("\n")
-	}
-
-	if m.selected["mysql"] {
-		s.WriteString("  mysql:\n")
-		s.WriteString("    image: mysql:8\n")
-		s.WriteString("    env:\n")
-		s.WriteString("      MYSQL_ROOT_PASSWORD: root\n")
-		s.WriteString("      MYSQL_DATABASE: testdb\n")
-		s.WriteString("    ports:\n")
-		s.WriteString("      - \"3306/tcp\"\n")
-		s.WriteString("    wait_for:\n")
-		s.WriteString("      type: log\n")
-		s.WriteString("      target: \"ready for connections\"\n")
-		s.WriteString("      timeout: 60s\n")
 		s.WriteString("\n")
 	}
 
@@ -689,17 +670,6 @@ func generateTomatoConfig(m initModel) string {
 		s.WriteString("\n")
 	}
 
-	if m.selected["mysql"] {
-		s.WriteString("  db:\n")
-		s.WriteString("    type: mysql\n")
-		s.WriteString("    container: mysql\n")
-		s.WriteString("    database: testdb\n")
-		s.WriteString("    options:\n")
-		s.WriteString("      user: root\n")
-		s.WriteString("      password: root\n")
-		s.WriteString("\n")
-	}
-
 	if m.selected["redis"] {
 		s.WriteString("  cache:\n")
 		s.WriteString("    type: redis\n")
@@ -728,9 +698,9 @@ func generateTomatoConfig(m initModel) string {
 
 	if m.selected["http"] {
 		s.WriteString("  http:\n")
-		s.WriteString("    type: wiremock\n")
+		s.WriteString("    type: http-server\n")
 		s.WriteString("    options:\n")
-		s.WriteString("      # Configure external API mocks here\n")
+		s.WriteString("      port: 9999  # point your app at {{.http.url}}\n")
 		s.WriteString("\n")
 	}
 
@@ -768,7 +738,7 @@ func generateExampleFeatureFile(m initModel) string {
 	s.WriteString("  I want to test my application\n")
 	s.WriteString("  So that I can ensure it works correctly\n\n")
 
-	if m.selected["postgresql"] || m.selected["mysql"] {
+	if m.selected["postgresql"] {
 		s.WriteString("  Scenario: Database operations\n")
 		s.WriteString("    Given I set \"db\" table \"users\" with values:\n")
 		s.WriteString("      | id | name  | email           |\n")
