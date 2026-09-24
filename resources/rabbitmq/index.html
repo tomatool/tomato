@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Behavioral testing tool for Go with BDD support">
+        <meta name="description" content="Language-agnostic behavioral testing tool with BDD support">
       
       
         <meta name="author" content="tomato contributors">
@@ -1137,6 +1137,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Publishing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1148,6 +1165,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Consuming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1158,6 +1192,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Assertions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1446,6 +1497,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Publishing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1457,6 +1525,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Consuming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1467,6 +1552,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Assertions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1492,6 +1594,10 @@
 
 <h1 id="rabbitmq">RabbitMQ<a class="headerlink" href="#rabbitmq" title="Permanent link">#</a></h1>
 <p>Steps for interacting with RabbitMQ message broker</p>
+<div class="admonition tip">
+<p class="admonition-title">Multi-line Content</p>
+<p>Steps ending with <code>:</code> accept multi-line content using Gherkin's docstring syntax (<code>"""</code>). See examples below each section.</p>
+</div>
 <h2 id="queue-management">Queue Management<a class="headerlink" href="#queue-management" title="Permanent link">#</a></h2>
 <table>
 <thead>
@@ -1571,87 +1677,57 @@
 </thead>
 <tbody>
 <tr>
-<td>`"{resource}" publishes to queue "orders":</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>Hello World</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" publishes to queue "orders":</code></td>
 <td>Publishes a message directly to a queue</td>
 </tr>
 <tr>
-<td>`"{resource}" publishes json to queue "orders":</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>{"order_id": 123}</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" publishes json to queue "orders":</code></td>
 <td>Publishes a JSON message directly to a queue</td>
 </tr>
 <tr>
-<td>`"{resource}" publishes to exchange "events" with routing key "order.created":</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>Order created</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" publishes to exchange "events" with routing key "order.created":</code></td>
 <td>Publishes a message to an exchange with routing key</td>
 </tr>
 <tr>
-<td>`"{resource}" publishes json to exchange "events" with routing key "order.created":</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>{"event": "order.created"}</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" publishes json to exchange "events" with routing key "order.created":</code></td>
 <td>Publishes a JSON message to an exchange with routing key</td>
 </tr>
 <tr>
-<td>`"{resource}" publishes messages to queue "orders":</td>
-<td></td>
-</tr>
-<tr>
-<td>message</td>
-<td></td>
-</tr>
-<tr>
-<td>message 1</td>
-<td></td>
-</tr>
-<tr>
-<td>message 2</td>
-<td>`</td>
+<td><code>"{resource}" publishes messages to queue "orders":</code></td>
+<td>Publishes multiple messages from a table</td>
 </tr>
 </tbody>
 </table>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h3>
+<p><strong>Publishes a message directly to a queue:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to queue "</span><span class="s">orders</span><span class="nf">":</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  Hello World</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Publishes a JSON message directly to a queue:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to queue "</span><span class="s">orders</span><span class="nf">":</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  {"order_id": 123}</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Publishes a message to an exchange with routing key:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  Order created</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Publishes a JSON message to an exchange with routing key:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"event": "order.created"}</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Publishes multiple messages from a table:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes messages to queue "</span><span class="s">orders</span><span class="nf">":</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> routing_key</span><span class="k"> |</span><span class="s"> message</span><span class="k"> |</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> order.1</span><span class="k">     |</span><span class="s"> msg1</span><span class="k">    |</span>
+</span></code></pre></div></p>
 <h2 id="consuming">Consuming<a class="headerlink" href="#consuming" title="Permanent link">#</a></h2>
 <table>
 <thead>
@@ -1670,23 +1746,18 @@
 <td>Waits for a message from a queue within timeout</td>
 </tr>
 <tr>
-<td>`"{resource}" receives from queue "orders" within "5s":</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>Hello World</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" receives from queue "orders" within "5s":</code></td>
 <td>Asserts a specific message is received within timeout</td>
 </tr>
 </tbody>
 </table>
+<h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">#</a></h3>
+<p><strong>Asserts a specific message is received within timeout:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives from queue "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">  Hello World</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
 <h2 id="assertions">Assertions<a class="headerlink" href="#assertions" title="Permanent link">#</a></h2>
 <table>
 <thead>
@@ -1705,19 +1776,7 @@
 <td>Asserts no messages have been consumed from queue</td>
 </tr>
 <tr>
-<td>`"{resource}" last message contains:</td>
-<td></td>
-</tr>
-<tr>
-<td>"""</td>
-<td></td>
-</tr>
-<tr>
-<td>order_id</td>
-<td></td>
-</tr>
-<tr>
-<td>"""`</td>
+<td><code>"{resource}" last message contains:</code></td>
 <td>Asserts the last consumed message contains content</td>
 </tr>
 <tr>
@@ -1730,6 +1789,13 @@
 </tr>
 </tbody>
 </table>
+<h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">#</a></h3>
+<p><strong>Asserts the last consumed message contains content:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message contains:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  order_id</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
 
 
 

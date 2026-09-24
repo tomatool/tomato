@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Behavioral testing tool for Go with BDD support">
+        <meta name="description" content="Language-agnostic behavioral testing tool with BDD support">
       
       
         <meta name="author" content="tomato contributors">
@@ -1580,7 +1580,10 @@
         DB[(PostgreSQL)]
         REDIS[(Redis)]
         KAFKA[(Kafka)]
+        RMQ[(RabbitMQ)]
+        S3[(S3)]
         HTTP[HTTP Server]
+        GRPC[gRPC Server]
         WS[WebSocket]
     end
 
@@ -1591,11 +1594,16 @@
     TC --&gt; DB
     TC --&gt; REDIS
     TC --&gt; KAFKA
+    TC --&gt; RMQ
+    TC --&gt; S3
 
     H --&gt; DB
     H --&gt; REDIS
     H --&gt; KAFKA
+    H --&gt; RMQ
+    H --&gt; S3
     H --&gt; HTTP
+    H --&gt; GRPC
     H --&gt; WS
 
     G --&gt; H</code></pre>
