@@ -9,6 +9,8 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
+- `scylladb` / `cassandra` resource: CQL execution, table seeding and assertions, keyspace bootstrap, per-scenario truncate. ([#150](https://github.com/tomatool/tomato/pull/150))
+- Kafka Avro via Confluent Schema Registry: publish and assert Avro messages as plain JSON. ([#152](https://github.com/tomatool/tomato/pull/152))
 - Stability and deprecation policy (`docs/stability.md`), CONTRIBUTING, MAINTAINERS, CODEOWNERS, and issue and PR templates.
 - `StepDef.Deprecated`: deprecated steps keep working, warn once per run, and are labelled in generated docs.
 - `tomato validate` warns when `tomato.yml` has no `version` field.

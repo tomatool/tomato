@@ -7,6 +7,7 @@ Tomato supports the following resource types for behavioral testing.
 | [HTTP Client](http-client.md) | `http` | Steps for making HTTP requests and validating responses |
 | [HTTP Server](http-server.md) | `http-server` | Steps for stubbing HTTP services |
 | [PostgreSQL](postgres.md) | `postgres` | Steps for interacting with PostgreSQL databases |
+| [ScyllaDB](scylladb.md) | `scylladb` | Steps for interacting with ScyllaDB and Apache Cassandra over CQL |
 | [Redis](redis.md) | `redis` | Steps for interacting with Redis key-value store |
 | [Kafka](kafka.md) | `kafka` | Steps for interacting with Apache Kafka message broker |
 | [RabbitMQ](rabbitmq.md) | `rabbitmq` | Steps for interacting with RabbitMQ message broker |

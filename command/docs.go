@@ -101,6 +101,10 @@ func collectStepCategories() []handler.StepCategory {
 	postgresHandler, _ := handler.NewPostgres("db", handler.DummyConfig(), nil)
 	categories = append(categories, postgresHandler.Steps())
 
+	// ScyllaDB / Cassandra
+	scyllaHandler, _ := handler.NewCassandra("scylla", handler.DummyConfig(), nil)
+	categories = append(categories, scyllaHandler.Steps())
+
 	// Redis
 	redisHandler, _ := handler.NewRedis("cache", handler.DummyConfig(), nil)
 	categories = append(categories, redisHandler.Steps())
