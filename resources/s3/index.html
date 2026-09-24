@@ -531,6 +531,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Step Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1689,6 +1717,10 @@
 <td>Write an object with an explicit content type</td>
 </tr>
 <tr>
+<td><code>"{resource}" object "uploads/a.csv" is "id,name" with metadata:</code></td>
+<td>Upload an object with user metadata (table of key</td>
+</tr>
+<tr>
 <td><code>"files" object "uploads/logo.png" is file "testdata/logo.png"</code></td>
 <td>Upload a local file as an object</td>
 </tr>
@@ -1709,11 +1741,16 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {"id": 1, "name": "John"}</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
+<p><strong>Upload an object with user metadata (table of key | value):</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" object "</span><span class="s">uploads/a.csv</span><span class="nf">" is "</span><span class="s">id,name</span><span class="nf">" with metadata:</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">   |</span><span class="s"> value</span><span class="k">   |</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">  |</span><span class="s"> owner</span><span class="k"> |</span><span class="s"> billing</span><span class="k"> |</span>
+</span></code></pre></div></p>
 <p><strong>Seed multiple objects from a table with path and content columns:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" objects:</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">  |</span><span class="s"> path</span><span class="k">                |</span><span class="s"> content</span><span class="k">     |</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">  |</span><span class="s"> uploads/a.txt</span><span class="k">       |</span><span class="s"> first</span><span class="k">       |</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">  |</span><span class="s"> uploads/b.txt</span><span class="k">       |</span><span class="s"> second</span><span class="k">      |</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" objects:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">  |</span><span class="s"> path</span><span class="k">                |</span><span class="s"> content</span><span class="k">     |</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">  |</span><span class="s"> uploads/a.txt</span><span class="k">       |</span><span class="s"> first</span><span class="k">       |</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">  |</span><span class="s"> uploads/b.txt</span><span class="k">       |</span><span class="s"> second</span><span class="k">      |</span>
 </span></code></pre></div></p>
 <h2 id="bucket-assertions">Bucket Assertions<a class="headerlink" href="#bucket-assertions" title="Permanent link">#</a></h2>
 <table>
@@ -1803,16 +1840,16 @@
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">#</a></h3>
 <p><strong>Assert exact object content (docstring):</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/hello.txt</span><span class="nf">" content should be:</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  hello world</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">"""</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/hello.txt</span><span class="nf">" content should be:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  hello world</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Assert object JSON content matches (partial, supports @matchers):</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/user.json</span><span class="nf">" content should match:</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"id": "@number", "name": "John"}</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/user.json</span><span class="nf">" content should match:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s">  {"id": "@number", "name": "John"}</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <h2 id="capture">Capture<a class="headerlink" href="#capture" title="Permanent link">#</a></h2>
 <table>
