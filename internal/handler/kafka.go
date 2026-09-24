@@ -29,6 +29,7 @@ type Kafka struct {
 	pendingHeaders []sarama.RecordHeader // applied to the next published message
 
 	messages     map[string][]*sarama.ConsumerMessage
+	claimed      map[string]int // topic -> messages already matched by a receive step
 	messagesMu   sync.RWMutex
 	lastMessage  *sarama.ConsumerMessage
 	consuming    map[string]bool
@@ -180,6 +181,7 @@ func (r *Kafka) Reset(ctx context.Context) error {
 
 	r.messagesMu.Lock()
 	r.messages = make(map[string][]*sarama.ConsumerMessage)
+	r.claimed = make(map[string]int)
 	r.lastMessage = nil
 	r.messagesMu.Unlock()
 
@@ -613,43 +615,52 @@ func (r *Kafka) startConsuming(topic string) error {
 }
 
 func (r *Kafka) consumeMessage(topic, timeout string) error {
+	_, err := r.nextMessage(topic, timeout)
+	return err
+}
+
+// nextMessage waits for the next message on topic that no earlier receive
+// step has matched, and makes it the last message. Waiting for "a message
+// newer than when this step started" missed messages that arrived before the
+// step ran, which made receive steps flaky.
+func (r *Kafka) nextMessage(topic, timeout string) (*sarama.ConsumerMessage, error) {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
-		return fmt.Errorf("invalid timeout: %w", err)
+		return nil, fmt.Errorf("invalid timeout: %w", err)
 	}
-
 	if err := r.startConsuming(topic); err != nil {
-		return err
+		return nil, err
 	}
 
 	deadline := time.Now().Add(duration)
-	initialCount := r.getMessageCount(topic)
-
-	for time.Now().Before(deadline) {
-		if r.getMessageCount(topic) > initialCount {
-			return nil
+	for {
+		r.messagesMu.Lock()
+		if r.claimed == nil {
+			r.claimed = make(map[string]int)
 		}
-		time.Sleep(100 * time.Millisecond)
+		if next := r.claimed[topic]; next < len(r.messages[topic]) {
+			msg := r.messages[topic][next]
+			r.claimed[topic] = next + 1
+			r.lastMessage = msg
+			r.messagesMu.Unlock()
+			return msg, nil
+		}
+		r.messagesMu.Unlock()
+		if !time.Now().Before(deadline) {
+			return nil, fmt.Errorf("no message received within %s", timeout)
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
-
-	return fmt.Errorf("no message received within %s", timeout)
 }
 
 func (r *Kafka) shouldReceiveMessage(topic, timeout string, doc *godog.DocString) error {
-	if err := r.consumeMessage(topic, timeout); err != nil {
+	msg, err := r.nextMessage(topic, timeout)
+	if err != nil {
 		return err
 	}
 
-	r.messagesMu.RLock()
-	lastMsg := r.lastMessage
-	r.messagesMu.RUnlock()
-
-	if lastMsg == nil {
-		return fmt.Errorf("no message received")
-	}
-
 	expected := strings.TrimSpace(doc.Content)
-	actual := strings.TrimSpace(string(lastMsg.Value))
+	actual := strings.TrimSpace(string(msg.Value))
 
 	if actual != expected {
 		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)
