@@ -127,11 +127,16 @@ coverage: build
 	@echo "Integration suite with a coverage-instrumented binary..."
 	$(GOCMD) build -cover -covermode=atomic -coverpkg=./... $(LDFLAGS) -o ./bin/tomato-coverage .
 	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage run -c ./tests/tomato.yml --quiet; echo $$? > ./coverage/integration.exit
+	@echo "CLI commands, so they count too..."
+	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage validate -c ./tests/tomato.yml --plain > /dev/null
+	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage steps > /dev/null
+	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage steps --json --type kafka > /dev/null
+	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage docs --format markdown -o /dev/null
+	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage coverage -c ./tests/tomato.yml --all-types --format json -o ./coverage/steps.json
 	$(GOCMD) tool covdata merge -i=./coverage/unit,./coverage/integration -o=./coverage/merged
 	$(GOCMD) tool covdata textfmt -i=./coverage/merged -o=./coverage/coverage.out
 	$(GOCMD) tool cover -html=./coverage/coverage.out -o ./coverage/coverage.html
-	$(BINARY_PATH) coverage -c ./tests/tomato.yml --all-types --format json -o ./coverage/steps.json
-	./scripts/coverage-report.sh
+	./scripts/report-coverage.sh
 
 ## coverage-all: Run both unit tests and integration tests with combined coverage
 coverage-all: test-coverage integration-test-coverage
