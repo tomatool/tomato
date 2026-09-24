@@ -217,6 +217,86 @@ Feature: Event Processing
 
 See [Kafka Steps](../resources/kafka.md) for the complete list of available steps.
 
+## Avro and Schema Registry
+
+Tomato speaks the [Confluent wire format](https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#wire-format):
+a magic byte, a 4-byte schema id, then the Avro body. That is what
+`KafkaAvroSerializer` and `KafkaAvroDeserializer` read and write, so a JVM app
+under test sees ordinary Avro messages. Feature files stay plain JSON.
+
+### Add a Schema Registry
+
+```yaml
+containers:
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    depends_on:
+      - kafka
+    env:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+    ports:
+      - "8081/tcp"
+    wait_for:
+      type: http
+      path: /subjects
+      target: "8081"
+      timeout: 90s
+
+resources:
+  kafka:
+    type: kafka
+    container: kafka
+    options:
+      topics: [orders]
+      schema_registry:
+        container: schema-registry     # or: url: http://localhost:8081
+        subjects:                      # optional, topic -> subject
+          payments: com.example.Payment
+
+app:
+  env:
+    SPRING_KAFKA_PROPERTIES_SCHEMA_REGISTRY_URL: "http://{{.schema-registry.host}}:{{.schema-registry.port.8081}}"
+```
+
+| Option | Description |
+|--------|-------------|
+| `schema_registry.url` | Registry base URL |
+| `schema_registry.container` | Container running the registry; tomato resolves host and mapped port |
+| `schema_registry.port` | Registry port inside the container (default `8081`) |
+| `schema_registry.subjects` | Map a topic to a subject. Default is `<topic>-value` (TopicNameStrategy) |
+
+### Writing Avro Tests
+
+```gherkin
+Scenario: Order service emits an OrderCreated event
+  Given "kafka" registers schema for subject "orders-value" from file "schemas/order.avsc"
+  And "kafka" consumes from "orders"
+  When "api" sends "POST" to "/orders" with json:
+    """
+    {"id": "order-1", "amount": 4200}
+    """
+  Then "kafka" receives avro from "orders" within "10s":
+    """
+    {"id": "order-1", "status": "CREATED"}
+    """
+  And "kafka" last message avro matches:
+    """
+    {"id": "order-1", "amount": 4200, "status": "CREATED", "note": null}
+    """
+```
+
+- `publishes avro to "topic"` encodes the JSON with the **latest** schema of
+  the topic's value subject. Register it first, or let the app register it.
+- `receives avro from ... within` waits for a message whose decoded JSON
+  **contains** the given fields, so other messages on the topic don't break the
+  test. `last message avro matches` compares the whole record exactly.
+- Nullable fields (`["null", "string"]`) are written as plain JSON values
+  (`"rush"` or `null`), not Avro-JSON's `{"string": "rush"}`.
+- Keys are sent and asserted as strings. Avro keys, schema references and
+  Protobuf/JSON Schema subjects are not supported yet.
+
 ## Troubleshooting
 
 ### Connection Refused

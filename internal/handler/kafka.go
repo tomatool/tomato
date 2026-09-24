@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,7 @@ type Kafka struct {
 	admin    sarama.ClusterAdmin
 	producer sarama.SyncProducer
 	consumer sarama.Consumer
+	registry *schemaRegistry // nil unless options.schema_registry is set
 
 	messages     map[string][]*sarama.ConsumerMessage
 	messagesMu   sync.RWMutex
@@ -76,6 +78,69 @@ func (r *Kafka) Init(ctx context.Context) error {
 	}
 	r.consumer = consumer
 
+	registryURL, err := r.schemaRegistryURL(ctx)
+	if err != nil {
+		return err
+	}
+	if registryURL != "" {
+		r.registry = newSchemaRegistry(registryURL)
+	}
+
+	return nil
+}
+
+// schemaRegistryURL resolves options.schema_registry to a base URL: either
+// `url` as given, or the host and mapped port of `container` (port 8081
+// unless `port` says otherwise). It returns "" when no registry is configured.
+func (r *Kafka) schemaRegistryURL(ctx context.Context) (string, error) {
+	raw, ok := r.config.Options["schema_registry"]
+	if !ok || raw == nil {
+		return "", nil
+	}
+	opts, ok := raw.(map[string]any)
+	if !ok {
+		return "", fmt.Errorf("options.schema_registry must be a map with `url` or `container`")
+	}
+	if u, ok := opts["url"].(string); ok && u != "" {
+		return u, nil
+	}
+	name, _ := opts["container"].(string)
+	if name == "" {
+		return "", fmt.Errorf("options.schema_registry needs `url` or `container`")
+	}
+	port := "8081"
+	if p, ok := opts["port"]; ok {
+		port = fmt.Sprintf("%v", p)
+	}
+	host, err := r.container.GetHost(ctx, name)
+	if err != nil {
+		return "", fmt.Errorf("getting schema registry host: %w", err)
+	}
+	mapped, err := r.container.GetPort(ctx, name, port+"/tcp")
+	if err != nil {
+		return "", fmt.Errorf("getting schema registry port: %w", err)
+	}
+	return fmt.Sprintf("http://%s:%s", host, mapped), nil
+}
+
+// valueSubject is the Schema Registry subject for a topic's values, following
+// the default TopicNameStrategy (`<topic>-value`) unless
+// options.schema_registry.subjects maps the topic to another subject.
+func (r *Kafka) valueSubject(topic string) string {
+	if opts, ok := r.config.Options["schema_registry"].(map[string]any); ok {
+		if subjects, ok := opts["subjects"].(map[string]any); ok {
+			if s, ok := subjects[topic].(string); ok && s != "" {
+				return s
+			}
+		}
+	}
+	return topic + "-value"
+}
+
+func (r *Kafka) requireRegistry() error {
+	if r.registry == nil {
+		return fmt.Errorf("resource %q has no schema registry; set options.schema_registry.url or .container", r.name)
+	}
 	return nil
 }
 
@@ -97,8 +162,15 @@ func (r *Kafka) getBrokers(ctx context.Context) ([]string, error) {
 }
 
 func (r *Kafka) Ready(ctx context.Context) error {
-	_, err := r.admin.ListTopics()
-	return err
+	if _, err := r.admin.ListTopics(); err != nil {
+		return err
+	}
+	if r.registry != nil {
+		if err := r.registry.ready(ctx); err != nil {
+			return fmt.Errorf("schema registry not ready: %w", err)
+		}
+	}
+	return nil
 }
 
 func (r *Kafka) Reset(ctx context.Context) error {
@@ -108,6 +180,10 @@ func (r *Kafka) Reset(ctx context.Context) error {
 	r.messages = make(map[string][]*sarama.ConsumerMessage)
 	r.lastMessage = nil
 	r.messagesMu.Unlock()
+
+	if r.registry != nil {
+		r.registry.reset()
+	}
 
 	topics := r.getTopicsToReset()
 	if len(topics) == 0 {
@@ -254,6 +330,57 @@ func (r *Kafka) Steps() StepCategory {
 				Description: "Publishes multiple messages from a table",
 				Example:     "\"{resource}\" publishes messages to \"events\":\n  | key      | value           |\n  | user-1   | {\"id\": 1}     |",
 				Handler:     r.publishMessages,
+			},
+
+			// Avro / Schema Registry
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" registers schema for subject "([^"]*)":$`,
+				Description: "Registers an Avro schema under a subject",
+				Example:     "\"{resource}\" registers schema for subject \"orders-value\":\n  \"\"\"\n  {\"type\": \"record\", \"name\": \"Order\", \"fields\": [{\"name\": \"id\", \"type\": \"string\"}]}\n  \"\"\"",
+				Handler:     r.registerSchema,
+			},
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" registers schema for subject "([^"]*)" from file "([^"]*)"$`,
+				Description: "Registers an Avro schema (.avsc) from a file",
+				Example:     `"{resource}" registers schema for subject "orders-value" from file "schemas/order.avsc"`,
+				Handler:     r.registerSchemaFromFile,
+			},
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" publishes avro to "([^"]*)":$`,
+				Description: "Publishes JSON as Avro, using the latest schema of the topic's value subject",
+				Example:     "\"{resource}\" publishes avro to \"orders\":\n  \"\"\"\n  {\"id\": \"order-1\"}\n  \"\"\"",
+				Handler:     r.publishAvro,
+			},
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" publishes avro to "([^"]*)" with key "([^"]*)":$`,
+				Description: "Publishes JSON as Avro with a string key",
+				Example:     "\"{resource}\" publishes avro to \"orders\" with key \"order-1\":\n  \"\"\"\n  {\"id\": \"order-1\"}\n  \"\"\"",
+				Handler:     r.publishAvroWithKey,
+			},
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" receives avro from "([^"]*)" within "([^"]*)":$`,
+				Description: "Waits for an Avro message whose JSON form contains the given fields",
+				Example:     "\"{resource}\" receives avro from \"orders\" within \"10s\":\n  \"\"\"\n  {\"id\": \"order-1\"}\n  \"\"\"",
+				Handler:     r.shouldReceiveAvro,
+			},
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" last message avro matches:$`,
+				Description: "Asserts the last message, decoded from Avro, equals the JSON exactly",
+				Example:     "\"{resource}\" last message avro matches:\n  \"\"\"\n  {\"id\": \"order-1\", \"note\": null}\n  \"\"\"",
+				Handler:     r.lastMessageAvroShouldMatch,
+			},
+			{
+				Group:       "Avro and Schema Registry",
+				Pattern:     `^"{resource}" last message avro contains:$`,
+				Description: "Asserts the last message, decoded from Avro, contains the JSON fields",
+				Example:     "\"{resource}\" last message avro contains:\n  \"\"\"\n  {\"id\": \"order-1\"}\n  \"\"\"",
+				Handler:     r.lastMessageAvroShouldContain,
 			},
 
 			// Consuming
@@ -714,3 +841,142 @@ func (r *Kafka) Cleanup(ctx context.Context) error {
 
 var _ Handler = (*Kafka)(nil)
 var _ MessagePublisher = (*Kafka)(nil)
+
+// --- Avro / Schema Registry ---
+
+func (r *Kafka) registerSchema(subject string, doc *godog.DocString) error {
+	if err := r.requireRegistry(); err != nil {
+		return err
+	}
+	_, err := r.registry.register(context.Background(), subject, doc.Content)
+	return err
+}
+
+func (r *Kafka) registerSchemaFromFile(subject, path string) error {
+	if err := r.requireRegistry(); err != nil {
+		return err
+	}
+	schema, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("reading schema file: %w", err)
+	}
+	_, err = r.registry.register(context.Background(), subject, string(schema))
+	return err
+}
+
+func (r *Kafka) publishAvro(topic string, doc *godog.DocString) error {
+	return r.publishAvroWithKey(topic, "", doc)
+}
+
+func (r *Kafka) publishAvroWithKey(topic, key string, doc *godog.DocString) error {
+	if err := r.requireRegistry(); err != nil {
+		return err
+	}
+	value, err := r.registry.encode(context.Background(), r.valueSubject(topic), ReplaceVariables(doc.Content))
+	if err != nil {
+		return err
+	}
+	msg := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.ByteEncoder(value),
+	}
+	if key != "" {
+		msg.Key = sarama.StringEncoder(key)
+	}
+	_, _, err = r.producer.SendMessage(msg)
+	return err
+}
+
+func (r *Kafka) shouldReceiveAvro(topic, timeout string, doc *godog.DocString) error {
+	if err := r.requireRegistry(); err != nil {
+		return err
+	}
+	duration, err := time.ParseDuration(timeout)
+	if err != nil {
+		return fmt.Errorf("invalid timeout: %w", err)
+	}
+	var expected any
+	if err := json.Unmarshal([]byte(ReplaceVariables(doc.Content)), &expected); err != nil {
+		return fmt.Errorf("expected JSON is invalid: %w", err)
+	}
+	if err := r.startConsuming(topic); err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	deadline := time.Now().Add(duration)
+	var lastMismatch error
+	for {
+		r.messagesMu.RLock()
+		msgs := append([]*sarama.ConsumerMessage(nil), r.messages[topic]...)
+		r.messagesMu.RUnlock()
+
+		for _, msg := range msgs {
+			actual, err := r.decodeAvroJSON(ctx, msg)
+			if err != nil {
+				lastMismatch = err
+				continue
+			}
+			if err := CompareJSON(expected, actual, "", true); err != nil {
+				lastMismatch = err
+				continue
+			}
+			r.messagesMu.Lock()
+			r.lastMessage = msg
+			r.messagesMu.Unlock()
+			return nil
+		}
+
+		if !time.Now().Before(deadline) {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if lastMismatch != nil {
+		return fmt.Errorf("no matching Avro message on %q within %s; last mismatch: %w", topic, timeout, lastMismatch)
+	}
+	return fmt.Errorf("no message received on %q within %s", topic, timeout)
+}
+
+func (r *Kafka) lastMessageAvroShouldMatch(doc *godog.DocString) error {
+	return r.compareLastAvro(doc, false)
+}
+
+func (r *Kafka) lastMessageAvroShouldContain(doc *godog.DocString) error {
+	return r.compareLastAvro(doc, true)
+}
+
+func (r *Kafka) compareLastAvro(doc *godog.DocString, partial bool) error {
+	if err := r.requireRegistry(); err != nil {
+		return err
+	}
+	r.messagesMu.RLock()
+	lastMsg := r.lastMessage
+	r.messagesMu.RUnlock()
+	if lastMsg == nil {
+		return fmt.Errorf("no message received")
+	}
+
+	var expected any
+	if err := json.Unmarshal([]byte(ReplaceVariables(doc.Content)), &expected); err != nil {
+		return fmt.Errorf("expected JSON is invalid: %w", err)
+	}
+	actual, err := r.decodeAvroJSON(context.Background(), lastMsg)
+	if err != nil {
+		return err
+	}
+	return CompareJSON(expected, actual, "", partial)
+}
+
+// decodeAvroJSON decodes a wire-format Avro message value into generic JSON.
+func (r *Kafka) decodeAvroJSON(ctx context.Context, msg *sarama.ConsumerMessage) (any, error) {
+	text, err := r.registry.decode(ctx, msg.Value)
+	if err != nil {
+		return nil, err
+	}
+	var v any
+	if err := json.Unmarshal([]byte(text), &v); err != nil {
+		return nil, fmt.Errorf("decoded Avro is not valid JSON: %w", err)
+	}
+	return v, nil
+}
