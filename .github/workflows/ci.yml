@@ -28,6 +28,50 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+  example-spring-boot-kotlin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/spring-boot-kotlin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build tomato
+        working-directory: .
+        run: go build -o /usr/local/bin/tomato .
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Build the example service
+        run: ./gradlew bootJar --no-daemon
+
+      - name: Run tomato against the service
+        run: tomato run --quiet
+
+      - name: Coverage from the tomato run
+        if: always()
+        run: ./gradlew tomatoCoverage --no-daemon
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-boot-kotlin-reports
+          path: |
+            examples/spring-boot-kotlin/build/reports/tomato/
+            examples/spring-boot-kotlin/build/reports/tomato-coverage/
+
   coverage:
     # Unit tests + the integration suite on real containers, merged coverage,
     # and the gates in scripts/report-coverage.sh:

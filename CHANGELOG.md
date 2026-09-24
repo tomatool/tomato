@@ -14,6 +14,8 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - Kafka and RabbitMQ `message header "k" is "v"` for the next publish; S3 upload `with metadata:`.
 - `scylladb` / `cassandra` resource: CQL execution, table seeding and assertions, keyspace bootstrap, per-scenario truncate. ([#150](https://github.com/tomatool/tomato/pull/150))
 - Kafka Avro via Confluent Schema Registry: publish and assert Avro messages as plain JSON. ([#152](https://github.com/tomatool/tomato/pull/152))
+- Deployed environments: resources connect via `url` / `options.host` / `brokers` with TLS (`options.tls`) and Kafka SASL (PLAIN, SCRAM-SHA-256/512); Schema Registry basic auth. Resources on remote hosts don't reset unless `reset: true`.
+- `examples/spring-boot-kotlin` and a "Testing JVM and Kotlin Services" guide; CI builds and runs the example.
 - Stability and deprecation policy (`docs/stability.md`), CONTRIBUTING, MAINTAINERS, CODEOWNERS, and issue and PR templates.
 - `StepDef.Deprecated`: deprecated steps keep working, warn once per run, and are labelled in generated docs.
 - `tomato validate` warns when `tomato.yml` has no `version` field.
@@ -21,6 +23,8 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- Kafka: reset waits for partition consumers to close, so the next scenario's `consumes from` no longer fails with "That topic/partition is already being consumed".
+- Command errors (a resource that can't connect, a failing hook) are printed instead of exiting 1 silently.
 - Receive steps (Kafka, RabbitMQ, WebSocket) take the next unmatched message, so a message that arrived before the step ran is no longer missed (flaky timeouts in fanout and fast-echo scenarios).
 - HTTP steps accept an absolute URL instead of prefixing `base_url` to it.
 - The integration suite and S3 docs use `cgr.dev/chainguard/minio`; neither Docker Hub's `minio/minio` nor `quay.io/minio/minio` can be pulled anonymously any more.
