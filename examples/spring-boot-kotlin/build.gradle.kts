@@ -35,6 +35,19 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     jacocoRuntimeAgent("org.jacoco:org.jacoco.agent:0.8.12:runtime")
+
+    // Experimental: the same scenarios as features/, written in Kotlin.
+    testImplementation("dev.tomatool:tomato-kotlin:0.1.0-SNAPSHOT")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+// `./gradlew test` runs src/test through `tomato serve`, which starts the jar.
+tasks.test {
+    useJUnitPlatform()
+    dependsOn(tasks.bootJar)
+    systemProperty("tomato.bin", providers.gradleProperty("tomatoBin").getOrElse("tomato"))
+    testLogging { events("passed", "failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }
 
 kotlin {

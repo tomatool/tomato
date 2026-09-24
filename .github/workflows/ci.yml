@@ -59,6 +59,9 @@ jobs:
       - name: Run tomato against the service
         run: tomato run --quiet
 
+      - name: Run the same tests in Kotlin (experimental SDK, tomato serve)
+        run: ./gradlew test --no-daemon
+
       - name: Coverage from the tomato run
         if: always()
         run: ./gradlew tomatoCoverage --no-daemon

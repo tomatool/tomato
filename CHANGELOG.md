@@ -9,6 +9,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
+- Experimental: `tomato serve` runs tomato's steps over a local HTTP API, and `sdk/kotlin` writes tomato tests as JUnit 5 tests in Kotlin on top of it (reset before every test, same steps and errors as Gherkin).
 - `scylladb` / `cassandra` resource: CQL execution, table seeding and assertions, keyspace bootstrap, per-scenario truncate. ([#150](https://github.com/tomatool/tomato/pull/150))
 - Kafka Avro via Confluent Schema Registry: publish and assert Avro messages as plain JSON. ([#152](https://github.com/tomatool/tomato/pull/152))
 - Deployed environments: resources connect via `url` / `options.host` / `brokers` with TLS (`options.tls`) and Kafka SASL (PLAIN, SCRAM-SHA-256/512); Schema Registry basic auth. Resources on remote hosts don't reset unless `reset: true`.
