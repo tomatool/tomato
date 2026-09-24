@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -28,6 +29,8 @@ const avroMagicByte = 0x00
 type schemaRegistry struct {
 	baseURL string
 	client  *http.Client
+	user    string // basic auth, e.g. a Confluent Cloud API key
+	pass    string
 
 	mu     sync.Mutex
 	byID   map[int]*goavro.Codec
@@ -40,6 +43,17 @@ func newSchemaRegistry(baseURL string) *schemaRegistry {
 		client:  &http.Client{Timeout: 10 * time.Second},
 		byID:    make(map[int]*goavro.Codec),
 		latest:  make(map[string]int),
+	}
+}
+
+// configure sets basic auth credentials and a TLS config for the registry.
+func (s *schemaRegistry) configure(user, password string, tlsCfg *tls.Config) {
+	s.user, s.pass = user, password
+	if tlsCfg != nil {
+		s.client = &http.Client{
+			Timeout:   s.client.Timeout,
+			Transport: &http.Transport{TLSClientConfig: tlsCfg},
+		}
 	}
 }
 
@@ -175,6 +189,9 @@ func (s *schemaRegistry) do(ctx context.Context, method, path string, in, out an
 		return err
 	}
 	req.Header.Set("Accept", "application/vnd.schemaregistry.v1+json")
+	if s.user != "" {
+		req.SetBasicAuth(s.user, s.pass)
+	}
 	if in != nil {
 		req.Header.Set("Content-Type", "application/vnd.schemaregistry.v1+json")
 	}

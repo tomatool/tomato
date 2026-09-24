@@ -20,6 +20,7 @@ type Postgres struct {
 	config    config.Resource
 	container *container.Manager
 	db        *sql.DB
+	skipReset bool // remote target without `reset: true`
 }
 
 func NewPostgres(name string, cfg config.Resource, cm *container.Manager) (*Postgres, error) {
@@ -29,14 +30,53 @@ func NewPostgres(name string, cfg config.Resource, cm *container.Manager) (*Post
 func (r *Postgres) Name() string { return r.name }
 
 func (r *Postgres) Init(ctx context.Context) error {
-	host, err := r.container.GetHost(ctx, r.config.Container)
+	dsn, host, err := r.dsn(ctx)
 	if err != nil {
-		return fmt.Errorf("getting container host: %w", err)
+		return err
 	}
-	port, err := r.container.GetPort(ctx, r.config.Container, "5432/tcp")
+	r.skipReset = remoteResetGuard(r.name, r.config, host)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return fmt.Errorf("getting container port: %w", err)
+		return fmt.Errorf("connecting to postgres: %w", err)
 	}
+	r.db = db
+	return nil
+}
+
+// dsn builds the connection string and reports the host it points at. A
+// resource connects in one of three ways, in this order:
+//
+//   - `url:` (or options.dsn): a full postgres:// URL or libpq keyword DSN,
+//     used as given
+//   - options.host / options.port: a server tomato did not start
+//   - `container:`: a container tomato manages
+func (r *Postgres) dsn(ctx context.Context) (string, string, error) {
+	if dsn := r.config.URL; dsn != "" {
+		return dsn, postgresDSNHost(dsn), nil
+	}
+	if dsn, ok := r.config.Options["dsn"].(string); ok && dsn != "" {
+		return dsn, postgresDSNHost(dsn), nil
+	}
+
+	var host, port string
+	if h, ok := r.config.Options["host"].(string); ok && h != "" {
+		host, port = h, "5432"
+		if p, ok := r.config.Options["port"]; ok {
+			port = fmt.Sprintf("%v", p)
+		}
+	} else {
+		if r.config.Container == "" {
+			return "", "", fmt.Errorf("postgres resource %q needs `container`, `url` or options.host", r.name)
+		}
+		var err error
+		if host, err = r.container.GetHost(ctx, r.config.Container); err != nil {
+			return "", "", fmt.Errorf("getting container host: %w", err)
+		}
+		if port, err = r.container.GetPort(ctx, r.config.Container, "5432/tcp"); err != nil {
+			return "", "", fmt.Errorf("getting container port: %w", err)
+		}
+	}
+
 	dbName := r.config.Database
 	if dbName == "" {
 		dbName = "postgres"
@@ -48,18 +88,53 @@ func (r *Postgres) Init(ctx context.Context) error {
 	if p, ok := r.config.Options["password"].(string); ok {
 		password = p
 	}
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbName)
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return fmt.Errorf("connecting to postgres: %w", err)
+	// Managed containers speak plain TCP; a remote server usually requires
+	// TLS. options.sslmode (and sslrootcert/sslcert/sslkey) override either.
+	sslmode := "disable"
+	if !isLocalHost(host) {
+		sslmode = "require"
 	}
-	r.db = db
-	return nil
+	if m, ok := r.config.Options["sslmode"].(string); ok && m != "" {
+		sslmode = m
+	}
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		host, port, pqQuote(user), pqQuote(password), pqQuote(dbName), sslmode)
+	for _, key := range []string{"sslrootcert", "sslcert", "sslkey"} {
+		if v, ok := r.config.Options[key].(string); ok && v != "" {
+			dsn += fmt.Sprintf(" %s=%s", key, pqQuote(v))
+		}
+	}
+	return dsn, host, nil
+}
+
+// pqQuote quotes a libpq keyword value so spaces and quotes in passwords
+// survive.
+func pqQuote(v string) string {
+	if v != "" && !strings.ContainsAny(v, ` '\`) {
+		return v
+	}
+	return "'" + strings.NewReplacer(`\`, `\\`, `'`, `\'`).Replace(v) + "'"
+}
+
+// postgresDSNHost returns the host a postgres URL or keyword DSN points at.
+func postgresDSNHost(dsn string) string {
+	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
+		return hostOf(dsn)
+	}
+	for _, field := range strings.Fields(dsn) {
+		if h, ok := strings.CutPrefix(field, "host="); ok {
+			return strings.Trim(h, "'")
+		}
+	}
+	return "localhost"
 }
 
 func (r *Postgres) Ready(ctx context.Context) error { return r.db.PingContext(ctx) }
 
 func (r *Postgres) Reset(ctx context.Context) error {
+	if r.skipReset {
+		return nil
+	}
 	tables, err := r.getTablesToReset(ctx)
 	if err != nil {
 		return err

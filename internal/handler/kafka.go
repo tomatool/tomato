@@ -26,6 +26,8 @@ type Kafka struct {
 	consumer sarama.Consumer
 	registry *schemaRegistry // nil unless options.schema_registry is set
 
+	skipReset bool // remote brokers without `reset: true`
+
 	messages     map[string][]*sarama.ConsumerMessage
 	messagesMu   sync.RWMutex
 	lastMessage  *sarama.ConsumerMessage
@@ -59,6 +61,10 @@ func (r *Kafka) Init(ctx context.Context) error {
 	cfg.Producer.Return.Errors = true
 	cfg.Consumer.Return.Errors = true
 	cfg.Admin.Timeout = 30 * time.Second
+	if err := applyKafkaSecurity(cfg, r.config.Options); err != nil {
+		return err
+	}
+	r.skipReset = remoteResetGuard(r.name, r.config, brokers...)
 
 	admin, err := sarama.NewClusterAdmin(brokers, cfg)
 	if err != nil {
@@ -84,6 +90,15 @@ func (r *Kafka) Init(ctx context.Context) error {
 	}
 	if registryURL != "" {
 		r.registry = newSchemaRegistry(registryURL)
+		if opts, ok := r.config.Options["schema_registry"].(map[string]any); ok {
+			user, _ := opts["user"].(string)
+			password, _ := opts["password"].(string)
+			tlsCfg, err := tlsFromOptions(opts)
+			if err != nil {
+				return fmt.Errorf("schema_registry: %w", err)
+			}
+			r.registry.configure(user, password, tlsCfg)
+		}
 	}
 
 	return nil
@@ -186,7 +201,7 @@ func (r *Kafka) Reset(ctx context.Context) error {
 	}
 
 	topics := r.getTopicsToReset()
-	if len(topics) == 0 {
+	if len(topics) == 0 || r.skipReset {
 		return nil
 	}
 
