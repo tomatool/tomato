@@ -788,3 +788,21 @@ func contains(s, substr string) bool {
 	}
 	return false
 }
+
+// A project with no containers must not need Docker: StartAll used to
+// create the shared network unconditionally, which panics inside
+// testcontainers when no daemon is reachable.
+func TestStartAllWithoutContainersSkipsDocker(t *testing.T) {
+	t.Setenv("DOCKER_HOST", "unix:///nonexistent/docker.sock")
+	m, err := NewManager(map[string]config.Container{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := m.StartAll(context.Background()); err != nil {
+		t.Fatalf("StartAll with no containers: %v", err)
+	}
+	if m.network != nil {
+		t.Error("StartAll with no containers should not create a network")
+	}
+	m.Cleanup()
+}
