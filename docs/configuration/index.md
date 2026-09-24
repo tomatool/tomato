@@ -45,7 +45,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|redis|kafka|s3|websocket|websocket-server|shell
+    type: http|http-server|grpc|postgres|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell
     container: container_name
     options: {}
 
@@ -68,9 +68,33 @@ features:               # Feature file settings
 | `timeout` | duration | `5m` | Global test timeout |
 | `parallel` | int | `1` | Number of parallel scenarios |
 | `fail_fast` | bool | `false` | Stop on first failure |
-| `output` | string | `pretty` | Output format: `pretty`, `progress`, `junit` |
+| `output` | string | `pretty` | Output formats, comma-separated; see [Reports](#reports) |
 | `reset.level` | string | `scenario` | Reset level: `scenario`, `feature`, `run`, `none` |
 | `reset.on_failure` | string | `reset` | On failure: `reset`, `keep` |
+
+### Reports
+
+`output` takes one or more comma-separated formats. A format without a path
+prints to the console; `format:path` writes that format to a file. Use this to
+feed CI test reports and test-management tools.
+
+```yaml
+settings:
+  output: "pretty,junit:reports/tomato.xml,cucumber:reports/cucumber.json"
+```
+
+| Format | Writes |
+|--------|--------|
+| `pretty` | Human-readable console output (default) |
+| `progress` | One character per step |
+| `junit` | JUnit XML, one `testsuite` per feature and one `testcase` per scenario |
+| `cucumber` | Cucumber JSON, the input most Cucumber report tools import |
+| `tomato` | Structured events used by the GitHub Action's PR comment |
+
+Tomato creates the report directories if they don't exist. When `--format` is
+passed on the command line (the GitHub Action passes `--format tomato` for PR
+comments), it replaces the console format but file outputs from `output` are
+still written.
 
 ## App Configuration
 
@@ -103,6 +127,12 @@ app:
     DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port}}/test"
     REDIS_URL: "redis://{{.redis.host}}:{{.redis.port}}"
 ```
+
+!!! note "Port already in use"
+    In command mode, tomato checks `port` before starting the app. If another
+    process is already listening there (a local `make run`, a leftover test
+    run), tomato fails instead of starting: otherwise the ready check would
+    pass against the other process and the tests would hit the wrong app.
 
 ### Template Variables
 
@@ -215,10 +245,9 @@ resources:
         - users
         - orders
         - products
-      # Always exclude these tables from truncation
+      # Never truncate these tables (added to the defaults below)
       exclude:
-        - schema_migrations
-        - goose_db_version
+        - countries        # reference data seeded by a migration
 ```
 
 #### Reset Behavior
@@ -228,7 +257,21 @@ By default, PostgreSQL resources truncate **all tables** in the public schema be
 | Option | Description |
 |--------|-------------|
 | `tables` | If set, only these tables are truncated (instead of all) |
-| `exclude` | Tables to never truncate (default: `schema_migrations`, `goose_db_version`) |
+| `exclude` | Extra tables to never truncate, on top of the defaults |
+
+Migration history tables are never truncated, so migration tools still see
+their migrations as applied:
+
+| Tool | Tables |
+|------|--------|
+| golang-migrate, Rails, sqlx | `schema_migrations` |
+| goose | `goose_db_version` |
+| Flyway | `flyway_schema_history` |
+| Liquibase | `databasechangelog`, `databasechangeloglock` |
+
+Reference data that migrations insert (countries, roles, permissions) is
+truncated like any other table. Add those tables to `exclude` so scenarios
+don't have to re-seed them.
 
 The `container` field automatically provides the connection details - tomato resolves the container's host and port at runtime.
 

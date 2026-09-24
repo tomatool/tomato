@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/cucumber/godog"
@@ -109,8 +110,19 @@ func (r *Postgres) getConfiguredTables() []string {
 	return nil
 }
 
+// defaultResetExclusions are the bookkeeping tables of common migration tools.
+// Truncating them makes the tool think no migration has run, so they are never
+// reset, whatever the user adds to `exclude`.
+var defaultResetExclusions = []string{
+	"schema_migrations",     // golang-migrate, Rails, sqlx
+	"goose_db_version",      // goose
+	"flyway_schema_history", // Flyway
+	"databasechangelog",     // Liquibase
+	"databasechangeloglock", // Liquibase
+}
+
 func (r *Postgres) isExcluded(table string) bool {
-	excludeList := []string{"schema_migrations", "goose_db_version"}
+	excludeList := slices.Clone(defaultResetExclusions)
 	if exclude, ok := r.config.Options["exclude"].([]interface{}); ok {
 		for _, e := range exclude {
 			if s, ok := e.(string); ok {
