@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "OrderPaid",
+  "namespace": "com.example.orders",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "paymentId", "type": "string"}
+  ]
+}
