@@ -77,6 +77,10 @@ tomato run     # Run behavioral tests
 tomato steps   # List available steps
 ```
 
+## Examples
+
+- [`examples/spring-boot-kotlin`](examples/spring-boot-kotlin): a Spring Boot + Kotlin service with Postgres/Flyway, Kafka Avro and JaCoCo coverage, tested black-box
+
 ## Documentation
 
 For complete documentation, visit **[tomatool.github.io/tomato](https://tomatool.github.io/tomato)**

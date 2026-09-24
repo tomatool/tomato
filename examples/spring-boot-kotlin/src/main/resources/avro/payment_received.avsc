@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "PaymentReceived",
+  "namespace": "com.example.payments",
+  "fields": [
+    {"name": "paymentId", "type": "string"},
+    {"name": "orderId", "type": "string"},
+    {"name": "amount", "type": "long"}
+  ]
+}
