@@ -26,12 +26,15 @@ type Kafka struct {
 	consumer sarama.Consumer
 	registry *schemaRegistry // nil unless options.schema_registry is set
 
+	skipReset bool // remote brokers without `reset: true`
+
 	messages     map[string][]*sarama.ConsumerMessage
 	messagesMu   sync.RWMutex
 	lastMessage  *sarama.ConsumerMessage
 	consuming    map[string]bool
 	consumingMu  sync.RWMutex
 	stopChannels map[string]chan struct{}
+	consumersWG  sync.WaitGroup // partition consumer goroutines
 }
 
 func NewKafka(name string, cfg config.Resource, cm *container.Manager) (*Kafka, error) {
@@ -59,6 +62,10 @@ func (r *Kafka) Init(ctx context.Context) error {
 	cfg.Producer.Return.Errors = true
 	cfg.Consumer.Return.Errors = true
 	cfg.Admin.Timeout = 30 * time.Second
+	if err := applyKafkaSecurity(cfg, r.config.Options); err != nil {
+		return err
+	}
+	r.skipReset = remoteResetGuard(r.name, r.config, brokers...)
 
 	admin, err := sarama.NewClusterAdmin(brokers, cfg)
 	if err != nil {
@@ -84,6 +91,15 @@ func (r *Kafka) Init(ctx context.Context) error {
 	}
 	if registryURL != "" {
 		r.registry = newSchemaRegistry(registryURL)
+		if opts, ok := r.config.Options["schema_registry"].(map[string]any); ok {
+			user, _ := opts["user"].(string)
+			password, _ := opts["password"].(string)
+			tlsCfg, err := tlsFromOptions(opts)
+			if err != nil {
+				return fmt.Errorf("schema_registry: %w", err)
+			}
+			r.registry.configure(user, password, tlsCfg)
+		}
 	}
 
 	return nil
@@ -186,7 +202,7 @@ func (r *Kafka) Reset(ctx context.Context) error {
 	}
 
 	topics := r.getTopicsToReset()
-	if len(topics) == 0 {
+	if len(topics) == 0 || r.skipReset {
 		return nil
 	}
 
@@ -260,6 +276,10 @@ func (r *Kafka) stopAllConsumers() {
 		delete(r.stopChannels, topic)
 		r.consuming[topic] = false
 	}
+	// Wait until every partition consumer has closed. Otherwise the next
+	// scenario's "consumes from" can race the old consumer and fail with
+	// "That topic/partition is already being consumed".
+	r.consumersWG.Wait()
 }
 
 func (r *Kafka) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -583,7 +603,9 @@ func (r *Kafka) startConsuming(topic string) error {
 			return fmt.Errorf("consuming partition %d: %w", partition, err)
 		}
 
+		r.consumersWG.Add(1)
 		go func(pc sarama.PartitionConsumer) {
+			defer r.consumersWG.Done()
 			defer pc.Close()
 			for {
 				select {

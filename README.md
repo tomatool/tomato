@@ -28,6 +28,7 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 - **Clean State Testing** - Reset resources between scenarios for reliable, isolated tests
 - **BDD/Gherkin Support** - Write tests in plain English using Cucumber syntax
 - **Multiple Resource Types** - HTTP, gRPC, PostgreSQL, ScyllaDB/Cassandra, Redis, Kafka, RabbitMQ, S3, WebSocket, Shell
+- **Deployed Environments** - Point the same features at staging over TLS/SASL, with reset off for remote hosts
 - **Avro + Schema Registry** - Publish and assert Kafka Avro messages as plain JSON
 - **CI Reports** - JUnit XML and Cucumber JSON alongside console output
 - **Auto-generated Documentation** - Keep step docs in sync with code
@@ -77,6 +78,10 @@ tomato init    # Initialize a new project
 tomato run     # Run behavioral tests
 tomato steps   # List available steps
 ```
+
+## Examples
+
+- [`examples/spring-boot-kotlin`](examples/spring-boot-kotlin): a Spring Boot + Kotlin service with Postgres/Flyway, Kafka Avro and JaCoCo coverage, tested black-box
 
 ## Documentation
 

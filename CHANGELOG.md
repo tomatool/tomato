@@ -9,13 +9,20 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
+- Experimental: `tomato serve` runs tomato's steps over a local HTTP API, and `sdk/kotlin` writes tomato tests as JUnit 5 tests in Kotlin on top of it (reset before every test, same steps and errors as Gherkin).
 - `scylladb` / `cassandra` resource: CQL execution, table seeding and assertions, keyspace bootstrap, per-scenario truncate. ([#150](https://github.com/tomatool/tomato/pull/150))
 - Kafka Avro via Confluent Schema Registry: publish and assert Avro messages as plain JSON. ([#152](https://github.com/tomatool/tomato/pull/152))
+- Deployed environments: resources connect via `url` / `options.host` / `brokers` with TLS (`options.tls`) and Kafka SASL (PLAIN, SCRAM-SHA-256/512); Schema Registry basic auth. Resources on remote hosts don't reset unless `reset: true`.
+- `examples/spring-boot-kotlin` and a "Testing JVM and Kotlin Services" guide; CI builds and runs the example.
 - Stability and deprecation policy (`docs/stability.md`), CONTRIBUTING, MAINTAINERS, CODEOWNERS, and issue and PR templates.
 - `StepDef.Deprecated`: deprecated steps keep working, warn once per run, and are labelled in generated docs.
 - `tomato validate` warns when `tomato.yml` has no `version` field.
 - CI reports: file outputs such as `junit:reports/tomato.xml` get their directories created, and are kept when `--format` is overridden (for example by the GitHub Action's PR comment). ([#149](https://github.com/tomatool/tomato/pull/149))
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
+
+### Fixed
+- Kafka: reset waits for partition consumers to close, so the next scenario's `consumes from` no longer fails with "That topic/partition is already being consumed".
+- Command errors (a resource that can't connect, a failing hook) are printed instead of exiting 1 silently.
 
 ### Changed
 - A config with an unsupported `version`, or a v1-style config, is rejected with a pointer to the migration guide instead of a YAML decoding error.
