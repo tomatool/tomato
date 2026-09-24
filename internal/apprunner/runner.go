@@ -394,7 +394,7 @@ func (r *Runner) waitForReady(ctx context.Context) error {
 			}
 		} else if r.config.Port > 0 {
 			// Default: TCP port check
-			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", r.cmdHost, r.cmdPort), 2*time.Second)
+			conn, err := net.DialTimeout("tcp", net.JoinHostPort(r.cmdHost, strconv.Itoa(r.cmdPort)), 2*time.Second)
 			if err == nil {
 				conn.Close()
 				return nil
@@ -873,7 +873,7 @@ func (r *Runner) VerifyHealthy(ctx context.Context) error {
 	}
 
 	// Default: TCP port check
-	addr := fmt.Sprintf("%s:%d", host, port)
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("app not responding on %s: %w", addr, err)

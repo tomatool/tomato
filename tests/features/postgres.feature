@@ -69,3 +69,33 @@ Feature: PostgreSQL Handler
     Then "db" query "SELECT count(*) as cnt FROM users" returns:
       | cnt |
       | 2   |
+
+  Scenario: Seed from a SQL file
+    When "db" executes file "tests/testdata/sql/seed_users.sql"
+    Then "db" table "users" has "2" rows
+    And "db" table "users" contains:
+      | id | name  |
+      | 10 | Frank |
+      | 11 | Grace |
+
+  Scenario: Clear one table within a scenario
+    Given "db" table "users" has values:
+      | id | name | email          |
+      | 1  | Ada  | ada@test.com   |
+    When "db" clears table "users"
+    Then "db" table "users" is empty
+
+  Scenario: Clear several tables from a list
+    Given "db" executes:
+      """
+      CREATE TABLE IF NOT EXISTS audit_log (id int PRIMARY KEY, entry text);
+      INSERT INTO audit_log (id, entry) VALUES (1, 'created');
+      """
+    And "db" table "users" has values:
+      | id | name | email        |
+      | 2  | Bob  | bob@test.com |
+    When "db" clears tables:
+      | users     |
+      | audit_log |
+    Then "db" table "users" is empty
+    And "db" table "audit_log" is empty

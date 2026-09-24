@@ -2,864 +2,660 @@ package apprunner
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/docker/go-connections/nat"
+	"github.com/testcontainers/testcontainers-go"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/runlog"
 )
 
-// Tests for NewRunner
-
-func TestNewRunner(t *testing.T) {
-	tests := []struct {
-		name    string
-		config  config.AppConfig
-		wantPort int
-	}{
-		{
-			name:     "empty config",
-			config:   config.AppConfig{},
-			wantPort: 0,
-		},
-		{
-			name: "with port",
-			config: config.AppConfig{
-				Port: 8080,
-			},
-			wantPort: 8080,
-		},
-		{
-			name: "with command",
-			config: config.AppConfig{
-				Command: "./app serve",
-				Port:    3000,
-			},
-			wantPort: 3000,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(tt.config, nil)
-
-			if runner == nil {
-				t.Fatal("expected runner, got nil")
-			}
-			if runner.appPort != tt.wantPort {
-				t.Errorf("expected port %d, got %d", tt.wantPort, runner.appPort)
-			}
-			if runner.appHost != "localhost" {
-				t.Errorf("expected host localhost, got %s", runner.appHost)
-			}
-			if !runner.showLogs {
-				t.Error("expected showLogs to be true by default")
-			}
-		})
-	}
+// fakeContainer stands in for a started testcontainer. Only the methods the
+// runner calls are implemented; anything else panics via the nil interface.
+type fakeContainer struct {
+	testcontainers.Container
+	host       string
+	mapped     map[string]int
+	logs       string
+	logsErr    error
+	termErr    error
+	terminated bool
 }
 
-// Tests for SetShowLogs
+func (f *fakeContainer) Host(context.Context) (string, error) { return f.host, nil }
 
-func TestSetShowLogs(t *testing.T) {
-	runner := NewRunner(config.AppConfig{}, nil)
-
-	if !runner.showLogs {
-		t.Error("expected showLogs to be true initially")
+func (f *fakeContainer) MappedPort(_ context.Context, p nat.Port) (nat.Port, error) {
+	if port, ok := f.mapped[string(p)]; ok {
+		return nat.Port(fmt.Sprintf("%d/tcp", port)), nil
 	}
-
-	runner.SetShowLogs(false)
-	if runner.showLogs {
-		t.Error("expected showLogs to be false after SetShowLogs(false)")
-	}
-
-	runner.SetShowLogs(true)
-	if !runner.showLogs {
-		t.Error("expected showLogs to be true after SetShowLogs(true)")
-	}
+	return "", fmt.Errorf("port %s not mapped", p)
 }
 
-// Tests for GetBaseURL
-
-func TestGetBaseURL(t *testing.T) {
-	tests := []struct {
-		name     string
-		port     int
-		expected string
-	}{
-		{
-			name:     "port 8080",
-			port:     8080,
-			expected: "http://localhost:8080",
-		},
-		{
-			name:     "port 3000",
-			port:     3000,
-			expected: "http://localhost:3000",
-		},
-		{
-			name:     "port 0",
-			port:     0,
-			expected: "http://localhost:0",
-		},
+func (f *fakeContainer) Logs(context.Context) (io.ReadCloser, error) {
+	if f.logsErr != nil {
+		return nil, f.logsErr
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(config.AppConfig{Port: tt.port}, nil)
-			url := runner.GetBaseURL()
-
-			if url != tt.expected {
-				t.Errorf("expected %s, got %s", tt.expected, url)
-			}
-		})
-	}
+	return io.NopCloser(strings.NewReader(f.logs)), nil
 }
 
-// Tests for GetRecentLogs
-
-func TestGetRecentLogs(t *testing.T) {
-	tests := []struct {
-		name     string
-		logLines []string
-		n        int
-		expected []string
-	}{
-		{
-			name:     "empty logs",
-			logLines: []string{},
-			n:        5,
-			expected: nil,
-		},
-		{
-			name:     "n is 0",
-			logLines: []string{"line1", "line2"},
-			n:        0,
-			expected: nil,
-		},
-		{
-			name:     "n is negative",
-			logLines: []string{"line1", "line2"},
-			n:        -1,
-			expected: nil,
-		},
-		{
-			name:     "n less than available",
-			logLines: []string{"line1", "line2", "line3", "line4", "line5"},
-			n:        3,
-			expected: []string{"line3", "line4", "line5"},
-		},
-		{
-			name:     "n equals available",
-			logLines: []string{"line1", "line2", "line3"},
-			n:        3,
-			expected: []string{"line1", "line2", "line3"},
-		},
-		{
-			name:     "n greater than available",
-			logLines: []string{"line1", "line2"},
-			n:        10,
-			expected: []string{"line1", "line2"},
-		},
-		{
-			name:     "n is 1",
-			logLines: []string{"line1", "line2", "line3"},
-			n:        1,
-			expected: []string{"line3"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(config.AppConfig{}, nil)
-			runner.logLines = tt.logLines
-
-			result := runner.GetRecentLogs(tt.n)
-
-			if tt.expected == nil {
-				if result != nil {
-					t.Errorf("expected nil, got %v", result)
-				}
-				return
-			}
-
-			if len(result) != len(tt.expected) {
-				t.Errorf("expected %d lines, got %d", len(tt.expected), len(result))
-				return
-			}
-
-			for i, line := range result {
-				if line != tt.expected[i] {
-					t.Errorf("line %d: expected %q, got %q", i, tt.expected[i], line)
-				}
-			}
-		})
-	}
+func (f *fakeContainer) Terminate(context.Context, ...testcontainers.TerminateOption) error {
+	f.terminated = true
+	return f.termErr
 }
 
-// Tests for waitReady
-
-func TestWaitReadyNoConfig(t *testing.T) {
-	// Test with no ready config and no port - should just wait 2 seconds
-	runner := NewRunner(config.AppConfig{}, nil)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	start := time.Now()
-	err := runner.waitReady(ctx)
-	elapsed := time.Since(start)
-
+// managerWith returns a container manager holding fake containers by name.
+func managerWith(t *testing.T, containers map[string]*fakeContainer) *container.Manager {
+	t.Helper()
+	cm, err := container.NewManager(map[string]config.Container{})
 	if err != nil {
-		t.Errorf("unexpected error: %v", err)
+		t.Fatalf("NewManager: %v", err)
 	}
-
-	// Should have waited approximately 2 seconds
-	if elapsed < 1*time.Second || elapsed > 4*time.Second {
-		t.Errorf("expected ~2s wait, got %v", elapsed)
+	for name, c := range containers {
+		cm.RegisterContainer(name, c)
 	}
+	return cm
 }
 
-func TestWaitReadyUnknownType(t *testing.T) {
-	runner := NewRunner(config.AppConfig{
-		Ready: &config.ReadyCheck{
-			Type: "unknown",
-		},
-	}, nil)
-
-	ctx := context.Background()
-	err := runner.waitReady(ctx)
-
-	if err == nil {
-		t.Error("expected error for unknown ready type")
-	}
-	if !contains(err.Error(), "unknown ready check type") {
-		t.Errorf("unexpected error: %v", err)
-	}
-}
-
-// Tests for waitHTTP
-
-func TestWaitHTTP(t *testing.T) {
-	// Create a test HTTP server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		w.WriteHeader(http.StatusNotFound)
-	}))
-	defer server.Close()
-
-	// Parse server URL to get host and port
-	host, port := parseHostPort(t, server.URL)
-
-	tests := []struct {
-		name           string
-		config         config.AppConfig
-		timeout        time.Duration
-		wantErr        bool
-	}{
-		{
-			name: "successful health check",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type:   "http",
-					Path:   "/health",
-					Status: 200,
-				},
-			},
-			timeout: 5 * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "default path /health",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type:   "http",
-					Status: 200,
-				},
-			},
-			timeout: 5 * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "default status 200",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type: "http",
-					Path: "/health",
-				},
-			},
-			timeout: 5 * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "wrong status code",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type:   "http",
-					Path:   "/health",
-					Status: 201,
-				},
-			},
-			timeout: 1 * time.Second,
-			wantErr: true,
-		},
-		{
-			name: "wrong path",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type:   "http",
-					Path:   "/nonexistent",
-					Status: 200,
-				},
-			},
-			timeout: 1 * time.Second,
-			wantErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(tt.config, nil)
-			runner.appHost = host
-
-			ctx := context.Background()
-			err := runner.waitHTTP(ctx, tt.timeout)
-
-			if tt.wantErr && err == nil {
-				t.Error("expected error, got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-		})
-	}
-}
-
-func TestWaitHTTPContextCanceled(t *testing.T) {
-	runner := NewRunner(config.AppConfig{
-		Port: 59999, // Non-existent port
-		Ready: &config.ReadyCheck{
-			Type: "http",
-			Path: "/health",
-		},
-	}, nil)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
-
-	err := runner.waitHTTP(ctx, 30*time.Second)
-	if err != context.Canceled {
-		t.Errorf("expected context.Canceled, got %v", err)
-	}
-}
-
-// Tests for waitTCP
-
-func TestWaitTCP(t *testing.T) {
-	// Create a test TCP listener
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+// freePort returns a port nothing listens on.
+func freePort(t *testing.T) int {
+	t.Helper()
+	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("failed to create listener: %v", err)
+		t.Fatal(err)
 	}
-	defer listener.Close()
+	port := l.Addr().(*net.TCPAddr).Port
+	l.Close()
+	return port
+}
 
-	// Accept connections in background
+// listen starts a TCP listener that accepts and closes connections.
+func listen(t *testing.T) (int, func()) {
+	t.Helper()
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			c, err := l.Accept()
 			if err != nil {
 				return
 			}
-			conn.Close()
+			c.Close()
 		}
 	}()
+	return l.Addr().(*net.TCPAddr).Port, func() { l.Close() }
+}
 
-	addr := listener.Addr().(*net.TCPAddr)
+func serverPort(t *testing.T, srv *httptest.Server) int {
+	t.Helper()
+	return srv.Listener.Addr().(*net.TCPAddr).Port
+}
 
-	tests := []struct {
-		name    string
-		host    string
-		port    int
-		timeout time.Duration
-		wantErr bool
-	}{
-		{
-			name:    "successful connection",
-			host:    "127.0.0.1",
-			port:    addr.Port,
-			timeout: 5 * time.Second,
-			wantErr: false,
-		},
-		{
-			name:    "connection refused",
-			host:    "127.0.0.1",
-			port:    59998, // Non-existent port
-			timeout: 1 * time.Second,
-			wantErr: true,
-		},
+func quietRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
+	r := NewRunner(cfg, cm)
+	r.SetShowLogs(false)
+	return r
+}
+
+func TestNewRunnerModes(t *testing.T) {
+	if got := NewRunner(config.AppConfig{Command: "./app"}, nil).GetMode(); got != ModeCommand {
+		t.Errorf("command config: mode = %s, want %s", got, ModeCommand)
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(config.AppConfig{}, nil)
-
-			ctx := context.Background()
-			err := runner.waitTCP(ctx, tt.host, tt.port, tt.timeout)
-
-			if tt.wantErr && err == nil {
-				t.Error("expected error, got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-		})
+	if got := NewRunner(config.AppConfig{Image: "app:latest"}, nil).GetMode(); got != ModeContainer {
+		t.Errorf("image config: mode = %s, want %s", got, ModeContainer)
+	}
+	build := &config.AppBuild{Dockerfile: "Dockerfile"}
+	if got := NewRunner(config.AppConfig{Build: build}, nil).GetMode(); got != ModeContainer {
+		t.Errorf("build config: mode = %s, want %s", got, ModeContainer)
+	}
+	r := NewRunner(config.AppConfig{}, nil)
+	if r.resources == nil || !r.showLogs {
+		t.Error("NewRunner should initialise resources and show logs by default")
 	}
 }
 
-func TestWaitTCPContextCanceled(t *testing.T) {
-	runner := NewRunner(config.AppConfig{}, nil)
+func TestSetContainerMode(t *testing.T) {
+	r := NewRunner(config.AppConfig{Command: "./app"}, nil)
+	if err := r.SetContainerMode(true); err == nil {
+		t.Error("container mode without image/build should fail")
+	}
+	if err := r.SetContainerMode(false); err != nil || r.GetMode() != ModeCommand {
+		t.Errorf("disabling container mode should be a no-op, got %v / %s", err, r.GetMode())
+	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
-
-	err := runner.waitTCP(ctx, "127.0.0.1", 59997, 30*time.Second)
-	if err != context.Canceled {
-		t.Errorf("expected context.Canceled, got %v", err)
+	r = NewRunner(config.AppConfig{Command: "./app", Image: "app:latest"}, nil)
+	r.mode = ModeCommand
+	if err := r.SetContainerMode(true); err != nil || r.GetMode() != ModeContainer {
+		t.Errorf("container mode with an image: %v / %s", err, r.GetMode())
 	}
 }
 
-// Tests for waitExec
-
-func TestWaitExec(t *testing.T) {
-	tests := []struct {
-		name    string
-		command string
-		timeout time.Duration
-		wantErr bool
-	}{
-		{
-			name:    "successful command",
-			command: "true",
-			timeout: 5 * time.Second,
-			wantErr: false,
-		},
-		{
-			name:    "failing command",
-			command: "false",
-			timeout: 1 * time.Second,
-			wantErr: true,
-		},
-		{
-			name:    "echo command",
-			command: "echo hello",
-			timeout: 5 * time.Second,
-			wantErr: false,
-		},
+func TestSetShowLogsAndResources(t *testing.T) {
+	r := NewRunner(config.AppConfig{}, nil)
+	r.SetShowLogs(false)
+	if r.showLogs {
+		t.Error("SetShowLogs(false) should disable log display")
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(config.AppConfig{
-				Ready: &config.ReadyCheck{
-					Type:    "exec",
-					Command: tt.command,
-				},
-			}, nil)
-
-			ctx := context.Background()
-			err := runner.waitExec(ctx, tt.timeout)
-
-			if tt.wantErr && err == nil {
-				t.Error("expected error, got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("unexpected error: %v", err)
-			}
-		})
+	res := map[string]config.Resource{"mock": {Type: "http-server"}}
+	r.SetResources(res)
+	if _, ok := r.resources["mock"]; !ok {
+		t.Error("SetResources should store the resources")
 	}
 }
 
-func TestWaitExecContextCanceled(t *testing.T) {
-	runner := NewRunner(config.AppConfig{
-		Ready: &config.ReadyCheck{
-			Type:    "exec",
-			Command: "sleep 10",
-		},
+func TestSetRunContext(t *testing.T) {
+	r := quietRunner(config.AppConfig{}, nil)
+	r.SetRunContext(nil)
+	if r.logFile != nil {
+		t.Error("nil run context should not create a log file")
+	}
+
+	dir := t.TempDir()
+	r.SetRunContext(&runlog.RunContext{Dir: dir})
+	if r.logFile == nil {
+		t.Fatal("run context should create an app log file")
+	}
+	r.streamCommandLogs(strings.NewReader("hello\n"), "stdout")
+	if err := r.Stop(); err != nil {
+		t.Fatal(err)
+	}
+	if r.logFile != nil {
+		t.Error("Stop should close the log file")
+	}
+	data, err := os.ReadFile(filepath.Join(dir, "app.log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "[stdout] hello") {
+		t.Errorf("log file = %q, want the streamed line", data)
+	}
+
+	// A run directory that doesn't exist only warns.
+	r = quietRunner(config.AppConfig{}, nil)
+	r.SetRunContext(&runlog.RunContext{Dir: filepath.Join(dir, "missing", "deeper")})
+	if r.logFile != nil {
+		t.Error("an unwritable run dir should leave logFile nil")
+	}
+}
+
+func TestStartUnknownMode(t *testing.T) {
+	r := quietRunner(config.AppConfig{}, nil)
+	r.mode = Mode("bogus")
+	if err := r.Start(context.Background()); err == nil || !strings.Contains(err.Error(), "unknown mode") {
+		t.Errorf("unknown mode should fail, got %v", err)
+	}
+}
+
+func TestStartCommandRequiresCommand(t *testing.T) {
+	r := quietRunner(config.AppConfig{}, nil)
+	if err := r.Start(context.Background()); err == nil || !strings.Contains(err.Error(), "command is required") {
+		t.Errorf("missing command should fail, got %v", err)
+	}
+	r = quietRunner(config.AppConfig{Command: "   "}, nil)
+	if err := r.Start(context.Background()); err == nil || !strings.Contains(err.Error(), "empty command") {
+		t.Errorf("blank command should fail, got %v", err)
+	}
+}
+
+func TestStartCommandMissingBinary(t *testing.T) {
+	r := quietRunner(config.AppConfig{Command: "/definitely/not/a/binary"}, nil)
+	if err := r.Start(context.Background()); err == nil || !strings.Contains(err.Error(), "starting app") {
+		t.Errorf("missing binary should fail to start, got %v", err)
+	}
+}
+
+func TestStartCommandStreamsOutputAndEnv(t *testing.T) {
+	if _, err := exec.LookPath("env"); err != nil {
+		t.Skip("env not available")
+	}
+	workdir := t.TempDir()
+	r := quietRunner(config.AppConfig{
+		Command: "env",
+		WorkDir: workdir,
+		Wait:    time.Millisecond,
+		Env:     map[string]string{"TOMATO_TEST_VALUE": "from-tomato"},
 	}, nil)
+	if err := r.Start(context.Background()); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	defer r.Stop()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Cancel immediately
+	if r.cmd.Dir != workdir {
+		t.Errorf("workdir = %q, want %q", r.cmd.Dir, workdir)
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		for _, line := range r.GetRecentLogs(100) {
+			if line == "TOMATO_TEST_VALUE=from-tomato" {
+				return
+			}
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Errorf("app output never showed the configured env; logs: %v", r.GetRecentLogs(100))
+}
 
-	err := runner.waitExec(ctx, 30*time.Second)
-	if err != context.Canceled {
-		t.Errorf("expected context.Canceled, got %v", err)
+func TestStartCommandReadyTimeoutStopsApp(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("sleep not available")
+	}
+	r := quietRunner(config.AppConfig{
+		Command: "sleep 30",
+		Port:    freePort(t),
+		Ready:   &config.ReadyCheck{Type: "tcp", Timeout: 50 * time.Millisecond},
+	}, nil)
+	err := r.Start(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "app not ready") {
+		t.Fatalf("expected a readiness timeout, got %v", err)
+	}
+	if r.cmd != nil {
+		t.Error("the app process should be stopped when it never becomes ready")
 	}
 }
 
-// Tests for VerifyHealthy
+func TestStartCommandSucceedsAndStops(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("sleep not available")
+	}
+	r := quietRunner(config.AppConfig{Command: "sleep 30"}, nil)
+	if err := r.Start(context.Background()); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	if r.GetHost() != "localhost" || r.GetPort() != 0 {
+		t.Errorf("host/port = %s/%d", r.GetHost(), r.GetPort())
+	}
+	if err := r.Stop(); err != nil {
+		t.Fatalf("Stop: %v", err)
+	}
+	if r.cmd != nil {
+		t.Error("Stop should clear the process")
+	}
+	// Stopping twice is safe.
+	if err := r.Stop(); err != nil {
+		t.Errorf("second Stop: %v", err)
+	}
+}
+
+func TestStopCommandAlreadyExited(t *testing.T) {
+	if _, err := exec.LookPath("true"); err != nil {
+		t.Skip("true not available")
+	}
+	r := quietRunner(config.AppConfig{}, nil)
+	r.cmd = exec.Command("true")
+	if err := r.cmd.Run(); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.stopCommand(); err == nil {
+		t.Error("stopping a process that already exited should report the kill failure")
+	}
+}
+
+func TestBuildEnvForCommand(t *testing.T) {
+	cm := managerWith(t, map[string]*fakeContainer{
+		"postgres": {host: "localhost", mapped: map[string]int{"5432/tcp": 55432}},
+	})
+	r := quietRunner(config.AppConfig{Env: map[string]string{
+		"DB_HOST":     "{{.postgres.host}}",
+		"DB_PORT":     "{{.postgres.port.5432}}",
+		"DB_PORT_TCP": "{{ .postgres.port.5432/tcp }}",
+		"DB_URL":      "postgres://u@{{.postgres.host}}:{{.postgres.port.5432}}/db",
+		"NO_PORT":     "{{.postgres.port}}",
+		"UNMAPPED":    "{{.postgres.port.6379}}",
+		"UNKNOWN":     "{{.redis.port.6379}}",
+		"MOCK":        "{{.mock.url}}/v1",
+		"MOCK_NOPORT": "{{.mock-noport.url}}",
+		"OTHER":       "{{.api.url}}",
+		"MISSING":     "{{.nope.url}}",
+		"PLAIN":       "value",
+	}}, cm)
+	r.SetResources(map[string]config.Resource{
+		"mock":        {Type: "http-server", Options: map[string]any{"port": 9999}},
+		"mock-noport": {Type: "http-server", Options: map[string]any{}},
+		"api":         {Type: "http"},
+	})
+
+	env := r.buildEnvForCommand()
+	want := map[string]string{
+		"DB_HOST":     "localhost",
+		"DB_PORT":     "55432",
+		"DB_PORT_TCP": "55432",
+		"DB_URL":      "postgres://u@localhost:55432/db",
+		"NO_PORT":     "{{.postgres.port}}",
+		"UNMAPPED":    "{{.postgres.port.6379}}",
+		"UNKNOWN":     "{{.redis.port.6379}}",
+		"MOCK":        "http://localhost:9999/v1",
+		"MOCK_NOPORT": "{{.mock-noport.url}}",
+		"OTHER":       "{{.api.url}}",
+		"MISSING":     "{{.nope.url}}",
+		"PLAIN":       "value",
+	}
+	for k, v := range want {
+		if env[k] != v {
+			t.Errorf("%s = %q, want %q", k, env[k], v)
+		}
+	}
+}
+
+func TestBuildEnvForDocker(t *testing.T) {
+	r := quietRunner(config.AppConfig{Env: map[string]string{
+		"DB_HOST":     "{{.postgres.host}}",
+		"DB_PORT":     "{{.postgres.port.5432}}",
+		"DB_PORT_TCP": "{{.postgres.port.5432/tcp}}",
+		"NO_PORT":     "{{.postgres.port}}",
+		"MOCK":        "{{.mock.url}}",
+		"MOCK_NOPORT": "{{.mock-noport.url}}",
+		"OTHER":       "{{.api.url}}",
+		"MISSING":     "{{.nope.url}}",
+	}}, nil)
+	r.SetResources(map[string]config.Resource{
+		"mock":        {Type: "http-server", Options: map[string]any{"port": 9999}},
+		"mock-noport": {Type: "http-server"},
+		"api":         {Type: "http"},
+	})
+
+	env := r.buildEnvForDocker()
+	want := map[string]string{
+		"DB_HOST":     "postgres",
+		"DB_PORT":     "5432",
+		"DB_PORT_TCP": "5432",
+		"NO_PORT":     "{{.postgres.port}}",
+		"MOCK":        "http://host.docker.internal:9999",
+		"MOCK_NOPORT": "{{.mock-noport.url}}",
+		"OTHER":       "{{.api.url}}",
+		"MISSING":     "{{.nope.url}}",
+	}
+	for k, v := range want {
+		if env[k] != v {
+			t.Errorf("%s = %q, want %q", k, env[k], v)
+		}
+	}
+}
+
+func TestWaitForReadyNoCheck(t *testing.T) {
+	r := quietRunner(config.AppConfig{}, nil)
+	if err := r.waitForReady(context.Background()); err != nil {
+		t.Errorf("no ready check or port should pass immediately, got %v", err)
+	}
+}
+
+func TestWaitForReadyHTTP(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		switch req.URL.Path {
+		case "/health":
+			w.WriteHeader(http.StatusOK)
+		case "/ready":
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	}))
+	defer srv.Close()
+	port := serverPort(t, srv)
+
+	cases := []struct {
+		name    string
+		ready   *config.ReadyCheck
+		wantErr bool
+	}{
+		{"default path and status", &config.ReadyCheck{Type: "http"}, false},
+		{"custom path and status", &config.ReadyCheck{Type: "http", Path: "/ready", Status: 204}, false},
+		{"never ready", &config.ReadyCheck{Type: "http", Path: "/down", Timeout: 50 * time.Millisecond}, true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := quietRunner(config.AppConfig{Port: port, Ready: c.ready}, nil)
+			r.cmdHost, r.cmdPort = "127.0.0.1", port
+			err := r.waitForReady(context.Background())
+			if (err != nil) != c.wantErr {
+				t.Errorf("waitForReady() error = %v, wantErr %v", err, c.wantErr)
+			}
+		})
+	}
+}
+
+func TestWaitForReadyTCP(t *testing.T) {
+	port, stop := listen(t)
+	defer stop()
+
+	r := quietRunner(config.AppConfig{Port: port}, nil)
+	r.cmdHost, r.cmdPort = "127.0.0.1", port
+	if err := r.waitForReady(context.Background()); err != nil {
+		t.Errorf("listening port should be ready, got %v", err)
+	}
+
+	closed := freePort(t)
+	r = quietRunner(config.AppConfig{Port: closed, Ready: &config.ReadyCheck{Type: "tcp", Timeout: 50 * time.Millisecond}}, nil)
+	r.cmdHost, r.cmdPort = "127.0.0.1", closed
+	if err := r.waitForReady(context.Background()); err == nil || !strings.Contains(err.Error(), "timeout") {
+		t.Errorf("closed port should time out, got %v", err)
+	}
+}
+
+func TestWaitForReadyContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	r := quietRunner(config.AppConfig{Port: freePort(t)}, nil)
+	r.cmdHost = "127.0.0.1"
+	if err := r.waitForReady(ctx); !errors.Is(err, context.Canceled) {
+		t.Errorf("canceled context should stop waiting, got %v", err)
+	}
+}
+
+func TestBuildWaitStrategy(t *testing.T) {
+	cases := []config.AppConfig{
+		{},
+		{Port: 8080},
+		{Port: 8080, Ready: &config.ReadyCheck{Type: "http"}},
+		{Port: 8080, Ready: &config.ReadyCheck{Type: "http", Path: "/ready", Status: 204, Timeout: time.Second}},
+		{Port: 8080, Ready: &config.ReadyCheck{Type: "tcp"}},
+		{Ready: &config.ReadyCheck{Type: "exec", Command: "true"}},
+		{Port: 8080, Ready: &config.ReadyCheck{Type: "other"}},
+	}
+	for i, cfg := range cases {
+		if s := quietRunner(cfg, nil).buildWaitStrategy(); s == nil {
+			t.Errorf("case %d: nil wait strategy", i)
+		}
+	}
+}
+
+func TestStartContainerNeedsImageOrBuild(t *testing.T) {
+	cm := managerWith(t, nil)
+	r := quietRunner(config.AppConfig{Port: 8080}, cm)
+	if err := r.startContainer(context.Background()); err == nil || !strings.Contains(err.Error(), "requires 'image' or 'build'") {
+		t.Errorf("container mode without image/build should fail, got %v", err)
+	}
+}
+
+func TestCaptureContainerLogs(t *testing.T) {
+	dir := t.TempDir()
+	fc := &fakeContainer{logs: "line one\n\nline two\n"}
+	r := quietRunner(config.AppConfig{Image: "app"}, nil)
+	r.SetRunContext(&runlog.RunContext{Dir: dir})
+	r.appContainer = fc
+	r.captureContainerLogs(context.Background())
+
+	got := r.GetRecentLogs(10)
+	if len(got) != 2 || got[0] != "line one" || got[1] != "line two" {
+		t.Errorf("captured logs = %v", got)
+	}
+	r.Stop()
+	data, _ := os.ReadFile(filepath.Join(dir, "app.log"))
+	if !strings.Contains(string(data), "line two") {
+		t.Errorf("container logs should be written to the log file, got %q", data)
+	}
+
+	// No container, a logs error, a stopped runner and a canceled context all return quietly.
+	quietRunner(config.AppConfig{}, nil).captureContainerLogs(context.Background())
+
+	r = quietRunner(config.AppConfig{Image: "app"}, nil)
+	r.appContainer = &fakeContainer{logsErr: errors.New("boom")}
+	r.captureContainerLogs(context.Background())
+
+	r = quietRunner(config.AppConfig{Image: "app"}, nil)
+	r.appContainer = &fakeContainer{logs: "ignored\n"}
+	r.Stop()
+	r.appContainer = &fakeContainer{logs: "ignored\n"}
+	r.captureContainerLogs(context.Background())
+	if len(r.GetRecentLogs(10)) != 0 {
+		t.Error("a stopped runner should not capture logs")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	r = quietRunner(config.AppConfig{Image: "app"}, nil)
+	r.appContainer = &fakeContainer{logs: "ignored\n"}
+	r.captureContainerLogs(ctx)
+}
+
+func TestStopContainer(t *testing.T) {
+	fc := &fakeContainer{}
+	r := quietRunner(config.AppConfig{Image: "app"}, nil)
+	r.appContainer = fc
+	if err := r.Stop(); err != nil {
+		t.Fatalf("Stop: %v", err)
+	}
+	if !fc.terminated || r.appContainer != nil {
+		t.Error("Stop should terminate and clear the container")
+	}
+
+	r = quietRunner(config.AppConfig{Image: "app"}, nil)
+	r.appContainer = &fakeContainer{termErr: errors.New("stuck")}
+	if err := r.Stop(); err == nil {
+		t.Error("a failed terminate should be returned")
+	}
+
+	r = quietRunner(config.AppConfig{Image: "app"}, nil)
+	if err := r.Stop(); err != nil {
+		t.Errorf("stopping without a container: %v", err)
+	}
+
+	r = quietRunner(config.AppConfig{}, nil)
+	r.mode = Mode("bogus")
+	if err := r.Stop(); err != nil {
+		t.Errorf("unknown mode Stop should be a no-op, got %v", err)
+	}
+}
+
+func TestHostPortAccessors(t *testing.T) {
+	r := quietRunner(config.AppConfig{Command: "./app", Port: 8080}, nil)
+	r.cmdHost, r.cmdPort = "localhost", 8080
+	if got := r.GetBaseURL(); got != "http://localhost:8080" {
+		t.Errorf("command base URL = %q", got)
+	}
+	if h, p := r.GetHostPort(); h != "localhost" || p != 8080 {
+		t.Errorf("command host/port = %s/%d", h, p)
+	}
+	if r.GetContainer() != nil {
+		t.Error("command mode has no container")
+	}
+	if r.GetInternalPort() != 8080 {
+		t.Errorf("internal port = %d", r.GetInternalPort())
+	}
+
+	fc := &fakeContainer{}
+	r = quietRunner(config.AppConfig{Image: "app", Port: 8080}, nil)
+	r.appContainer, r.appHost, r.appPort = fc, "127.0.0.1", 32768
+	if r.GetHost() != "127.0.0.1" || r.GetPort() != 32768 {
+		t.Errorf("container host/port = %s/%d", r.GetHost(), r.GetPort())
+	}
+	if got := r.GetBaseURL(); got != "http://127.0.0.1:32768" {
+		t.Errorf("container base URL = %q", got)
+	}
+	if h, p := r.GetHostPort(); h != "127.0.0.1" || p != 32768 {
+		t.Errorf("container host/port = %s/%d", h, p)
+	}
+	if r.GetContainer() != fc {
+		t.Error("GetContainer should return the app container")
+	}
+}
+
+func TestGetRecentLogs(t *testing.T) {
+	r := quietRunner(config.AppConfig{}, nil)
+	if got := r.GetRecentLogs(5); got != nil {
+		t.Errorf("no logs yet: %v", got)
+	}
+	r.logLines = []string{"a", "b", "c"}
+	if got := r.GetRecentLogs(0); got != nil {
+		t.Errorf("n=0: %v", got)
+	}
+	if got := r.GetRecentLogs(2); strings.Join(got, ",") != "b,c" {
+		t.Errorf("last 2 = %v", got)
+	}
+	if got := r.GetRecentLogs(10); strings.Join(got, ",") != "a,b,c" {
+		t.Errorf("more than available = %v", got)
+	}
+}
+
+func TestStreamCommandLogs(t *testing.T) {
+	r := NewRunner(config.AppConfig{}, nil)
+	r.SetShowLogs(true) // exercise the display branch too
+	var b strings.Builder
+	for i := 0; i < 150; i++ {
+		fmt.Fprintf(&b, "line %d\n\n", i)
+	}
+	r.streamCommandLogs(strings.NewReader(b.String()), "stdout")
+	got := r.GetRecentLogs(1000)
+	if len(got) != 100 {
+		t.Fatalf("kept %d lines, want the last 100", len(got))
+	}
+	if got[0] != "line 50" || got[99] != "line 149" {
+		t.Errorf("kept lines %q..%q", got[0], got[99])
+	}
+
+	r = quietRunner(config.AppConfig{}, nil)
+	r.Stop()
+	r.streamCommandLogs(strings.NewReader("ignored\n"), "stdout")
+	if len(r.GetRecentLogs(10)) != 0 {
+		t.Error("a stopped runner should not record logs")
+	}
+}
 
 func TestVerifyHealthy(t *testing.T) {
-	// Create a test HTTP server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health" {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/health" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 	}))
-	defer server.Close()
+	defer srv.Close()
+	port := serverPort(t, srv)
+	closed := freePort(t)
 
-	host, port := parseHostPort(t, server.URL)
-
-	tests := []struct {
+	cases := []struct {
 		name    string
-		config  config.AppConfig
-		host    string
+		port    int
+		ready   *config.ReadyCheck
 		wantErr bool
 	}{
-		{
-			name:    "no port configured",
-			config:  config.AppConfig{},
-			wantErr: false,
-		},
-		{
-			name: "http health check success",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type:   "http",
-					Path:   "/health",
-					Status: 200,
-				},
-			},
-			host:    host,
-			wantErr: false,
-		},
-		{
-			name: "http health check wrong status",
-			config: config.AppConfig{
-				Port: port,
-				Ready: &config.ReadyCheck{
-					Type:   "http",
-					Path:   "/health",
-					Status: 201,
-				},
-			},
-			host:    host,
-			wantErr: true,
-		},
-		{
-			name: "tcp health check success",
-			config: config.AppConfig{
-				Port: port,
-			},
-			host:    host,
-			wantErr: false,
-		},
-		{
-			name: "tcp health check failure",
-			config: config.AppConfig{
-				Port: 59996,
-			},
-			host:    "127.0.0.1",
-			wantErr: true,
-		},
+		{"no port", 0, nil, false},
+		{"http ok", port, &config.ReadyCheck{Type: "http"}, false},
+		{"http wrong status", port, &config.ReadyCheck{Type: "http", Path: "/broken"}, true},
+		{"http unreachable", closed, &config.ReadyCheck{Type: "http", Status: 200}, true},
+		{"tcp ok", port, nil, false},
+		{"tcp unreachable", closed, nil, true},
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(tt.config, nil)
-			if tt.host != "" {
-				runner.appHost = tt.host
-			}
-
-			ctx := context.Background()
-			err := runner.VerifyHealthy(ctx)
-
-			if tt.wantErr && err == nil {
-				t.Error("expected error, got nil")
-			}
-			if !tt.wantErr && err != nil {
-				t.Errorf("unexpected error: %v", err)
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := quietRunner(config.AppConfig{Port: c.port, Ready: c.ready}, nil)
+			r.cmdHost, r.cmdPort = "127.0.0.1", c.port
+			err := r.VerifyHealthy(context.Background())
+			if (err != nil) != c.wantErr {
+				t.Errorf("VerifyHealthy() error = %v, wantErr %v", err, c.wantErr)
 			}
 		})
 	}
-}
-
-// Tests for Stop
-
-func TestStop(t *testing.T) {
-	t.Run("stop without process", func(t *testing.T) {
-		runner := NewRunner(config.AppConfig{}, nil)
-
-		// Should not panic or error
-		err := runner.Stop()
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-	})
-
-	t.Run("stop can be called multiple times", func(t *testing.T) {
-		runner := NewRunner(config.AppConfig{}, nil)
-
-		// Multiple stops should not panic
-		runner.Stop()
-		runner.Stop()
-		runner.Stop()
-	})
-}
-
-// Tests for buildEnv
-
-func TestBuildEnv(t *testing.T) {
-	tests := []struct {
-		name     string
-		env      map[string]string
-		expected []string
-	}{
-		{
-			name:     "empty env",
-			env:      map[string]string{},
-			expected: []string{},
-		},
-		{
-			name: "simple env vars",
-			env: map[string]string{
-				"KEY1": "value1",
-				"KEY2": "value2",
-			},
-			expected: []string{"KEY1=value1", "KEY2=value2"},
-		},
-		{
-			name: "env with no templates",
-			env: map[string]string{
-				"DB_HOST": "localhost",
-				"DB_PORT": "5432",
-			},
-			expected: []string{"DB_HOST=localhost", "DB_PORT=5432"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			runner := NewRunner(config.AppConfig{
-				Env: tt.env,
-			}, nil)
-
-			ctx := context.Background()
-			result, err := runner.buildEnv(ctx)
-
-			if err != nil {
-				t.Errorf("unexpected error: %v", err)
-				return
-			}
-
-			// Check that all expected vars are present (order may vary)
-			for _, expected := range tt.expected {
-				found := false
-				for _, actual := range result {
-					if actual == expected {
-						found = true
-						break
-					}
-				}
-				if !found {
-					t.Errorf("expected %q in result, got %v", expected, result)
-				}
-			}
-		})
-	}
-}
-
-// Tests for streamLogs
-
-func TestStreamLogs(t *testing.T) {
-	runner := NewRunner(config.AppConfig{}, nil)
-	runner.showLogs = false // Don't print to stdout during tests
-
-	// Create a pipe
-	pr, pw := newPipe(t)
-
-	// Start streaming in background
-	done := make(chan struct{})
-	go func() {
-		runner.streamLogs(pr, "test")
-		close(done)
-	}()
-
-	// Write some lines
-	lines := []string{"line1", "line2", "line3"}
-	for _, line := range lines {
-		pw.Write([]byte(line + "\n"))
-	}
-
-	// Close the writer and wait for streaming to finish
-	pw.Close()
-	<-done
-
-	// Check that lines were captured
-	result := runner.GetRecentLogs(10)
-	if len(result) != len(lines) {
-		t.Errorf("expected %d lines, got %d", len(lines), len(result))
-	}
-}
-
-func TestStreamLogsMaxLines(t *testing.T) {
-	runner := NewRunner(config.AppConfig{}, nil)
-	runner.showLogs = false
-
-	pr, pw := newPipe(t)
-
-	done := make(chan struct{})
-	go func() {
-		runner.streamLogs(pr, "test")
-		close(done)
-	}()
-
-	// Write more than 100 lines
-	for i := 0; i < 150; i++ {
-		pw.Write([]byte(fmt.Sprintf("line%d\n", i)))
-	}
-
-	pw.Close()
-	<-done
-
-	// Should only keep last 100 lines
-	result := runner.GetRecentLogs(200)
-	if len(result) != 100 {
-		t.Errorf("expected 100 lines max, got %d", len(result))
-	}
-
-	// First line should be line50 (0-49 were trimmed)
-	if result[0] != "line50" {
-		t.Errorf("expected first line to be 'line50', got %q", result[0])
-	}
-}
-
-// Helper functions
-
-func parseHostPort(t *testing.T, rawURL string) (string, int) {
-	t.Helper()
-	// rawURL is like "http://127.0.0.1:12345"
-	var host string
-	var port int
-	_, err := fmt.Sscanf(rawURL, "http://%s", &host)
-	if err != nil {
-		// Try parsing differently
-		host = "127.0.0.1"
-	}
-
-	// Extract host and port
-	addr := rawURL[len("http://"):]
-	h, p, err := net.SplitHostPort(addr)
-	if err != nil {
-		t.Fatalf("failed to parse URL %s: %v", rawURL, err)
-	}
-	host = h
-	fmt.Sscanf(p, "%d", &port)
-	return host, port
-}
-
-func newPipe(t *testing.T) (*readCloser, *writeCloser) {
-	t.Helper()
-	pr, pw, err := newTestPipe()
-	if err != nil {
-		t.Fatalf("failed to create pipe: %v", err)
-	}
-	return pr, pw
-}
-
-// Simple pipe implementation for testing
-type readCloser struct {
-	pr *pipeReader
-}
-
-func (r *readCloser) Read(p []byte) (n int, err error) {
-	return r.pr.Read(p)
-}
-
-func (r *readCloser) Close() error {
-	return r.pr.Close()
-}
-
-type writeCloser struct {
-	pw *pipeWriter
-}
-
-func (w *writeCloser) Write(p []byte) (n int, err error) {
-	return w.pw.Write(p)
-}
-
-func (w *writeCloser) Close() error {
-	return w.pw.Close()
-}
-
-type pipeReader struct {
-	ch     chan []byte
-	buf    []byte
-	closed bool
-}
-
-func (r *pipeReader) Read(p []byte) (n int, err error) {
-	if len(r.buf) > 0 {
-		n = copy(p, r.buf)
-		r.buf = r.buf[n:]
-		return n, nil
-	}
-
-	data, ok := <-r.ch
-	if !ok {
-		return 0, fmt.Errorf("EOF")
-	}
-
-	n = copy(p, data)
-	if n < len(data) {
-		r.buf = data[n:]
-	}
-	return n, nil
-}
-
-func (r *pipeReader) Close() error {
-	return nil
-}
-
-type pipeWriter struct {
-	ch chan []byte
-}
-
-func (w *pipeWriter) Write(p []byte) (n int, err error) {
-	data := make([]byte, len(p))
-	copy(data, p)
-	w.ch <- data
-	return len(p), nil
-}
-
-func (w *pipeWriter) Close() error {
-	close(w.ch)
-	return nil
-}
-
-func newTestPipe() (*readCloser, *writeCloser, error) {
-	ch := make(chan []byte, 100)
-	return &readCloser{pr: &pipeReader{ch: ch}}, &writeCloser{pw: &pipeWriter{ch: ch}}, nil
-}
-
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
