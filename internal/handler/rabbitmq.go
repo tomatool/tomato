@@ -28,6 +28,7 @@ type RabbitMQ struct {
 
 	// Message storage
 	messages     map[string][]*amqp.Delivery // queue -> messages
+	claimed      map[string]int              // queue -> messages already matched by a receive step
 	messagesMu   sync.RWMutex
 	lastMessage  *amqp.Delivery
 	consuming    map[string]bool
@@ -196,6 +197,7 @@ func (r *RabbitMQ) Reset(ctx context.Context) error {
 
 	r.messagesMu.Lock()
 	r.messages = make(map[string][]*amqp.Delivery)
+	r.claimed = make(map[string]int)
 	r.lastMessage = nil
 	r.messagesMu.Unlock()
 	r.pendingHeaders = nil
@@ -692,43 +694,55 @@ func (r *RabbitMQ) startConsuming(queue string) error {
 }
 
 func (r *RabbitMQ) receiveMessage(queue, timeout string) error {
+	_, err := r.nextMessage(queue, timeout)
+	return err
+}
+
+// nextMessage waits for the next message on queue that no earlier receive
+// step has matched, and makes it the last message.
+//
+// It used to wait for a message newer than the count at the time the step
+// started. A message that arrived earlier (while an earlier step on another
+// queue was waiting, as in a fanout) was then never seen, and the step timed
+// out: the classic flaky test.
+func (r *RabbitMQ) nextMessage(queue, timeout string) (*amqp.Delivery, error) {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
-		return fmt.Errorf("invalid timeout: %w", err)
+		return nil, fmt.Errorf("invalid timeout: %w", err)
 	}
-
 	if err := r.startConsuming(queue); err != nil {
-		return err
+		return nil, err
 	}
 
 	deadline := time.Now().Add(duration)
-	initialCount := r.getMessageCount(queue)
-
-	for time.Now().Before(deadline) {
-		if r.getMessageCount(queue) > initialCount {
-			return nil
+	for {
+		r.messagesMu.Lock()
+		if r.claimed == nil {
+			r.claimed = make(map[string]int)
 		}
-		time.Sleep(100 * time.Millisecond)
+		if next := r.claimed[queue]; next < len(r.messages[queue]) {
+			msg := r.messages[queue][next]
+			r.claimed[queue] = next + 1
+			r.lastMessage = msg
+			r.messagesMu.Unlock()
+			return msg, nil
+		}
+		r.messagesMu.Unlock()
+		if !time.Now().Before(deadline) {
+			return nil, fmt.Errorf("no message received within %s", timeout)
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
-
-	return fmt.Errorf("no message received within %s", timeout)
 }
 
 func (r *RabbitMQ) shouldReceiveMessage(queue, timeout string, doc *godog.DocString) error {
-	if err := r.receiveMessage(queue, timeout); err != nil {
+	msg, err := r.nextMessage(queue, timeout)
+	if err != nil {
 		return err
 	}
 
-	r.messagesMu.RLock()
-	lastMsg := r.lastMessage
-	r.messagesMu.RUnlock()
-
-	if lastMsg == nil {
-		return fmt.Errorf("no message received")
-	}
-
 	expected := strings.TrimSpace(doc.Content)
-	actual := strings.TrimSpace(string(lastMsg.Body))
+	actual := strings.TrimSpace(string(msg.Body))
 
 	if actual != expected {
 		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)

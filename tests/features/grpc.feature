@@ -86,5 +86,5 @@ Feature: gRPC resource
       """
       {"service": "does-not-exist"}
       """
-    Then "grpc" response status is "NOT_FOUND"
+    Then "grpc" response status is "NotFound"
     And "grpc" response error contains "unknown service"
