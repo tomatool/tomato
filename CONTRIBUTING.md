@@ -15,9 +15,10 @@ cd tomato
 make build          # ./bin/tomato
 make test           # unit tests (go test -race ./...)
 make integration-test  # tomato testing itself against real containers
+make coverage       # what CI runs: unit + integration coverage, report and gates
 ```
 
-Other targets: `make lint`, `make fmt`, `make vet`, `make tidy`, `make coverage-all`.
+Other targets: `make lint`, `make fmt`, `make vet`, `make tidy`.
 Run `make help` for the full list.
 
 The integration suite is `tests/tomato.yml` plus `tests/features/*.feature`. It
@@ -30,7 +31,9 @@ those ports first; tomato refuses to start the app if its port is taken.
 1. Add a `StepDef` to the resource's `Steps()` in `internal/handler/<resource>.go`:
    `Group`, `Pattern` (use `{resource}` for the resource name), `Description`,
    `Example` and `Handler`.
-2. Cover it in `tests/features/<resource>.feature`.
+2. Cover it in `tests/features/<resource>.feature`. CI fails if any step of any
+   resource type is not used by a scenario; check with
+   `./bin/tomato coverage -c tests/tomato.yml --all-types`.
 3. Regenerate the docs: `go build -o tomato . && ./tomato docs`. This rewrites
    `docs/resources/`; commit the result.
 
@@ -78,8 +81,19 @@ chore(deps): bump go.opentelemetry.io/otel/sdk
 ```
 
 Keep pull requests focused: one feature or fix per PR, with tests and docs. Fill
-in the PR template; it's short. CI builds tomato and runs the integration suite.
-Please run `make test` locally as well.
+in the PR template; it's short.
+
+CI runs `make coverage` and posts the result as a comment on the pull request.
+It fails when:
+
+- a scenario in the integration suite fails,
+- any step of any resource type is not used by at least one scenario, or
+- Go statement coverage (unit + integration, merged) drops below the floors in
+  `.coverage-min`: `handler` for the resource code in `internal/handler`,
+  `total` for the whole module.
+
+When a change raises coverage, raise the floors in `.coverage-min` in the same
+PR, so coverage only goes up. Please run `make test` locally as well.
 
 ## Reporting bugs
 

@@ -9,6 +9,9 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
+- `tomato coverage`: which resource steps the feature files use, per resource type (text, markdown, JSON; `--min` to gate).
+- CI runs `make coverage`: unit + integration coverage merged, every resource step must be used by a scenario, code coverage floors in `.coverage-min`, report posted on the PR.
+- Kafka and RabbitMQ `message header "k" is "v"` for the next publish; S3 upload `with metadata:`.
 - `scylladb` / `cassandra` resource: CQL execution, table seeding and assertions, keyspace bootstrap, per-scenario truncate. ([#150](https://github.com/tomatool/tomato/pull/150))
 - Kafka Avro via Confluent Schema Registry: publish and assert Avro messages as plain JSON. ([#152](https://github.com/tomatool/tomato/pull/152))
 - Deployed environments: resources connect via `url` / `options.host` / `brokers` with TLS (`options.tls`) and Kafka SASL (PLAIN, SCRAM-SHA-256/512); Schema Registry basic auth. Resources on remote hosts don't reset unless `reset: true`.
@@ -22,6 +25,11 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ### Fixed
 - Kafka: reset waits for partition consumers to close, so the next scenario's `consumes from` no longer fails with "That topic/partition is already being consumed".
 - Command errors (a resource that can't connect, a failing hook) are printed instead of exiting 1 silently.
+- Receive steps (Kafka, RabbitMQ, WebSocket) take the next unmatched message, so a message that arrived before the step ran is no longer missed (flaky timeouts in fanout and fast-echo scenarios).
+- HTTP steps accept an absolute URL instead of prefixing `base_url` to it.
+- The integration suite and S3 docs use `cgr.dev/chainguard/minio`; neither Docker Hub's `minio/minio` nor `quay.io/minio/minio` can be pulled anonymously any more.
+- `grpc` reflection falls back to v1alpha reliably (a Send EOF hid the Unimplemented status).
+- `http-server` `url is stored in` stored nothing; WebSocket server writes are serialised per connection.
 
 ### Changed
 - A config with an unsupported `version`, or a v1-style config, is rejected with a pointer to the migration guide instead of a YAML decoding error.

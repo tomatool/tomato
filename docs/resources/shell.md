@@ -42,9 +42,13 @@ Steps for executing shell commands and scripts
 |------|-------------|
 | `"shell" stdout contains "success"` | Assert stdout contains substring |
 | `"shell" stdout does not contain "error"` | Assert stdout doesn't contain |
+| `"shell" stdout contains:` | Assert stdout contains text (docstring, may include quotes) |
+| `"shell" stdout does not contain:` | Assert stdout doesn't contain text (docstring, may include quotes) |
 | `"shell" stdout is:` | Assert exact stdout |
 | `"shell" stdout is empty` | Assert stdout empty |
 | `"shell" stderr contains "warning"` | Assert stderr contains substring |
+| `"shell" stderr does not contain "panic"` | Assert stderr doesn't contain |
+| `"shell" stderr contains:` | Assert stderr contains text (docstring, may include quotes) |
 | `"shell" stderr is empty` | Assert stderr empty |
 
 

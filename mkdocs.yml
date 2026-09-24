@@ -70,6 +70,7 @@ nav:
     - Overview: getting-started/index.md
     - GitHub Action: getting-started/github-action.md
     - JVM and Kotlin: getting-started/jvm.md
+    - Step Coverage: getting-started/coverage.md
   - Configuration:
     - Reference: configuration/index.md
     - Deployed Environments: configuration/external-targets.md

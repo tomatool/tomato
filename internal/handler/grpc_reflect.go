@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 
@@ -254,6 +256,16 @@ func (s *v1Stream) Close() { _ = s.stream.CloseSend() }
 
 func (s *v1Stream) roundTrip(req *v1.ServerReflectionRequest) (*v1.ServerReflectionResponse, error) {
 	if err := s.stream.Send(req); err != nil {
+		// Send returns a bare io.EOF when the server has already ended the
+		// stream (e.g. Unimplemented on a v1alpha-only server); the real
+		// status is only available from Recv. Returning EOF made the v1 probe
+		// miss the Unimplemented and skip the v1alpha fallback under load.
+		if errors.Is(err, io.EOF) {
+			_, recvErr := s.stream.Recv()
+			if recvErr != nil {
+				return nil, recvErr
+			}
+		}
 		return nil, err
 	}
 	resp, err := s.stream.Recv()
@@ -310,6 +322,16 @@ func (s *v1alphaStream) Close() { _ = s.stream.CloseSend() }
 
 func (s *v1alphaStream) roundTrip(req *v1alpha.ServerReflectionRequest) (*v1alpha.ServerReflectionResponse, error) {
 	if err := s.stream.Send(req); err != nil {
+		// Send returns a bare io.EOF when the server has already ended the
+		// stream (e.g. Unimplemented on a v1alpha-only server); the real
+		// status is only available from Recv. Returning EOF made the v1 probe
+		// miss the Unimplemented and skip the v1alpha fallback under load.
+		if errors.Is(err, io.EOF) {
+			_, recvErr := s.stream.Recv()
+			if recvErr != nil {
+				return nil, recvErr
+			}
+		}
 		return nil, err
 	}
 	resp, err := s.stream.Recv()

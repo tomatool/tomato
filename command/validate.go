@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cucumber/gherkin/go/v26"
+	"github.com/mattn/go-isatty"
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/handler"
@@ -29,7 +30,7 @@ var validateCommand = &cli.Command{
 		},
 		&cli.BoolFlag{
 			Name:  "plain",
-			Usage: "disable colors and interactive UI (for CI)",
+			Usage: "disable colors and interactive UI (automatic when stdout is not a terminal)",
 		},
 	},
 	Action: runValidate,
@@ -60,7 +61,9 @@ func runValidate(c *cli.Context) error {
 		configPath: configPath,
 	}
 
-	if plain {
+	// The interactive UI needs a terminal; without one (CI, pipes) it
+	// fails before printing anything, so fall back to plain output.
+	if plain || !isatty.IsTerminal(os.Stdout.Fd()) {
 		return v.runPlain()
 	}
 
@@ -373,15 +376,9 @@ func (v *Validator) validateContainers() {
 func (v *Validator) validateFeatureFiles() {
 	var featureFiles []string
 
-	// Get config directory for resolving relative paths
-	configDir := filepath.Dir(v.configPath)
-
+	// Relative paths resolve against the working directory, the same way
+	// `tomato run` (godog) and the features.paths check above resolve them.
 	for _, path := range v.config.Features.Paths {
-		// Resolve path relative to config directory
-		if !filepath.IsAbs(path) {
-			path = filepath.Join(configDir, path)
-		}
-
 		// Walk directory recursively to find all .feature files
 		filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 			if err != nil {

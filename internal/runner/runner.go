@@ -30,6 +30,7 @@ type Runner struct {
 	handlers      HandlerRegistry
 	opts          Options
 	scenarioRegex *regexp.Regexp
+	godogTags     string
 }
 
 // New creates a new test runner
@@ -50,6 +51,12 @@ func newRunner(cfg *config.Config, container ContainerExecutor, handlers Handler
 		handlers:  handlers,
 		opts:      opts,
 	}
+
+	tags, err := toGodogTags(cfg.Features.Tags)
+	if err != nil {
+		return nil, err
+	}
+	r.godogTags = tags
 
 	// Compile scenario filter regex if provided
 	if cfg.Features.Scenario != "" {
@@ -84,7 +91,7 @@ func (r *Runner) Run(ctx context.Context) error {
 	opts := &godog.Options{
 		Format:        format,
 		Paths:         r.config.Features.Paths,
-		Tags:          r.config.Features.Tags,
+		Tags:          r.godogTags,
 		StopOnFailure: r.config.Settings.FailFast,
 		Strict:        true,
 		Concurrency:   r.config.Settings.Parallel,

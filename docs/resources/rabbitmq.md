@@ -40,6 +40,7 @@ Steps for interacting with RabbitMQ message broker
 
 | Step | Description |
 |------|-------------|
+| `"{resource}" message header "trace-id" is "abc-123"` | Sets a header on the next message published (any publish step) |
 | `"{resource}" publishes to queue "orders":` | Publishes a message directly to a queue |
 | `"{resource}" publishes json to queue "orders":` | Publishes a JSON message directly to a queue |
 | `"{resource}" publishes to exchange "events" with routing key "order.created":` | Publishes a message to an exchange with routing key |
