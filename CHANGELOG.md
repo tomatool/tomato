@@ -23,7 +23,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ### Fixed
 - Receive steps (Kafka, RabbitMQ, WebSocket) take the next unmatched message, so a message that arrived before the step ran is no longer missed (flaky timeouts in fanout and fast-echo scenarios).
 - HTTP steps accept an absolute URL instead of prefixing `base_url` to it.
-- The integration suite uses `quay.io/minio/minio`; Docker Hub's `minio/minio` can no longer be pulled.
+- The integration suite and S3 docs use `cgr.dev/chainguard/minio`; neither Docker Hub's `minio/minio` nor `quay.io/minio/minio` can be pulled anonymously any more.
 - `grpc` reflection falls back to v1alpha reliably (a Send EOF hid the Unimplemented status).
 - `http-server` `url is stored in` stored nothing; WebSocket server writes are serialised per connection.
 
