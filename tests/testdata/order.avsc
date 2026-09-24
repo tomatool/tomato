@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "com.example",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "amount", "type": "long"},
+    {"name": "currency", "type": {"type": "enum", "name": "Currency", "symbols": ["EUR", "USD"]}},
+    {"name": "note", "type": ["null", "string"], "default": null}
+  ]
+}

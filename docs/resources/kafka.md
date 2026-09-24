@@ -69,6 +69,70 @@ Steps for interacting with Apache Kafka message broker
 ```
 
 
+## Avro and Schema Registry
+
+| Step | Description |
+|------|-------------|
+| `"{resource}" registers schema for subject "orders-value":` | Registers an Avro schema under a subject |
+| `"{resource}" registers schema for subject "orders-value" from file "schemas/order.avsc"` | Registers an Avro schema (.avsc) from a file |
+| `"{resource}" publishes avro to "orders":` | Publishes JSON as Avro, using the latest schema of the topic's value subject |
+| `"{resource}" publishes avro to "orders" with key "order-1":` | Publishes JSON as Avro with a string key |
+| `"{resource}" receives avro from "orders" within "10s":` | Waits for an Avro message whose JSON form contains the given fields |
+| `"{resource}" last message avro matches:` | Asserts the last message, decoded from Avro, equals the JSON exactly |
+| `"{resource}" last message avro contains:` | Asserts the last message, decoded from Avro, contains the JSON fields |
+
+
+### Examples
+
+**Registers an Avro schema under a subject:**
+```gherkin
+"{resource}" registers schema for subject "orders-value":
+  """
+  {"type": "record", "name": "Order", "fields": [{"name": "id", "type": "string"}]}
+  """
+```
+
+**Publishes JSON as Avro, using the latest schema of the topic's value subject:**
+```gherkin
+"{resource}" publishes avro to "orders":
+  """
+  {"id": "order-1"}
+  """
+```
+
+**Publishes JSON as Avro with a string key:**
+```gherkin
+"{resource}" publishes avro to "orders" with key "order-1":
+  """
+  {"id": "order-1"}
+  """
+```
+
+**Waits for an Avro message whose JSON form contains the given fields:**
+```gherkin
+"{resource}" receives avro from "orders" within "10s":
+  """
+  {"id": "order-1"}
+  """
+```
+
+**Asserts the last message, decoded from Avro, equals the JSON exactly:**
+```gherkin
+"{resource}" last message avro matches:
+  """
+  {"id": "order-1", "note": null}
+  """
+```
+
+**Asserts the last message, decoded from Avro, contains the JSON fields:**
+```gherkin
+"{resource}" last message avro contains:
+  """
+  {"id": "order-1"}
+  """
+```
+
+
 ## Consuming
 
 | Step | Description |

@@ -66,6 +66,22 @@ containers:
       target: "9092"
       timeout: 60s
 
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    depends_on:
+      - kafka
+    env:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+    ports:
+      - "8081/tcp"
+    wait_for:
+      type: http
+      path: /subjects
+      target: "8081"
+      timeout: 90s
+
   minio:
     image: minio/minio:latest
     command: ["server", "/data"]
@@ -131,6 +147,10 @@ resources:
       partitions: 1
       replication_factor: 1
       reset_strategy: delete_recreate
+      schema_registry:
+        container: schema-registry
+        subjects:
+          mapped-orders: com.example.Order
 
   mq:
     type: rabbitmq
