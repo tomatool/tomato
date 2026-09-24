@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ type Redis struct {
 	config    config.Resource
 	container *container.Manager
 	client    *redis.Client
+	skipReset bool // remote target without `reset: true`
 }
 
 func NewRedis(name string, cfg config.Resource, cm *container.Manager) (*Redis, error) {
@@ -31,30 +33,65 @@ func NewRedis(name string, cfg config.Resource, cm *container.Manager) (*Redis, 
 func (r *Redis) Name() string { return r.name }
 
 func (r *Redis) Init(ctx context.Context) error {
-	host, err := r.container.GetHost(ctx, r.config.Container)
+	opts, err := r.clientOptions(ctx)
 	if err != nil {
-		return fmt.Errorf("getting container host: %w", err)
+		return err
 	}
-	port, err := r.container.GetPort(ctx, r.config.Container, "6379/tcp")
-	if err != nil {
-		return fmt.Errorf("getting container port: %w", err)
-	}
-
-	db := 0
-	if d, ok := r.config.Options["db"].(int); ok {
-		db = d
-	}
-	password := ""
-	if p, ok := r.config.Options["password"].(string); ok {
-		password = p
-	}
-
-	r.client = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", host, port),
-		Password: password,
-		DB:       db,
-	})
+	r.skipReset = remoteResetGuard(r.name, r.config, opts.Addr)
+	r.client = redis.NewClient(opts)
 	return nil
+}
+
+// clientOptions connects via `url:` (redis:// or rediss:// for TLS), via
+// options.host/port, or via the managed `container:`. options.password,
+// options.db and options.tls apply on top of any of them.
+func (r *Redis) clientOptions(ctx context.Context) (*redis.Options, error) {
+	var opts *redis.Options
+	if r.config.URL != "" {
+		parsed, err := redis.ParseURL(r.config.URL)
+		if err != nil {
+			return nil, fmt.Errorf("parsing redis url: %w", err)
+		}
+		opts = parsed
+	} else {
+		var host, port string
+		if h, ok := r.config.Options["host"].(string); ok && h != "" {
+			host, port = h, "6379"
+			if p, ok := r.config.Options["port"]; ok {
+				port = fmt.Sprintf("%v", p)
+			}
+		} else {
+			if r.config.Container == "" {
+				return nil, fmt.Errorf("redis resource %q needs `container`, `url` or options.host", r.name)
+			}
+			var err error
+			if host, err = r.container.GetHost(ctx, r.config.Container); err != nil {
+				return nil, fmt.Errorf("getting container host: %w", err)
+			}
+			if port, err = r.container.GetPort(ctx, r.config.Container, "6379/tcp"); err != nil {
+				return nil, fmt.Errorf("getting container port: %w", err)
+			}
+		}
+		opts = &redis.Options{Addr: net.JoinHostPort(host, port)}
+	}
+
+	if d, ok := r.config.Options["db"].(int); ok {
+		opts.DB = d
+	}
+	if u, ok := r.config.Options["user"].(string); ok && u != "" {
+		opts.Username = u
+	}
+	if p, ok := r.config.Options["password"].(string); ok && p != "" {
+		opts.Password = p
+	}
+	tlsCfg, err := tlsFromOptions(r.config.Options)
+	if err != nil {
+		return nil, err
+	}
+	if tlsCfg != nil {
+		opts.TLSConfig = tlsCfg
+	}
+	return opts, nil
 }
 
 func (r *Redis) Ready(ctx context.Context) error {
@@ -62,6 +99,9 @@ func (r *Redis) Ready(ctx context.Context) error {
 }
 
 func (r *Redis) Reset(ctx context.Context) error {
+	if r.skipReset {
+		return nil
+	}
 	strategy := "flush"
 	if s, ok := r.config.Options["reset_strategy"].(string); ok {
 		strategy = s

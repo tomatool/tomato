@@ -21,8 +21,9 @@ type RabbitMQ struct {
 	config    config.Resource
 	container *container.Manager
 
-	conn    *amqp.Connection
-	channel *amqp.Channel
+	conn      *amqp.Connection
+	channel   *amqp.Channel
+	skipReset bool // remote target without `reset: true`
 
 	// Message storage
 	messages     map[string][]*amqp.Delivery // queue -> messages
@@ -59,7 +60,20 @@ func (r *RabbitMQ) Init(ctx context.Context) error {
 		return fmt.Errorf("getting connection URL: %w", err)
 	}
 
-	conn, err := amqp.Dial(url)
+	r.skipReset = remoteResetGuard(r.name, r.config, url)
+
+	// amqps:// URLs get TLS with the system roots; options.tls adds a custom
+	// CA or a client certificate.
+	tlsCfg, err := tlsFromOptions(r.config.Options)
+	if err != nil {
+		return err
+	}
+	var conn *amqp.Connection
+	if tlsCfg != nil {
+		conn, err = amqp.DialTLS(url, tlsCfg)
+	} else {
+		conn, err = amqp.Dial(url)
+	}
 	if err != nil {
 		return fmt.Errorf("connecting to RabbitMQ: %w", err)
 	}
@@ -196,6 +210,12 @@ func (r *RabbitMQ) Reset(ctx context.Context) error {
 	r.messages = make(map[string][]*amqp.Delivery)
 	r.lastMessage = nil
 	r.messagesMu.Unlock()
+
+	// Local consumed-message state is always cleared; the broker itself is
+	// only purged when it is safe to.
+	if r.skipReset {
+		return nil
+	}
 
 	strategy := "purge"
 	if s, ok := r.config.Options["reset_strategy"].(string); ok {
