@@ -191,10 +191,15 @@ func buildCategoryWithGroups(cat handler.StepCategory) CategoryWithGroups {
 			tableExample = lines[0]
 		}
 
+		description := step.Description
+		if step.Deprecated != "" {
+			description = "**Deprecated:** " + step.Deprecated + ". " + description
+		}
+
 		groupMap[groupName] = append(groupMap[groupName], GroupedStep{
 			Example:      step.Example,
 			TableExample: tableExample,
-			Description:  step.Description,
+			Description:  description,
 			IsMultiline:  isMultiline,
 		})
 	}
