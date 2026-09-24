@@ -2,6 +2,7 @@ package handler
 
 import (
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/tomatool/tomato/internal/config"
@@ -77,6 +78,27 @@ func TestGRPCIsRegistered(t *testing.T) {
 		}
 		if _, ok := h.(*GRPC); !ok {
 			t.Errorf("%q built a %T, want *GRPC", typ, h)
+		}
+	}
+}
+
+// TestUnimplementedTypes_FailLoudly guards against the old no-op stubs coming
+// back: a type tomato can't drive must be rejected with a hint, never
+// constructed as a handler that silently does nothing.
+func TestUnimplementedTypes_FailLoudly(t *testing.T) {
+	r := &Registry{}
+	for typ := range unimplementedTypes {
+		if slices.Contains(ValidResourceTypes(), typ) {
+			t.Errorf("unimplemented type %q must not be advertised as valid", typ)
+		}
+		_, err := r.createHandler("res", config.Resource{Type: typ})
+		if err == nil {
+			t.Errorf("unimplemented type %q must not construct", typ)
+			continue
+		}
+		hint, _ := UnimplementedTypeHint(typ)
+		if !strings.Contains(err.Error(), hint) {
+			t.Errorf("error for %q should carry the hint %q, got %q", typ, hint, err)
 		}
 	}
 }

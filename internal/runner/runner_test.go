@@ -3,6 +3,8 @@ package runner
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -1037,4 +1039,52 @@ func sliceEqual(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func TestEnsureReportDirs(t *testing.T) {
+	root := t.TempDir()
+	junit := filepath.Join(root, "reports", "junit", "tomato.xml")
+	cucumber := filepath.Join(root, "reports", "cucumber.json")
+
+	format := "pretty, junit:" + junit + ",cucumber:" + cucumber
+	if err := ensureReportDirs(format); err != nil {
+		t.Fatalf("ensureReportDirs(%q) returned %v", format, err)
+	}
+	for _, dir := range []string{filepath.Dir(junit), filepath.Dir(cucumber)} {
+		if info, err := os.Stat(dir); err != nil || !info.IsDir() {
+			t.Errorf("expected directory %s to exist", dir)
+		}
+	}
+
+	// Formats without a file, and files in the working directory, need no directory.
+	for _, format := range []string{"", "pretty", "progress", "junit:tomato.xml"} {
+		if err := ensureReportDirs(format); err != nil {
+			t.Errorf("ensureReportDirs(%q) returned %v", format, err)
+		}
+	}
+}
+
+func TestResolveFormat(t *testing.T) {
+	tests := []struct {
+		name       string
+		configured string
+		override   string
+		want       string
+	}{
+		{name: "no override", configured: "pretty", want: "pretty"},
+		{name: "override replaces stdout format", configured: "pretty", override: "tomato", want: "tomato"},
+		{
+			name:       "override keeps file outputs",
+			configured: "pretty, junit:reports/tomato.xml,cucumber:reports/cucumber.json",
+			override:   "tomato",
+			want:       "tomato,junit:reports/tomato.xml,cucumber:reports/cucumber.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resolveFormat(tt.configured, tt.override); got != tt.want {
+				t.Errorf("resolveFormat(%q, %q) = %q, want %q", tt.configured, tt.override, got, tt.want)
+			}
+		})
+	}
 }

@@ -283,6 +283,16 @@ func (v *Validator) validateResources() {
 
 	for name, res := range v.config.Resources {
 		// Check resource type
+		if hint, unimplemented := handler.UnimplementedTypeHint(res.Type); unimplemented {
+			v.results = append(v.results, ValidationResult{
+				Category:   "Resources",
+				Item:       name,
+				Status:     "error",
+				Message:    fmt.Sprintf("type %q is not implemented", res.Type),
+				Suggestion: hint,
+			})
+			continue
+		}
 		if !validTypes[res.Type] {
 			v.results = append(v.results, ValidationResult{
 				Category:   "Resources",
