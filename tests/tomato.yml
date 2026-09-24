@@ -192,6 +192,19 @@ resources:
     type: http-client
     base_url: "http://localhost:8080"
 
+  payments:
+    type: grpc-server
+    options:
+      port: 50061
+      proto_files:
+        - payments.proto
+      import_paths:
+        - tests/testdata/proto
+
+  payments-client:
+    type: grpc
+    address: localhost:50061
+
   grpc:
     type: grpc
     address: "localhost:9090"

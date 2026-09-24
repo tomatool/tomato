@@ -298,6 +298,12 @@ func (r *Runner) getResourceURL(name string) string {
 			return ""
 		}
 		return fmt.Sprintf("http://localhost:%d", port)
+	case "grpc-server":
+		// A gRPC dial target, not a URL: gRPC clients take host:port.
+		if p, ok := res.Options["port"].(int); ok && p > 0 {
+			return fmt.Sprintf("localhost:%d", p)
+		}
+		log.Warn().Str("resource", name).Msg("grpc-server resource has no port configured, cannot resolve URL template")
 	}
 
 	return ""
@@ -640,6 +646,11 @@ func (r *Runner) getResourceURLForDocker(name string) string {
 		}
 		// Use host.docker.internal for Docker containers to reach host services
 		return fmt.Sprintf("http://host.docker.internal:%d", port)
+	case "grpc-server":
+		if p, ok := res.Options["port"].(int); ok && p > 0 {
+			return fmt.Sprintf("host.docker.internal:%d", p)
+		}
+		log.Warn().Str("resource", name).Msg("grpc-server resource has no port configured, cannot resolve URL template")
 	}
 
 	return ""

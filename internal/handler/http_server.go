@@ -412,4 +412,6 @@ func (r *HTTPServer) Cleanup(ctx context.Context) error {
 	return nil
 }
 
+func (r *HTTPServer) startsBeforeClients() {}
+
 var _ Handler = (*HTTPServer)(nil)

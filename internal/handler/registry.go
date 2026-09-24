@@ -76,6 +76,7 @@ var handlerFactories = map[string]handlerFactory{
 	"http-server":      factory(NewHTTPServer),
 	"grpc":             factory(NewGRPC),
 	"grpc-client":      factory(NewGRPC),
+	"grpc-server":      factory(NewGRPCServer),
 	"websocket":        factory(NewWebSocketClient),
 	"websocket-client": factory(NewWebSocketClient),
 	"websocket-server": factory(NewWebSocketServer),
@@ -124,12 +125,33 @@ func (r *Registry) Get(name string) (Handler, error) {
 	return h, nil
 }
 
+// mockServer is implemented by handlers that host a server the app or other
+// resources connect to.
+type mockServer interface{ startsBeforeClients() }
+
 // WaitReady waits for all handlers to be ready
 func (r *Registry) WaitReady(ctx context.Context) error {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	for name, h := range r.handlers {
+	// Start servers tomato hosts (http-server, grpc-server, websocket-server)
+	// first: client resources may point at them and check readiness by
+	// connecting.
+	names := make([]string, 0, len(r.handlers))
+	for name := range r.handlers {
+		names = append(names, name)
+	}
+	sort.SliceStable(names, func(i, j int) bool {
+		_, si := r.handlers[names[i]].(mockServer)
+		_, sj := r.handlers[names[j]].(mockServer)
+		if si != sj {
+			return si
+		}
+		return names[i] < names[j]
+	})
+
+	for _, name := range names {
+		h := r.handlers[name]
 		log.Debug().Str("handler", name).Msg("initializing handler")
 		if err := h.Init(ctx); err != nil {
 			return fmt.Errorf("initializing %s: %w", name, err)
