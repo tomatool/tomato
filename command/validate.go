@@ -376,15 +376,9 @@ func (v *Validator) validateContainers() {
 func (v *Validator) validateFeatureFiles() {
 	var featureFiles []string
 
-	// Get config directory for resolving relative paths
-	configDir := filepath.Dir(v.configPath)
-
+	// Relative paths resolve against the working directory, the same way
+	// `tomato run` (godog) and the features.paths check above resolve them.
 	for _, path := range v.config.Features.Paths {
-		// Resolve path relative to config directory
-		if !filepath.IsAbs(path) {
-			path = filepath.Join(configDir, path)
-		}
-
 		// Walk directory recursively to find all .feature files
 		filepath.Walk(path, func(filePath string, info os.FileInfo, err error) error {
 			if err != nil {
