@@ -203,6 +203,15 @@ resources:
     type: websocket-client
     url: "ws://localhost:8080/ws"
 
+  wsmock:
+    type: websocket-server
+    options:
+      port: 9997
+
+  wsmock-client:
+    type: websocket-client
+    url: "ws://localhost:9997/"
+
   mock:
     type: http-server
     options:

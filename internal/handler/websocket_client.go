@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cucumber/godog"
@@ -28,9 +29,13 @@ type WebSocketClient struct {
 	messages    [][]byte
 	messagesMu  sync.RWMutex
 	lastMessage []byte
-	readCtx     context.Context
-	readCancel  context.CancelFunc
-	connected   bool
+	// consumed is how many messages receive steps have already matched.
+	// Receive steps look at messages from here on, so a reply that arrives
+	// before the step starts waiting is still seen.
+	consumed   int
+	readCtx    context.Context
+	readCancel context.CancelFunc
+	connected  atomic.Bool
 }
 
 func NewWebSocketClient(name string, cfg config.Resource, cm *container.Manager) (*WebSocketClient, error) {
@@ -114,6 +119,7 @@ func (r *WebSocketClient) Reset(ctx context.Context) error {
 	r.messagesMu.Lock()
 	r.messages = make([][]byte, 0)
 	r.lastMessage = nil
+	r.consumed = 0
 	r.messagesMu.Unlock()
 
 	r.headers = make(http.Header)
@@ -137,7 +143,7 @@ func (r *WebSocketClient) disconnect() {
 		r.conn.Close()
 		r.conn = nil
 	}
-	r.connected = false
+	r.connected.Store(false)
 }
 
 func (r *WebSocketClient) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -285,7 +291,7 @@ func (r *WebSocketClient) connect() error {
 }
 
 func (r *WebSocketClient) connectWithHeaders(table *godog.Table) error {
-	if r.connected {
+	if r.connected.Load() {
 		return nil
 	}
 
@@ -304,24 +310,26 @@ func (r *WebSocketClient) connectWithHeaders(table *godog.Table) error {
 	}
 
 	r.conn = conn
-	r.connected = true
+	r.connected.Store(true)
 
 	r.readCtx, r.readCancel = context.WithCancel(context.Background())
-	go r.readLoop()
+	go r.readLoop(r.readCtx, conn)
 
 	return nil
 }
 
-func (r *WebSocketClient) readLoop() {
+// readLoop reads from conn until it closes. It takes the connection as an
+// argument so a disconnect (which nils r.conn) can't race it.
+func (r *WebSocketClient) readLoop(ctx context.Context, conn *websocket.Conn) {
 	for {
 		select {
-		case <-r.readCtx.Done():
+		case <-ctx.Done():
 			return
 		default:
-			_, message, err := r.conn.ReadMessage()
+			_, message, err := conn.ReadMessage()
 			if err != nil {
 				if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-					r.connected = false
+					r.connected.Store(false)
 				}
 				return
 			}
@@ -340,21 +348,21 @@ func (r *WebSocketClient) disconnectStep() error {
 }
 
 func (r *WebSocketClient) shouldBeConnected() error {
-	if !r.connected {
+	if !r.connected.Load() {
 		return fmt.Errorf("websocket is not connected")
 	}
 	return nil
 }
 
 func (r *WebSocketClient) shouldBeDisconnected() error {
-	if r.connected {
+	if r.connected.Load() {
 		return fmt.Errorf("websocket is still connected")
 	}
 	return nil
 }
 
 func (r *WebSocketClient) sendMessage(doc *godog.DocString) error {
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
@@ -363,7 +371,7 @@ func (r *WebSocketClient) sendMessage(doc *godog.DocString) error {
 }
 
 func (r *WebSocketClient) sendText(text string) error {
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
@@ -377,7 +385,7 @@ func (r *WebSocketClient) sendJSON(doc *godog.DocString) error {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
 
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
@@ -391,7 +399,7 @@ func (r *WebSocketClient) shouldReceiveMessage(timeout string, doc *godog.DocStr
 		return fmt.Errorf("invalid timeout: %w", err)
 	}
 
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
@@ -417,7 +425,7 @@ func (r *WebSocketClient) shouldReceiveMessageContaining(timeout, substr string)
 		return fmt.Errorf("invalid timeout: %w", err)
 	}
 
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
@@ -441,7 +449,7 @@ func (r *WebSocketClient) shouldReceiveJSONMatching(timeout string, doc *godog.D
 		return fmt.Errorf("invalid timeout: %w", err)
 	}
 
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
@@ -475,25 +483,27 @@ func (r *WebSocketClient) shouldReceiveNMessages(count int, timeout string) erro
 		return fmt.Errorf("invalid timeout: %w", err)
 	}
 
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
 	}
 
 	deadline := time.Now().Add(duration)
-	initialCount := r.getMessageCount()
-
-	for time.Now().Before(deadline) {
-		currentCount := r.getMessageCount()
-		if currentCount-initialCount >= count {
+	for {
+		r.messagesMu.Lock()
+		unread := len(r.messages) - r.consumed
+		if unread >= count {
+			r.consumed += count
+			r.messagesMu.Unlock()
 			return nil
 		}
-		time.Sleep(50 * time.Millisecond)
+		r.messagesMu.Unlock()
+		if !time.Now().Before(deadline) {
+			return fmt.Errorf("expected %d messages, received %d within %s", count, unread, timeout)
+		}
+		time.Sleep(20 * time.Millisecond)
 	}
-
-	received := r.getMessageCount() - initialCount
-	return fmt.Errorf("expected %d messages, received %d within %s", count, received, timeout)
 }
 
 func (r *WebSocketClient) shouldNotReceiveMessage(timeout string) error {
@@ -502,41 +512,42 @@ func (r *WebSocketClient) shouldNotReceiveMessage(timeout string) error {
 		return fmt.Errorf("invalid timeout: %w", err)
 	}
 
-	if !r.connected {
+	if !r.connected.Load() {
 		if err := r.connect(); err != nil {
 			return err
 		}
 	}
 
-	initialCount := r.getMessageCount()
 	time.Sleep(duration)
 
-	if r.getMessageCount() > initialCount {
-		r.messagesMu.RLock()
-		lastMsg := r.lastMessage
-		r.messagesMu.RUnlock()
-		return fmt.Errorf("received unexpected message: %s", string(lastMsg))
+	r.messagesMu.RLock()
+	defer r.messagesMu.RUnlock()
+	if len(r.messages) > r.consumed {
+		return fmt.Errorf("received unexpected message: %s", string(r.messages[r.consumed]))
 	}
-
 	return nil
 }
 
+// waitForMessage returns the next message no receive step has matched yet,
+// waiting up to timeout for one to arrive. Messages that arrived before the
+// step started count: a fast echo reply is not lost to the race between the
+// send step and this one.
 func (r *WebSocketClient) waitForMessage(timeout time.Duration) ([]byte, error) {
 	deadline := time.Now().Add(timeout)
-	initialCount := r.getMessageCount()
-
-	for time.Now().Before(deadline) {
-		r.messagesMu.RLock()
-		if len(r.messages) > initialCount {
-			msg := r.messages[len(r.messages)-1]
-			r.messagesMu.RUnlock()
+	for {
+		r.messagesMu.Lock()
+		if len(r.messages) > r.consumed {
+			msg := r.messages[r.consumed]
+			r.consumed++
+			r.messagesMu.Unlock()
 			return msg, nil
 		}
-		r.messagesMu.RUnlock()
-		time.Sleep(50 * time.Millisecond)
+		r.messagesMu.Unlock()
+		if !time.Now().Before(deadline) {
+			return nil, fmt.Errorf("no message received within %s", timeout)
+		}
+		time.Sleep(20 * time.Millisecond)
 	}
-
-	return nil, fmt.Errorf("no message received within %s", timeout)
 }
 
 func (r *WebSocketClient) getMessageCount() int {
@@ -626,15 +637,15 @@ func (r *WebSocketClient) Connect(ctx context.Context, headers map[string]string
 	}
 
 	r.conn = conn
-	r.connected = true
+	r.connected.Store(true)
 	r.readCtx, r.readCancel = context.WithCancel(ctx)
-	go r.readLoop()
+	go r.readLoop(r.readCtx, conn)
 
 	return nil
 }
 
 func (r *WebSocketClient) Send(ctx context.Context, message []byte) error {
-	if !r.connected {
+	if !r.connected.Load() {
 		return fmt.Errorf("not connected")
 	}
 	return r.conn.WriteMessage(websocket.TextMessage, message)

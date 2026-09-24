@@ -5,12 +5,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -82,6 +85,11 @@ func main() {
 	mux.HandleFunc("/cache", cacheHandler)
 	mux.HandleFunc("/echo", echoHandler)
 	mux.HandleFunc("/ws", wsHandler)
+	mux.HandleFunc("/text", textHandler)
+	mux.HandleFunc("/empty", emptyHandler)
+	mux.HandleFunc("/login", loginHandler)
+	mux.HandleFunc("/logout", logoutHandler)
+	mux.HandleFunc("/profile", profileHandler)
 
 	startGRPC()
 
@@ -361,14 +369,72 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		"headers": r.Header,
 	}
 
+	cookies := map[string]string{}
+	for _, c := range r.Cookies() {
+		cookies[c.Name] = c.Value
+	}
+	response["cookies"] = cookies
+
 	if r.Method == http.MethodPost || r.Method == http.MethodPut {
+		raw, _ := io.ReadAll(r.Body)
+		response["raw"] = string(raw)
 		var body interface{}
-		if err := json.NewDecoder(r.Body).Decode(&body); err == nil {
+		if err := json.Unmarshal(raw, &body); err == nil {
 			response["body"] = body
+		}
+		if strings.HasPrefix(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") {
+			if form, err := url.ParseQuery(string(raw)); err == nil {
+				flat := map[string]string{}
+				for k := range form {
+					flat[k] = form.Get(k)
+				}
+				response["form"] = flat
+			}
 		}
 	}
 
 	json.NewEncoder(w).Encode(response)
+}
+
+// textHandler returns a fixed plain-text body.
+func textHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Tomato", "fresh")
+	fmt.Fprint(w, "Hello from the \"tomato\" test app\nline two")
+}
+
+// emptyHandler answers with no body at all.
+func emptyHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// loginHandler sets a session cookie and points at the session resource.
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{Name: "session", Value: "sess-42", Path: "/"})
+	w.Header().Set("Location", "/echo?session=sess-42")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"status": "logged in"})
+}
+
+// logoutHandler clears the session cookie.
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{Name: "session", Value: "", Path: "/", MaxAge: -1})
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// profileHandler returns a fixed profile with typed fields.
+func profileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id":         "6f1c2a8e-3b4d-4c5e-9f60-7a8b9c0d1e2f",
+		"email":      "ada@example.com",
+		"name":       "Ada",
+		"created_at": "2026-09-24T10:00:00Z",
+		"tags":       []string{"admin", "beta"},
+		"verified":   true,
+		"age":        36,
+	})
 }
 
 // WebSocket handler - echo server with broadcast support
@@ -390,6 +456,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		delete(wsClients, conn)
 		wsClientsMu.Unlock()
 	}()
+
+	// Clients that identify themselves get a welcome with the id they sent,
+	// which lets features check headers sent on the handshake.
+	if id := r.Header.Get("X-Client-Id"); id != "" {
+		welcome, _ := json.Marshal(map[string]string{"action": "welcome", "client": id})
+		conn.WriteMessage(websocket.TextMessage, welcome)
+	}
 
 	for {
 		messageType, message, err := conn.ReadMessage()

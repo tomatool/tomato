@@ -26,14 +26,47 @@ type WebSocketServer struct {
 	port     int
 	upgrader websocket.Upgrader
 
-	connections []*websocket.Conn
+	connections []*wsServerConn
 	connMu      sync.RWMutex
 
-	onConnectMsg  string
-	messageRules  []*MessageRule
-	rulesMu       sync.RWMutex
-	receivedMsgs  []string
-	receivedMu    sync.RWMutex
+	onConnectMsg string
+	messageRules []*MessageRule
+	rulesMu      sync.RWMutex
+	receivedMsgs []string
+	receivedMu   sync.RWMutex
+}
+
+// wsServerConn serialises writes: gorilla/websocket allows one concurrent
+// writer, and the on-connect message, rule replies (reader goroutine) and
+// broadcasts (step goroutine) can all write to the same connection.
+type wsServerConn struct {
+	conn *websocket.Conn
+	mu   sync.Mutex
+}
+
+func (c *wsServerConn) write(msg string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.conn.WriteMessage(websocket.TextMessage, []byte(msg))
+}
+
+// wsAssertWait is how long server assertions wait for the expected state:
+// connections register and messages arrive asynchronously to the client
+// steps that caused them.
+const wsAssertWait = 2 * time.Second
+
+// eventually polls cond until it holds or wsAssertWait passes.
+func eventually(cond func() bool) bool {
+	deadline := time.Now().Add(wsAssertWait)
+	for {
+		if cond() {
+			return true
+		}
+		if !time.Now().Before(deadline) {
+			return false
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 // MessageRule defines how to respond to messages
@@ -48,7 +81,7 @@ func NewWebSocketServer(name string, cfg config.Resource, cm *container.Manager)
 		name:         name,
 		config:       cfg,
 		container:    cm,
-		connections:  make([]*websocket.Conn, 0),
+		connections:  make([]*wsServerConn, 0),
 		messageRules: make([]*MessageRule, 0),
 		receivedMsgs: make([]string, 0),
 		upgrader: websocket.Upgrader{
@@ -87,24 +120,28 @@ func (r *WebSocketServer) Init(ctx context.Context) error {
 }
 
 func (r *WebSocketServer) handleWebSocket(w http.ResponseWriter, req *http.Request) {
-	conn, err := r.upgrader.Upgrade(w, req, nil)
+	ws, err := r.upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		return
 	}
+	conn := &wsServerConn{conn: ws}
 
 	r.connMu.Lock()
 	r.connections = append(r.connections, conn)
 	r.connMu.Unlock()
 
 	// Send on-connect message if configured
-	if r.onConnectMsg != "" {
-		conn.WriteMessage(websocket.TextMessage, []byte(r.onConnectMsg))
+	r.rulesMu.RLock()
+	onConnect := r.onConnectMsg
+	r.rulesMu.RUnlock()
+	if onConnect != "" {
+		conn.write(onConnect)
 	}
 
 	// Handle messages
 	go func() {
 		defer func() {
-			conn.Close()
+			ws.Close()
 			r.connMu.Lock()
 			for i, c := range r.connections {
 				if c == conn {
@@ -116,7 +153,7 @@ func (r *WebSocketServer) handleWebSocket(w http.ResponseWriter, req *http.Reque
 		}()
 
 		for {
-			_, message, err := conn.ReadMessage()
+			_, message, err := ws.ReadMessage()
 			if err != nil {
 				return
 			}
@@ -138,7 +175,7 @@ func (r *WebSocketServer) handleWebSocket(w http.ResponseWriter, req *http.Reque
 					matched = true
 				}
 				if matched && rule.Reply != "" {
-					conn.WriteMessage(websocket.TextMessage, []byte(rule.Reply))
+					conn.write(rule.Reply)
 					break
 				}
 			}
@@ -154,10 +191,10 @@ func (r *WebSocketServer) Ready(ctx context.Context) error {
 func (r *WebSocketServer) Reset(ctx context.Context) error {
 	// Close all connections
 	r.connMu.Lock()
-	for _, conn := range r.connections {
-		conn.Close()
+	for _, c := range r.connections {
+		c.conn.Close()
 	}
-	r.connections = make([]*websocket.Conn, 0)
+	r.connections = make([]*wsServerConn, 0)
 	r.connMu.Unlock()
 
 	r.rulesMu.Lock()
@@ -285,42 +322,60 @@ func (r *WebSocketServer) broadcast(doc *godog.DocString) error {
 
 func (r *WebSocketServer) broadcastText(message string) error {
 	r.connMu.RLock()
-	defer r.connMu.RUnlock()
+	conns := append([]*wsServerConn(nil), r.connections...)
+	r.connMu.RUnlock()
 
-	for _, conn := range r.connections {
-		conn.WriteMessage(websocket.TextMessage, []byte(message))
+	if len(conns) == 0 {
+		return fmt.Errorf("no clients are connected to broadcast to")
+	}
+	for _, c := range conns {
+		if err := c.write(message); err != nil {
+			return fmt.Errorf("broadcasting: %w", err)
+		}
 	}
 	return nil
+}
+
+func (r *WebSocketServer) connectionCount() int {
+	r.connMu.RLock()
+	defer r.connMu.RUnlock()
+	return len(r.connections)
 }
 
 func (r *WebSocketServer) hasConnections(count int) error {
-	r.connMu.RLock()
-	defer r.connMu.RUnlock()
-
-	if len(r.connections) != count {
-		return fmt.Errorf("expected %d connections, got %d", count, len(r.connections))
+	if !eventually(func() bool { return r.connectionCount() == count }) {
+		return fmt.Errorf("expected %d connections, got %d", count, r.connectionCount())
 	}
 	return nil
 }
 
-func (r *WebSocketServer) receivedMessage(message string) error {
+func (r *WebSocketServer) hasReceived(message string) bool {
 	r.receivedMu.RLock()
 	defer r.receivedMu.RUnlock()
-
 	for _, msg := range r.receivedMsgs {
 		if msg == message {
-			return nil
+			return true
 		}
 	}
-	return fmt.Errorf("message %q was not received", message)
+	return false
+}
+
+func (r *WebSocketServer) receivedCount() int {
+	r.receivedMu.RLock()
+	defer r.receivedMu.RUnlock()
+	return len(r.receivedMsgs)
+}
+
+func (r *WebSocketServer) receivedMessage(message string) error {
+	if !eventually(func() bool { return r.hasReceived(message) }) {
+		return fmt.Errorf("message %q was not received", message)
+	}
+	return nil
 }
 
 func (r *WebSocketServer) receivedMessageCount(count int) error {
-	r.receivedMu.RLock()
-	defer r.receivedMu.RUnlock()
-
-	if len(r.receivedMsgs) != count {
-		return fmt.Errorf("expected %d messages, got %d", count, len(r.receivedMsgs))
+	if !eventually(func() bool { return r.receivedCount() == count }) {
+		return fmt.Errorf("expected %d messages, got %d", count, r.receivedCount())
 	}
 	return nil
 }
@@ -333,8 +388,8 @@ func (r *WebSocketServer) GetURL() string {
 func (r *WebSocketServer) Cleanup(ctx context.Context) error {
 	// Close all connections first
 	r.connMu.Lock()
-	for _, conn := range r.connections {
-		conn.Close()
+	for _, c := range r.connections {
+		c.conn.Close()
 	}
 	r.connections = nil
 	r.connMu.Unlock()
