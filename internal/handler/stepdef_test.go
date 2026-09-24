@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -23,6 +24,9 @@ func TestStepHandler_NotDeprecatedIsUnchanged(t *testing.T) {
 }
 
 func TestStepHandler_DeprecatedWarnsOnceAndStillRuns(t *testing.T) {
+	// "Once per run" is process-wide state; start clean so the test also
+	// passes when repeated (-count, -cpu).
+	warnedDeprecated = sync.Map{}
 	var buf bytes.Buffer
 	prev := log.Logger
 	log.Logger = zerolog.New(&buf)

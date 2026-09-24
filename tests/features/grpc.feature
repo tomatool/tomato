@@ -71,3 +71,20 @@ Feature: gRPC resource
       {"service": "tomato"}
       """
     Then "grpc" response time is less than "5s"
+
+  Scenario: Assert what the response does and does not contain
+    When "grpc" calls "grpc.health.v1.Health/Check" with:
+      """
+      {"service": "tomato"}
+      """
+    Then "grpc" response does not contain "NOT_SERVING"
+    And "grpc" response json "status" exists
+    And "grpc" response json "unknownField" does not exist
+
+  Scenario: Assert on the error message of a failed call
+    When "grpc" calls "grpc.health.v1.Health/Check" with:
+      """
+      {"service": "does-not-exist"}
+      """
+    Then "grpc" response status is "NotFound"
+    And "grpc" response error contains "unknown service"

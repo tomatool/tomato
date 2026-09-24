@@ -133,3 +133,14 @@ Feature: HTTP Server Handler
     Then "api" response status is "404"
     When "api" sends "GET" to "http://localhost:9998/service-a"
     Then "api" response status is "404"
+
+  Scenario: Store the stub server URL in a variable
+    Given "mock" url is stored in "MOCK_URL"
+    And "mock" stub "GET" "/from-variable" returns "200" with body:
+      """
+      reached through the stored url
+      """
+    When "api" sends "GET" to "{{MOCK_URL}}/from-variable"
+    Then "api" response status is "200"
+    And "api" response body contains "stored url"
+    And "mock" received "GET" "/from-variable"

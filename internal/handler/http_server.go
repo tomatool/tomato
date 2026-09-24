@@ -392,9 +392,7 @@ func (r *HTTPServer) receivedTotalRequests(count int) error {
 }
 
 func (r *HTTPServer) storeURL(varName string) error {
-	// This would need integration with a variable store
-	// For now, we'll just return nil - in a real implementation,
-	// this would store http://localhost:{port} in a shared context
+	SetVariable(varName, r.GetURL())
 	return nil
 }
 

@@ -128,3 +128,20 @@ Feature: Kafka Handler
       | k1   | first    |
       | k2   | second   |
       | k3   | third    |
+
+  # Headers
+  Scenario: Publish a message with headers and assert them
+    Given "events" creates topic "headers-topic"
+    And "events" consumes from "headers-topic"
+    And "events" message header "trace-id" is "abc-123"
+    And "events" message header "content-type" is "text/plain"
+    When "events" publishes to "headers-topic":
+      """
+      traced message
+      """
+    Then "events" receives from "headers-topic" within "10s":
+      """
+      traced message
+      """
+    And "events" last message has header "trace-id" with value "abc-123"
+    And "events" last message has header "content-type" with value "text/plain"

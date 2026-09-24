@@ -69,6 +69,7 @@ nav:
   - Getting Started:
     - Overview: getting-started/index.md
     - GitHub Action: getting-started/github-action.md
+    - Step Coverage: getting-started/coverage.md
   - Configuration:
     - Reference: configuration/index.md
     - HTTP Server: configuration/http-server.md
