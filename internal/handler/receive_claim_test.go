@@ -60,3 +60,40 @@ func TestKafkaReceiveClaimsMessagesThatArrivedEarlier(t *testing.T) {
 		t.Error("with both messages matched, a third receive should time out")
 	}
 }
+
+// "has N messages" must tolerate a delivery still in flight: the step
+// before it may only have waited for the first of several messages.
+
+func TestRabbitMQMessageCountWaitsForInFlightDelivery(t *testing.T) {
+	r, _ := NewRabbitMQ("mq", DummyConfig(), nil)
+	r.messages["q"] = []*amqp.Delivery{{Body: []byte("message 1")}}
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		r.messagesMu.Lock()
+		r.messages["q"] = append(r.messages["q"], &amqp.Delivery{Body: []byte("message 2")})
+		r.messagesMu.Unlock()
+	}()
+	if err := r.queueShouldHaveMessages("q", 2); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.queueShouldHaveMessages("q", 3); err == nil {
+		t.Error("a count that never arrives should still fail")
+	}
+}
+
+func TestKafkaMessageCountWaitsForInFlightMessage(t *testing.T) {
+	r, _ := NewKafka("events", DummyConfig(), nil)
+	r.messages["t"] = []*sarama.ConsumerMessage{{Value: []byte("message 1")}}
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		r.messagesMu.Lock()
+		r.messages["t"] = append(r.messages["t"], &sarama.ConsumerMessage{Value: []byte("message 2")})
+		r.messagesMu.Unlock()
+	}()
+	if err := r.topicShouldHaveMessages("t", 2); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.topicShouldHaveMessages("t", 3); err == nil {
+		t.Error("a count that never arrives should still fail")
+	}
+}

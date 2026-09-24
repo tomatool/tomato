@@ -83,7 +83,7 @@ containers:
       timeout: 90s
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
     command: ["server", "/data"]
     ports:
       - "9000/tcp"
