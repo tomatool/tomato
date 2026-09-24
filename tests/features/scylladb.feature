@@ -64,3 +64,11 @@ Feature: ScyllaDB Handler
       | 1  | Alice | alice@test.com |
     When "scylla" clears table "users"
     Then "scylla" table "users" is empty
+
+  Scenario: Seed from a CQL file
+    When "scylla" executes file "tests/testdata/scylla/seed_users.cql"
+    Then "scylla" table "users" has "2" rows
+    And "scylla" table "users" contains:
+      | id | name  |
+      | 20 | Heidi |
+      | 21 | Ivan  |

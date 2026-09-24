@@ -67,3 +67,10 @@ Feature: Shell Handler
     When "shell" runs "echo 'success'"
     Then "shell" stdout does not contain "error"
     And "shell" stdout does not contain "failure"
+
+  Scenario: Run a script file
+    Given "shell" env "GREETING" is "tomato"
+    When "shell" runs script "tests/testdata/scripts/hello.sh"
+    Then "shell" exit code is "0"
+    And "shell" stdout contains "script ran with tomato"
+    And "shell" stderr is empty

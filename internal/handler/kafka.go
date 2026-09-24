@@ -26,7 +26,10 @@ type Kafka struct {
 	consumer sarama.Consumer
 	registry *schemaRegistry // nil unless options.schema_registry is set
 
+	pendingHeaders []sarama.RecordHeader // applied to the next published message
+
 	messages     map[string][]*sarama.ConsumerMessage
+	claimed      map[string]int // topic -> messages already matched by a receive step
 	messagesMu   sync.RWMutex
 	lastMessage  *sarama.ConsumerMessage
 	consuming    map[string]bool
@@ -178,12 +181,14 @@ func (r *Kafka) Reset(ctx context.Context) error {
 
 	r.messagesMu.Lock()
 	r.messages = make(map[string][]*sarama.ConsumerMessage)
+	r.claimed = make(map[string]int)
 	r.lastMessage = nil
 	r.messagesMu.Unlock()
 
 	if r.registry != nil {
 		r.registry.reset()
 	}
+	r.pendingHeaders = nil
 
 	topics := r.getTopicsToReset()
 	if len(topics) == 0 {
@@ -296,6 +301,13 @@ func (r *Kafka) Steps() StepCategory {
 			},
 
 			// Publishing
+			{
+				Group:       "Publishing",
+				Pattern:     `^"{resource}" message header "([^"]*)" is "([^"]*)"$`,
+				Description: "Sets a header on the next message published (any publish step)",
+				Example:     `"{resource}" message header "trace-id" is "abc-123"`,
+				Handler:     r.setMessageHeader,
+			},
 			{
 				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes to "([^"]*)":$`,
@@ -499,7 +511,7 @@ func (r *Kafka) publishMessageWithKey(topic, key string, doc *godog.DocString) e
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	_, _, err := r.producer.SendMessage(msg)
+	_, _, err := r.send(msg)
 	return err
 }
 
@@ -520,7 +532,7 @@ func (r *Kafka) publishJSONWithKey(topic, key string, doc *godog.DocString) erro
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	_, _, err := r.producer.SendMessage(msg)
+	_, _, err := r.send(msg)
 	return err
 }
 
@@ -553,7 +565,7 @@ func (r *Kafka) publishMessages(topic string, table *godog.Table) error {
 		if keyIdx >= 0 && keyIdx < len(row.Cells) {
 			msg.Key = sarama.StringEncoder(row.Cells[keyIdx].Value)
 		}
-		if _, _, err := r.producer.SendMessage(msg); err != nil {
+		if _, _, err := r.send(msg); err != nil {
 			return fmt.Errorf("sending message: %w", err)
 		}
 	}
@@ -603,43 +615,52 @@ func (r *Kafka) startConsuming(topic string) error {
 }
 
 func (r *Kafka) consumeMessage(topic, timeout string) error {
+	_, err := r.nextMessage(topic, timeout)
+	return err
+}
+
+// nextMessage waits for the next message on topic that no earlier receive
+// step has matched, and makes it the last message. Waiting for "a message
+// newer than when this step started" missed messages that arrived before the
+// step ran, which made receive steps flaky.
+func (r *Kafka) nextMessage(topic, timeout string) (*sarama.ConsumerMessage, error) {
 	duration, err := time.ParseDuration(timeout)
 	if err != nil {
-		return fmt.Errorf("invalid timeout: %w", err)
+		return nil, fmt.Errorf("invalid timeout: %w", err)
 	}
-
 	if err := r.startConsuming(topic); err != nil {
-		return err
+		return nil, err
 	}
 
 	deadline := time.Now().Add(duration)
-	initialCount := r.getMessageCount(topic)
-
-	for time.Now().Before(deadline) {
-		if r.getMessageCount(topic) > initialCount {
-			return nil
+	for {
+		r.messagesMu.Lock()
+		if r.claimed == nil {
+			r.claimed = make(map[string]int)
 		}
-		time.Sleep(100 * time.Millisecond)
+		if next := r.claimed[topic]; next < len(r.messages[topic]) {
+			msg := r.messages[topic][next]
+			r.claimed[topic] = next + 1
+			r.lastMessage = msg
+			r.messagesMu.Unlock()
+			return msg, nil
+		}
+		r.messagesMu.Unlock()
+		if !time.Now().Before(deadline) {
+			return nil, fmt.Errorf("no message received within %s", timeout)
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
-
-	return fmt.Errorf("no message received within %s", timeout)
 }
 
 func (r *Kafka) shouldReceiveMessage(topic, timeout string, doc *godog.DocString) error {
-	if err := r.consumeMessage(topic, timeout); err != nil {
+	msg, err := r.nextMessage(topic, timeout)
+	if err != nil {
 		return err
 	}
 
-	r.messagesMu.RLock()
-	lastMsg := r.lastMessage
-	r.messagesMu.RUnlock()
-
-	if lastMsg == nil {
-		return fmt.Errorf("no message received")
-	}
-
 	expected := strings.TrimSpace(doc.Content)
-	actual := strings.TrimSpace(string(lastMsg.Value))
+	actual := strings.TrimSpace(string(msg.Value))
 
 	if actual != expected {
 		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)
@@ -809,7 +830,7 @@ func (r *Kafka) Publish(ctx context.Context, topic string, payload []byte, heade
 		})
 	}
 
-	_, _, err := r.producer.SendMessage(msg)
+	_, _, err := r.send(msg)
 	return err
 }
 
@@ -883,7 +904,7 @@ func (r *Kafka) publishAvroWithKey(topic, key string, doc *godog.DocString) erro
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	_, _, err = r.producer.SendMessage(msg)
+	_, _, err = r.send(msg)
 	return err
 }
 
@@ -979,4 +1000,25 @@ func (r *Kafka) decodeAvroJSON(ctx context.Context, msg *sarama.ConsumerMessage)
 		return nil, fmt.Errorf("decoded Avro is not valid JSON: %w", err)
 	}
 	return v, nil
+}
+
+func (r *Kafka) setMessageHeader(key, value string) error {
+	r.pendingHeaders = append(r.pendingHeaders, sarama.RecordHeader{
+		Key:   []byte(key),
+		Value: []byte(ReplaceVariables(value)),
+	})
+	return nil
+}
+
+// send publishes msg with any headers set by "message header ... is ...",
+// then clears them so they apply to exactly one publish step.
+func (r *Kafka) send(msg *sarama.ProducerMessage) (int32, int64, error) {
+	if len(r.pendingHeaders) > 0 {
+		msg.Headers = append(msg.Headers, r.pendingHeaders...)
+	}
+	partition, offset, err := r.producer.SendMessage(msg)
+	if err == nil {
+		r.pendingHeaders = nil
+	}
+	return partition, offset, err
 }
