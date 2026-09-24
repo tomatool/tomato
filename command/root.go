@@ -18,6 +18,7 @@ One config to rule them all.`,
 		Commands: []*cli.Command{
 			initCommand,
 			runCommand,
+			serveCommand,
 			validateCommand,
 			docsCommand,
 			stepsCommand,

@@ -112,6 +112,18 @@ func (r *Registry) createHandler(name string, cfg config.Resource) (Handler, err
 	return build(name, cfg, r.container)
 }
 
+// Names returns the resource names, sorted.
+func (r *Registry) Names() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	names := make([]string, 0, len(r.handlers))
+	for name := range r.handlers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
+
 // Get returns a handler by name
 func (r *Registry) Get(name string) (Handler, error) {
 	r.mu.RLock()
