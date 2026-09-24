@@ -24,6 +24,8 @@ type RabbitMQ struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
 
+	pendingHeaders amqp.Table // applied to the next published message
+
 	// Message storage
 	messages     map[string][]*amqp.Delivery // queue -> messages
 	messagesMu   sync.RWMutex
@@ -196,6 +198,7 @@ func (r *RabbitMQ) Reset(ctx context.Context) error {
 	r.messages = make(map[string][]*amqp.Delivery)
 	r.lastMessage = nil
 	r.messagesMu.Unlock()
+	r.pendingHeaders = nil
 
 	strategy := "purge"
 	if s, ok := r.config.Options["reset_strategy"].(string); ok {
@@ -336,6 +339,13 @@ func (r *RabbitMQ) Steps() StepCategory {
 			},
 
 			// Publishing - Queue
+			{
+				Group:       "Publishing",
+				Pattern:     `^"{resource}" message header "([^"]*)" is "([^"]*)"$`,
+				Description: "Sets a header on the next message published (any publish step)",
+				Example:     `"{resource}" message header "trace-id" is "abc-123"`,
+				Handler:     r.setMessageHeader,
+			},
 			{
 				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes to queue "([^"]*)":$`,
@@ -544,10 +554,7 @@ func (r *RabbitMQ) publishToQueue(queue string, doc *godog.DocString) error {
 		queue, // routing key = queue name
 		false,
 		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(doc.Content),
-		},
+		r.publishing("text/plain", []byte(doc.Content)),
 	)
 }
 
@@ -563,10 +570,7 @@ func (r *RabbitMQ) publishJSONToQueue(queue string, doc *godog.DocString) error 
 		queue,
 		false,
 		false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(doc.Content),
-		},
+		r.publishing("application/json", []byte(doc.Content)),
 	)
 }
 
@@ -577,10 +581,7 @@ func (r *RabbitMQ) publishToExchange(exchange, routingKey string, doc *godog.Doc
 		routingKey,
 		false,
 		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(doc.Content),
-		},
+		r.publishing("text/plain", []byte(doc.Content)),
 	)
 }
 
@@ -596,10 +597,7 @@ func (r *RabbitMQ) publishJSONToExchange(exchange, routingKey string, doc *godog
 		routingKey,
 		false,
 		false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        []byte(doc.Content),
-		},
+		r.publishing("application/json", []byte(doc.Content)),
 	)
 }
 
@@ -637,10 +635,7 @@ func (r *RabbitMQ) publishMessages(queue string, table *godog.Table) error {
 			routingKey,
 			false,
 			false,
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(row.Cells[messageIdx].Value),
-			},
+			r.publishing("text/plain", []byte(row.Cells[messageIdx].Value)),
 		)
 		if err != nil {
 			return fmt.Errorf("publishing message: %w", err)
@@ -844,3 +839,19 @@ func (r *RabbitMQ) Cleanup(ctx context.Context) error {
 }
 
 var _ Handler = (*RabbitMQ)(nil)
+
+func (r *RabbitMQ) setMessageHeader(key, value string) error {
+	if r.pendingHeaders == nil {
+		r.pendingHeaders = amqp.Table{}
+	}
+	r.pendingHeaders[key] = ReplaceVariables(value)
+	return nil
+}
+
+// publishing builds a message with any headers set by "message header ...
+// is ...", and clears them so they apply to exactly one publish step.
+func (r *RabbitMQ) publishing(contentType string, body []byte) amqp.Publishing {
+	p := amqp.Publishing{ContentType: contentType, Body: body, Headers: r.pendingHeaders}
+	r.pendingHeaders = nil
+	return p
+}
