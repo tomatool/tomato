@@ -26,6 +26,8 @@ type Kafka struct {
 	consumer sarama.Consumer
 	registry *schemaRegistry // nil unless options.schema_registry is set
 
+	pendingHeaders []sarama.RecordHeader // applied to the next published message
+
 	messages     map[string][]*sarama.ConsumerMessage
 	messagesMu   sync.RWMutex
 	lastMessage  *sarama.ConsumerMessage
@@ -184,6 +186,7 @@ func (r *Kafka) Reset(ctx context.Context) error {
 	if r.registry != nil {
 		r.registry.reset()
 	}
+	r.pendingHeaders = nil
 
 	topics := r.getTopicsToReset()
 	if len(topics) == 0 {
@@ -296,6 +299,13 @@ func (r *Kafka) Steps() StepCategory {
 			},
 
 			// Publishing
+			{
+				Group:       "Publishing",
+				Pattern:     `^"{resource}" message header "([^"]*)" is "([^"]*)"$`,
+				Description: "Sets a header on the next message published (any publish step)",
+				Example:     `"{resource}" message header "trace-id" is "abc-123"`,
+				Handler:     r.setMessageHeader,
+			},
 			{
 				Group:       "Publishing",
 				Pattern:     `^"{resource}" publishes to "([^"]*)":$`,
@@ -499,7 +509,7 @@ func (r *Kafka) publishMessageWithKey(topic, key string, doc *godog.DocString) e
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	_, _, err := r.producer.SendMessage(msg)
+	_, _, err := r.send(msg)
 	return err
 }
 
@@ -520,7 +530,7 @@ func (r *Kafka) publishJSONWithKey(topic, key string, doc *godog.DocString) erro
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	_, _, err := r.producer.SendMessage(msg)
+	_, _, err := r.send(msg)
 	return err
 }
 
@@ -553,7 +563,7 @@ func (r *Kafka) publishMessages(topic string, table *godog.Table) error {
 		if keyIdx >= 0 && keyIdx < len(row.Cells) {
 			msg.Key = sarama.StringEncoder(row.Cells[keyIdx].Value)
 		}
-		if _, _, err := r.producer.SendMessage(msg); err != nil {
+		if _, _, err := r.send(msg); err != nil {
 			return fmt.Errorf("sending message: %w", err)
 		}
 	}
@@ -809,7 +819,7 @@ func (r *Kafka) Publish(ctx context.Context, topic string, payload []byte, heade
 		})
 	}
 
-	_, _, err := r.producer.SendMessage(msg)
+	_, _, err := r.send(msg)
 	return err
 }
 
@@ -883,7 +893,7 @@ func (r *Kafka) publishAvroWithKey(topic, key string, doc *godog.DocString) erro
 	if key != "" {
 		msg.Key = sarama.StringEncoder(key)
 	}
-	_, _, err = r.producer.SendMessage(msg)
+	_, _, err = r.send(msg)
 	return err
 }
 
@@ -979,4 +989,25 @@ func (r *Kafka) decodeAvroJSON(ctx context.Context, msg *sarama.ConsumerMessage)
 		return nil, fmt.Errorf("decoded Avro is not valid JSON: %w", err)
 	}
 	return v, nil
+}
+
+func (r *Kafka) setMessageHeader(key, value string) error {
+	r.pendingHeaders = append(r.pendingHeaders, sarama.RecordHeader{
+		Key:   []byte(key),
+		Value: []byte(ReplaceVariables(value)),
+	})
+	return nil
+}
+
+// send publishes msg with any headers set by "message header ... is ...",
+// then clears them so they apply to exactly one publish step.
+func (r *Kafka) send(msg *sarama.ProducerMessage) (int32, int64, error) {
+	if len(r.pendingHeaders) > 0 {
+		msg.Headers = append(msg.Headers, r.pendingHeaders...)
+	}
+	partition, offset, err := r.producer.SendMessage(msg)
+	if err == nil {
+		r.pendingHeaders = nil
+	}
+	return partition, offset, err
 }
