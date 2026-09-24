@@ -158,3 +158,21 @@ Feature: RabbitMQ Handler
     And "mq" purges queue "purge-queue"
     And "mq" consumes from queue "purge-queue"
     Then "mq" queue "purge-queue" is empty
+
+  Scenario: Declare a durable exchange
+    Given "mq" declares durable exchange "durable-events" of type "topic"
+    Then "mq" exchange "durable-events" exists
+
+  Scenario: Publish a message with headers and assert them
+    Given "mq" declares queue "header-queue"
+    And "mq" consumes from queue "header-queue"
+    And "mq" message header "trace-id" is "abc-123"
+    When "mq" publishes to queue "header-queue":
+      """
+      traced message
+      """
+    Then "mq" receives from queue "header-queue" within "5s":
+      """
+      traced message
+      """
+    And "mq" last message has header "trace-id" with value "abc-123"

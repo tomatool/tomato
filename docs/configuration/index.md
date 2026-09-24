@@ -452,6 +452,10 @@ features:
 | `@smoke or @api` | Either tag |
 | `not @slow` | Exclude slow tests |
 | `@smoke and not @wip` | Smoke tests, excluding WIP |
+| `(@smoke or @api) and not @slow` | Parentheses group terms |
+
+`not` binds tighter than `and`, which binds tighter than `or`. godog's legacy
+syntax (`@smoke && ~@slow`, `,` for or) is still accepted.
 
 ## Environment Variables
 
