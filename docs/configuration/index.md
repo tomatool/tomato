@@ -303,7 +303,12 @@ resources:
       partitions: 1
       replication_factor: 1
       reset_strategy: delete_recreate
+      # Optional: Avro via Confluent Schema Registry
+      schema_registry:
+        container: schema-registry   # or url: http://localhost:8081
 ```
+
+See [Kafka: Avro and Schema Registry](kafka.md#avro-and-schema-registry).
 
 ### WebSocket
 
