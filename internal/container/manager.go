@@ -209,6 +209,12 @@ func (m *Manager) calculateStartOrder() ([]string, error) {
 
 // StartAll starts all containers in dependency order
 func (m *Manager) StartAll(ctx context.Context) error {
+	// Nothing to start: don't touch Docker at all. A shell- or HTTP-only
+	// project must run on machines (and CI jobs) without a Docker daemon.
+	if len(m.order) == 0 {
+		return nil
+	}
+
 	// Create the shared network first
 	if err := m.CreateNetwork(ctx); err != nil {
 		return fmt.Errorf("creating network: %w", err)
