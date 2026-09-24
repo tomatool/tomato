@@ -74,3 +74,33 @@ Feature: Shell Handler
     Then "shell" exit code is "0"
     And "shell" stdout contains "script ran with tomato"
     And "shell" stderr is empty
+
+  Scenario: Check stderr does not contain
+    When "shell" runs "echo 'warning: disk' >&2"
+    Then "shell" stderr does not contain "panic"
+
+  Scenario: Assert output containing double quotes
+    When "shell" runs:
+      """
+      echo '{"status": "ok"}'
+      echo 'expected "dx"' >&2
+      """
+    Then "shell" stdout contains:
+      """
+      "status": "ok"
+      """
+    And "shell" stdout does not contain:
+      """
+      "status": "fail"
+      """
+    And "shell" stderr contains:
+      """
+      expected "dx"
+      """
+
+  Scenario: Env set in an earlier scenario does not leak
+    When "shell" runs:
+      """
+      echo "MY_VAR=[$MY_VAR]"
+      """
+    Then "shell" stdout contains "MY_VAR=[]"

@@ -1,0 +1,11 @@
+# Fixture for tests/features/cli.feature: a shell-only project the
+# integration suite runs tomato against (no containers, no app).
+version: 2
+
+resources:
+  shell:
+    type: shell
+
+features:
+  paths:
+    - ./tests/testdata/cli/features

@@ -126,7 +126,7 @@ coverage: build
 	$(GOTEST) -race -covermode=atomic -coverpkg=./... ./... -args -test.gocoverdir=$(CURDIR)/coverage/unit
 	@echo "Integration suite with a coverage-instrumented binary..."
 	$(GOCMD) build -cover -covermode=atomic -coverpkg=./... $(LDFLAGS) -o ./bin/tomato-coverage .
-	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage run -c ./tests/tomato.yml --quiet; echo $$? > ./coverage/integration.exit
+	GOCOVERDIR=./coverage/integration TOMATO_BIN=./bin/tomato-coverage ./bin/tomato-coverage run -c ./tests/tomato.yml --quiet; echo $$? > ./coverage/integration.exit
 	@echo "CLI commands, so they count too..."
 	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage validate -c ./tests/tomato.yml --plain > /dev/null
 	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage steps > /dev/null
