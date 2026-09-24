@@ -1,0 +1,38 @@
+name: New resource type
+description: Support for a system tomato can't drive yet (a database, broker, protocol…)
+labels: [enhancement, new-resource]
+body:
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: e.g. ScyllaDB, MySQL, NATS, Schema Registry
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: What do your tests need to do with it?
+      description: Seed data, assert state, publish/consume, call an API…
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: How you'd configure it
+      render: yaml
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps you'd write
+      render: gherkin
+  - type: textarea
+    id: reset
+    attributes:
+      label: What should reset between scenarios clear, and what must it keep?
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to implement this (see CONTRIBUTING.md, "Adding a new resource type")

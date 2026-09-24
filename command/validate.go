@@ -233,13 +233,21 @@ func (v *Validator) validateConfigExists() {
 
 func (v *Validator) validateConfigStructure() {
 	// Check version
-	if v.config.Version != 2 {
+	if v.config.Version != config.SupportedVersion {
 		v.results = append(v.results, ValidationResult{
 			Category:   "Config",
 			Item:       "version",
 			Status:     "error",
 			Message:    fmt.Sprintf("unsupported version %d", v.config.Version),
-			Suggestion: "Set version: 2 at the top of your config",
+			Suggestion: fmt.Sprintf("Set version: %d at the top of your config", config.SupportedVersion),
+		})
+	} else if !v.config.VersionDeclared {
+		v.results = append(v.results, ValidationResult{
+			Category:   "Config",
+			Item:       "version",
+			Status:     "warning",
+			Message:    "no version declared, assuming 2",
+			Suggestion: "Add version: 2 at the top of your config so a future schema can't be misread",
 		})
 	}
 
