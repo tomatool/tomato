@@ -65,3 +65,11 @@ Feature: tomato CLI
       """
     Then "shell" succeeds
     And "shell" stdout contains "Validation passed!"
+
+  Scenario: a project without containers runs without Docker
+    When "shell" runs:
+      """
+      DOCKER_HOST=unix:///nonexistent/docker.sock sh tests/testdata/cli/tomato.sh run -c tests/testdata/cli/tomato.yml
+      """
+    Then "shell" succeeds
+    And "shell" stdout contains "4 scenarios (4 passed)"
