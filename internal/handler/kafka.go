@@ -702,9 +702,11 @@ func (r *Kafka) getMessageCount(topic string) int {
 	return len(r.messages[topic])
 }
 
+// topicShouldHaveMessages waits briefly for the count: messages reach the
+// consumer asynchronously, so one produced a step ago may still be in flight.
 func (r *Kafka) topicShouldHaveMessages(topic string, expected int) error {
-	count := r.getMessageCount(topic)
-	if count != expected {
+	eventually(func() bool { return r.getMessageCount(topic) == expected })
+	if count := r.getMessageCount(topic); count != expected {
 		return fmt.Errorf("topic %q: expected %d messages, got %d", topic, expected, count)
 	}
 	return nil

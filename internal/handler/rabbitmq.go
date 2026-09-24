@@ -759,9 +759,12 @@ func (r *RabbitMQ) getMessageCount(queue string) int {
 
 // Assertions
 
+// queueShouldHaveMessages waits briefly for the count: deliveries reach the
+// consumer asynchronously, so a message published a step ago may still be
+// in flight.
 func (r *RabbitMQ) queueShouldHaveMessages(queue string, expected int) error {
-	count := r.getMessageCount(queue)
-	if count != expected {
+	eventually(func() bool { return r.getMessageCount(queue) == expected })
+	if count := r.getMessageCount(queue); count != expected {
 		return fmt.Errorf("queue %q: expected %d messages, got %d", queue, expected, count)
 	}
 	return nil
