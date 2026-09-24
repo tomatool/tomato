@@ -1,0 +1,37 @@
+name: Bug report
+description: Something in tomato doesn't work as documented
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: tomato version
+      description: Output of `tomato version`
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: tomato.yml
+      description: Remove secrets first.
+      render: yaml
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature file (or the failing scenario)
+      render: gherkin
+  - type: textarea
+    id: output
+    attributes:
+      label: Output of `tomato run --verbose`
+      render: text
+  - type: input
+    id: environment
+    attributes:
+      label: OS, Docker version, and whether you use the GitHub Action

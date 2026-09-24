@@ -90,6 +90,7 @@ nav:
     - WebSocket Client: resources/websocket-client.md
     - WebSocket Server: resources/websocket-server.md
     - S3: resources/s3.md
+  - Stability: stability.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
 

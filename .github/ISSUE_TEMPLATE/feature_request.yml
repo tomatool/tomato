@@ -1,0 +1,21 @@
+name: Feature request
+description: A new step, option or behaviour for an existing resource
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to test?
+      description: The situation, not the solution. What can't you express today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed step or config
+      description: How you would like it to read in a feature file or tomato.yml.
+      render: gherkin
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you use today
