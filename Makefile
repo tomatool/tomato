@@ -1,4 +1,4 @@
-.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage-all
+.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all
 
 # Build variables
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -118,6 +118,20 @@ integration-test-coverage:
 	@echo "Generating coverage report..."
 	$(GOCMD) tool cover -html=coverage-integration.out -o coverage-integration.html
 	@echo "Integration coverage report: coverage-integration.html"
+
+## coverage: Unit + integration coverage, step coverage, report and gates (what CI runs)
+coverage: build
+	@mkdir -p ./coverage && find ./coverage -mindepth 1 -delete && mkdir -p ./coverage/unit ./coverage/integration ./coverage/merged
+	@echo "Unit tests with coverage..."
+	$(GOTEST) -race -covermode=atomic -coverpkg=./... ./... -args -test.gocoverdir=$(CURDIR)/coverage/unit
+	@echo "Integration suite with a coverage-instrumented binary..."
+	$(GOCMD) build -cover -covermode=atomic -coverpkg=./... $(LDFLAGS) -o ./bin/tomato-coverage .
+	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage run -c ./tests/tomato.yml --quiet; echo $$? > ./coverage/integration.exit
+	$(GOCMD) tool covdata merge -i=./coverage/unit,./coverage/integration -o=./coverage/merged
+	$(GOCMD) tool covdata textfmt -i=./coverage/merged -o=./coverage/coverage.out
+	$(GOCMD) tool cover -html=./coverage/coverage.out -o ./coverage/coverage.html
+	$(BINARY_PATH) coverage -c ./tests/tomato.yml --all-types --format json -o ./coverage/steps.json
+	./scripts/coverage-report.sh
 
 ## coverage-all: Run both unit tests and integration tests with combined coverage
 coverage-all: test-coverage integration-test-coverage
