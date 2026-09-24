@@ -87,6 +87,7 @@ Without reset, write scenarios that create their own uniquely named data
 | `kafka` | `brokers` | `options.tls`, `options.sasl` (`PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`) |
 | `rabbitmq` | `url` (`amqp://` or `amqps://`) | `amqps://` or `options.tls` |
 | `s3` | `options.endpoint` | `https://` endpoint |
+| `scylladb` / `cassandra` | `options.hosts` | `options.tls` |
 
 ### `options.tls`
 

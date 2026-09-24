@@ -27,6 +27,7 @@ type Cassandra struct {
 	cluster   *gocql.ClusterConfig
 	session   *gocql.Session
 	keyspace  string
+	skipReset bool // remote target without `reset: true`
 }
 
 func NewCassandra(name string, cfg config.Resource, cm *container.Manager) (*Cassandra, error) {
@@ -40,6 +41,7 @@ func (r *Cassandra) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	r.skipReset = remoteResetGuard(r.name, r.config, host)
 
 	cluster := gocql.NewCluster(net.JoinHostPort(host, strconv.Itoa(port)))
 	cluster.Timeout = 10 * time.Second
@@ -56,6 +58,14 @@ func (r *Cassandra) Init(ctx context.Context) error {
 		}
 		return ip, port
 	})
+
+	tlsCfg, err := tlsFromOptions(r.config.Options)
+	if err != nil {
+		return err
+	}
+	if tlsCfg != nil {
+		cluster.SslOpts = &gocql.SslOptions{Config: tlsCfg, EnableHostVerification: !tlsCfg.InsecureSkipVerify}
+	}
 
 	if user, ok := r.config.Options["user"].(string); ok && user != "" {
 		password, _ := r.config.Options["password"].(string)
@@ -188,6 +198,9 @@ func (r *Cassandra) bootstrap(ctx context.Context) error {
 // Reset truncates every table in the reset keyspaces (`options.keyspaces`,
 // defaulting to the resource's keyspace), except those in `exclude`.
 func (r *Cassandra) Reset(ctx context.Context) error {
+	if r.skipReset {
+		return nil
+	}
 	tables, err := r.tablesToReset(ctx)
 	if err != nil {
 		return err
