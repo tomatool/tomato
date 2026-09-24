@@ -66,6 +66,8 @@ func factory[T Handler](f func(string, config.Resource, *container.Manager) (T, 
 var handlerFactories = map[string]handlerFactory{
 	"postgres":         factory(NewPostgres),
 	"postgresql":       factory(NewPostgres),
+	"scylladb":         factory(NewCassandra),
+	"cassandra":        factory(NewCassandra),
 	"redis":            factory(NewRedis),
 	"rabbitmq":         factory(NewRabbitMQ),
 	"kafka":            factory(NewKafka),
@@ -205,6 +207,7 @@ func ValidResourceTypes() []string {
 func ContainerBasedTypes() []string {
 	return []string{
 		"postgres", "postgresql",
+		"scylladb", "cassandra",
 		"redis", "rabbitmq", "kafka",
 		"s3", "minio",
 	}

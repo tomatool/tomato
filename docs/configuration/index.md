@@ -45,7 +45,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell
+    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell
     container: container_name
     options: {}
 
@@ -274,6 +274,24 @@ truncated like any other table. Add those tables to `exclude` so scenarios
 don't have to re-seed them.
 
 The `container` field automatically provides the connection details - tomato resolves the container's host and port at runtime.
+
+### ScyllaDB / Cassandra
+
+```yaml
+resources:
+  scylla:
+    type: scylladb          # or: cassandra
+    container: scylla
+    options:
+      keyspace: app         # created if missing, then used for unqualified tables
+      schema:
+        - ./fixtures/schema.cql
+      exclude:
+        - countries         # reference data kept across scenarios
+```
+
+Every table in the keyspace is truncated before each scenario, except those in
+`exclude`. See [ScyllaDB Configuration](scylladb.md) for all options.
 
 ### Redis
 
