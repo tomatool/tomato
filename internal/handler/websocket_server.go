@@ -330,6 +330,8 @@ func (r *WebSocketServer) GetURL() string {
 	return fmt.Sprintf("ws://localhost:%d", r.port)
 }
 
+func (r *WebSocketServer) startsBeforeClients() {}
+
 func (r *WebSocketServer) Cleanup(ctx context.Context) error {
 	// Close all connections first
 	r.connMu.Lock()

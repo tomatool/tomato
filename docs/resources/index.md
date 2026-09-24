@@ -15,6 +15,7 @@ Tomato supports the following resource types for behavioral testing.
 | [WebSocket Client](websocket-client.md) | `websocket` | Steps for connecting to WebSocket servers |
 | [WebSocket Server](websocket-server.md) | `websocket-server` | Steps for stubbing WebSocket services |
 | [S3](s3.md) | `s3` | Steps for interacting with S3-compatible object storage (MinIO, LocalStack, AWS) |
+| [gRPC Server](grpc-server.md) | `grpc-server` | Steps for stubbing gRPC services the app depends on |
 | [gRPC](grpc.md) | `grpc` | Steps for calling unary gRPC methods and validating responses |
 
 

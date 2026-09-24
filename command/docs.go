@@ -133,6 +133,10 @@ func collectStepCategories() []handler.StepCategory {
 	s3Handler, _ := handler.NewS3("files", handler.DummyConfig(), nil)
 	categories = append(categories, s3Handler.Steps())
 
+	// gRPC Server
+	grpcServerHandler, _ := handler.NewGRPCServer("payments", handler.DummyConfig(), nil)
+	categories = append(categories, grpcServerHandler.Steps())
+
 	// gRPC
 	grpcHandler, _ := handler.NewGRPC("grpc", handler.DummyConfig(), nil)
 	categories = append(categories, grpcHandler.Steps())
@@ -382,6 +386,7 @@ type ResourceInfo struct {
 var resourceTypeMapping = map[string]string{
 	"HTTP Client":      "http",
 	"HTTP Server":      "http-server",
+	"gRPC Server":      "grpc-server",
 	"PostgreSQL":       "postgres",
 	"Redis":            "redis",
 	"Kafka":            "kafka",

@@ -430,10 +430,13 @@ func (r *GRPC) responseStatusShouldBe(expected string) error {
 	if r.lastStatus == nil {
 		return errNoGRPCResponse
 	}
-	want := strings.ToUpper(strings.TrimSpace(expected))
-	got := r.lastStatus.Code().String()
-	if !strings.EqualFold(got, want) {
-		return fmt.Errorf("expected status %s, got %s: %s", want, got, r.lastStatus.Message())
+	// Accept the canonical name (NOT_FOUND), grpc-go's (NotFound) or the number.
+	want, err := parseCode(expected)
+	if err != nil {
+		return err
+	}
+	if got := r.lastStatus.Code(); got != want {
+		return fmt.Errorf("expected status %s, got %s: %s", expected, got, r.lastStatus.Message())
 	}
 	return nil
 }

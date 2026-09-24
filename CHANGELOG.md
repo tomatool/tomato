@@ -9,6 +9,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
+- `grpc-server` resource: stub gRPC dependencies from `.proto` files or a protoset (no codegen), assert on requests and metadata; serves reflection.
 - `scylladb` / `cassandra` resource: CQL execution, table seeding and assertions, keyspace bootstrap, per-scenario truncate. ([#150](https://github.com/tomatool/tomato/pull/150))
 - Kafka Avro via Confluent Schema Registry: publish and assert Avro messages as plain JSON. ([#152](https://github.com/tomatool/tomato/pull/152))
 - Stability and deprecation policy (`docs/stability.md`), CONTRIBUTING, MAINTAINERS, CODEOWNERS, and issue and PR templates.
@@ -16,6 +17,9 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - `tomato validate` warns when `tomato.yml` has no `version` field.
 - CI reports: file outputs such as `junit:reports/tomato.xml` get their directories created, and are kept when `--format` is overridden (for example by the GitHub Action's PR comment). ([#149](https://github.com/tomatool/tomato/pull/149))
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
+
+### Fixed
+- `grpc` `response status is` accepts canonical status names (`NOT_FOUND`), not only `NotFound`.
 
 ### Changed
 - A config with an unsupported `version`, or a v1-style config, is rejected with a pointer to the migration guide instead of a YAML decoding error.

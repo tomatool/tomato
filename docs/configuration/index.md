@@ -45,7 +45,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell
+    type: http|http-server|grpc|grpc-server|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell
     container: container_name
     options: {}
 
@@ -359,6 +359,23 @@ resources:
 
 The server must register the gRPC reflection service. See
 [gRPC Configuration](grpc.md).
+
+### gRPC Server
+
+A stub server for gRPC dependencies, like `http-server` for HTTP:
+
+```yaml
+resources:
+  payments:
+    type: grpc-server
+    options:
+      port: 50061
+      proto_files: [payments/v1/payments.proto]
+      import_paths: [proto]
+```
+
+The app reaches it at `{{.payments.url}}` (`localhost:50061`). See
+[gRPC Server Configuration](grpc-server.md).
 
 ### S3
 
