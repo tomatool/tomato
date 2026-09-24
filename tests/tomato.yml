@@ -83,7 +83,7 @@ containers:
       timeout: 90s
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     command: ["server", "/data"]
     ports:
       - "9000/tcp"

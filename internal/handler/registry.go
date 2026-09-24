@@ -212,3 +212,22 @@ func ContainerBasedTypes() []string {
 		"s3", "minio",
 	}
 }
+
+// StepCategoryForType returns the step definitions of a resource type, built
+// from a throwaway handler. It is what `tomato steps`, `tomato docs` and
+// `tomato coverage` read; no connection is made.
+func StepCategoryForType(typ string) (StepCategory, bool) {
+	build, ok := handlerFactories[typ]
+	if !ok {
+		return StepCategory{}, false
+	}
+	h, err := build("resource", DummyConfig(), nil)
+	if err != nil {
+		return StepCategory{}, false
+	}
+	provider, ok := h.(StepProvider)
+	if !ok {
+		return StepCategory{}, false
+	}
+	return provider.Steps(), true
+}
