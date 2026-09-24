@@ -88,7 +88,7 @@
   - [x] Step definitions (publish, consume, ordering, headers)
   - [x] Topic management (create, delete)
   - [ ] Consumer group management
-  - [ ] Schema Registry integration (optional)
+  - [x] Schema Registry integration (Avro, Confluent wire format)
 
 ### HTTP Resources
 - [x] **HTTP Client**
