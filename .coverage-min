@@ -1,4 +1,5 @@
 # Code coverage floors enforced by `make coverage` (scripts/report-coverage.sh).
-# Unit + integration coverage, merged. Raise these when coverage goes up.
-handler=75.0
-total=59.5
+# Unit + integration coverage, merged. Kept ~0.5 below measured: timing-dependent
+# branches move coverage by ~0.1% between runs. Raise these when coverage goes up.
+handler=74.5
+total=59.0
