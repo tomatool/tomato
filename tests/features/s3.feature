@@ -94,3 +94,23 @@ Feature: S3 Handler
     Given "files" object "adhoc/note.txt" is "auto-created"
     Then "files" bucket "adhoc" should exist
     And "files" object "adhoc/note.txt" content should be "auto-created"
+
+  Scenario: Exact multi-line content from a docstring
+    Given "files" object "uploads/greeting.txt" is:
+      """
+      hello
+      world
+      """
+    Then "files" object "uploads/greeting.txt" content should be:
+      """
+      hello
+      world
+      """
+
+  Scenario: Upload with user metadata and assert it
+    Given "files" object "uploads/report.csv" is "id,name" with metadata:
+      | key   | value   |
+      | owner | billing |
+      | team  | finance |
+    Then "files" object "uploads/report.csv" metadata "owner" should be "billing"
+    And "files" object "uploads/report.csv" metadata "team" should be "finance"

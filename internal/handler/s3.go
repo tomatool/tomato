@@ -286,6 +286,13 @@ func (r *S3) Steps() StepCategory {
 			},
 			{
 				Group:       "Object Setup",
+				Pattern:     `^"{resource}" object "([^"]*)" is "([^"]*)" with metadata:$`,
+				Description: "Upload an object with user metadata (table of key | value)",
+				Example:     "\"{resource}\" object \"uploads/a.csv\" is \"id,name\" with metadata:\n  | key   | value   |\n  | owner | billing |",
+				Handler:     r.putObjectWithMetadata,
+			},
+			{
+				Group:       "Object Setup",
 				Pattern:     `^"{resource}" object "([^"]*)" is file "([^"]*)"$`,
 				Description: "Upload a local file as an object",
 				Example:     `"files" object "uploads/logo.png" is file "testdata/logo.png"`,
@@ -580,6 +587,10 @@ func (r *S3) getObject(ctx context.Context, path string) ([]byte, error) {
 }
 
 func (r *S3) put(ctx context.Context, path string, body []byte, contentType string) error {
+	return r.putWithMetadata(ctx, path, body, contentType, nil)
+}
+
+func (r *S3) putWithMetadata(ctx context.Context, path string, body []byte, contentType string, metadata map[string]string) error {
 	bucket, key, err := splitPath(path)
 	if err != nil {
 		return err
@@ -594,6 +605,9 @@ func (r *S3) put(ctx context.Context, path string, body []byte, contentType stri
 	}
 	if contentType != "" {
 		in.ContentType = aws.String(contentType)
+	}
+	if len(metadata) > 0 {
+		in.Metadata = metadata
 	}
 	_, err = r.client.PutObject(ctx, in)
 	return err
@@ -655,6 +669,21 @@ func (r *S3) putObjectDoc(path string, doc *godog.DocString) error {
 
 func (r *S3) putObjectWithContentType(path, content, contentType string) error {
 	return r.put(context.Background(), path, []byte(ReplaceVariables(content)), contentType)
+}
+
+func (r *S3) putObjectWithMetadata(path, content string, table *godog.Table) error {
+	metadata := map[string]string{}
+	for i, row := range table.Rows {
+		if len(row.Cells) < 2 {
+			return fmt.Errorf("metadata table rows need a key and a value")
+		}
+		key, value := row.Cells[0].Value, row.Cells[1].Value
+		if i == 0 && strings.EqualFold(key, "key") && strings.EqualFold(value, "value") {
+			continue // header row
+		}
+		metadata[key] = ReplaceVariables(value)
+	}
+	return r.putWithMetadata(context.Background(), path, []byte(ReplaceVariables(content)), "", metadata)
 }
 
 func (r *S3) putObjectFromFile(path, filePath string) error {

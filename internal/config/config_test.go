@@ -1003,7 +1003,7 @@ func TestContainerCommand(t *testing.T) {
 			yaml: `version: 2
 containers:
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     command: ["server", "/data", "--console-address", ":9001"]
 `,
 			want: []string{"server", "/data", "--console-address", ":9001"},
