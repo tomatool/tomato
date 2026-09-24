@@ -1107,6 +1107,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#avro-and-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avro and Schema Registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Avro and Schema Registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#consuming" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1119,7 +1147,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#examples_1" class="md-nav__link">
+  <a href="#examples_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Examples
@@ -1147,7 +1175,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#examples_2" class="md-nav__link">
+  <a href="#examples_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Examples
@@ -1473,6 +1501,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#avro-and-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avro and Schema Registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Avro and Schema Registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#consuming" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1485,7 +1541,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#examples_1" class="md-nav__link">
+  <a href="#examples_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Examples
@@ -1513,7 +1569,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#examples_2" class="md-nav__link">
+  <a href="#examples_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Examples
@@ -1638,6 +1694,82 @@
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">      |</span><span class="s"> value</span><span class="k">           |</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> user-1</span><span class="k">   |</span><span class="s"> {"id": 1}</span><span class="k">     |</span>
 </span></code></pre></div></p>
+<h2 id="avro-and-schema-registry">Avro and Schema Registry<a class="headerlink" href="#avro-and-schema-registry" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"{resource}" registers schema for subject "orders-value":</code></td>
+<td>Registers an Avro schema under a subject</td>
+</tr>
+<tr>
+<td><code>"{resource}" registers schema for subject "orders-value" from file "schemas/order.avsc"</code></td>
+<td>Registers an Avro schema (.avsc) from a file</td>
+</tr>
+<tr>
+<td><code>"{resource}" publishes avro to "orders":</code></td>
+<td>Publishes JSON as Avro, using the latest schema of the topic's value subject</td>
+</tr>
+<tr>
+<td><code>"{resource}" publishes avro to "orders" with key "order-1":</code></td>
+<td>Publishes JSON as Avro with a string key</td>
+</tr>
+<tr>
+<td><code>"{resource}" receives avro from "orders" within "10s":</code></td>
+<td>Waits for an Avro message whose JSON form contains the given fields</td>
+</tr>
+<tr>
+<td><code>"{resource}" last message avro matches:</code></td>
+<td>Asserts the last message, decoded from Avro, equals the JSON exactly</td>
+</tr>
+<tr>
+<td><code>"{resource}" last message avro contains:</code></td>
+<td>Asserts the last message, decoded from Avro, contains the JSON fields</td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">#</a></h3>
+<p><strong>Registers an Avro schema under a subject:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" registers schema for subject "</span><span class="s">orders-value</span><span class="nf">":</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">  {"type": "record", "name": "Order", "fields": [{"name": "id", "type": "string"}]}</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Publishes JSON as Avro, using the latest schema of the topic's value subject:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes avro to "</span><span class="s">orders</span><span class="nf">":</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  {"id": "order-1"}</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Publishes JSON as Avro with a string key:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes avro to "</span><span class="s">orders</span><span class="nf">" with key "</span><span class="s">order-1</span><span class="nf">":</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="s">  {"id": "order-1"}</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Waits for an Avro message whose JSON form contains the given fields:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives avro from "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">":</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="s">  {"id": "order-1"}</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Asserts the last message, decoded from Avro, equals the JSON exactly:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message avro matches:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="s">  {"id": "order-1", "note": null}</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
+<p><strong>Asserts the last message, decoded from Avro, contains the JSON fields:</strong>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message avro contains:</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="s">  {"id": "order-1"}</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="s">  </span><span class="k">"""</span>
+</span></code></pre></div></p>
 <h2 id="consuming">Consuming<a class="headerlink" href="#consuming" title="Permanent link">#</a></h2>
 <table>
 <thead>
@@ -1665,12 +1797,12 @@
 </tr>
 </tbody>
 </table>
-<h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">#</a></h3>
+<h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">#</a></h3>
 <p><strong>Asserts a specific message is received within timeout:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives from "</span><span class="s">events</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">  Hello World</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">"""</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives from "</span><span class="s">events</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="s">  Hello World</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <h2 id="assertions">Assertions<a class="headerlink" href="#assertions" title="Permanent link">#</a></h2>
 <table>
@@ -1707,17 +1839,17 @@
 </tr>
 </tbody>
 </table>
-<h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">#</a></h3>
+<h3 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">#</a></h3>
 <p><strong>Asserts the last consumed message contains content:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message contains:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  user_created</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">"""</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message contains:</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="nf">  </span><span class="k">"""</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="s">  user_created</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="s">  </span><span class="k">"""</span>
 </span></code></pre></div></p>
 <p><strong>Asserts messages are received in specified order:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives messages from "</span><span class="s">events</span><span class="nf">" in order:</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">    |</span><span class="s"> value</span><span class="k">  |</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">  |</span><span class="s"> key1</span><span class="k">   |</span><span class="s"> msg1</span><span class="k">   |</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives messages from "</span><span class="s">events</span><span class="nf">" in order:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">    |</span><span class="s"> value</span><span class="k">  |</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">  |</span><span class="s"> key1</span><span class="k">   |</span><span class="s"> msg1</span><span class="k">   |</span>
 </span></code></pre></div></p>
 
 

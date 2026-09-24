@@ -849,6 +849,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#avro-and-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avro and Schema Registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Avro and Schema Registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-a-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add a Schema Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-avro-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Avro Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1644,6 +1683,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#avro-and-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Avro and Schema Registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Avro and Schema Registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-a-schema-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add a Schema Registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#writing-avro-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Avro Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1970,6 +2048,98 @@
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s">      </span><span class="k">"""</span>
 </span></code></pre></div>
 <p>See <a href="../../resources/kafka/">Kafka Steps</a> for the complete list of available steps.</p>
+<h2 id="avro-and-schema-registry">Avro and Schema Registry<a class="headerlink" href="#avro-and-schema-registry" title="Permanent link">#</a></h2>
+<p>Tomato speaks the <a href="https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#wire-format">Confluent wire format</a>:
+a magic byte, a 4-byte schema id, then the Avro body. That is what
+<code>KafkaAvroSerializer</code> and <code>KafkaAvroDeserializer</code> read and write, so a JVM app
+under test sees ordinary Avro messages. Feature files stay plain JSON.</p>
+<h3 id="add-a-schema-registry">Add a Schema Registry<a class="headerlink" href="#add-a-schema-registry" title="Permanent link">#</a></h3>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">containers</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">schema-registry</span><span class="p">:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">confluentinc/cp-schema-registry:7.6.1</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">      </span><span class="nt">SCHEMA_REGISTRY_HOST_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">schema-registry</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">      </span><span class="nt">SCHEMA_REGISTRY_LISTENERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://0.0.0.0:8081</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">      </span><span class="nt">SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://kafka:29092</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"8081/tcp"</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="nt">wait_for</span><span class="p">:</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">      </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/subjects</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"8081"</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90s</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="w">      </span><span class="nt">topics</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">orders</span><span class="p p-Indicator">]</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">      </span><span class="nt">schema_registry</span><span class="p">:</span>
+</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">        </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">schema-registry</span><span class="w">     </span><span class="c1"># or: url: http://localhost:8081</span>
+</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="w">        </span><span class="nt">subjects</span><span class="p">:</span><span class="w">                      </span><span class="c1"># optional, topic -&gt; subject</span>
+</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">          </span><span class="nt">payments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">com.example.Payment</span>
+</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>
+</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="nt">app</span><span class="p">:</span>
+</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
+</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="w">    </span><span class="nt">SPRING_KAFKA_PROPERTIES_SCHEMA_REGISTRY_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"http://{{.schema-registry.host}}:{{.schema-registry.port.8081}}"</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_registry.url</code></td>
+<td>Registry base URL</td>
+</tr>
+<tr>
+<td><code>schema_registry.container</code></td>
+<td>Container running the registry; tomato resolves host and mapped port</td>
+</tr>
+<tr>
+<td><code>schema_registry.port</code></td>
+<td>Registry port inside the container (default <code>8081</code>)</td>
+</tr>
+<tr>
+<td><code>schema_registry.subjects</code></td>
+<td>Map a topic to a subject. Default is <code>&lt;topic&gt;-value</code> (TopicNameStrategy)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="writing-avro-tests">Writing Avro Tests<a class="headerlink" href="#writing-avro-tests" title="Permanent link">#</a></h3>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Scenario:</span><span class="nf"> Order service emits an OrderCreated event</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" registers schema for subject "</span><span class="s">orders-value</span><span class="nf">" from file "</span><span class="s">schemas/order.avsc</span><span class="nf">"</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" consumes from "</span><span class="s">orders</span><span class="nf">"</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s">    {"id": "order-1", "amount": 4200}</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" receives avro from "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">":</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="s">    {"id": "order-1", "status": "CREATED"}</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="s">    </span><span class="k">"""</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" last message avro matches:</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="nf">    </span><span class="k">"""</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">    {"id": "order-1", "amount": 4200, "status": "CREATED", "note": null}</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="s">    </span><span class="k">"""</span>
+</span></code></pre></div>
+<ul>
+<li><code>publishes avro to "topic"</code> encodes the JSON with the <strong>latest</strong> schema of
+  the topic's value subject. Register it first, or let the app register it.</li>
+<li><code>receives avro from ... within</code> waits for a message whose decoded JSON
+  <strong>contains</strong> the given fields, so other messages on the topic don't break the
+  test. <code>last message avro matches</code> compares the whole record exactly.</li>
+<li>Nullable fields (<code>["null", "string"]</code>) are written as plain JSON values
+  (<code>"rush"</code> or <code>null</code>), not Avro-JSON's <code>{"string": "rush"}</code>.</li>
+<li>Keys are sent and asserted as strings. Avro keys, schema references and
+  Protobuf/JSON Schema subjects are not supported yet.</li>
+</ul>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">#</a></h2>
 <h3 id="connection-refused">Connection Refused<a class="headerlink" href="#connection-refused" title="Permanent link">#</a></h3>
 <p>If tests fail with "connection refused":</p>
@@ -1986,28 +2156,28 @@
 </ol>
 <h3 id="port-already-in-use">Port Already in Use<a class="headerlink" href="#port-already-in-use" title="Permanent link">#</a></h3>
 <p>Since Kafka uses fixed port mapping (<code>9092:9092</code>), ensure no other Kafka instance is running:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Kill any process using port 9092</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>lsof<span class="w"> </span>-ti:9092<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-9
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Kill any process using port 9092</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>lsof<span class="w"> </span>-ti:9092<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nb">kill</span><span class="w"> </span>-9
 </span></code></pre></div>
 <h2 id="alternative-kraft-mode-experimental">Alternative: KRaft Mode (Experimental)<a class="headerlink" href="#alternative-kraft-mode-experimental" title="Permanent link">#</a></h2>
 <p>For newer Kafka versions, KRaft mode eliminates Zookeeper. However, the advertised listener challenge remains. If you want to try KRaft:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">containers</span><span class="p">:</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">confluentinc/cp-kafka:7.6.1</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">      </span><span class="nt">KAFKA_NODE_ID</span><span class="p">:</span><span class="w"> </span><span class="s">"1"</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">      </span><span class="nt">KAFKA_PROCESS_ROLES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broker,controller</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">      </span><span class="nt">KAFKA_LISTENERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">      </span><span class="nt">KAFKA_ADVERTISED_LISTENERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="nt">KAFKA_LISTENER_SECURITY_PROTOCOL_MAP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">      </span><span class="nt">KAFKA_CONTROLLER_QUORUM_VOTERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1@kafka:29093</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">      </span><span class="nt">KAFKA_CONTROLLER_LISTENER_NAMES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CONTROLLER</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">      </span><span class="nt">KAFKA_INTER_BROKER_LISTENER_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">      </span><span class="nt">KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR</span><span class="p">:</span><span class="w"> </span><span class="s">"1"</span>
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">      </span><span class="nt">CLUSTER_ID</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MkU3OEVBNTcwNTJENDM2Qk</span>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"9092:9092"</span>
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"29092/tcp"</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">containers</span><span class="p">:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">confluentinc/cp-kafka:7.6.1</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">      </span><span class="nt">KAFKA_NODE_ID</span><span class="p">:</span><span class="w"> </span><span class="s">"1"</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">      </span><span class="nt">KAFKA_PROCESS_ROLES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">broker,controller</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">      </span><span class="nt">KAFKA_LISTENERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">      </span><span class="nt">KAFKA_ADVERTISED_LISTENERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">      </span><span class="nt">KAFKA_LISTENER_SECURITY_PROTOCOL_MAP</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">      </span><span class="nt">KAFKA_CONTROLLER_QUORUM_VOTERS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1@kafka:29093</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">      </span><span class="nt">KAFKA_CONTROLLER_LISTENER_NAMES</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CONTROLLER</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">      </span><span class="nt">KAFKA_INTER_BROKER_LISTENER_NAME</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PLAINTEXT</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">      </span><span class="nt">KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR</span><span class="p">:</span><span class="w"> </span><span class="s">"1"</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">      </span><span class="nt">CLUSTER_ID</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MkU3OEVBNTcwNTJENDM2Qk</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"9092:9092"</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"29092/tcp"</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">KRaft Compatibility</p>
