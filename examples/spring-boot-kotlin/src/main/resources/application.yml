@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders
+    username: orders
+    password: orders
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: orders
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+    properties:
+      schema.registry.url: http://localhost:8081
+
+orders:
+  topics:
+    created: orders
+    payments: payments
+    paid: orders-paid
+
+management:
+  endpoints.web.exposure.include: health

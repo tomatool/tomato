@@ -34,6 +34,7 @@ type Kafka struct {
 	consuming    map[string]bool
 	consumingMu  sync.RWMutex
 	stopChannels map[string]chan struct{}
+	consumersWG  sync.WaitGroup // partition consumer goroutines
 }
 
 func NewKafka(name string, cfg config.Resource, cm *container.Manager) (*Kafka, error) {
@@ -275,6 +276,10 @@ func (r *Kafka) stopAllConsumers() {
 		delete(r.stopChannels, topic)
 		r.consuming[topic] = false
 	}
+	// Wait until every partition consumer has closed. Otherwise the next
+	// scenario's "consumes from" can race the old consumer and fail with
+	// "That topic/partition is already being consumed".
+	r.consumersWG.Wait()
 }
 
 func (r *Kafka) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -598,7 +603,9 @@ func (r *Kafka) startConsuming(topic string) error {
 			return fmt.Errorf("consuming partition %d: %w", partition, err)
 		}
 
+		r.consumersWG.Add(1)
 		go func(pc sarama.PartitionConsumer) {
+			defer r.consumersWG.Done()
 			defer pc.Close()
 			for {
 				select {
