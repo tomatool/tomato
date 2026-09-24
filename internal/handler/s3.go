@@ -32,6 +32,7 @@ type S3 struct {
 	config    config.Resource
 	container *container.Manager
 	client    *s3.Client
+	skipReset bool // remote target without `reset: true`
 }
 
 func NewS3(name string, cfg config.Resource, cm *container.Manager) (*S3, error) {
@@ -45,6 +46,7 @@ func (r *S3) Init(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	r.skipReset = remoteResetGuard(r.name, r.config, endpoint)
 
 	accessKey := r.option("access_key", "minioadmin")
 	secretKey := r.option("secret_key", "minioadmin")
@@ -159,7 +161,7 @@ func (r *S3) Ready(ctx context.Context) error {
 //   - none: leave storage untouched
 func (r *S3) Reset(ctx context.Context) error {
 	strategy := r.option("reset_strategy", "purge")
-	if strategy == "none" {
+	if strategy == "none" || r.skipReset {
 		return nil
 	}
 

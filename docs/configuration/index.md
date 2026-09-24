@@ -259,6 +259,10 @@ By default, PostgreSQL resources truncate **all tables** in the public schema be
 | `tables` | If set, only these tables are truncated (instead of all) |
 | `exclude` | Extra tables to never truncate, on top of the defaults |
 
+To connect to a server tomato did not start, use `url:` (a postgres URL or
+keyword DSN) or `options.host`/`options.port` instead of `container:`. See
+[Testing Deployed Environments](external-targets.md).
+
 Migration history tables are never truncated, so migration tools still see
 their migrations as applied:
 
@@ -387,6 +391,13 @@ resources:
       env:
         PATH: /usr/local/bin
 ```
+
+### Resources tomato didn't start
+
+Every resource can point at an existing service instead of a container:
+`url`, `brokers`, `options.host`, TLS and SASL options. Resources on a remote
+host don't reset unless they set `reset: true`. See
+[Testing Deployed Environments](external-targets.md).
 
 ## Hooks
 
