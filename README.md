@@ -76,6 +76,7 @@ sudo mv tomato /usr/local/bin/
 tomato init    # Initialize a new project
 tomato run     # Run behavioral tests
 tomato steps   # List available steps
+tomato coverage  # Which steps your features use
 ```
 
 ## Documentation
