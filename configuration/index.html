@@ -2619,8 +2619,14 @@ don't have to re-seed them.</p>
 <td><code>@smoke and not @wip</code></td>
 <td>Smoke tests, excluding WIP</td>
 </tr>
+<tr>
+<td><code>(@smoke or @api) and not @slow</code></td>
+<td>Parentheses group terms</td>
+</tr>
 </tbody>
 </table>
+<p><code>not</code> binds tighter than <code>and</code>, which binds tighter than <code>or</code>. godog's legacy
+syntax (<code>@smoke &amp;&amp; ~@slow</code>, <code>,</code> for or) is still accepted.</p>
 <h2 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">#</a></h2>
 <p>Use environment variables anywhere in the config:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">containers</span><span class="p">:</span>
