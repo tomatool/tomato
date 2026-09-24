@@ -75,6 +75,7 @@ nav:
     - gRPC: configuration/grpc.md
     - Kafka: configuration/kafka.md
     - RabbitMQ: configuration/rabbitmq.md
+    - ScyllaDB: configuration/scylladb.md
     - Redis: configuration/redis.md
     - S3: configuration/s3.md
   - Available Resources:
@@ -83,6 +84,7 @@ nav:
     - HTTP Server: resources/http-server.md
     - gRPC: resources/grpc.md
     - PostgreSQL: resources/postgres.md
+    - ScyllaDB: resources/scylladb.md
     - Redis: resources/redis.md
     - Kafka: resources/kafka.md
     - RabbitMQ: resources/rabbitmq.md
