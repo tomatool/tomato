@@ -23,6 +23,16 @@ tomato run                 # 6 scenarios
 ./gradlew tomatoCoverage   # build/reports/tomato-coverage/index.html
 ```
 
+## The same tests in Kotlin (experimental)
+
+`src/test/kotlin` has the same scenarios as `features/`, written as JUnit 5
+tests with the experimental [tomato Kotlin SDK](../../sdk/kotlin). tomato still
+starts everything and resets state before every test; the tests are just Kotlin:
+
+```bash
+./gradlew test             # starts `tomato serve`, runs 7 tests
+```
+
 Each scenario starts with an empty `orders` table, so scenarios reuse the
 same ids and can run in any order. Flyway's history and the `currencies`
 table seeded by the migration are kept.

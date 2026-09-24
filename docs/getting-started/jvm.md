@@ -85,6 +85,24 @@ The example's `build.gradle.kts` copies the agent (`org.jacoco:org.jacoco.agent:
 next to the jar and adds a `tomatoCoverage` report task. On the example, 6
 scenarios cover every line and branch of the service.
 
+## Writing tests in Kotlin (experimental)
+
+Instead of feature files, tests can be JUnit 5 tests in Kotlin, using the
+experimental [Kotlin SDK](https://github.com/tomatool/tomato/tree/main/sdk/kotlin)
+on top of `tomato serve`. tomato still starts the containers and the app and
+resets state before every test:
+
+```kotlin
+@TomatoTest
+class OrdersTest(private val t: Tomato) {
+    @Test
+    fun `creating an order stores it`() {
+        t.http("api").post("/orders", mapOf("id" to "order-1", "amount" to 4200, "currency" to "EUR")).status(201)
+        t.db("db").table("orders").contains(mapOf("id" to "order-1", "status" to "CREATED"))
+    }
+}
+```
+
 ## CI
 
 ```yaml
