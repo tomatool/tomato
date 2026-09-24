@@ -11,13 +11,16 @@ import (
 
 // Config represents the tomato.yml configuration
 type Config struct {
-	Version    int                  `yaml:"version"`
-	Settings   Settings             `yaml:"settings"`
-	App        AppConfig            `yaml:"app"`
-	Containers map[string]Container `yaml:"containers"`
-	Resources  map[string]Resource  `yaml:"resources"`
-	Hooks      Hooks                `yaml:"hooks"`
-	Features   Features             `yaml:"features"`
+	Version int `yaml:"version"`
+	// VersionDeclared is false when the file omits `version` and it was
+	// defaulted; `tomato validate` warns about that.
+	VersionDeclared bool                 `yaml:"-"`
+	Settings        Settings             `yaml:"settings"`
+	App             AppConfig            `yaml:"app"`
+	Containers      map[string]Container `yaml:"containers"`
+	Resources       map[string]Resource  `yaml:"resources"`
+	Hooks           Hooks                `yaml:"hooks"`
+	Features        Features             `yaml:"features"`
 }
 
 // AppConfig defines how to run the application under test
@@ -148,7 +151,7 @@ type WaitStrategy struct {
 }
 
 type ContainerReset struct {
-	Strategy string   `yaml:"strategy"`
+	Strategy string `yaml:"strategy"`
 	// Database specific
 	Tables  []string `yaml:"tables,omitempty"`
 	Exclude []string `yaml:"exclude,omitempty"`
@@ -216,6 +219,10 @@ func Load(path string) (*Config, error) {
 	// Expand environment variables
 	data = []byte(os.ExpandEnv(string(data)))
 
+	if err := checkSchemaVersion(data); err != nil {
+		return nil, err
+	}
+
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parsing config file: %w", err)
@@ -232,9 +239,52 @@ func Load(path string) (*Config, error) {
 	return &cfg, nil
 }
 
+// SupportedVersion is the only tomato.yml schema version this release reads.
+const SupportedVersion = 2
+
+// migrationDocsURL explains the v1 → v2 differences; versioningDocsURL explains
+// how schema versions relate to tomato releases.
+const (
+	migrationDocsURL  = "https://tomatool.github.io/tomato/stability/#migrating-from-v1"
+	versioningDocsURL = "https://tomatool.github.io/tomato/stability/#versioning"
+)
+
+// checkSchemaVersion rejects configs written for another schema before they are
+// decoded into the v2 structs. Decoding a v1 file directly fails deep inside
+// the YAML decoder ("cannot unmarshal !!seq into map[string]config.Resource"),
+// which tells the user nothing about what is actually wrong.
+func checkSchemaVersion(data []byte) error {
+	var probe struct {
+		Version   *int      `yaml:"version"`
+		Resources yaml.Node `yaml:"resources"`
+	}
+	if err := yaml.Unmarshal(data, &probe); err != nil {
+		return fmt.Errorf("parsing config file: %w", err)
+	}
+
+	if probe.Version != nil && *probe.Version != SupportedVersion {
+		docs := versioningDocsURL
+		if *probe.Version < SupportedVersion {
+			docs = migrationDocsURL
+		}
+		return fmt.Errorf("unsupported config version: %d (this tomato reads version %d); see %s",
+			*probe.Version, SupportedVersion, docs)
+	}
+
+	// v1 had no version field and declared resources as a list of
+	// {name, type, options}; v2 uses a map keyed by resource name.
+	if probe.Version == nil && probe.Resources.Kind == yaml.SequenceNode {
+		return fmt.Errorf("this looks like a tomato v1 config (resources is a list); "+
+			"tomato v2 needs `version: 2` and resources keyed by name, see %s", migrationDocsURL)
+	}
+
+	return nil
+}
+
 func (c *Config) applyDefaults() {
+	c.VersionDeclared = c.Version != 0
 	if c.Version == 0 {
-		c.Version = 2
+		c.Version = SupportedVersion
 	}
 	if c.Settings.Timeout == 0 {
 		c.Settings.Timeout = 5 * time.Minute
@@ -257,8 +307,8 @@ func (c *Config) applyDefaults() {
 }
 
 func (c *Config) validate() error {
-	if c.Version != 2 {
-		return fmt.Errorf("unsupported config version: %d (expected 2)", c.Version)
+	if c.Version != SupportedVersion {
+		return fmt.Errorf("unsupported config version: %d (expected %d)", c.Version, SupportedVersion)
 	}
 
 	// Validate app config - only one mode allowed

@@ -15,6 +15,8 @@
 > Looking for the stable version? [**v1 is available here**](https://github.com/tomatool/tomato/tree/v1), but will not receive future updates as development focuses on v2.
 >
 > **Use v2 at your own risk** - APIs and features may change without notice.
+>
+> See [what "stable" will mean and what's left before this warning goes](https://tomatool.github.io/tomato/stability/#dropping-the-at-your-own-risk-warning); breaking changes are listed in the [changelog](https://github.com/tomatool/tomato/blob/main/CHANGELOG.md).
 
 ---
 
@@ -26,6 +28,7 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 - **Clean State Testing** - Reset resources between scenarios for reliable, isolated tests
 - **BDD/Gherkin Support** - Write tests in plain English using Cucumber syntax
 - **Multiple Resource Types** - HTTP, gRPC, PostgreSQL, ScyllaDB/Cassandra, Redis, Kafka, RabbitMQ, S3, WebSocket, Shell
+- **Avro + Schema Registry** - Publish and assert Kafka Avro messages as plain JSON
 - **CI Reports** - JUnit XML and Cucumber JSON alongside console output
 - **Auto-generated Documentation** - Keep step docs in sync with code
 - **Application Runner** - Start your app connected to test containers
@@ -83,6 +86,11 @@ For complete documentation, visit **[tomatool.github.io/tomato](https://tomatool
 - [Configuration Reference](https://tomatool.github.io/tomato/configuration)
 - [Architecture](https://tomatool.github.io/tomato/architecture)
 - [Step Reference](https://tomatool.github.io/tomato/resources)
+
+## Contributing
+
+See [CONTRIBUTING.md](https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md) for development setup and how to add steps and
+resources, and [MAINTAINERS.md](https://github.com/tomatool/tomato/blob/main/MAINTAINERS.md) for who reviews and how to join.
 
 ## License
 

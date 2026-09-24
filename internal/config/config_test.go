@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -1078,6 +1079,72 @@ containers:
 				if got[i] != tt.want[i] {
 					t.Errorf("command[%d] = %q, want %q", i, got[i], tt.want[i])
 				}
+			}
+		})
+	}
+}
+
+func TestLoadSchemaVersion(t *testing.T) {
+	tests := []struct {
+		name         string
+		content      string
+		errContains  []string
+		wantDeclared bool
+	}{
+		{
+			name:         "declared v2",
+			content:      "version: 2\n",
+			wantDeclared: true,
+		},
+		{
+			name:    "missing version defaults to 2",
+			content: "resources:\n  api:\n    type: http\n    base_url: http://localhost:8080\n",
+		},
+		{
+			name:        "future version is rejected with a pointer",
+			content:     "version: 3\n",
+			errContains: []string{"unsupported config version: 3", "reads version 2", "#versioning"},
+		},
+		{
+			name:        "explicit version 1 is rejected",
+			content:     "version: 1\n",
+			errContains: []string{"unsupported config version: 1", "migrating-from-v1"},
+		},
+		{
+			name: "v1 resource list is recognised",
+			content: `---
+resources:
+    - name: app-client
+      type: http/client
+      options:
+        base_url: http://localhost:8080
+`,
+			errContains: []string{"tomato v1 config", "version: 2", "migrating-from-v1"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := Load(createTempConfig(t, tt.content))
+			if len(tt.errContains) > 0 {
+				if err == nil {
+					t.Fatal("expected an error")
+				}
+				for _, want := range tt.errContains {
+					if !strings.Contains(err.Error(), want) {
+						t.Errorf("error %q should contain %q", err, want)
+					}
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if cfg.Version != SupportedVersion {
+				t.Errorf("Version = %d, want %d", cfg.Version, SupportedVersion)
+			}
+			if cfg.VersionDeclared != tt.wantDeclared {
+				t.Errorf("VersionDeclared = %v, want %v", cfg.VersionDeclared, tt.wantDeclared)
 			}
 		})
 	}
