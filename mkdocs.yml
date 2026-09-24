@@ -73,6 +73,7 @@ nav:
     - Reference: configuration/index.md
     - HTTP Server: configuration/http-server.md
     - gRPC: configuration/grpc.md
+    - gRPC Server: configuration/grpc-server.md
     - Kafka: configuration/kafka.md
     - RabbitMQ: configuration/rabbitmq.md
     - ScyllaDB: configuration/scylladb.md
@@ -83,6 +84,7 @@ nav:
     - HTTP Client: resources/http-client.md
     - HTTP Server: resources/http-server.md
     - gRPC: resources/grpc.md
+    - gRPC Server: resources/grpc-server.md
     - PostgreSQL: resources/postgres.md
     - ScyllaDB: resources/scylladb.md
     - Redis: resources/redis.md
