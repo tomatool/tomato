@@ -13,28 +13,28 @@
       
       
       
-        <link rel="prev" href="../kafka/">
+        <link rel="prev" href="../resources/s3/">
       
       
-        <link rel="next" href="../shell/">
+        <link rel="next" href="../developer-guide/architecture/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>RabbitMQ - 🍅 tomato</title>
+        <title>Stability - 🍅 tomato</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#rabbitmq" class="md-skip">
+        <a href="#stability-and-versioning" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +92,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="🍅 tomato" class="md-header__button md-logo" aria-label="🍅 tomato" data-md-component="logo">
+    <a href=".." title="🍅 tomato" class="md-header__button md-logo" aria-label="🍅 tomato" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              RabbitMQ
+              Stability
             
           </span>
         </div>
@@ -235,7 +235,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href=".." class="md-tabs__link">
         
   
   
@@ -256,7 +256,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/" class="md-tabs__link">
+        <a href="../getting-started/" class="md-tabs__link">
           
   
   
@@ -276,7 +276,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../configuration/" class="md-tabs__link">
+        <a href="../configuration/" class="md-tabs__link">
           
   
   
@@ -292,13 +292,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../resources/" class="md-tabs__link">
           
   
   
@@ -314,9 +312,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../../stability/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -337,7 +337,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../developer-guide/architecture/" class="md-tabs__link">
+        <a href="../developer-guide/architecture/" class="md-tabs__link">
           
   
   
@@ -371,7 +371,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="🍅 tomato" class="md-nav__button md-logo" aria-label="🍅 tomato" data-md-component="logo">
+    <a href=".." title="🍅 tomato" class="md-nav__button md-logo" aria-label="🍅 tomato" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -401,7 +401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -482,7 +482,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/" class="md-nav__link">
+      <a href="../getting-started/" class="md-nav__link">
         
   
   
@@ -510,7 +510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/github-action/" class="md-nav__link">
+      <a href="../getting-started/github-action/" class="md-nav__link">
         
   
   
@@ -599,7 +599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/" class="md-nav__link">
+      <a href="../configuration/" class="md-nav__link">
         
   
   
@@ -627,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/http-server/" class="md-nav__link">
+      <a href="../configuration/http-server/" class="md-nav__link">
         
   
   
@@ -655,7 +655,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/grpc/" class="md-nav__link">
+      <a href="../configuration/grpc/" class="md-nav__link">
         
   
   
@@ -683,7 +683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/kafka/" class="md-nav__link">
+      <a href="../configuration/kafka/" class="md-nav__link">
         
   
   
@@ -711,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/rabbitmq/" class="md-nav__link">
+      <a href="../configuration/rabbitmq/" class="md-nav__link">
         
   
   
@@ -739,7 +739,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/redis/" class="md-nav__link">
+      <a href="../configuration/redis/" class="md-nav__link">
         
   
   
@@ -767,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/s3/" class="md-nav__link">
+      <a href="../configuration/s3/" class="md-nav__link">
         
   
   
@@ -799,31 +799,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -841,7 +838,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -859,7 +856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../resources/" class="md-nav__link">
         
   
   
@@ -887,7 +884,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../http-client/" class="md-nav__link">
+      <a href="../resources/http-client/" class="md-nav__link">
         
   
   
@@ -915,7 +912,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../http-server/" class="md-nav__link">
+      <a href="../resources/http-server/" class="md-nav__link">
         
   
   
@@ -943,7 +940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../grpc/" class="md-nav__link">
+      <a href="../resources/grpc/" class="md-nav__link">
         
   
   
@@ -971,7 +968,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../postgres/" class="md-nav__link">
+      <a href="../resources/postgres/" class="md-nav__link">
         
   
   
@@ -999,7 +996,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../redis/" class="md-nav__link">
+      <a href="../resources/redis/" class="md-nav__link">
         
   
   
@@ -1027,7 +1024,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../kafka/" class="md-nav__link">
+      <a href="../resources/kafka/" class="md-nav__link">
         
   
   
@@ -1052,37 +1049,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RabbitMQ
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../resources/rabbitmq/" class="md-nav__link">
         
   
   
@@ -1098,143 +1068,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#queue-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Queue Management
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#exchange-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exchange Management
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bindings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bindings
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#publishing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Publishing
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Publishing">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#consuming" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Consuming
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Consuming">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assertions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Assertions
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Assertions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1247,7 +1080,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shell/" class="md-nav__link">
+      <a href="../resources/shell/" class="md-nav__link">
         
   
   
@@ -1275,7 +1108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../websocket-client/" class="md-nav__link">
+      <a href="../resources/websocket-client/" class="md-nav__link">
         
   
   
@@ -1303,7 +1136,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../websocket-server/" class="md-nav__link">
+      <a href="../resources/websocket-server/" class="md-nav__link">
         
   
   
@@ -1331,7 +1164,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../s3/" class="md-nav__link">
+      <a href="../resources/s3/" class="md-nav__link">
         
   
   
@@ -1363,10 +1196,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../stability/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1382,6 +1242,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-stable-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The stable surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#not-covered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not covered
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Versioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deprecation-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deprecation policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dropping-the-at-your-own-risk-warning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dropping the "at your own risk" warning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#migrating-from-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migrating from v1
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1447,7 +1393,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer-guide/architecture/" class="md-nav__link">
+      <a href="../developer-guide/architecture/" class="md-nav__link">
         
   
   
@@ -1502,10 +1448,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#queue-management" class="md-nav__link">
+  <a href="#the-stable-surface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Queue Management
+        The stable surface
       
     </span>
   </a>
@@ -1513,10 +1459,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#exchange-management" class="md-nav__link">
+  <a href="#not-covered" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exchange Management
+        Not covered
       
     </span>
   </a>
@@ -1524,10 +1470,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#bindings" class="md-nav__link">
+  <a href="#versioning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Bindings
+        Versioning
       
     </span>
   </a>
@@ -1535,86 +1481,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#publishing" class="md-nav__link">
+  <a href="#deprecation-policy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Publishing
+        Deprecation policy
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Publishing">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#consuming" class="md-nav__link">
+  <a href="#dropping-the-at-your-own-risk-warning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Consuming
+        Dropping the "at your own risk" warning
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Consuming">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#assertions" class="md-nav__link">
+  <a href="#migrating-from-v1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Assertions
+        Migrating from v1
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Assertions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1638,216 +1533,145 @@
   
 
 
-<h1 id="rabbitmq">RabbitMQ<a class="headerlink" href="#rabbitmq" title="Permanent link">#</a></h1>
-<p>Steps for interacting with RabbitMQ message broker</p>
-<div class="admonition tip">
-<p class="admonition-title">Multi-line Content</p>
-<p>Steps ending with <code>:</code> accept multi-line content using Gherkin's docstring syntax (<code>"""</code>). See examples below each section.</p>
-</div>
-<h2 id="queue-management">Queue Management<a class="headerlink" href="#queue-management" title="Permanent link">#</a></h2>
+<h1 id="stability-and-versioning">Stability and Versioning<a class="headerlink" href="#stability-and-versioning" title="Permanent link">#</a></h1>
+<p>tomato v2 is still under active development: the README says "use v2 at your own
+risk". This page defines what "stable" will mean, so that promise can be kept
+once the <a href="#dropping-the-at-your-own-risk-warning">criteria</a> below are met, and
+so contributors know today which changes need extra care.</p>
+<h2 id="the-stable-surface">The stable surface<a class="headerlink" href="#the-stable-surface" title="Permanent link">#</a></h2>
+<p>These are the parts of tomato that test suites depend on. Once v2 is declared
+stable, they only change in backwards-compatible ways within v2.</p>
 <table>
 <thead>
 <tr>
-<th>Step</th>
-<th>Description</th>
+<th>Surface</th>
+<th>What is covered</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" declares queue "orders"</code></td>
-<td>Declares a queue with default settings</td>
+<td><code>tomato.yml</code> schema</td>
+<td>Every field documented in the <a href="../configuration/">Configuration Reference</a> under <code>version: 2</code>, its meaning and its default</td>
 </tr>
 <tr>
-<td><code>"{resource}" declares durable queue "orders"</code></td>
-<td>Declares a durable queue</td>
+<td>Step vocabulary</td>
+<td>Every step listed by <code>tomato steps</code> (and on the <a href="../resources/">resource pages</a>): its wording, its arguments and what it asserts</td>
 </tr>
 <tr>
-<td><code>"{resource}" queue "orders" exists</code></td>
-<td>Asserts a queue exists</td>
+<td>Resource types</td>
+<td>The <code>type:</code> names accepted by <code>tomato validate</code>, including aliases (<code>postgresql</code>, <code>http-client</code>, <code>minio</code>, …)</td>
 </tr>
 <tr>
-<td><code>"{resource}" purges queue "orders"</code></td>
-<td>Purges all messages from a queue</td>
+<td>CLI</td>
+<td>Commands <code>init</code>, <code>run</code>, <code>validate</code>, <code>steps</code>, <code>version</code>, <code>update</code>, their flags, and exit codes (0 pass, non-zero fail)</td>
+</tr>
+<tr>
+<td>Report formats</td>
+<td>The console formats and the <code>junit</code> and <code>cucumber</code> file outputs described under <a href="../configuration/#reports">Reports</a></td>
+</tr>
+<tr>
+<td>GitHub Action</td>
+<td>Inputs of <code>tomatool/tomato@v2</code>: <code>version</code>, <code>config</code>, <code>features</code>, <code>tags</code>, <code>scenario</code>, <code>no-reset</code>, <code>verbose</code>, <code>quiet</code>, <code>skip-validate</code>, <code>comment</code></td>
+</tr>
+<tr>
+<td>Template variables</td>
+<td><code>{{.container.host}}</code>, <code>{{.container.port.N}}</code> and <code>{{.resource.url}}</code> in <code>app.env</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="exchange-management">Exchange Management<a class="headerlink" href="#exchange-management" title="Permanent link">#</a></h2>
+<h2 id="not-covered">Not covered<a class="headerlink" href="#not-covered" title="Permanent link">#</a></h2>
+<p>These can change in any release:</p>
+<ul>
+<li><strong>Go packages.</strong> Everything under <code>internal/</code> and the <code>command</code> package. tomato
+  is a binary, not a library; don't import it.</li>
+<li><strong>The <code>tomato</code> event format</strong> (<code>--format tomato</code>, <code>TOMATO_EVENT:</code> lines). It exists for
+  the GitHub Action and the web UI. It becomes stable only when it is documented
+  as a format for users.</li>
+<li><strong>The web UI</strong> (<code>tomato ui</code>) and hidden commands such as <code>tomato docs</code>.</li>
+<li><strong>Console output text</strong>: wording, colours and layout of <code>pretty</code> output and error
+  messages. Parse the <code>junit</code> or <code>cucumber</code> outputs instead.</li>
+<li><strong>Default container images</strong> in <code>tomato init</code> templates.</li>
+</ul>
+<h2 id="versioning">Versioning<a class="headerlink" href="#versioning" title="Permanent link">#</a></h2>
+<p>tomato follows <a href="https://semver.org/">Semantic Versioning</a> for the stable surface:</p>
+<ul>
+<li><strong>Patch</strong> (<code>2.1.x</code>): bug fixes only. A fix may make a step stricter when it was
+  wrongly passing; that is called out in the <a href="https://github.com/tomatool/tomato/blob/main/CHANGELOG.md">changelog</a>.</li>
+<li><strong>Minor</strong> (<code>2.x.0</code>): new resources, steps, options and flags. Existing suites keep
+  working. Deprecations are announced in minor releases.</li>
+<li><strong>Major</strong> (<code>3.0.0</code>): removals and incompatible changes. A new major also gets a new
+  <code>version:</code> number in <code>tomato.yml</code>, so an old binary never misreads a new config:
+  tomato rejects any <code>version</code> it doesn't support, with a link to this page.</li>
+</ul>
+<p>Until the warning is dropped, minor releases may still contain breaking changes.
+Each one is listed under <strong>Changed</strong> or <strong>Removed</strong> in the changelog.</p>
+<h2 id="deprecation-policy">Deprecation policy<a class="headerlink" href="#deprecation-policy" title="Permanent link">#</a></h2>
+<p>When part of the stable surface has to go:</p>
+<ol>
+<li>It is marked deprecated in a minor release, with its replacement named in the
+   changelog and in the docs.</li>
+<li>It keeps working for <strong>at least one further minor release</strong>. Deprecated steps log
+   a warning the first time they run in a suite (<code>deprecated step: use … instead</code>),
+   and the generated step docs label them <strong>Deprecated</strong>.</li>
+<li>It is removed no earlier than the next minor release after that, or in the next
+   major release once v2 is stable.</li>
+</ol>
+<p>Contributors: mark a step deprecated by setting <code>Deprecated: "use … instead"</code> on its
+<code>StepDef</code>. The step keeps its handler; tomato wraps it to emit the warning.</p>
+<h2 id="dropping-the-at-your-own-risk-warning">Dropping the "at your own risk" warning<a class="headerlink" href="#dropping-the-at-your-own-risk-warning" title="Permanent link">#</a></h2>
+<p>The README warning goes away when all of these hold:</p>
+<ul>
+<li>[ ] This policy is published (this page) and has been followed for one minor release.</li>
+<li>[ ] Every item in the stable surface is documented and covered by the integration suite in <code>tests/features</code>.</li>
+<li>[ ] CI runs unit tests as well as integration tests, and both pass on <code>main</code>.</li>
+<li>[ ] Releases carry changelog entries sorted into Added / Changed / Deprecated / Removed / Fixed.</li>
+<li>[ ] At least two maintainers can review and merge (see <a href="https://github.com/tomatool/tomato/blob/main/MAINTAINERS.md">MAINTAINERS.md</a>).</li>
+</ul>
+<p>Progress on these is tracked in the changelog and the README.</p>
+<h2 id="migrating-from-v1">Migrating from v1<a class="headerlink" href="#migrating-from-v1" title="Permanent link">#</a></h2>
+<p>tomato v1 (the <a href="https://github.com/tomatool/tomato/tree/v1"><code>v1</code> branch</a>) no longer
+receives updates. v2 is a rewrite, not an upgrade in place:</p>
 <table>
 <thead>
 <tr>
-<th>Step</th>
-<th>Description</th>
+<th>v1</th>
+<th>v2</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" declares exchange "events" of type "topic"</code></td>
-<td>Declares an exchange (direct, fanout, topic, headers)</td>
+<td>No <code>version</code> field</td>
+<td><code>version: 2</code> at the top of <code>tomato.yml</code></td>
 </tr>
 <tr>
-<td><code>"{resource}" declares durable exchange "events" of type "topic"</code></td>
-<td>Declares a durable exchange</td>
+<td><code>resources:</code> is a list of <code>{name, type, options}</code></td>
+<td><code>resources:</code> is a map keyed by name: <code>api: {type: http, …}</code></td>
 </tr>
 <tr>
-<td><code>"{resource}" exchange "events" exists</code></td>
-<td>Asserts an exchange exists</td>
+<td>Types such as <code>httpclient</code>, <code>http/client</code>, <code>queue</code> + <code>driver: rabbitmq</code>, <code>mysql</code>, <code>nsq</code>, <code>wiremock</code></td>
+<td>Types such as <code>http</code>, <code>http-server</code>, <code>rabbitmq</code>, <code>postgres</code>; MySQL, NSQ and Wiremock have no v2 equivalent yet (see <code>tomato validate</code> for the list)</td>
+</tr>
+<tr>
+<td>Connection strings (<code>datasource</code>) supplied by you, services started by you (e.g. docker-compose)</td>
+<td><code>containers:</code> started by tomato; resources point at them with <code>container:</code></td>
+</tr>
+<tr>
+<td>v1 step wording</td>
+<td>v2 step wording: run <code>tomato steps</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="bindings">Bindings<a class="headerlink" href="#bindings" title="Permanent link">#</a></h2>
-<table>
-<thead>
-<tr>
-<th>Step</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>"{resource}" binds queue "orders" to exchange "events"</code></td>
-<td>Binds a queue to an exchange with empty routing key</td>
-</tr>
-<tr>
-<td><code>"{resource}" binds queue "orders" to exchange "events" with routing key "order.*"</code></td>
-<td>Binds a queue to an exchange with a routing key</td>
-</tr>
-</tbody>
-</table>
-<h2 id="publishing">Publishing<a class="headerlink" href="#publishing" title="Permanent link">#</a></h2>
-<table>
-<thead>
-<tr>
-<th>Step</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>"{resource}" publishes to queue "orders":</code></td>
-<td>Publishes a message directly to a queue</td>
-</tr>
-<tr>
-<td><code>"{resource}" publishes json to queue "orders":</code></td>
-<td>Publishes a JSON message directly to a queue</td>
-</tr>
-<tr>
-<td><code>"{resource}" publishes to exchange "events" with routing key "order.created":</code></td>
-<td>Publishes a message to an exchange with routing key</td>
-</tr>
-<tr>
-<td><code>"{resource}" publishes json to exchange "events" with routing key "order.created":</code></td>
-<td>Publishes a JSON message to an exchange with routing key</td>
-</tr>
-<tr>
-<td><code>"{resource}" publishes messages to queue "orders":</code></td>
-<td>Publishes multiple messages from a table</td>
-</tr>
-</tbody>
-</table>
-<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h3>
-<p><strong>Publishes a message directly to a queue:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to queue "</span><span class="s">orders</span><span class="nf">":</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  Hello World</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
-</span></code></pre></div></p>
-<p><strong>Publishes a JSON message directly to a queue:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to queue "</span><span class="s">orders</span><span class="nf">":</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  {"order_id": 123}</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
-</span></code></pre></div></p>
-<p><strong>Publishes a message to an exchange with routing key:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  Order created</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">"""</span>
-</span></code></pre></div></p>
-<p><strong>Publishes a JSON message to an exchange with routing key:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"event": "order.created"}</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
-</span></code></pre></div></p>
-<p><strong>Publishes multiple messages from a table:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes messages to queue "</span><span class="s">orders</span><span class="nf">":</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> routing_key</span><span class="k"> |</span><span class="s"> message</span><span class="k"> |</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> order.1</span><span class="k">     |</span><span class="s"> msg1</span><span class="k">    |</span>
-</span></code></pre></div></p>
-<h2 id="consuming">Consuming<a class="headerlink" href="#consuming" title="Permanent link">#</a></h2>
-<table>
-<thead>
-<tr>
-<th>Step</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>"{resource}" consumes from queue "orders"</code></td>
-<td>Starts consuming messages from a queue</td>
-</tr>
-<tr>
-<td><code>"{resource}" receives from queue "orders" within "5s"</code></td>
-<td>Waits for a message from a queue within timeout</td>
-</tr>
-<tr>
-<td><code>"{resource}" receives from queue "orders" within "5s":</code></td>
-<td>Asserts a specific message is received within timeout</td>
-</tr>
-</tbody>
-</table>
-<h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">#</a></h3>
-<p><strong>Asserts a specific message is received within timeout:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives from queue "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">  Hello World</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">"""</span>
-</span></code></pre></div></p>
-<h2 id="assertions">Assertions<a class="headerlink" href="#assertions" title="Permanent link">#</a></h2>
-<table>
-<thead>
-<tr>
-<th>Step</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>"{resource}" queue "orders" has "3" messages</code></td>
-<td>Asserts queue has exactly N messages consumed</td>
-</tr>
-<tr>
-<td><code>"{resource}" queue "orders" is empty</code></td>
-<td>Asserts no messages have been consumed from queue</td>
-</tr>
-<tr>
-<td><code>"{resource}" last message contains:</code></td>
-<td>Asserts the last consumed message contains content</td>
-</tr>
-<tr>
-<td><code>"{resource}" last message has routing key "order.created"</code></td>
-<td>Asserts the last consumed message has specific routing key</td>
-</tr>
-<tr>
-<td><code>"{resource}" last message has header "content-type" with value "application/json"</code></td>
-<td>Asserts the last message has a header with value</td>
-</tr>
-</tbody>
-</table>
-<h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">#</a></h3>
-<p><strong>Asserts the last consumed message contains content:</strong>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message contains:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">"""</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  order_id</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">"""</span>
-</span></code></pre></div></p>
+<p>tomato recognises a v1 file (no <code>version</code> and a list under <code>resources</code>) and stops
+with a pointer to this section instead of a YAML decoding error.</p>
 
 
 
 
 
 
+
+  
+  
 
 
 
@@ -1908,10 +1732,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
