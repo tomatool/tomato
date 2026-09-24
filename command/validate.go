@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cucumber/gherkin/go/v26"
+	"github.com/mattn/go-isatty"
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/handler"
@@ -29,7 +30,7 @@ var validateCommand = &cli.Command{
 		},
 		&cli.BoolFlag{
 			Name:  "plain",
-			Usage: "disable colors and interactive UI (for CI)",
+			Usage: "disable colors and interactive UI (automatic when stdout is not a terminal)",
 		},
 	},
 	Action: runValidate,
@@ -60,7 +61,9 @@ func runValidate(c *cli.Context) error {
 		configPath: configPath,
 	}
 
-	if plain {
+	// The interactive UI needs a terminal; without one (CI, pipes) it
+	// fails before printing anything, so fall back to plain output.
+	if plain || !isatty.IsTerminal(os.Stdout.Fd()) {
 		return v.runPlain()
 	}
 

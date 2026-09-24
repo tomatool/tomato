@@ -26,6 +26,11 @@ type Shell struct {
 	env          map[string]string
 	workDir      string
 	timeout      time.Duration
+
+	// Configured defaults, restored on Reset so env/workdir set by steps
+	// don't leak into later scenarios.
+	defaultEnv     map[string]string
+	defaultWorkDir string
 }
 
 func NewShell(name string, cfg config.Resource, cm *container.Manager) (*Shell, error) {
@@ -42,12 +47,14 @@ func NewShell(name string, cfg config.Resource, cm *container.Manager) (*Shell, 
 	}
 
 	return &Shell{
-		name:      name,
-		config:    cfg,
-		container: cm,
-		env:       make(map[string]string),
-		workDir:   workDir,
-		timeout:   timeout,
+		name:           name,
+		config:         cfg,
+		container:      cm,
+		env:            make(map[string]string),
+		workDir:        workDir,
+		timeout:        timeout,
+		defaultEnv:     make(map[string]string),
+		defaultWorkDir: workDir,
 	}, nil
 }
 
@@ -58,11 +65,21 @@ func (r *Shell) Init(ctx context.Context) error {
 	if envMap, ok := r.config.Options["env"].(map[string]interface{}); ok {
 		for k, v := range envMap {
 			if s, ok := v.(string); ok {
-				r.env[k] = s
+				r.defaultEnv[k] = s
 			}
 		}
 	}
+	r.restoreDefaults()
 	return nil
+}
+
+// restoreDefaults resets env and workdir to what the config specifies.
+func (r *Shell) restoreDefaults() {
+	r.env = make(map[string]string, len(r.defaultEnv))
+	for k, v := range r.defaultEnv {
+		r.env[k] = v
+	}
+	r.workDir = r.defaultWorkDir
 }
 
 func (r *Shell) Ready(ctx context.Context) error {
@@ -73,7 +90,7 @@ func (r *Shell) Reset(ctx context.Context) error {
 	r.lastExitCode = 0
 	r.lastStdout = ""
 	r.lastStderr = ""
-	// Keep env and workDir as configured
+	r.restoreDefaults()
 	return nil
 }
 
@@ -173,6 +190,20 @@ func (r *Shell) Steps() StepCategory {
 			},
 			{
 				Group:       "Output",
+				Pattern:     `^"{resource}" stdout contains:$`,
+				Description: "Assert stdout contains text (docstring, may include quotes)",
+				Example:     `"shell" stdout contains:`,
+				Handler:     r.stdoutShouldContainDoc,
+			},
+			{
+				Group:       "Output",
+				Pattern:     `^"{resource}" stdout does not contain:$`,
+				Description: "Assert stdout doesn't contain text (docstring, may include quotes)",
+				Example:     `"shell" stdout does not contain:`,
+				Handler:     r.stdoutShouldNotContainDoc,
+			},
+			{
+				Group:       "Output",
 				Pattern:     `^"{resource}" stdout is:$`,
 				Description: "Assert exact stdout",
 				Example:     `"shell" stdout is:`,
@@ -191,6 +222,20 @@ func (r *Shell) Steps() StepCategory {
 				Description: "Assert stderr contains substring",
 				Example:     `"shell" stderr contains "warning"`,
 				Handler:     r.stderrShouldContain,
+			},
+			{
+				Group:       "Output",
+				Pattern:     `^"{resource}" stderr does not contain "([^"]*)"$`,
+				Description: "Assert stderr doesn't contain",
+				Example:     `"shell" stderr does not contain "panic"`,
+				Handler:     r.stderrShouldNotContain,
+			},
+			{
+				Group:       "Output",
+				Pattern:     `^"{resource}" stderr contains:$`,
+				Description: "Assert stderr contains text (docstring, may include quotes)",
+				Example:     `"shell" stderr contains:`,
+				Handler:     r.stderrShouldContainDoc,
 			},
 			{
 				Group:       "Output",
@@ -343,6 +388,14 @@ func (r *Shell) stdoutShouldNotContain(substr string) error {
 	return nil
 }
 
+func (r *Shell) stdoutShouldContainDoc(doc *godog.DocString) error {
+	return r.stdoutShouldContain(strings.TrimSpace(doc.Content))
+}
+
+func (r *Shell) stdoutShouldNotContainDoc(doc *godog.DocString) error {
+	return r.stdoutShouldNotContain(strings.TrimSpace(doc.Content))
+}
+
 func (r *Shell) stdoutShouldBe(doc *godog.DocString) error {
 	expected := strings.TrimSpace(doc.Content)
 	actual := strings.TrimSpace(r.lastStdout)
@@ -364,6 +417,17 @@ func (r *Shell) stderrShouldContain(substr string) error {
 		return fmt.Errorf("stderr does not contain %q\nstderr: %s", substr, r.lastStderr)
 	}
 	return nil
+}
+
+func (r *Shell) stderrShouldNotContain(substr string) error {
+	if strings.Contains(r.lastStderr, substr) {
+		return fmt.Errorf("stderr should not contain %q\nstderr: %s", substr, r.lastStderr)
+	}
+	return nil
+}
+
+func (r *Shell) stderrShouldContainDoc(doc *godog.DocString) error {
+	return r.stderrShouldContain(strings.TrimSpace(doc.Content))
 }
 
 func (r *Shell) stderrShouldBeEmpty() error {
