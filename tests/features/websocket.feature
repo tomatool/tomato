@@ -89,3 +89,40 @@ Feature: WebSocket Handler
       """
     And "ws" last message contains "final"
     And "ws" disconnects
+
+  Scenario: Connect with handshake headers
+    Given "ws" connects with headers:
+      | header      | value    |
+      | X-Client-Id | tomato-1 |
+    Then "ws" receives json within "5s" matching:
+      """
+      {"action": "welcome", "client": "tomato-1"}
+      """
+    And "ws" disconnects
+
+  Scenario: Receive a batch of messages
+    Given "ws" connects
+    When "ws" sends "one"
+    And "ws" sends "two"
+    And "ws" sends "three"
+    Then "ws" receives "3" messages within "5s"
+    And "ws" last message is:
+      """
+      three
+      """
+    And "ws" received "3" messages
+    And "ws" does not receive within "300ms"
+    And "ws" disconnects
+
+  Scenario: Last message as JSON
+    Given "ws" connects
+    When "ws" sends json:
+      """
+      {"action": "echo", "payload": {"order": "order-1"}}
+      """
+    Then "ws" receives within "5s" containing "order-1"
+    And "ws" last message is json matching:
+      """
+      {"action": "echo", "payload": {"order": "order-1"}}
+      """
+    And "ws" disconnects
