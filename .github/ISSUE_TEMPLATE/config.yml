@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://tomatool.github.io/tomato/
+    about: Configuration reference, step reference and guides
