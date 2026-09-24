@@ -20,6 +20,7 @@ Steps for interacting with Apache Kafka message broker
 
 | Step | Description |
 |------|-------------|
+| `"{resource}" message header "trace-id" is "abc-123"` | Sets a header on the next message published (any publish step) |
 | `"{resource}" publishes to "events":` | Publishes a message to a topic |
 | `"{resource}" publishes to "events" with key "user-123":` | Publishes a message with a key to a topic |
 | `"{resource}" publishes json to "events":` | Publishes a JSON message to a topic |
