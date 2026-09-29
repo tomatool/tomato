@@ -9,7 +9,7 @@
 
 ---
 
-> [!WARNING]
+> ⚠️ **Warning**
 > **v2 is currently under active development.** This version contains breaking changes and may not be stable.
 >
 > Looking for the stable version? [**v1 is available here**](https://github.com/tomatool/tomato/tree/v1), but will not receive future updates as development focuses on v2.
@@ -37,7 +37,7 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 
 ## Installation
 
-### Quick Install (recommended)
+### Quick install (recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
@@ -55,15 +55,15 @@ brew install tomatool/tap/tomato
 - uses: tomatool/tomato@v2
 ```
 
-See [GitHub Action documentation](https://tomatool.github.io/tomato/github-action) for all options.
+See [GitHub Action documentation](https://tomatool.github.io/tomato/getting-started/github-action) for all options.
 
-### Go Install
+### Go install
 
 ```bash
 go install github.com/tomatool/tomato@latest
 ```
 
-### From Source
+### From source
 
 ```bash
 git clone https://github.com/tomatool/tomato.git
@@ -72,7 +72,7 @@ go build -o tomato .
 sudo mv tomato /usr/local/bin/
 ```
 
-## Quick Start
+## Quick start
 
 ```bash
 tomato init    # Initialize a new project
@@ -87,7 +87,7 @@ For complete documentation, visit **[tomatool.github.io/tomato](https://tomatool
 
 - [Getting Started](https://tomatool.github.io/tomato/getting-started)
 - [Configuration Reference](https://tomatool.github.io/tomato/configuration)
-- [Architecture](https://tomatool.github.io/tomato/architecture)
+- [Architecture](https://tomatool.github.io/tomato/developer-guide/architecture)
 - [Step Reference](https://tomatool.github.io/tomato/resources)
 
 ## Contributing
@@ -97,4 +97,4 @@ resources, and [MAINTAINERS.md](https://github.com/tomatool/tomato/blob/main/MAI
 
 ## License
 
-Tomato is open source under the [MIT License](LICENSE).
+Tomato is open source under the [MIT License](https://github.com/tomatool/tomato/blob/main/LICENSE).
