@@ -1,14 +1,8 @@
----
-layout: default
-title: GitHub Action
-nav_order: 5
----
-
 # GitHub Action
 
 Run Tomato tests in your CI/CD pipeline using the official GitHub Action.
 
-## Basic Usage
+## Basic usage
 
 ```yaml
 name: Tests
@@ -36,11 +30,12 @@ jobs:
 | `no-reset` | Skip state reset between scenarios | `false` |
 | `verbose` | Show debug logs | `false` |
 | `quiet` | Hide application logs | `false` |
+| `skip-validate` | Skip configuration validation before running tests | `false` |
 | `comment` | Post/update a test summary comment on the PR | `true` |
 
 ## Examples
 
-### Filter by Tags
+### Filter by tags
 
 ```yaml
 - uses: tomatool/tomato@v2
@@ -48,7 +43,7 @@ jobs:
     tags: '@smoke and not @slow'
 ```
 
-### Filter by Scenario Name
+### Filter by scenario name
 
 ```yaml
 - uses: tomatool/tomato@v2
@@ -56,7 +51,7 @@ jobs:
     scenario: 'user registration'
 ```
 
-### Run Specific Features
+### Run specific features
 
 ```yaml
 - uses: tomatool/tomato@v2
@@ -64,7 +59,7 @@ jobs:
     features: 'features/api features/auth'
 ```
 
-### Verbose Output
+### Verbose output
 
 ```yaml
 - uses: tomatool/tomato@v2
@@ -72,7 +67,7 @@ jobs:
     verbose: 'true'
 ```
 
-### PR Comment with Test Results
+### PR comment with test results
 
 ```yaml
 - uses: tomatool/tomato@v2
@@ -84,7 +79,7 @@ When enabled on a `pull_request` workflow, the action posts (or updates) a comme
 
 > **Note:** The `comment` feature requires `pull-requests: write` permission. See the [complete workflow example](#complete-workflow-example) below.
 
-### Publish a JUnit Report
+### Publish a JUnit report
 
 Write a JUnit report from `tomato.yml`, then upload it or hand it to a test
 reporter. File outputs are kept when `comment` is enabled.
@@ -108,7 +103,7 @@ settings:
 
 See [Reports](../configuration/index.md#reports) for all formats.
 
-### Pin to Specific Version
+### Pin to specific version
 
 ```yaml
 - uses: tomatool/tomato@v2.0.0
@@ -116,7 +111,7 @@ See [Reports](../configuration/index.md#reports) for all formats.
     config: 'tomato.yml'
 ```
 
-### Try an Unreleased Commit
+### Try an unreleased commit
 
 Used at a commit or a branch instead of a version tag, the action builds tomato
 from that same commit (with Go, which it sets up), so a change can run in your
@@ -130,7 +125,7 @@ CI before it is released:
 
 Setting `version` still installs that release instead.
 
-## Complete Workflow Example
+## Complete workflow example
 
 ```yaml
 name: Integration Tests
