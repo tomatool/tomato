@@ -35,6 +35,10 @@ type Kafka struct {
 	consuming    map[string]bool
 	consumingMu  sync.RWMutex
 	stopChannels map[string]chan struct{}
+
+	brokers  []string                     // set by Init
+	groups   map[string]*kafkaGroupMember // consumer groups tomato joined, by group and topic
+	groupsMu sync.Mutex
 }
 
 func NewKafka(name string, cfg config.Resource, cm *container.Manager) (*Kafka, error) {
@@ -45,6 +49,7 @@ func NewKafka(name string, cfg config.Resource, cm *container.Manager) (*Kafka, 
 		messages:     make(map[string][]*sarama.ConsumerMessage),
 		consuming:    make(map[string]bool),
 		stopChannels: make(map[string]chan struct{}),
+		groups:       make(map[string]*kafkaGroupMember),
 	}, nil
 }
 
@@ -56,12 +61,8 @@ func (r *Kafka) Init(ctx context.Context) error {
 		return fmt.Errorf("getting brokers: %w", err)
 	}
 
-	cfg := sarama.NewConfig()
-	cfg.Version = sarama.V3_0_0_0
-	cfg.Producer.Return.Successes = true
-	cfg.Producer.Return.Errors = true
-	cfg.Consumer.Return.Errors = true
-	cfg.Admin.Timeout = 30 * time.Second
+	r.brokers = brokers
+	cfg := newKafkaConfig()
 
 	admin, err := sarama.NewClusterAdmin(brokers, cfg)
 	if err != nil {
@@ -177,6 +178,7 @@ func (r *Kafka) Ready(ctx context.Context) error {
 }
 
 func (r *Kafka) Reset(ctx context.Context) error {
+	r.stopConsumerGroups()
 	r.stopAllConsumers()
 
 	r.messagesMu.Lock()
@@ -276,7 +278,7 @@ func (r *Kafka) Steps() StepCategory {
 	return StepCategory{
 		Name:        "Kafka",
 		Description: "Steps for interacting with Apache Kafka message broker",
-		Steps: []StepDef{
+		Steps: append([]StepDef{
 			// Topic Management
 			{
 				Group:       "Topic Management",
@@ -468,7 +470,7 @@ func (r *Kafka) Steps() StepCategory {
 				Example:     "\"{resource}\" receives messages from \"events\" in order:\n  | key    | value  |\n  | key1   | msg1   |",
 				Handler:     r.shouldReceiveMessagesInOrder,
 			},
-		},
+		}, r.consumerGroupSteps()...),
 	}
 }
 
@@ -837,6 +839,7 @@ func (r *Kafka) Publish(ctx context.Context, topic string, payload []byte, heade
 }
 
 func (r *Kafka) Cleanup(ctx context.Context) error {
+	r.stopConsumerGroups()
 	r.stopAllConsumers()
 
 	var errs []error

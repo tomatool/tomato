@@ -99,3 +99,12 @@ Feature: PostgreSQL Handler
       | audit_log |
     Then "db" table "users" is empty
     And "db" table "audit_log" is empty
+
+  Scenario: Wait for rows a query returns
+    Given "db" executes:
+      """
+      INSERT INTO users (name, email) VALUES ('Async', 'async@test.com')
+      """
+    Then "db" query "SELECT name FROM users WHERE email = 'async@test.com'" returns within "5s":
+      | name  |
+      | Async |

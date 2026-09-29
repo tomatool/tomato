@@ -134,6 +134,16 @@ app:
     run), tomato fails instead of starting: otherwise the ready check would
     pass against the other process and the tests would hit the wrong app.
 
+In command mode the app inherits tomato's environment, plus `env`. Some
+resources the app depends on while it starts are set up before it and add to
+that environment too: the [aws](aws.md) resource points the app's AWS SDK at its
+STS and removes `AWS_ACCESS_KEY_ID` and friends inherited from your shell. The
+app's own `env` still wins over anything a resource sets.
+
+The app runs in its own process group, and stopping it stops the whole group,
+so `command: go run ./cmd/server` (where `go` does not pass signals on) does not
+leave the server running and holding the port.
+
 ### Template Variables
 
 In `app.env`, you can use templates to inject container addresses:
@@ -193,6 +203,30 @@ containers:
       exclude:
         - schema_migrations
 ```
+
+`volumes` are `source:target[:mode]`. A source path (`./x`, `../x`, `/x`, `~/x`)
+is bound into the container, relative paths resolved against the directory of
+`tomato.yml`; a bare name is a Docker volume. `build` (`context`, `dockerfile`)
+builds the image instead of pulling one, with `context` relative to `tomato.yml`
+too. Each container's output is written to `.tomato/runs/<run>/container-<name>.log`
+for as long as it runs, including when it fails to start.
+
+### Presets
+
+A preset is a container tomato knows how to run. It fills in the image, env,
+ports and wait strategy; anything the entry sets itself (an `env` key, `image`,
+`wait_for`) wins.
+
+```yaml
+containers:
+  kafka:
+    preset: kafka
+    auth: aws_msk_iam   # optional: plaintext (default) or aws_msk_iam
+```
+
+| Preset | What it runs |
+|--------|--------------|
+| `kafka` | A single-node KRaft broker, reachable from the host and from other containers. With `auth: aws_msk_iam`, a second listener speaks SASL `AWS_MSK_IAM` like MSK's IAM port. See [Kafka](kafka.md#preset). |
 
 ### Wait Strategies
 

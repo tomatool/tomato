@@ -14,6 +14,7 @@ import (
 	"github.com/tomatool/tomato/internal/apprunner"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/handler"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/runner"
 	"github.com/urfave/cli/v2"
@@ -178,6 +179,18 @@ func runTests(c *cli.Context) error {
 		fmt.Printf("  %s %s\n", checkStyle.Render("✓"), name)
 	}
 
+	// Resources the app depends on while it starts (the aws resource's STS)
+	// are initialized before it, so its environment can point at them. The same
+	// registry then serves the tests.
+	registry, err := handler.NewRegistry(cfg.Resources, cm)
+	if err != nil {
+		return fmt.Errorf("failed to initialize resources: %w", err)
+	}
+	appEnv, err := registry.InitAppEnvProviders(c.Context)
+	if err != nil {
+		return fmt.Errorf("failed to initialize resources the app depends on: %w", err)
+	}
+
 	// Step 2: Start the application under test
 	var appRunner *apprunner.Runner
 	if cfg.App.IsConfigured() {
@@ -192,6 +205,7 @@ func runTests(c *cli.Context) error {
 		appRunner.SetRunContext(runCtx)
 		appRunner.SetShowLogs(!c.Bool("quiet"))
 		appRunner.SetResources(cfg.Resources)
+		appRunner.SetProvidedEnv(appEnv.Set, appEnv.Unset)
 
 		// Force container mode if --container flag is set
 		if c.Bool("container") {
@@ -267,7 +281,7 @@ func runTests(c *cli.Context) error {
 	fmt.Println()
 	fmt.Println(subtitleStyle.Render("Initializing resources..."))
 
-	r, err := runner.New(cfg, cm, runner.Options{
+	r, err := runner.NewWithRegistry(cfg, cm, registry, runner.Options{
 		NoReset: c.Bool("no-reset"),
 		Format:  c.String("format"),
 	})

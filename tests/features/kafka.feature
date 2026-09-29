@@ -145,3 +145,18 @@ Feature: Kafka Handler
       """
     And "events" last message has header "trace-id" with value "abc-123"
     And "events" last message has header "content-type" with value "text/plain"
+
+  Scenario: The broker sees a consumer group's members and assignments
+    Given "events" consumes from "test-events" as consumer group "tomato-tests"
+    Then "events" consumer group "tomato-tests" is consuming "test-events" within "30s"
+    When "events" publishes to "test-events":
+      """
+      hello group
+      """
+    Then "events" receives from "test-events" within "10s":
+      """
+      hello group
+      """
+
+  Scenario: A consumer group tomato left has no members
+    Then "events" consumer group "tomato-tests" has no members

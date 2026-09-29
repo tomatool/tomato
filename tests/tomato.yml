@@ -30,41 +30,13 @@ containers:
       target: "6379"
       timeout: 30s
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
-    env:
-      ZOOKEEPER_CLIENT_PORT: "2181"
-      ZOOKEEPER_TICK_TIME: "2000"
-    ports:
-      - "2181/tcp"
-    wait_for:
-      type: port
-      target: "2181"
-      timeout: 30s
-
+  # The kafka preset: a single-node KRaft broker. tomato picks its host port and
+  # advertises it, and other containers reach it at kafka:29092. The suite's
+  # client uses the plain listener; aws_msk_iam adds the IAM listeners, so the
+  # broker has to start with them.
   kafka:
-    image: confluentinc/cp-kafka:7.6.1
-    depends_on:
-      - zookeeper
-    env:
-      KAFKA_BROKER_ID: "1"
-      KAFKA_ZOOKEEPER_CONNECT: "{{.zookeeper.host}}:{{.zookeeper.port.2181}}"
-      # Dual listeners: internal (kafka:29092) and external (localhost:9092)
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    ports:
-      # Fixed port for external access (host connects here)
-      - "9092:9092"
-      # Internal port for container-to-container (dynamic is fine)
-      - "29092/tcp"
-    wait_for:
-      type: port
-      target: "9092"
-      timeout: 60s
+    preset: kafka
+    auth: aws_msk_iam
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.1
@@ -221,6 +193,21 @@ resources:
     type: http-server
     options:
       port: 9998
+
+  # IRSA for the app: a role and a web identity token, exchanged at the STS this
+  # resource serves; the app's AWS SDK finds both through its environment.
+  aws:
+    type: aws
+    options:
+      region: eu-central-1
+      role_arn: arn:aws:iam::000000000000:role/tomato-tests
+      ambient_identity: true
+      port: 9996
+
+  # Calls the aws resource's STS directly.
+  sts:
+    type: http-client
+    base_url: "http://localhost:9996"
 
 features:
   paths:
