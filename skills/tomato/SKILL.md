@@ -1,17 +1,19 @@
 ---
 name: tomato
 description: >
-  Set up, write, review and debug tomato suites, which test an app through its
-  own interfaces against real dependencies. Use when adding tomato to a repo,
-  writing scenarios, reviewing a suite, or a run fails.
+  Set up, write, review and debug tomato suites, which test an app in isolation
+  through its interfaces, against dependencies tomato starts. Use when adding
+  tomato, writing scenarios, reviewing a suite, or a run fails.
 license: MIT
 compatibility: Needs the tomato CLI (v2) and Docker where the agent runs.
 ---
 
 # tomato
 
-tomato runs an app against its real dependencies in containers, resets them before
-every scenario, and checks behavior through the app's own interfaces.
+tomato builds an isolated environment for an app: its dependencies run as
+containers tomato starts, and the services it calls are mocks tomato serves. It
+resets them before every scenario and checks behavior through the app's own
+interfaces.
 
 ## Principles
 
@@ -19,11 +21,15 @@ Hard rules. A suite that breaks one is wrong even when it is green.
 
 | Rule | Means | So |
 |---|---|---|
+| Isolated | The suite runs only against what tomato starts: containers, mocks, tomato's STS. | Nothing shared or external: no staging databases, real cloud accounts, third-party APIs or other teams' running services. A host, URL or credential that points outside the run is a bug. |
 | Config only | A suite is `tomato.yml`, feature files and a CI workflow. | No harness scripts, wrapper commands or custom images. When tomato can't express something, add it to tomato first ([contributing](references/contributing.md)). |
 | Fail like production | A scenario must be able to fail the way production fails. | Reproduce the path that matters: auth, runtime flags, broker, schema. A shortcut that can't fail that way proves nothing. |
 | Black box | Drive and assert only through what the application exposes or touches: its API, its database, its topics and queues, the services it calls. | Never call its internals or assert on its logs. |
+| One focus | A scenario is one action and its direct effects. | Assert them, then stop. "Create a user" ends at the stored row and the published message. What consumes that message, or changing the user afterwards, are other scenarios. |
 
-tomato's own defaults follow from them: one config is the source of truth, every
+"Fail like production" means the same software and wiring, never a real
+environment: a real Postgres in a container, not the staging one. tomato's own
+defaults follow from these rules: one config is the source of truth, every
 scenario starts from reset state, and the application's language doesn't matter.
 
 ## Tool constraints

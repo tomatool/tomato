@@ -8,8 +8,9 @@ scenario worth keeping.
 - One feature file per capability, named after it: `change-request-visibility.feature`, not `api-tests.feature`.
 - The Feature description states the rule in plain prose, and the fixtures the scenarios rely on.
 - A scenario's name is the behavior, as a sentence someone outside the team would understand: "A non-owner sees the query redacted", not "GET change request 403".
-- Given sets state. When is one action through the application's interface. Then checks what shows up on its interfaces: the response, rows, messages, calls to the services it depends on.
-- One behavior per scenario. A second When is fine when the behavior is a sequence, such as create then read.
+- One focus per scenario: one action, its direct effects, then stop. Nothing follows the last Then.
+- Given sets up everything the action needs, even when it uses the application's API to do it. When is the one action, through the application's interface. Then checks its direct effects on the interfaces: the response, rows, messages, calls to the services it depends on.
+- Effects further downstream are other scenarios: what a consumer does with the published message, a later update, a read of what was created. When the read is the behavior under test, create the record in Given and make the read the When.
 - A Background holds setup every scenario in the file shares. A Scenario Outline runs one behavior over several inputs.
 - Put a comment above any step whose purpose isn't obvious, saying what it proves.
 
@@ -43,8 +44,8 @@ Scenario: Test orders endpoint
   Then "api" response status is "201"
 ```
 
-Strong: the name is the behavior, and each Then is something a broken
-implementation would get wrong.
+Strong: the name is the behavior, each Then is something a broken implementation
+would get wrong, and it stops at the last direct effect of the one action.
 
 ```gherkin
 Scenario: A placed order is stored and announced
@@ -60,4 +61,20 @@ Scenario: A placed order is stored and announced
     | customer-7 | tomato-1 | 2        |
   # Keyed by customer, so one customer's events stay in order.
   And "events" receives from "orders.created.v1" with key "customer-7" within "10s"
+```
+
+Too much: two focuses. When it fails, the name doesn't say which behavior broke,
+and cancelling can't be tested unless placing passes first. Split it into
+"A placed order is stored and announced" and "Cancelling an order announces it",
+with the order seeded in the second one's Given.
+
+```gherkin
+Scenario: Order lifecycle
+  Given "events" consumes from "orders.created.v1"
+  When "api" sends "POST" to "/orders"
+  Then "api" response status is "201"
+  And "api" response json "id" saved as "{{order_id}}"
+  And "events" receives from "orders.created.v1" with key "customer-7" within "10s"
+  When "api" sends "POST" to "/orders/{{order_id}}/cancel"
+  Then "events" receives from "orders.cancelled.v1" with key "customer-7" within "10s"
 ```

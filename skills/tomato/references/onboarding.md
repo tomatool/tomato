@@ -11,6 +11,11 @@ Before writing config, list from the code and the deployment manifests:
 - How production wires each one: connection settings, auth mechanism, runtime flags, feature switches.
 - The interfaces its behavior shows up on: its API, rows it writes, messages it publishes, calls it makes.
 
+Each of them becomes something tomato starts or serves: a container, a preset, an
+`http-server` mock, the `aws` resource. Nothing in the suite may reach outside the
+run, not even read-only: no staging database, real cloud account or third-party
+API.
+
 Anything on that list the suite leaves out, or replaces with something that can't fail the same way, is a gap. Name each gap in a comment where it is taken.
 
 ## 2. Write tomato.yml
