@@ -80,6 +80,7 @@ func main() {
 	// Setup routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/env", envHandler)
 	mux.HandleFunc("/users", usersHandler)
 	mux.HandleFunc("/users/", userHandler)
 	mux.HandleFunc("/cache", cacheHandler)
@@ -516,4 +517,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			conn.WriteMessage(messageType, message)
 		}
 	}
+}
+
+// envHandler reports one environment variable, so the suite can check what
+// tomato put in the app's environment (the aws resource's IRSA variables).
+func envHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+	value, set := os.LookupEnv(name)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{"name": name, "set": set, "value": value})
 }

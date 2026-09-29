@@ -82,6 +82,7 @@ var handlerFactories = map[string]handlerFactory{
 	"s3":               factory(NewS3),
 	"minio":            factory(NewS3),
 	"shell":            factory(NewShell),
+	"aws":              factory(NewAWS),
 }
 
 // unimplementedTypes are resource types people reach for that tomato does not
@@ -122,6 +123,39 @@ func (r *Registry) Get(name string) (Handler, error) {
 		return nil, fmt.Errorf("handler not found: %s", name)
 	}
 	return h, nil
+}
+
+// InitAppEnvProviders initializes the resources the application depends on
+// while it starts (see AppEnvProvider) and returns the environment they
+// provide, merged in resource-name order.
+func (r *Registry) InitAppEnvProviders(ctx context.Context) (AppEnv, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	names := make([]string, 0, len(r.handlers))
+	for name := range r.handlers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	env := AppEnv{Set: make(map[string]string)}
+	for _, name := range names {
+		h := r.handlers[name]
+		provider, ok := h.(AppEnvProvider)
+		if !ok {
+			continue
+		}
+		log.Debug().Str("handler", name).Msg("initializing handler before the app")
+		if err := h.Init(ctx); err != nil {
+			return AppEnv{}, fmt.Errorf("initializing %s: %w", name, err)
+		}
+		provided := provider.AppEnv()
+		for k, v := range provided.Set {
+			env.Set[k] = v
+		}
+		env.Unset = append(env.Unset, provided.Unset...)
+	}
+	return env, nil
 }
 
 // WaitReady waits for all handlers to be ready

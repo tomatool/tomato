@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -60,6 +61,10 @@ type Runner struct {
 	// Run context for logging
 	runCtx  *runlog.RunContext
 	logFile *os.File
+
+	// Environment resources provide to the app (see SetProvidedEnv)
+	providedEnv map[string]string
+	unsetEnv    map[string]bool
 }
 
 // NewRunner creates a new app runner
@@ -83,6 +88,48 @@ func NewRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
 // SetResources sets resource configurations for template resolution
 func (r *Runner) SetResources(resources map[string]config.Resource) {
 	r.resources = resources
+}
+
+// SetProvidedEnv sets the environment resources provide to the app, such as the
+// aws resource's IRSA variables: set is added to the app's environment (its own
+// env settings still win) and unset is removed from what it inherits from
+// tomato. Command mode only; the values are host paths and host ports.
+func (r *Runner) SetProvidedEnv(set map[string]string, unset []string) {
+	r.providedEnv = set
+	r.unsetEnv = make(map[string]bool, len(unset))
+	for _, k := range unset {
+		r.unsetEnv[k] = true
+	}
+}
+
+// commandEnv is the app process's environment: tomato's own minus what
+// resources asked to remove, then what they provide, then the app's env, which
+// wins because the last value of a duplicated key is the one a process sees.
+func (r *Runner) commandEnv(appEnv map[string]string) []string {
+	var env []string
+	for _, kv := range os.Environ() {
+		key, _, _ := strings.Cut(kv, "=")
+		if r.unsetEnv[key] {
+			continue
+		}
+		env = append(env, kv)
+	}
+	for _, key := range sortedKeys(r.providedEnv) {
+		env = append(env, key+"="+r.providedEnv[key])
+	}
+	for _, key := range sortedKeys(appEnv) {
+		env = append(env, key+"="+appEnv[key])
+	}
+	return env
+}
+
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // SetContainerMode forces container mode (for --container flag)
@@ -145,47 +192,9 @@ func (r *Runner) startCommand(ctx context.Context) error {
 		return err
 	}
 
-	// Build environment with mapped host ports (for local process)
-	env := r.buildEnvForCommand()
-
-	// Parse command
-	parts := strings.Fields(r.config.Command)
-	if len(parts) == 0 {
-		return fmt.Errorf("empty command")
+	if err := r.startProcess(ctx); err != nil {
+		return err
 	}
-
-	r.cmd = exec.CommandContext(ctx, parts[0], parts[1:]...)
-
-	// Set working directory
-	if r.config.WorkDir != "" {
-		r.cmd.Dir = r.config.WorkDir
-	}
-
-	// Build environment
-	r.cmd.Env = os.Environ()
-	for k, v := range env {
-		r.cmd.Env = append(r.cmd.Env, fmt.Sprintf("%s=%s", k, v))
-	}
-
-	// Capture output
-	stdout, err := r.cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("creating stdout pipe: %w", err)
-	}
-	stderr, err := r.cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("creating stderr pipe: %w", err)
-	}
-
-	// Start process
-	log.Debug().Str("command", r.config.Command).Msg("starting app process")
-	if err := r.cmd.Start(); err != nil {
-		return fmt.Errorf("starting app: %w", err)
-	}
-
-	// Stream logs
-	go r.streamCommandLogs(stdout, "stdout")
-	go r.streamCommandLogs(stderr, "stderr")
 
 	// Set host/port for test runner
 	r.cmdHost = "localhost"
@@ -207,6 +216,57 @@ func (r *Runner) startCommand(ctx context.Context) error {
 		Str("host", r.cmdHost).
 		Int("port", r.cmdPort).
 		Msg("app process ready")
+
+	return nil
+}
+
+// startProcess launches the app command with its environment and streams its
+// output; it does not wait for the app to be ready.
+func (r *Runner) startProcess(ctx context.Context) error {
+	// Build environment with mapped host ports (for local process)
+	env := r.buildEnvForCommand()
+
+	// Parse command
+	parts := strings.Fields(r.config.Command)
+	if len(parts) == 0 {
+		return fmt.Errorf("empty command")
+	}
+
+	r.cmd = exec.CommandContext(ctx, parts[0], parts[1:]...)
+
+	// Set working directory
+	if r.config.WorkDir != "" {
+		r.cmd.Dir = r.config.WorkDir
+	}
+
+	// Build environment
+	r.cmd.Env = r.commandEnv(env)
+
+	// Run the app in its own process group, so stopping it reaches what it
+	// started too. `go run ./app` is the common case: go does not pass SIGTERM
+	// on, and signalling its PID alone left the compiled app running, still
+	// holding the app port for the next run.
+	r.cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	// Capture output
+	stdout, err := r.cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("creating stdout pipe: %w", err)
+	}
+	stderr, err := r.cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("creating stderr pipe: %w", err)
+	}
+
+	// Start process
+	log.Debug().Str("command", r.config.Command).Msg("starting app process")
+	if err := r.cmd.Start(); err != nil {
+		return fmt.Errorf("starting app: %w", err)
+	}
+
+	// Stream logs
+	go r.streamCommandLogs(stdout, "stdout")
+	go r.streamCommandLogs(stderr, "stderr")
 
 	return nil
 }
@@ -409,6 +469,9 @@ func (r *Runner) waitForReady(ctx context.Context) error {
 
 // startContainer starts the app as a testcontainer
 func (r *Runner) startContainer(ctx context.Context) error {
+	if len(r.providedEnv) > 0 {
+		log.Warn().Msg("resources that provide app environment (like aws) only apply to an app run as a local process; the container gets none of it")
+	}
 	// Build environment with container DNS names (for internal Docker communication)
 	env := r.buildEnvForDocker()
 
@@ -736,11 +799,14 @@ func (r *Runner) stopCommand() error {
 
 	log.Debug().Int("pid", r.cmd.Process.Pid).Msg("stopping app process")
 
-	// Try graceful shutdown first
-	if err := r.cmd.Process.Signal(syscall.SIGTERM); err != nil {
+	// Try graceful shutdown first, of the whole process group (see startCommand)
+	pgid := r.cmd.Process.Pid
+	if err := syscall.Kill(-pgid, syscall.SIGTERM); err != nil {
 		log.Debug().Err(err).Msg("failed to send SIGTERM, trying SIGKILL")
-		if err := r.cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("killing app process: %w", err)
+		if err := syscall.Kill(-pgid, syscall.SIGKILL); err != nil {
+			if err := r.cmd.Process.Kill(); err != nil {
+				return fmt.Errorf("killing app process: %w", err)
+			}
 		}
 	}
 
@@ -755,7 +821,7 @@ func (r *Runner) stopCommand() error {
 	case <-done:
 	case <-time.After(5 * time.Second):
 		// Force kill if graceful shutdown takes too long
-		r.cmd.Process.Kill()
+		_ = syscall.Kill(-pgid, syscall.SIGKILL)
 		<-done
 	}
 

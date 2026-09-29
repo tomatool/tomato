@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -96,6 +97,12 @@ type ResetSettings struct {
 }
 
 type Container struct {
+	// Preset expands the entry into a ready configuration (see presets.go);
+	// the other fields then only override what the preset fills in.
+	Preset string `yaml:"preset,omitempty"`
+	// Auth selects how a preset authenticates clients (kafka: plaintext or
+	// aws_msk_iam).
+	Auth      string            `yaml:"auth,omitempty"`
 	Image     string            `yaml:"image"`
 	Build     *BuildConfig      `yaml:"build,omitempty"`
 	Command   StringList        `yaml:"command,omitempty"`
@@ -227,6 +234,11 @@ func Load(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parsing config file: %w", err)
 	}
+
+	if err := cfg.expandPresets(); err != nil {
+		return nil, fmt.Errorf("expanding presets: %w", err)
+	}
+	cfg.resolvePaths(filepath.Dir(path))
 
 	// Apply defaults
 	cfg.applyDefaults()

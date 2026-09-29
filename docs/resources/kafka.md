@@ -184,3 +184,13 @@ Steps for interacting with Apache Kafka message broker
   | key1   | msg1   |
 ```
 
+
+## Consumer Groups
+
+| Step | Description |
+|------|-------------|
+| `"{resource}" consumes from "events" as consumer group "billing"` | Joins a consumer group on a topic; its messages are received like any other |
+| `"{resource}" consumer group "billing" is consuming "events" within "30s"` | Waits until a member of the consumer group is assigned the topic, as the broker sees it |
+| `"{resource}" consumer group "billing" has no members` | Asserts the consumer group has no members, as the broker sees it |
+
+
