@@ -111,7 +111,8 @@ at the result.
 ## 3. First features
 
 Start with one scenario per interface that proves the wiring, then the behaviors
-that matter most. See [scenarios.md](scenarios.md).
+that matter most. Lay them out by interface from the first file, like
+`features/http/api/v1/health.feature`. See [scenarios.md](scenarios.md#layout).
 
 ## 4. Verify
 

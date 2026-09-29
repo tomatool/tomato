@@ -3,9 +3,35 @@
 Get every step's wording from `tomato steps`. The shapes below are what makes a
 scenario worth keeping.
 
+## Layout
+
+Feature files mirror the application's interfaces, the way its clients reach
+them. The directories say which interface, the file which behavior of it.
+
+```text
+features/
+├── http/api/v1/
+│   ├── orders/
+│   │   ├── place-order.feature
+│   │   └── cancel-order.feature
+│   └── health.feature
+├── grpc/directory.v1.DirectoryService/
+│   └── list-entities.feature
+└── kafka/
+    ├── customer.cmd.create-account.v1/
+    │   └── creates-account.feature
+    └── customer.fct.account-created.v1/
+        └── published-from-outbox.feature
+```
+
+- The path follows how the interface is addressed: the URL path for HTTP, the package and service for gRPC, the topic or queue for messaging.
+- A new API version gets its own tree, so v1 and v2 behavior can differ side by side.
+- A scenario lives under the interface its When goes through. Its effects on other interfaces, like the message a POST publishes, are Thens, not a reason to move it.
+- Behavior no client triggers, like a scheduled publisher, lives under the interface its effect shows on.
+
 ## Shape
 
-- One feature file per capability, named after it: `change-request-visibility.feature`, not `api-tests.feature`.
+- One feature file per behavior of an interface, named after the behavior: `place-order.feature`, not `api-tests.feature`.
 - The Feature description states the rule in plain prose, and the fixtures the scenarios rely on.
 - A scenario's name is the behavior, as a sentence someone outside the team would understand: "A non-owner sees the query redacted", not "GET change request 403".
 - One focus per scenario: one action, its direct effects, then stop. Nothing follows the last Then.

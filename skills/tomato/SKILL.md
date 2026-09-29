@@ -54,6 +54,7 @@ add how that runtime is built, started and configured.
 
 ## Rules
 
+- Lay features out by the interface they exercise, like `features/http/api/v1/orders/place-order.feature` ([layout](references/scenarios.md#layout)).
 - Every fixture and assertion must be able to fail. A scenario that still passes with the behavior removed is wrong.
 - Assert the reason for the pass, not a coincidence: add the assertion that proves the intended path was taken.
 - Wait for asynchronous effects with a `within` step. A fixed wait needs a comment saying why no `within` step fits.
