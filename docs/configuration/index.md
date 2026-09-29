@@ -208,7 +208,8 @@ containers:
 is bound into the container, relative paths resolved against the directory of
 `tomato.yml`; a bare name is a Docker volume. `build` (`context`, `dockerfile`)
 builds the image instead of pulling one, with `context` relative to `tomato.yml`
-too. Each container's output is written to `.tomato/runs/<run>/container-<name>.log`
+too. The image is named `tomato-<container>` and kept, so the next run rebuilds
+from cache into the same image. Each container's output is written to `.tomato/runs/<run>/container-<name>.log`
 for as long as it runs, including when it fails to start.
 
 ### Presets

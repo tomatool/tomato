@@ -11,7 +11,6 @@ import (
 
 	"github.com/tomatool/tomato/internal/awsid"
 	"github.com/tomatool/tomato/internal/presets"
-	"github.com/tomatool/tomato/internal/version"
 )
 
 // A preset expands one container entry into a working configuration for a
@@ -32,6 +31,14 @@ const (
 	// is told "Access denied", as MSK does.
 	KafkaAuthAWSMSKIAM = "aws_msk_iam"
 )
+
+// KafkaImage is what the kafka preset runs unless the entry sets image or
+// build: the stock broker image. For auth: aws_msk_iam, tomato copies the
+// AWS_MSK_IAM server it carries (presets.MskIamJar) into kafkaPluginPath, on the
+// broker's classpath, so any apache/kafka image works.
+const KafkaImage = "apache/kafka:3.9.1"
+
+const kafkaPluginPath = "/opt/kafka/libs/tomato-msk-iam.jar"
 
 // Kafka preset ports inside the container. The two host-facing listeners are
 // published on host ports tomato picks, and advertised as localhost:<that port>,
@@ -56,12 +63,6 @@ var freePort = func() (string, error) {
 	}
 	defer l.Close()
 	return fmt.Sprintf("%d", l.Addr().(*net.TCPAddr).Port), nil
-}
-
-// kafkaImage is presets.KafkaImage for this build of tomato; a variable so tests
-// need not extract or name a published image.
-var kafkaImage = func() (image, buildContext string, err error) {
-	return presets.KafkaImage(version.Version)
 }
 
 func (c *Config) expandPresets() error {
@@ -102,15 +103,7 @@ func (c *Config) expandKafkaPreset(name string, cont *Container) error {
 	iam := auth == KafkaAuthAWSMSKIAM
 
 	if cont.Image == "" && cont.Build == nil {
-		image, buildContext, err := kafkaImage()
-		if err != nil {
-			return err
-		}
-		if image != "" {
-			cont.Image = image
-		} else {
-			cont.Build = &BuildConfig{Context: buildContext, Dockerfile: "Dockerfile"}
-		}
+		cont.Image = KafkaImage
 	}
 
 	plainHostPort, err := freePort()
@@ -163,6 +156,7 @@ func (c *Config) expandKafkaPreset(name string, cont *Container) error {
 			env["KAFKA_LISTENER_NAME_"+envName+"_AWS__MSK__IAM_SASL_JAAS_CONFIG"] = loginModule
 		}
 		env["TOMATO_MSK_IAM_ALLOWED_ACCESS_KEY_IDS"] = strings.Join(c.awsRoleSessionKeys(), ",")
+		cont.Files = append(cont.Files, ContainerFile{Path: kafkaPluginPath, Content: presets.MskIamJar, Mode: 0o644})
 	}
 
 	env["KAFKA_LISTENERS"] = strings.Join(listeners, ",")
