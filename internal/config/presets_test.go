@@ -1,29 +1,30 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/tomatool/tomato/internal/awsid"
+	"github.com/tomatool/tomato/internal/presets"
 )
 
-// stubPresets replaces port picking and image lookup for the test.
-func stubPresets(t *testing.T, image, buildContext string) {
+// stubPorts makes the host ports the presets pick predictable: 40001, 40002, ...
+func stubPorts(t *testing.T) {
 	t.Helper()
-	origPort, origImage := freePort, kafkaImage
+	origPort := freePort
 	next := 40000
 	freePort = func() (string, error) {
 		next++
 		return fmt.Sprintf("%d", next), nil
 	}
-	kafkaImage = func() (string, string, error) { return image, buildContext, nil }
-	t.Cleanup(func() { freePort, kafkaImage = origPort, origImage })
+	t.Cleanup(func() { freePort = origPort })
 }
 
 func TestKafkaPreset_Plaintext(t *testing.T) {
-	stubPresets(t, "ghcr.io/tomatool/tomato-kafka:2.2.0", "")
+	stubPorts(t)
 	cfg, err := Load(createTempConfig(t, `
 version: 2
 containers:
@@ -35,8 +36,11 @@ containers:
 	}
 	k := cfg.Containers["kafka"]
 
-	if k.Image != "ghcr.io/tomatool/tomato-kafka:2.2.0" || k.Build != nil {
-		t.Errorf("image %q, build %+v; want the published image", k.Image, k.Build)
+	if k.Image != KafkaImage || k.Build != nil {
+		t.Errorf("image %q, build %+v; want %s", k.Image, k.Build, KafkaImage)
+	}
+	if len(k.Files) != 0 {
+		t.Errorf("plaintext kafka gets files: %+v", k.Files)
 	}
 	if len(k.Ports) != 1 || k.Ports[0] != "40001:9092" {
 		t.Errorf("ports %v, want [40001:9092]", k.Ports)
@@ -53,7 +57,7 @@ containers:
 }
 
 func TestKafkaPreset_AWSMSKIAMAllowsTheRoleSessionsOfAWSResources(t *testing.T) {
-	stubPresets(t, "", "/tmp/kafka-context")
+	stubPorts(t)
 	cfg, err := Load(createTempConfig(t, `
 version: 2
 containers:
@@ -71,8 +75,13 @@ resources:
 	}
 	b := cfg.Containers["broker"]
 
-	if b.Image != "" || b.Build == nil || b.Build.Context != "/tmp/kafka-context" {
-		t.Errorf("image %q, build %+v; want a build from the extracted context", b.Image, b.Build)
+	// The stock image, with the plugin tomato carries copied onto its classpath.
+	if b.Image != KafkaImage || b.Build != nil {
+		t.Errorf("image %q, build %+v; want %s", b.Image, b.Build, KafkaImage)
+	}
+	if len(b.Files) != 1 || b.Files[0].Path != "/opt/kafka/libs/tomato-msk-iam.jar" ||
+		!bytes.Equal(b.Files[0].Content, presets.MskIamJar) || b.Files[0].Mode != 0o644 {
+		t.Errorf("files %+v, want the MSK IAM plugin in /opt/kafka/libs", b.Files)
 	}
 	if len(b.Ports) != 2 || b.Ports[1] != "40002:9098" {
 		t.Errorf("ports %v, want the IAM listener on 40002:9098", b.Ports)
@@ -101,7 +110,7 @@ resources:
 }
 
 func TestKafkaPreset_WithoutAWSResourceAllowsAnyIdentity(t *testing.T) {
-	stubPresets(t, "img", "")
+	stubPorts(t)
 	cfg, err := Load(createTempConfig(t, `
 version: 2
 containers:
@@ -118,7 +127,7 @@ containers:
 }
 
 func TestKafkaPreset_EntryOverridesWin(t *testing.T) {
-	stubPresets(t, "img", "")
+	stubPorts(t)
 	cfg, err := Load(createTempConfig(t, `
 version: 2
 containers:
@@ -146,8 +155,28 @@ containers:
 	}
 }
 
+// An aws_msk_iam entry with its own image still gets the plugin copied in.
+func TestKafkaPreset_OwnImageStillGetsThePlugin(t *testing.T) {
+	stubPorts(t)
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  kafka:
+    preset: kafka
+    auth: aws_msk_iam
+    image: apache/kafka:3.8.1
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	k := cfg.Containers["kafka"]
+	if k.Image != "apache/kafka:3.8.1" || len(k.Files) != 1 || k.Files[0].Path != "/opt/kafka/libs/tomato-msk-iam.jar" {
+		t.Errorf("image %q, files %+v; want the entry's image with the plugin", k.Image, k.Files)
+	}
+}
+
 func TestPresets_Errors(t *testing.T) {
-	stubPresets(t, "img", "")
+	stubPorts(t)
 	for name, tc := range map[string]struct{ content, want string }{
 		"unknown preset": {`
 version: 2

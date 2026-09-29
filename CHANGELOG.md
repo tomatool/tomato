@@ -9,7 +9,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
-- `kafka` container preset (`preset: kafka`): a single-node KRaft broker with its host port picked and advertised, reachable from the host and from other containers; `auth: aws_msk_iam` adds a listener speaking SASL `AWS_MSK_IAM` like MSK's IAM port. Release builds pull `ghcr.io/tomatool/tomato-kafka:<version>`, development builds build it from the binary.
+- `kafka` container preset (`preset: kafka`): a single-node KRaft broker with its host port picked and advertised, reachable from the host and from other containers; `auth: aws_msk_iam` adds a listener speaking SASL `AWS_MSK_IAM` like MSK's IAM port. It runs the stock `apache/kafka:3.9.1`: the `AWS_MSK_IAM` server ships inside the tomato binary and is copied into the container before the broker starts, so there is no extra image.
 - `aws` resource: IRSA for the app under test. tomato serves STS (`AssumeRoleWithWebIdentity`, `AssumeRole`, `GetCallerIdentity`), writes the web identity token and credential files, points the app's SDK at them and drops inherited `AWS_*` credentials; `ambient_identity` adds the fallback identity a credential chain ends up with when the role cannot be had. An `AWS_MSK_IAM` preset listener lets in only the role sessions it issues. Steps: `role "..." was assumed` / `was not assumed`.
 - Resources that the app needs while it starts (`AppEnvProvider`) are initialized before it and add to its environment.
 - Kafka consumer groups: `consumes from "t" as consumer group "g"`, `consumer group "g" is consuming "t" within "30s"`, `consumer group "g" has no members`.
@@ -26,7 +26,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
-- Container `volumes` and `build` were parsed and ignored; they are applied now, with relative paths resolved against `tomato.yml`.
+- Container `volumes` and `build` were parsed and ignored; they are applied now, with relative paths resolved against `tomato.yml`. A built image is named `tomato-<container>:<hash>`, so reruns reuse it instead of adding an image per run.
 - Container logs were read once, when the wait strategy passed; they are followed for the container's whole life, so a container that fails to start leaves its output behind.
 - A container env template tomato cannot resolve (`{{.x}}`) made startup hang.
 - Stopping the app signalled only its PID, so `command: go run ./app` left the compiled app running and holding the port; the app runs in its own process group, which is stopped as a whole.

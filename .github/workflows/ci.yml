@@ -28,6 +28,16 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+      - name: Kafka preset plugin matches its sources
+        # tomato embeds the committed internal/presets/kafka/tomato-msk-iam.jar.
+        # Rebuild it from its Java sources and fail when it differs.
+        run: |
+          make kafka-plugin
+          git diff --exit-code --stat -- internal/presets/kafka/tomato-msk-iam.jar || {
+            echo "::error::tomato-msk-iam.jar does not match internal/presets/kafka/src: run make kafka-plugin and commit the jar"
+            exit 1
+          }
+
   coverage:
     # Unit tests + the integration suite on real containers, merged coverage,
     # and the gates in scripts/report-coverage.sh:
