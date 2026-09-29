@@ -70,10 +70,11 @@ identity gets in.
 
 ### The image
 
-A release of tomato runs `ghcr.io/tomatool/tomato-kafka:<version>`: apache/kafka
-plus the `AWS_MSK_IAM` server, published with each release. A development build
-of tomato builds that image from the copy embedded in the binary the first time
-it runs. Set `image:` on the entry to use another.
+The preset runs the stock `apache/kafka:3.9.1`. For `auth: aws_msk_iam`, tomato
+copies the `AWS_MSK_IAM` server it carries in its binary into the container's
+`/opt/kafka/libs` before the broker starts, so there is no extra image to pull
+or build. Set `image:` on the entry to run another apache/kafka tag; the plugin
+is copied into it the same way.
 
 ## Overview
 
