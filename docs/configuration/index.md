@@ -1,4 +1,4 @@
-# Configuration Reference
+# Configuration reference
 
 Complete reference for `tomato.yml` configuration options.
 

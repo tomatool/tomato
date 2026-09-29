@@ -1,4 +1,4 @@
-# Redis Configuration
+# Redis configuration
 
 This guide covers how to configure Redis for integration testing with tomato.
 
@@ -6,7 +6,7 @@ This guide covers how to configure Redis for integration testing with tomato.
 
 Redis is an in-memory data structure store used as a database, cache, and message broker. Tomato's Redis handler supports strings, hashes, lists, and sets.
 
-## Container Setup
+## Container setup
 
 Add a Redis container to your `tomato.yml`:
 
@@ -22,7 +22,7 @@ containers:
       timeout: 30s
 ```
 
-### With Password Authentication
+### With password authentication
 
 ```yaml
 containers:
@@ -37,7 +37,7 @@ containers:
       timeout: 30s
 ```
 
-### With Persistence (Optional)
+### With persistence (optional)
 
 For tests that need data persistence across container restarts:
 
@@ -56,7 +56,7 @@ containers:
       timeout: 30s
 ```
 
-## Resource Configuration
+## Resource configuration
 
 Configure the Redis resource:
 
@@ -71,7 +71,7 @@ resources:
       reset_strategy: flush
 ```
 
-### Resource Options
+### Resource options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -80,14 +80,14 @@ resources:
 | `reset_strategy` | string | `flush` | How to reset between scenarios |
 | `reset_pattern` | string | `*` | Pattern for selective key deletion (when using `pattern` strategy) |
 
-### Reset Strategies
+### Reset strategies
 
 | Strategy | Description |
 |----------|-------------|
 | `flush` | Flush all keys in the database (recommended, fastest) |
 | `pattern` | Delete keys matching `reset_pattern` (useful for shared databases) |
 
-## Complete Example
+## Complete example
 
 Here's a complete `tomato.yml` with Redis:
 
@@ -124,9 +124,9 @@ features:
     - ./features
 ```
 
-## Writing Redis Tests
+## Writing Redis tests
 
-### String Operations
+### String operations
 
 ```gherkin
 Feature: Caching
@@ -148,7 +148,7 @@ Feature: Caching
     Then "cache" key "config" contains "debug"
 ```
 
-### Hash Operations
+### Hash operations
 
 ```gherkin
 Scenario: Store user profile as hash
@@ -163,7 +163,7 @@ Scenario: Store user profile as hash
     | email | alice@test.com |
 ```
 
-### List Operations
+### List operations
 
 ```gherkin
 Scenario: Manage task queue
@@ -175,7 +175,7 @@ Scenario: Manage task queue
   And "cache" list "tasks" contains "process-order-1"
 ```
 
-### Set Operations
+### Set operations
 
 ```gherkin
 Scenario: Track unique visitors
@@ -187,7 +187,7 @@ Scenario: Track unique visitors
   And "cache" set "visitors" contains "user-2"
 ```
 
-### Counter Operations
+### Counter operations
 
 ```gherkin
 Scenario: Track page views
@@ -200,7 +200,7 @@ Scenario: Track page views
 
 See [Redis Steps](../resources/redis.md) for the complete list of available steps.
 
-## Multiple Redis Databases
+## Multiple Redis databases
 
 You can configure multiple Redis resources pointing to different databases:
 
@@ -223,7 +223,7 @@ resources:
 
 ## Troubleshooting
 
-### Connection Refused
+### Connection refused
 
 If tests fail with "connection refused":
 
@@ -231,14 +231,14 @@ If tests fail with "connection refused":
 2. Check port mapping: `docker port <container_id>`
 3. Ensure no firewall is blocking the connection
 
-### Authentication Failed
+### Authentication failed
 
 If using password authentication:
 
 1. Verify password matches in container command and resource options
 2. Check for special characters that may need escaping
 
-### Keys Not Being Reset
+### Keys not being reset
 
 If keys persist between scenarios:
 

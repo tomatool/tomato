@@ -1,4 +1,4 @@
-# RabbitMQ Configuration
+# RabbitMQ configuration
 
 This guide covers how to configure RabbitMQ for integration testing with tomato.
 
@@ -6,7 +6,7 @@ This guide covers how to configure RabbitMQ for integration testing with tomato.
 
 RabbitMQ is a popular message broker that implements AMQP (Advanced Message Queuing Protocol). Unlike Kafka's topic-based model, RabbitMQ uses an exchange/queue/binding model for message routing.
 
-## RabbitMQ Concepts
+## RabbitMQ concepts
 
 | Concept | Description |
 |---------|-------------|
@@ -15,7 +15,7 @@ RabbitMQ is a popular message broker that implements AMQP (Advanced Message Queu
 | **Binding** | A link between an exchange and a queue with an optional routing key |
 | **Routing Key** | A message attribute used by exchanges to route messages |
 
-### Exchange Types
+### Exchange types
 
 | Type | Description |
 |------|-------------|
@@ -24,7 +24,7 @@ RabbitMQ is a popular message broker that implements AMQP (Advanced Message Queu
 | `topic` | Routes messages based on routing key patterns (wildcards: `*` single word, `#` zero or more words) |
 | `headers` | Routes based on message headers instead of routing key |
 
-## Container Setup
+## Container setup
 
 Add a RabbitMQ container to your `tomato.yml`:
 
@@ -43,7 +43,7 @@ containers:
       timeout: 30s
 ```
 
-### Management UI (Optional)
+### Management UI (optional)
 
 For debugging, you can use the management image which includes a web UI:
 
@@ -65,7 +65,7 @@ containers:
 
 Access the management UI at `http://localhost:<mapped-port>` with credentials `guest/guest`.
 
-## Resource Configuration
+## Resource configuration
 
 Configure the RabbitMQ resource:
 
@@ -81,7 +81,7 @@ resources:
       reset_strategy: purge
 ```
 
-### Resource Options
+### Resource options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -93,7 +93,7 @@ resources:
 | `exchanges` | list | - | Pre-declare exchanges on init |
 | `bindings` | list | - | Pre-declare bindings on init |
 
-### Reset Strategies
+### Reset strategies
 
 | Strategy | Description |
 |----------|-------------|
@@ -101,7 +101,7 @@ resources:
 | `delete_recreate` | Delete and recreate all declared queues and exchanges |
 | `none` | No reset between scenarios |
 
-### Pre-declaring Resources
+### Pre-declaring resources
 
 You can pre-declare queues, exchanges, and bindings in the config:
 
@@ -133,7 +133,7 @@ resources:
           exchange: broadcast
 ```
 
-## Complete Example
+## Complete example
 
 Here's a complete `tomato.yml` with RabbitMQ:
 
@@ -174,9 +174,9 @@ features:
     - ./features
 ```
 
-## Writing RabbitMQ Tests
+## Writing RabbitMQ tests
 
-### Basic Queue Operations
+### Basic queue operations
 
 ```gherkin
 Feature: Order Processing
@@ -195,7 +195,7 @@ Feature: Order Processing
       """
 ```
 
-### Topic Exchange Routing
+### Topic exchange routing
 
 ```gherkin
 Scenario: Route orders by type
@@ -215,7 +215,7 @@ Scenario: Route orders by type
     """
 ```
 
-### Fanout Exchange Broadcasting
+### Fanout exchange broadcasting
 
 ```gherkin
 Scenario: Broadcast notifications to all subscribers
@@ -246,7 +246,7 @@ See [RabbitMQ Steps](../resources/rabbitmq.md) for the complete list of availabl
 
 ## Troubleshooting
 
-### Connection Refused
+### Connection refused
 
 If tests fail with "connection refused":
 
@@ -254,19 +254,19 @@ If tests fail with "connection refused":
 2. Check the mapped port: `docker port <container_id>`
 3. Ensure credentials match configuration
 
-### Consumer Not Receiving Messages
+### Consumer not receiving messages
 
 1. Ensure `consumes from queue` is called before publishing
 2. Verify the queue exists and is bound to the correct exchange
 3. Check routing keys match the binding patterns
 
-### Messages Not Routing
+### Messages not routing
 
 For topic exchanges, verify your routing key patterns:
 - `*` matches exactly one word (e.g., `order.*` matches `order.created` but not `order.created.urgent`)
 - `#` matches zero or more words (e.g., `order.#` matches `order`, `order.created`, and `order.created.urgent`)
 
-### Queue Already Exists with Different Properties
+### Queue already exists with different properties
 
 If you get "PRECONDITION_FAILED" errors:
 - Queues and exchanges are idempotent but properties must match

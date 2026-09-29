@@ -1,4 +1,4 @@
-# Getting Started
+# Getting started
 
 This guide sets up tomato and runs your first behavioral test.
 

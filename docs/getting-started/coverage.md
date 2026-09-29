@@ -1,4 +1,4 @@
-# Step Coverage
+# Step coverage
 
 `tomato coverage` shows which steps of your resources your feature files
 actually use. It reads `tomato.yml` and every feature file, expands Scenario
