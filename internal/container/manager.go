@@ -1,7 +1,10 @@
 package container
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -255,13 +258,21 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		if dockerfile == "" {
 			dockerfile = "Dockerfile"
 		}
+		repo, tag := buildImageName(name, cfg.Build.Context, dockerfile)
 		req.FromDockerfile = testcontainers.FromDockerfile{
 			Context:    cfg.Build.Context,
 			Dockerfile: dockerfile,
-			// Keep the image, so the next run reuses its layers.
+			// A stable name, and the image kept: a rerun builds from cache into
+			// the same image instead of leaving one more behind.
+			Repo:      repo,
+			Tag:       tag,
 			KeepImage: true,
 		}
 	}
+
+	// Files the config puts into the container before it starts, such as the
+	// kafka preset's AWS_MSK_IAM plugin.
+	req.Files = containerFiles(cfg.Files)
 
 	// Follow the container's output from the moment it starts, so a container
 	// that fails its wait strategy still leaves its logs behind.
@@ -345,6 +356,40 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		Msg("container ready")
 
 	return nil
+}
+
+// buildImageName names the image built for a container: tomato-<name>, tagged
+// with a hash of what it is built from, so the reruns of a project reuse one
+// image, and containers of the same name in two projects do not collide.
+func buildImageName(name, buildContext, dockerfile string) (repo, tag string) {
+	repo = strings.Trim(strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			return r
+		case r >= 'A' && r <= 'Z':
+			return r + ('a' - 'A')
+		}
+		return '-'
+	}, name), "-")
+	if repo == "" {
+		repo = "build"
+	}
+	sum := sha256.Sum256([]byte(buildContext + "\x00" + dockerfile))
+	return "tomato-" + repo, hex.EncodeToString(sum[:6])
+}
+
+// containerFiles copies files into a container through the Docker API, which
+// works with a remote Docker host, where a bind mount of a local file would not.
+func containerFiles(files []config.ContainerFile) []testcontainers.ContainerFile {
+	var out []testcontainers.ContainerFile
+	for _, f := range files {
+		out = append(out, testcontainers.ContainerFile{
+			Reader:            bytes.NewReader(f.Content),
+			ContainerFilePath: f.Path,
+			FileMode:          f.Mode,
+		})
+	}
+	return out
 }
 
 // resolveEnvTemplates resolves template variables in environment values
