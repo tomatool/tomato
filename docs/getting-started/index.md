@@ -1,21 +1,15 @@
----
-layout: default
-title: Getting Started
-nav_order: 2
----
-
 # Getting Started
 
-This guide will help you set up Tomato and run your first behavioral test.
+This guide sets up tomato and runs your first behavioral test.
 
 ## Prerequisites
 
-- [Go 1.26+](https://go.dev/dl/) (for installation)
-- [Docker](https://docs.docker.com/get-docker/) (for running containers)
+- [Docker](https://docs.docker.com/get-docker/) — tomato starts your test containers
+- [Go 1.26+](https://go.dev/dl/) — only for the `go install` and from-source methods
 
 ## Installation
 
-### Quick Install (Recommended)
+### Quick install (recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tomatool/tomato/main/install.sh | sh
@@ -33,13 +27,13 @@ go install github.com/tomatool/tomato@latest
 brew install tomatool/tap/tomato
 ```
 
-### Verify Installation
+### Verify installation
 
 ```bash
 tomato --version
 ```
 
-## Initialize a Project
+## Initialize a project
 
 Create a new project with the init command:
 
@@ -52,7 +46,7 @@ This creates:
 - `tomato.yml` - Main configuration file
 - `features/` - Directory for your feature files
 
-## Project Structure
+## Project structure
 
 ```text
 my-project/
@@ -116,7 +110,7 @@ features:
   tags: "@smoke"  # Optional: filter by tags
 ```
 
-## Writing Tests
+## Writing tests
 
 Create a feature file in `features/`:
 
@@ -125,26 +119,25 @@ Create a feature file in `features/`:
 Feature: User API
 
   Background:
-    Given I set "db" table "users" with values:
+    Given "db" table "users" has values:
       | id | name  | email          |
       | 1  | Alice | alice@test.com |
 
   Scenario: Get user by ID
-    When I send "GET" request to "api" "/users/1"
-    Then "api" response status should be "200"
-    And "api" response JSON "name" should be "Alice"
+    When "api" sends "GET" to "/users/1"
+    Then "api" response status is "200"
+    And "api" response json "name" is "Alice"
 
   Scenario: Create new user
-    When I set "api" JSON body:
+    When "api" sends "POST" to "/users" with json:
       """
       {"name": "Bob", "email": "bob@test.com"}
       """
-    And I send "POST" request to "api" "/users"
-    Then "api" response status should be "201"
-    And "db" table "users" should have "2" rows
+    Then "api" response status is "201"
+    And "db" table "users" has "2" rows
 ```
 
-## Validate Configuration
+## Validate configuration
 
 Before running tests, validate your configuration and feature files:
 
@@ -165,7 +158,7 @@ Use `--plain` for CI environments without interactive output:
 tomato validate --plain
 ```
 
-## Running Tests
+## Running tests
 
 Run all tests:
 
@@ -185,7 +178,7 @@ Run with verbose output:
 tomato run -v
 ```
 
-## Testing Your Application
+## Testing your application
 
 Tomato can also start your application and connect it to test containers:
 
@@ -199,14 +192,17 @@ app:
     path: /health
   wait: 5s
   env:
-    DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port}}/test"
-    REDIS_URL: "redis://{{.redis.host}}:{{.redis.port}}"
+    DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test"
+    REDIS_URL: "redis://{{.redis.host}}:{{.redis.port.6379}}"
 ```
 
-The `{{.container.host}}` and `{{.container.port}}` templates are replaced with actual container addresses.
+The `{{.container.host}}` and `{{.container.port.<port>}}` templates are replaced
+with the container's address and its mapped host port. The number is the port
+*inside* the container, so `{{.postgres.port.5432}}` resolves to whichever host
+port Docker mapped 5432 to. A bare `{{.postgres.port}}` is left untouched.
 
-## Next Steps
+## Next steps
 
-- [Configuration Reference](configuration.md) - Full configuration options
-- [Resources](resources/index.md) - All available step definitions
+- [Configuration Reference](../configuration/index.md) - Full configuration options
+- [Resources](../resources/index.md) - All available step definitions
 - [Examples](https://github.com/tomatool/tomato/tree/main/examples) - Sample projects
