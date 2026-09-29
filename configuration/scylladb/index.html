@@ -844,12 +844,12 @@
   <a href="#container-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Container Setup
+        Container setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Container Setup">
+    <nav class="md-nav" aria-label="Container setup">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -883,19 +883,19 @@
   <a href="#resource-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Configuration
+        Resource configuration
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Resource Configuration">
+    <nav class="md-nav" aria-label="Resource configuration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#resource-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Options
+        Resource options
       
     </span>
   </a>
@@ -911,7 +911,7 @@
   <a href="#schema-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Schema Files
+        Schema files
       
     </span>
   </a>
@@ -922,7 +922,7 @@
   <a href="#seeding-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Seeding Data
+        Seeding data
       
     </span>
   </a>
@@ -944,7 +944,7 @@
   <a href="#wiring-the-app" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring the App
+        Wiring the app
       
     </span>
   </a>
@@ -1672,12 +1672,12 @@
   <a href="#container-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Container Setup
+        Container setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Container Setup">
+    <nav class="md-nav" aria-label="Container setup">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1711,19 +1711,19 @@
   <a href="#resource-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Configuration
+        Resource configuration
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Resource Configuration">
+    <nav class="md-nav" aria-label="Resource configuration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#resource-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Options
+        Resource options
       
     </span>
   </a>
@@ -1739,7 +1739,7 @@
   <a href="#schema-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Schema Files
+        Schema files
       
     </span>
   </a>
@@ -1750,7 +1750,7 @@
   <a href="#seeding-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Seeding Data
+        Seeding data
       
     </span>
   </a>
@@ -1772,7 +1772,7 @@
   <a href="#wiring-the-app" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring the App
+        Wiring the app
       
     </span>
   </a>
@@ -1810,11 +1810,11 @@
   
 
 
-<h1 id="scylladb-configuration">ScyllaDB Configuration<a class="headerlink" href="#scylladb-configuration" title="Permanent link">#</a></h1>
+<h1 id="scylladb-configuration">ScyllaDB configuration<a class="headerlink" href="#scylladb-configuration" title="Permanent link">#</a></h1>
 <p>This guide covers how to configure ScyllaDB or Apache Cassandra for integration testing with tomato.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
 <p>The <code>scylladb</code> resource talks CQL, so it works with both ScyllaDB and Apache Cassandra (<code>type: cassandra</code> is an alias). Tomato creates the keyspace, runs your schema files, truncates tables between scenarios, and provides steps to seed and assert on data. See the <a href="../../resources/scylladb/">ScyllaDB step reference</a> for all steps.</p>
-<h2 id="container-setup">Container Setup<a class="headerlink" href="#container-setup" title="Permanent link">#</a></h2>
+<h2 id="container-setup">Container setup<a class="headerlink" href="#container-setup" title="Permanent link">#</a></h2>
 <h3 id="scylladb">ScyllaDB<a class="headerlink" href="#scylladb" title="Permanent link">#</a></h3>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">containers</span><span class="p">:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">scylla</span><span class="p">:</span>
@@ -1843,7 +1843,7 @@
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">180s</span>
 </span></code></pre></div>
 <p>The port opens before the node serves CQL. The resource keeps retrying until a query succeeds (<code>ready_timeout</code>, 90s by default), so the port wait is enough.</p>
-<h2 id="resource-configuration">Resource Configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">#</a></h2>
+<h2 id="resource-configuration">Resource configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">#</a></h2>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">resources</span><span class="p">:</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">scylla</span><span class="p">:</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scylladb</span>
@@ -1856,7 +1856,7 @@
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="nt">exclude</span><span class="p">:</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">countries</span>
 </span></code></pre></div>
-<h3 id="resource-options">Resource Options<a class="headerlink" href="#resource-options" title="Permanent link">#</a></h3>
+<h3 id="resource-options">Resource options<a class="headerlink" href="#resource-options" title="Permanent link">#</a></h3>
 <table>
 <thead>
 <tr>
@@ -1935,7 +1935,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="schema-files">Schema Files<a class="headerlink" href="#schema-files" title="Permanent link">#</a></h2>
+<h2 id="schema-files">Schema files<a class="headerlink" href="#schema-files" title="Permanent link">#</a></h2>
 <p>Schema files are plain CQL scripts. Statements are split on <code>;</code>, and semicolons inside strings, quoted identifiers, <code>$$</code> strings and comments are ignored.</p>
 <div class="language-sql highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">-- fixtures/schema.cql</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">users</span><span class="w"> </span><span class="p">(</span>
@@ -1953,7 +1953,7 @@
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">countries</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="p">,</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">'DE'</span><span class="p">,</span><span class="w"> </span><span class="s1">'Germany'</span><span class="p">);</span>
 </span></code></pre></div>
 <p>If your application creates its own schema on startup (for example with a migration tool), you can leave <code>schema</code> out and let the app do it.</p>
-<h2 id="seeding-data">Seeding Data<a class="headerlink" href="#seeding-data" title="Permanent link">#</a></h2>
+<h2 id="seeding-data">Seeding data<a class="headerlink" href="#seeding-data" title="Permanent link">#</a></h2>
 <p><code>table ... has values:</code> inserts rows with <code>INSERT ... JSON</code>, so cells are written as text and CQL converts them to the column type (int, uuid, timestamp, boolean, ...). A cell holding a JSON array or object fills a list, set, map or UDT column, and <code>null</code> writes a null.</p>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">scylla</span><span class="nf">" table "</span><span class="s">users</span><span class="nf">" has values:</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> id</span><span class="k">                                   |</span><span class="s"> email</span><span class="k">          |</span><span class="s"> created_at</span><span class="k">           |</span><span class="s"> tags</span><span class="k">          |</span>
@@ -1962,7 +1962,7 @@
 <h2 id="assertions">Assertions<a class="headerlink" href="#assertions" title="Permanent link">#</a></h2>
 <p>CQL has no global row order, so <code>table ... contains:</code> and <code>query result of ... contains:</code> match rows in any order. <code>query ... returns:</code> compares rows in the order the query returns them. Use it with a <code>WHERE</code> on the partition key when order matters.</p>
 <p>Values are compared as text: timestamps in RFC 3339 UTC (<code>2026-01-01T00:00:00Z</code>), UUIDs in canonical form, collections as JSON. An unset text or number column reads back as its zero value (<code>""</code>, <code>0</code>), as gocql reports it.</p>
-<h2 id="wiring-the-app">Wiring the App<a class="headerlink" href="#wiring-the-app" title="Permanent link">#</a></h2>
+<h2 id="wiring-the-app">Wiring the app<a class="headerlink" href="#wiring-the-app" title="Permanent link">#</a></h2>
 <p>Pass the container address to your app like any other dependency:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">app</span><span class="p">:</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">java -jar build/libs/app.jar</span>

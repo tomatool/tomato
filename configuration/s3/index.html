@@ -900,12 +900,12 @@
   <a href="#container-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Container Setup
+        Container setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Container Setup">
+    <nav class="md-nav" aria-label="Container setup">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -939,12 +939,12 @@
   <a href="#resource-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Configuration
+        Resource configuration
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Resource Configuration">
+    <nav class="md-nav" aria-label="Resource configuration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -962,7 +962,7 @@
   <a href="#connecting-without-a-container" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Connecting Without a Container
+        Connecting without a container
       
     </span>
   </a>
@@ -978,7 +978,7 @@
   <a href="#reset-behaviour" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reset Behaviour
+        Reset behaviour
       
     </span>
   </a>
@@ -989,7 +989,7 @@
   <a href="#wiring-your-application" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring Your Application
+        Wiring your application
       
     </span>
   </a>
@@ -1000,7 +1000,7 @@
   <a href="#object-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Object Paths
+        Object paths
       
     </span>
   </a>
@@ -1022,7 +1022,7 @@
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
-        See Also
+        See also
       
     </span>
   </a>
@@ -1683,12 +1683,12 @@
   <a href="#container-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Container Setup
+        Container setup
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Container Setup">
+    <nav class="md-nav" aria-label="Container setup">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1722,12 +1722,12 @@
   <a href="#resource-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Configuration
+        Resource configuration
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Resource Configuration">
+    <nav class="md-nav" aria-label="Resource configuration">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1745,7 +1745,7 @@
   <a href="#connecting-without-a-container" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Connecting Without a Container
+        Connecting without a container
       
     </span>
   </a>
@@ -1761,7 +1761,7 @@
   <a href="#reset-behaviour" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reset Behaviour
+        Reset behaviour
       
     </span>
   </a>
@@ -1772,7 +1772,7 @@
   <a href="#wiring-your-application" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Wiring Your Application
+        Wiring your application
       
     </span>
   </a>
@@ -1783,7 +1783,7 @@
   <a href="#object-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Object Paths
+        Object paths
       
     </span>
   </a>
@@ -1805,7 +1805,7 @@
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       
-        See Also
+        See also
       
     </span>
   </a>
@@ -1832,7 +1832,7 @@
   
 
 
-<h1 id="s3-configuration">S3 Configuration<a class="headerlink" href="#s3-configuration" title="Permanent link">#</a></h1>
+<h1 id="s3-configuration">S3 configuration<a class="headerlink" href="#s3-configuration" title="Permanent link">#</a></h1>
 <p>This guide covers how to configure S3-compatible object storage for integration testing with tomato.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
 <p>The <code>s3</code> resource talks to any S3-compatible endpoint. In tests that usually means
@@ -1840,7 +1840,7 @@
 resource works against a real bucket if you point it at one.</p>
 <p>Because it speaks the S3 protocol rather than a vendor API, one set of steps covers
 all three.</p>
-<h2 id="container-setup">Container Setup<a class="headerlink" href="#container-setup" title="Permanent link">#</a></h2>
+<h2 id="container-setup">Container setup<a class="headerlink" href="#container-setup" title="Permanent link">#</a></h2>
 <h3 id="minio">MinIO<a class="headerlink" href="#minio" title="Permanent link">#</a></h3>
 <p>MinIO needs an explicit <code>server</code> command — the image's default entrypoint only prints help.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">containers</span><span class="p">:</span>
@@ -1870,7 +1870,7 @@ all three.</p>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="s">"4566"</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90s</span>
 </span></code></pre></div>
-<h2 id="resource-configuration">Resource Configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">#</a></h2>
+<h2 id="resource-configuration">Resource configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">#</a></h2>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">resources</span><span class="p">:</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
@@ -1950,7 +1950,7 @@ all three.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="connecting-without-a-container">Connecting Without a Container<a class="headerlink" href="#connecting-without-a-container" title="Permanent link">#</a></h3>
+<h3 id="connecting-without-a-container">Connecting without a container<a class="headerlink" href="#connecting-without-a-container" title="Permanent link">#</a></h3>
 <p>Point the resource at an endpoint directly to test against something tomato does not manage:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">resources</span><span class="p">:</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
@@ -1969,7 +1969,7 @@ all three.</p>
 <p>Reset is destructive by design. Against a real account, set
 <code>reset_strategy: none</code> or scope it with <code>reset_buckets</code>.</p>
 </div>
-<h2 id="reset-behaviour">Reset Behaviour<a class="headerlink" href="#reset-behaviour" title="Permanent link">#</a></h2>
+<h2 id="reset-behaviour">Reset behaviour<a class="headerlink" href="#reset-behaviour" title="Permanent link">#</a></h2>
 <p>Following tomato's clean-state principle, every scenario starts with empty storage.</p>
 <table>
 <thead>
@@ -2012,7 +2012,7 @@ resource out of reset entirely:</p>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">reset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </span></code></pre></div>
-<h2 id="wiring-your-application">Wiring Your Application<a class="headerlink" href="#wiring-your-application" title="Permanent link">#</a></h2>
+<h2 id="wiring-your-application">Wiring your application<a class="headerlink" href="#wiring-your-application" title="Permanent link">#</a></h2>
 <p>Pass the endpoint to the application under test with container templates:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">app</span><span class="p">:</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
@@ -2023,7 +2023,7 @@ resource out of reset entirely:</p>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="nt">S3_SECRET_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minioadmin</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="nt">S3_FORCE_PATH_STYLE</span><span class="p">:</span><span class="w"> </span><span class="s">"true"</span>
 </span></code></pre></div>
-<h2 id="object-paths">Object Paths<a class="headerlink" href="#object-paths" title="Permanent link">#</a></h2>
+<h2 id="object-paths">Object paths<a class="headerlink" href="#object-paths" title="Permanent link">#</a></h2>
 <p>Every object step takes a single <code>bucket/key</code> path. An <code>s3://</code> prefix is stripped if present.</p>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/2026/01/report.pdf</span><span class="nf">" is "</span><span class="s">...</span><span class="nf">"</span>
 </span></code></pre></div>
@@ -2043,7 +2043,7 @@ resource out of reset entirely:</p>
 </span></code></pre></div>
 <p>The <code>within</code> steps matter here: applications usually upload in the background, so a
 plain <code>should exist</code> would race the write.</p>
-<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">#</a></h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">#</a></h2>
 <ul>
 <li><a href="../../resources/s3/">S3 Steps</a> — the full step reference</li>
 <li><a href="../">Configuration Reference</a></li>

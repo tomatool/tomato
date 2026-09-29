@@ -1484,7 +1484,18 @@
   <a href="#high-level-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        High-Level Overview
+        High-level overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-the-code-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the code lives
       
     </span>
   </a>
@@ -1495,7 +1506,7 @@
   <a href="#test-execution-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Test Execution Flow
+        Test execution flow
       
     </span>
   </a>
@@ -1506,7 +1517,7 @@
   <a href="#handler-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Handler Architecture
+        Handler architecture
       
     </span>
   </a>
@@ -1517,7 +1528,7 @@
   <a href="#resource-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Lifecycle
+        Resource lifecycle
       
     </span>
   </a>
@@ -1528,7 +1539,7 @@
   <a href="#container-orchestration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Container Orchestration
+        Container orchestration
       
     </span>
   </a>
@@ -1539,7 +1550,7 @@
   <a href="#data-flow-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Flow Example
+        Data flow example
       
     </span>
   </a>
@@ -1550,7 +1561,7 @@
   <a href="#http-requestresponse-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HTTP Request/Response Flow
+        HTTP request/response flow
       
     </span>
   </a>
@@ -1561,7 +1572,7 @@
   <a href="#configuration-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration Structure
+        Configuration structure
       
     </span>
   </a>
@@ -1572,7 +1583,7 @@
   <a href="#error-handling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error Handling
+        Error handling
       
     </span>
   </a>
@@ -1625,7 +1636,18 @@
   <a href="#high-level-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        High-Level Overview
+        High-level overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-the-code-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where the code lives
       
     </span>
   </a>
@@ -1636,7 +1658,7 @@
   <a href="#test-execution-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Test Execution Flow
+        Test execution flow
       
     </span>
   </a>
@@ -1647,7 +1669,7 @@
   <a href="#handler-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Handler Architecture
+        Handler architecture
       
     </span>
   </a>
@@ -1658,7 +1680,7 @@
   <a href="#resource-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Lifecycle
+        Resource lifecycle
       
     </span>
   </a>
@@ -1669,7 +1691,7 @@
   <a href="#container-orchestration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Container Orchestration
+        Container orchestration
       
     </span>
   </a>
@@ -1680,7 +1702,7 @@
   <a href="#data-flow-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Flow Example
+        Data flow example
       
     </span>
   </a>
@@ -1691,7 +1713,7 @@
   <a href="#http-requestresponse-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        HTTP Request/Response Flow
+        HTTP request/response flow
       
     </span>
   </a>
@@ -1702,7 +1724,7 @@
   <a href="#configuration-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration Structure
+        Configuration structure
       
     </span>
   </a>
@@ -1713,7 +1735,7 @@
   <a href="#error-handling" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error Handling
+        Error handling
       
     </span>
   </a>
@@ -1742,13 +1764,62 @@
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">#</a></h1>
 <p>This page provides an overview of tomato's internal architecture and how components interact during test execution.</p>
-<h2 id="high-level-overview">High-Level Overview<a class="headerlink" href="#high-level-overview" title="Permanent link">#</a></h2>
+<h2 id="high-level-overview">High-level overview<a class="headerlink" href="#high-level-overview" title="Permanent link">#</a></h2>
 <p>tomato is designed around three core concepts:</p>
 <ol>
 <li><strong>Containers</strong> - Docker containers managed via Testcontainers</li>
 <li><strong>Resources</strong> - Abstractions over external services (databases, APIs, message queues)</li>
 <li><strong>Handlers</strong> - Step definitions that interact with resources</li>
 </ol>
+<h2 id="where-the-code-lives">Where the code lives<a class="headerlink" href="#where-the-code-lives" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>command/</code></td>
+<td>One file per CLI command, plus the step-docs generator</td>
+</tr>
+<tr>
+<td><code>internal/config</code></td>
+<td><code>tomato.yml</code> parsing, defaults, validation, preset expansion</td>
+</tr>
+<tr>
+<td><code>internal/container</code></td>
+<td>Container lifecycle via Testcontainers, wait strategies, logs</td>
+</tr>
+<tr>
+<td><code>internal/apprunner</code></td>
+<td>Starting the application under test, <code>app.env</code> templating</td>
+</tr>
+<tr>
+<td><code>internal/handler</code></td>
+<td>One file per resource type, each with its step definitions</td>
+</tr>
+<tr>
+<td><code>internal/runner</code></td>
+<td>godog wiring, hooks, tag filtering, reset between scenarios</td>
+</tr>
+<tr>
+<td><code>internal/formatter</code></td>
+<td>Console, JUnit and Cucumber report output</td>
+</tr>
+<tr>
+<td><code>internal/presets</code></td>
+<td>Files copied into preset containers (the MSK IAM jar)</td>
+</tr>
+<tr>
+<td><code>internal/runlog</code></td>
+<td>Per-run log directory under <code>.tomato/runs/</code></td>
+</tr>
+</tbody>
+</table>
+<p>A resource type is registered in exactly one place, <code>handlerFactories</code> in
+<code>internal/handler/registry.go</code>.</p>
 <pre class="mermaid"><code>flowchart TB
     subgraph Config["tomato.yml"]
         C[Containers]
@@ -1793,7 +1864,7 @@
     H --&gt; WS
 
     G --&gt; H</code></pre>
-<h2 id="test-execution-flow">Test Execution Flow<a class="headerlink" href="#test-execution-flow" title="Permanent link">#</a></h2>
+<h2 id="test-execution-flow">Test execution flow<a class="headerlink" href="#test-execution-flow" title="Permanent link">#</a></h2>
 <p>When you run <code>tomato run</code>, the following sequence occurs:</p>
 <pre class="mermaid"><code>sequenceDiagram
     participant User
@@ -1815,6 +1886,12 @@
     end
 
     rect rgb(40, 40, 40)
+        Note over Handler: Resources the app depends on
+        Config-&gt;&gt;Handler: Init app-env providers (aws STS)
+        Handler--&gt;&gt;Config: Environment for the app
+    end
+
+    rect rgb(40, 40, 40)
         Note over App: App Setup (optional)
         Config-&gt;&gt;App: Start application
         App--&gt;&gt;App: Wait for ready check
@@ -1822,7 +1899,7 @@
 
     rect rgb(40, 40, 40)
         Note over Handler: Resource Setup
-        Config-&gt;&gt;Handler: Initialize handlers
+        Config-&gt;&gt;Handler: Initialize remaining handlers
         Handler--&gt;&gt;Handler: Connect to services
     end
 
@@ -1839,16 +1916,17 @@
     end
 
     Godog--&gt;&gt;CLI: Test results
-    CLI-&gt;&gt;TC: Stop containers
     CLI-&gt;&gt;App: Stop application
+    CLI-&gt;&gt;Handler: Close resources
+    CLI-&gt;&gt;TC: Stop containers
     CLI--&gt;&gt;User: Exit code</code></pre>
-<h2 id="handler-architecture">Handler Architecture<a class="headerlink" href="#handler-architecture" title="Permanent link">#</a></h2>
+<h2 id="handler-architecture">Handler architecture<a class="headerlink" href="#handler-architecture" title="Permanent link">#</a></h2>
 <p>Handlers are responsible for translating Gherkin steps into actions against resources:</p>
 <pre class="mermaid"><code>flowchart LR
     subgraph Steps["Gherkin Steps"]
-        S1["Given I set 'db' table..."]
-        S2["When I send 'GET' request..."]
-        S3["Then response status is '200'"]
+        S1["Given 'db' table 'users' has values:"]
+        S2["When 'api' sends 'GET' to '/users/1'"]
+        S3["Then 'api' response status is '200'"]
     end
 
     subgraph Handlers["Handler Registry"]
@@ -1879,7 +1957,7 @@
     KAFKA --&gt; MQ
     WS --&gt; WSS
     SHELL --&gt; CMD</code></pre>
-<h2 id="resource-lifecycle">Resource Lifecycle<a class="headerlink" href="#resource-lifecycle" title="Permanent link">#</a></h2>
+<h2 id="resource-lifecycle">Resource lifecycle<a class="headerlink" href="#resource-lifecycle" title="Permanent link">#</a></h2>
 <p>Each resource follows a consistent lifecycle:</p>
 <pre class="mermaid"><code>stateDiagram-v2
     [*] --&gt; Configured: Parse config
@@ -1892,7 +1970,7 @@
 
     Ready --&gt; Closed: Tests complete
     Closed --&gt; [*]</code></pre>
-<h2 id="container-orchestration">Container Orchestration<a class="headerlink" href="#container-orchestration" title="Permanent link">#</a></h2>
+<h2 id="container-orchestration">Container orchestration<a class="headerlink" href="#container-orchestration" title="Permanent link">#</a></h2>
 <p>tomato uses Testcontainers to manage Docker containers:</p>
 <pre class="mermaid"><code>flowchart TB
     subgraph Config["Configuration"]
@@ -1906,7 +1984,7 @@
         subgraph Containers
             C1[postgres:15]
             C2[redis:7]
-            C3[kafka:latest]
+            C3[apache/kafka:3.9.1]
         end
     end
 
@@ -1925,7 +2003,7 @@
     C1 --&gt; PORT
     C2 --&gt; PORT
     C3 --&gt; LOG</code></pre>
-<h2 id="data-flow-example">Data Flow Example<a class="headerlink" href="#data-flow-example" title="Permanent link">#</a></h2>
+<h2 id="data-flow-example">Data flow example<a class="headerlink" href="#data-flow-example" title="Permanent link">#</a></h2>
 <p>Here's how a typical database test scenario flows through the system:</p>
 <pre class="mermaid"><code>sequenceDiagram
     participant Feature as Feature File
@@ -1935,41 +2013,41 @@
 
     Note over Feature: Scenario: Create user
 
-    Feature-&gt;&gt;Godog: Given I set "db" table "users"...
+    Feature-&gt;&gt;Godog: Given "db" table "users" has values:
     Godog-&gt;&gt;PG: SetTableValues(table, data)
     PG-&gt;&gt;DB: INSERT INTO users...
     DB--&gt;&gt;PG: OK
     PG--&gt;&gt;Godog: Success
 
-    Feature-&gt;&gt;Godog: When I execute on "db" query...
+    Feature-&gt;&gt;Godog: When "db" executes:
     Godog-&gt;&gt;PG: ExecuteQuery(query)
     PG-&gt;&gt;DB: SELECT * FROM users
     DB--&gt;&gt;PG: Results
     PG--&gt;&gt;Godog: Store results
 
-    Feature-&gt;&gt;Godog: Then "db" query result should be...
+    Feature-&gt;&gt;Godog: Then "db" query "..." returns:
     Godog-&gt;&gt;PG: AssertQueryResult(expected)
     PG--&gt;&gt;Godog: Match/No match</code></pre>
-<h2 id="http-requestresponse-flow">HTTP Request/Response Flow<a class="headerlink" href="#http-requestresponse-flow" title="Permanent link">#</a></h2>
+<h2 id="http-requestresponse-flow">HTTP request/response flow<a class="headerlink" href="#http-requestresponse-flow" title="Permanent link">#</a></h2>
 <pre class="mermaid"><code>sequenceDiagram
     participant Feature as Feature File
     participant HTTP as HTTP Handler
     participant API as Target API
 
-    Feature-&gt;&gt;HTTP: Given I set request header...
+    Feature-&gt;&gt;HTTP: Given "api" header "X-Token" is "abc"
     HTTP--&gt;&gt;HTTP: Store header
 
-    Feature-&gt;&gt;HTTP: When I send "POST" to "/users"
+    Feature-&gt;&gt;HTTP: When "api" sends "POST" to "/users" with json:
     HTTP-&gt;&gt;API: POST /users
     API--&gt;&gt;HTTP: 201 Created + JSON body
     HTTP--&gt;&gt;HTTP: Store response
 
-    Feature-&gt;&gt;HTTP: Then response status is "201"
+    Feature-&gt;&gt;HTTP: Then "api" response status is "201"
     HTTP--&gt;&gt;HTTP: Assert status
 
-    Feature-&gt;&gt;HTTP: And response JSON "id" exists
+    Feature-&gt;&gt;HTTP: And "api" response json "id" exists
     HTTP--&gt;&gt;HTTP: Assert JSON path</code></pre>
-<h2 id="configuration-structure">Configuration Structure<a class="headerlink" href="#configuration-structure" title="Permanent link">#</a></h2>
+<h2 id="configuration-structure">Configuration structure<a class="headerlink" href="#configuration-structure" title="Permanent link">#</a></h2>
 <pre class="mermaid"><code>flowchart TB
     subgraph tomato.yml
         direction TB
@@ -1994,7 +2072,7 @@
             F[paths:&lt;br/&gt;  - ./features]
         end
     end</code></pre>
-<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">#</a></h2>
+<h2 id="error-handling">Error handling<a class="headerlink" href="#error-handling" title="Permanent link">#</a></h2>
 <p>When a step fails, tomato provides detailed error information:</p>
 <pre class="mermaid"><code>flowchart TB
     Step[Step Execution] --&gt; Check{Success?}
@@ -2020,9 +2098,6 @@
 
 
 
-
-  
-  
 
 
 

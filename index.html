@@ -485,7 +485,7 @@
   <a href="#quick-install-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Install (recommended)
+        Quick install (recommended)
       
     </span>
   </a>
@@ -518,7 +518,7 @@
   <a href="#go-install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Go Install
+        Go install
       
     </span>
   </a>
@@ -529,7 +529,7 @@
   <a href="#from-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From Source
+        From source
       
     </span>
   </a>
@@ -545,7 +545,7 @@
   <a href="#quick-start" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Quick start
       
     </span>
   </a>
@@ -1673,7 +1673,7 @@
   <a href="#quick-install-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Install (recommended)
+        Quick install (recommended)
       
     </span>
   </a>
@@ -1706,7 +1706,7 @@
   <a href="#go-install" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Go Install
+        Go install
       
     </span>
   </a>
@@ -1717,7 +1717,7 @@
   <a href="#from-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        From Source
+        From source
       
     </span>
   </a>
@@ -1733,7 +1733,7 @@
   <a href="#quick-start" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Quick start
       
     </span>
   </a>
@@ -1803,7 +1803,7 @@
 
 <hr />
 <blockquote>
-<p>[!WARNING]
+<p>⚠️ <strong>Warning</strong>
 <strong>v2 is currently under active development.</strong> This version contains breaking changes and may not be stable.</p>
 <p>Looking for the stable version? <a href="https://github.com/tomatool/tomato/tree/v1"><strong>v1 is available here</strong></a>, but will not receive future updates as development focuses on v2.</p>
 <p><strong>Use v2 at your own risk</strong> - APIs and features may change without notice.</p>
@@ -1825,7 +1825,7 @@
 <li><strong>Application Runner</strong> - Start your app connected to test containers</li>
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
-<h3 id="quick-install-recommended">Quick Install (recommended)<a class="headerlink" href="#quick-install-recommended" title="Permanent link">#</a></h3>
+<h3 id="quick-install-recommended">Quick install (recommended)<a class="headerlink" href="#quick-install-recommended" title="Permanent link">#</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/tomatool/tomato/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div>
 <h3 id="homebrew">Homebrew<a class="headerlink" href="#homebrew" title="Permanent link">#</a></h3>
@@ -1834,17 +1834,17 @@
 <h3 id="github-actions">GitHub Actions<a class="headerlink" href="#github-actions" title="Permanent link">#</a></h3>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tomatool/tomato@v2</span>
 </span></code></pre></div>
-<p>See <a href="https://tomatool.github.io/tomato/github-action">GitHub Action documentation</a> for all options.</p>
-<h3 id="go-install">Go Install<a class="headerlink" href="#go-install" title="Permanent link">#</a></h3>
+<p>See <a href="https://tomatool.github.io/tomato/getting-started/github-action">GitHub Action documentation</a> for all options.</p>
+<h3 id="go-install">Go install<a class="headerlink" href="#go-install" title="Permanent link">#</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/tomatool/tomato@latest
 </span></code></pre></div>
-<h3 id="from-source">From Source<a class="headerlink" href="#from-source" title="Permanent link">#</a></h3>
+<h3 id="from-source">From source<a class="headerlink" href="#from-source" title="Permanent link">#</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/tomatool/tomato.git
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">cd</span><span class="w"> </span>tomato
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>go<span class="w"> </span>build<span class="w"> </span>-o<span class="w"> </span>tomato<span class="w"> </span>.
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>sudo<span class="w"> </span>mv<span class="w"> </span>tomato<span class="w"> </span>/usr/local/bin/
 </span></code></pre></div>
-<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>tomato<span class="w"> </span>init<span class="w">    </span><span class="c1"># Initialize a new project</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>tomato<span class="w"> </span>run<span class="w">     </span><span class="c1"># Run behavioral tests</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>tomato<span class="w"> </span>steps<span class="w">   </span><span class="c1"># List available steps</span>
@@ -1855,14 +1855,14 @@
 <ul>
 <li><a href="https://tomatool.github.io/tomato/getting-started">Getting Started</a></li>
 <li><a href="https://tomatool.github.io/tomato/configuration">Configuration Reference</a></li>
-<li><a href="https://tomatool.github.io/tomato/architecture">Architecture</a></li>
+<li><a href="https://tomatool.github.io/tomato/developer-guide/architecture">Architecture</a></li>
 <li><a href="https://tomatool.github.io/tomato/resources">Step Reference</a></li>
 </ul>
 <h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">#</a></h2>
 <p>See <a href="https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for development setup and how to add steps and
 resources, and <a href="https://github.com/tomatool/tomato/blob/main/MAINTAINERS.md">MAINTAINERS.md</a> for who reviews and how to join.</p>
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">#</a></h2>
-<p>Tomato is open source under the <a href="LICENSE">MIT License</a>.</p>
+<p>Tomato is open source under the <a href="https://github.com/tomatool/tomato/blob/main/LICENSE">MIT License</a>.</p>
 
 
 
