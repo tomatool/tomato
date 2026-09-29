@@ -36,6 +36,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - The integration suite and S3 docs use `cgr.dev/chainguard/minio`; neither Docker Hub's `minio/minio` nor `quay.io/minio/minio` can be pulled anonymously any more.
 - `grpc` reflection falls back to v1alpha reliably (a Send EOF hid the Unimplemented status).
 - `http-server` `url is stored in` stored nothing; WebSocket server writes are serialised per connection.
+- Resources were never cleaned up at the end of a run, so clients stayed connected while their containers stopped (gocql logged every reconnect to a stopped ScyllaDB), and the aws resource left its token and credential files in the temp directory. They are closed now, after the app stops and before the containers do.
 
 ### Changed
 - GitHub Action: used at a commit or a branch (`tomatool/tomato@<sha>`), it builds tomato from that commit instead of installing the latest release, so the action and the binary match and a change can run in CI before it is released. Version tags and the `version` input install a release as before.
