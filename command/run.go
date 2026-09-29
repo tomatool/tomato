@@ -186,6 +186,11 @@ func runTests(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources: %w", err)
 	}
+	// Close the resources at the end of the run: after the app stops and before
+	// the containers do, as defers run last in, first out. A client still
+	// connected to a stopped container keeps reconnecting, and gocql logs
+	// every attempt.
+	defer cleanupResources(registry)
 	appEnv, err := registry.InitAppEnvProviders(c.Context)
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources the app depends on: %w", err)
@@ -312,10 +317,18 @@ func runTests(c *cli.Context) error {
 		if appRunner != nil {
 			appRunner.Stop()
 		}
+		cleanupResources(registry)
 		cm.Cleanup()
 	}
 
 	return testErr
+}
+
+// cleanupResources closes every resource's connections, servers and files.
+func cleanupResources(registry *handler.Registry) {
+	if err := registry.Cleanup(context.Background()); err != nil {
+		fmt.Fprintf(os.Stderr, "%s %v\n", warnStyle.Render("⚠"), err)
+	}
 }
 
 // printKeepAliveInfo prints connection info for all running containers
