@@ -26,6 +26,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- Kafka: tomato waits until a topic it creates (the `creates topic` steps, `delete_recreate` resets) answers an offset lookup on every partition, so a `consumes from` right after it no longer fails with "not the leader for some partition". KRaft brokers, such as the `kafka` preset's, accept a topic before they serve it. A `consumes from` that fails can also be retried by a later step instead of being skipped.
 - Container `volumes` and `build` were parsed and ignored; they are applied now, with relative paths resolved against `tomato.yml`.
 - Container logs were read once, when the wait strategy passed; they are followed for the container's whole life, so a container that fails to start leaves its output behind.
 - A container env template tomato cannot resolve (`{{.x}}`) made startup hang.
