@@ -116,21 +116,8 @@ func runTests(c *cli.Context) error {
 	}
 	defer tomatoLog.Close()
 
-	// Tee stdout to both console and log file
-	origStdout := os.Stdout
-	stdoutR, stdoutW, _ := os.Pipe()
-	os.Stdout = stdoutW
-
-	go func() {
-		multiWriter := io.MultiWriter(origStdout, tomatoLog)
-		io.Copy(multiWriter, stdoutR)
-	}()
-
-	// Restore stdout on function exit
-	defer func() {
-		stdoutW.Close()
-		os.Stdout = origStdout
-	}()
+	// Tee stdout to both console and log file, until the run returns.
+	defer teeStdout(tomatoLog)()
 
 	fmt.Println()
 	fmt.Println(titleStyle.Render("🍅 Tomato"))
@@ -323,6 +310,40 @@ func runTests(c *cli.Context) error {
 
 	return testErr
 }
+
+// teeStdout sends what is written to os.Stdout to the console and to log,
+// through a pipe, until the returned restore is called. restore waits until
+// the pipe is drained: tomato exits right after the run returns, and the run's
+// last lines, the summary among them, were lost when they were still in it.
+func teeStdout(log io.Writer) (restore func()) {
+	orig := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		return func() {}
+	}
+	os.Stdout = w
+
+	drained := make(chan struct{})
+	go func() {
+		defer close(drained)
+		_, _ = io.Copy(io.MultiWriter(orig, log), r)
+	}()
+
+	return func() {
+		os.Stdout = orig
+		w.Close()
+		select {
+		case <-drained:
+		case <-time.After(teeDrainTimeout):
+			// A process the run started still holds the pipe open; exiting
+			// beats waiting for it.
+		}
+		r.Close()
+	}
+}
+
+// teeDrainTimeout bounds how long restore waits for the pipe to drain.
+const teeDrainTimeout = 5 * time.Second
 
 // cleanupResources closes every resource's connections, servers and files.
 func cleanupResources(registry *handler.Registry) {
