@@ -1,11 +1,10 @@
 ---
 name: tomato
 description: >
-  Set up, write, review and debug tomato behavioral test suites (tomatool/tomato):
-  one tomato.yml that runs the application against its real dependencies in
-  containers, and Gherkin feature files that drive and assert it through its own
-  interfaces. Use when adding tomato to a repository, writing or changing
-  scenarios, reviewing a tomato suite, or when a tomato run fails or flakes.
+  Set up, write, review and debug tomato test suites: a tomato.yml that runs the
+  app against real dependencies in containers, and Gherkin features that test it
+  through its interfaces. Use when adding tomato to a repository, writing
+  scenarios, reviewing a suite, or when a tomato run fails.
 license: MIT
 compatibility: >
   Needs the tomato CLI (v2) and Docker where the agent runs. Step wording comes
@@ -66,5 +65,10 @@ add how that runtime is built, started and configured.
 
 - Onboarding: `tomato.yml`, the first feature files, the CI workflow, and the `tomato run` summary.
 - Scenarios: the changed feature files and the `tomato run` summary.
-- Review: findings ordered by severity, each with `file:line`, the rule it breaks and the fix.
+- Review: findings ordered by severity, each with `file:line`, the rule it breaks and the fix:
+
+  ```text
+  high  features/orders.feature:9  checks the 201 but not the stored row, so it
+        passes when nothing is saved (can't fail). Add: "db" table "orders" contains:
+  ```
 - Debugging: the failing step, the evidence from `.tomato/runs`, the cause and the fix.
