@@ -678,8 +678,9 @@ containers:
 	if pg.Build == nil {
 		t.Error("expected build config")
 	} else {
-		if pg.Build.Context != "./docker" {
-			t.Errorf("expected build context ./docker, got %s", pg.Build.Context)
+		// Relative to the config file, so it means the same wherever tomato runs from.
+		if want := filepath.Join(filepath.Dir(path), "docker"); pg.Build.Context != want {
+			t.Errorf("expected build context %s, got %s", want, pg.Build.Context)
 		}
 		if pg.Build.Dockerfile != "Dockerfile.postgres" {
 			t.Errorf("expected dockerfile Dockerfile.postgres, got %s", pg.Build.Dockerfile)

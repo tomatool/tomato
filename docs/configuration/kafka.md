@@ -2,6 +2,79 @@
 
 This guide covers how to configure Apache Kafka for integration testing with tomato.
 
+## Preset
+
+The shortest setup is the `kafka` preset. tomato picks the host port, advertises
+it, and points the kafka resource at it:
+
+```yaml
+containers:
+  kafka:
+    preset: kafka
+
+resources:
+  events:
+    type: kafka
+    container: kafka
+    options:
+      topics: [orders]
+```
+
+It is a single-node KRaft broker with these listeners:
+
+| Listener | For | Address |
+|----------|-----|---------|
+| plain | the host: tomato, an app run as a local process | `{{.kafka.host}}:{{.kafka.port.9092}}` |
+| plain | other containers on tomato's network | `kafka:29092` |
+| `AWS_MSK_IAM` (`auth: aws_msk_iam`) | the host | `{{.kafka.host}}:{{.kafka.port.9098}}` |
+| `AWS_MSK_IAM` (`auth: aws_msk_iam`) | other containers | `kafka:29098` |
+
+The kafka resource always uses the plain listener.
+
+### MSK IAM authentication
+
+`auth: aws_msk_iam` adds a listener that speaks SASL `AWS_MSK_IAM`, the
+mechanism [aws-msk-iam-auth](https://github.com/aws/aws-msk-iam-auth) uses
+against MSK. Point the app at it with the same client settings it uses in
+production, `SASL_PLAINTEXT` in place of `SASL_SSL`:
+
+```yaml
+containers:
+  kafka:
+    preset: kafka
+    auth: aws_msk_iam
+
+resources:
+  aws:
+    type: aws
+    options:
+      role_arn: arn:aws:iam::000000000000:role/my-service
+
+app:
+  command: java -jar build/libs/my-service.jar
+  env:
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{.kafka.host}}:{{.kafka.port.9098}}"
+    SPRING_KAFKA_PROPERTIES_SECURITY_PROTOCOL: SASL_PLAINTEXT
+    SPRING_KAFKA_PROPERTIES_SASL_MECHANISM: AWS_MSK_IAM
+    SPRING_KAFKA_PROPERTIES_SASL_JAAS_CONFIG: "software.amazon.msk.auth.iam.IAMLoginModule required;"
+    SPRING_KAFKA_PROPERTIES_SASL_CLIENT_CALLBACK_HANDLER_CLASS: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+```
+
+The listener checks who the client is, not its signature. With an [aws](aws.md)
+resource in the config it lets in only the role sessions that resource's STS
+issues, and tells any other identity `Access denied`, as MSK does for a role
+without the kafka-cluster policy. So an app that ends up with the wrong
+credentials (its SDK could not reach STS and fell back to another identity,
+say) fails here the way it fails against MSK. Without an aws resource, any
+identity gets in.
+
+### The image
+
+A release of tomato runs `ghcr.io/tomatool/tomato-kafka:<version>`: apache/kafka
+plus the `AWS_MSK_IAM` server, published with each release. A development build
+of tomato builds that image from the copy embedded in the binary the first time
+it runs. Set `image:` on the entry to use another.
+
 ## Overview
 
 Kafka integration testing with testcontainers requires special configuration due to how Kafka advertises its brokers to clients. This guide explains the recommended setup using Zookeeper-based Kafka with fixed port mapping.

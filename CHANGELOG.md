@@ -9,6 +9,11 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 ## [Unreleased]
 
 ### Added
+- `kafka` container preset (`preset: kafka`): a single-node KRaft broker with its host port picked and advertised, reachable from the host and from other containers; `auth: aws_msk_iam` adds a listener speaking SASL `AWS_MSK_IAM` like MSK's IAM port. Release builds pull `ghcr.io/tomatool/tomato-kafka:<version>`, development builds build it from the binary.
+- `aws` resource: IRSA for the app under test. tomato serves STS (`AssumeRoleWithWebIdentity`, `AssumeRole`, `GetCallerIdentity`), writes the web identity token and credential files, points the app's SDK at them and drops inherited `AWS_*` credentials; `ambient_identity` adds the fallback identity a credential chain ends up with when the role cannot be had. An `AWS_MSK_IAM` preset listener lets in only the role sessions it issues. Steps: `role "..." was assumed` / `was not assumed`.
+- Resources that the app needs while it starts (`AppEnvProvider`) are initialized before it and add to its environment.
+- Kafka consumer groups: `consumes from "t" as consumer group "g"`, `consumer group "g" is consuming "t" within "30s"`, `consumer group "g" has no members`.
+- PostgreSQL `query "..." returns within "10s":`, for rows the app writes asynchronously.
 - `tomato coverage`: which resource steps the feature files use, per resource type (text, markdown, JSON; `--min` to gate).
 - CI runs `make coverage`: unit + integration coverage merged, every resource step must be used by a scenario, code coverage floors in `.coverage-min`, report posted on the PR.
 - Kafka and RabbitMQ `message header "k" is "v"` for the next publish; S3 upload `with metadata:`.
@@ -21,6 +26,11 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- Container `volumes` and `build` were parsed and ignored; they are applied now, with relative paths resolved against `tomato.yml`.
+- Container logs were read once, when the wait strategy passed; they are followed for the container's whole life, so a container that fails to start leaves its output behind.
+- A container env template tomato cannot resolve (`{{.x}}`) made startup hang.
+- Stopping the app signalled only its PID, so `command: go run ./app` left the compiled app running and holding the port; the app runs in its own process group, which is stopped as a whole.
+- GitHub Action: the binary is downloaded and extracted in a temp directory, not the workspace (a repo with a `tomato` path at its root failed with `tar: tomato: Cannot open: File exists`), and results reach the comment scripts through env instead of being spliced into them, so a failing run's comment no longer breaks on backticks in its own markdown, and test output cannot inject into the script.
 - Receive steps (Kafka, RabbitMQ, WebSocket) take the next unmatched message, so a message that arrived before the step ran is no longer missed (flaky timeouts in fanout and fast-echo scenarios).
 - HTTP steps accept an absolute URL instead of prefixing `base_url` to it.
 - The integration suite and S3 docs use `cgr.dev/chainguard/minio`; neither Docker Hub's `minio/minio` nor `quay.io/minio/minio` can be pulled anonymously any more.
@@ -28,6 +38,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - `http-server` `url is stored in` stored nothing; WebSocket server writes are serialised per connection.
 
 ### Changed
+- GitHub Action: used at a commit or a branch (`tomatool/tomato@<sha>`), it builds tomato from that commit instead of installing the latest release, so the action and the binary match and a change can run in CI before it is released. Version tags and the `version` input install a release as before.
 - A config with an unsupported `version`, or a v1-style config, is rejected with a pointer to the migration guide instead of a YAML decoding error.
 - The app runner refuses to start when `app.port` is already in use, and the startup failure screen prints the reason. ([#149](https://github.com/tomatool/tomato/pull/149))
 - Postgres reset never truncates Flyway (`flyway_schema_history`) or Liquibase (`databasechangelog`, `databasechangeloglock`) history tables. ([#149](https://github.com/tomatool/tomato/pull/149))

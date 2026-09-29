@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/cucumber/godog"
 	messages "github.com/cucumber/messages/go/v21"
@@ -216,6 +217,13 @@ func (r *Postgres) Steps() StepCategory {
 			},
 			{
 				Group:       "Assertions",
+				Pattern:     `^"{resource}" query "([^"]*)" returns within "([^"]*)":$`,
+				Description: "Waits until the query result matches the rows exactly, for state the app writes asynchronously",
+				Example:     `"db" query "SELECT status FROM orders" returns within "10s":`,
+				Handler:     r.queryReturnsWithin,
+			},
+			{
+				Group:       "Assertions",
 				Pattern:     `^"{resource}" query result of "([^"]*)" contains:$`,
 				Description: "Assert query result contains expected rows (superset)",
 				Example:     `"db" query result of "SELECT id, name FROM users" contains:`,
@@ -357,6 +365,26 @@ func (r *Postgres) ExecSQLFile(ctx context.Context, path string) error {
 	}
 	_, err = r.db.ExecContext(ctx, string(content))
 	return err
+}
+
+// queryReturnsWithin retries queryReturns until it passes or the timeout ends,
+// and then reports the last mismatch.
+func (r *Postgres) queryReturnsWithin(query, timeout string, expected *godog.Table) error {
+	d, err := time.ParseDuration(timeout)
+	if err != nil {
+		return fmt.Errorf("invalid timeout: %w", err)
+	}
+	deadline := time.Now().Add(d)
+	for {
+		err := r.queryReturns(query, expected)
+		if err == nil || !time.Now().Before(deadline) {
+			if err != nil {
+				return fmt.Errorf("not within %s: %w", timeout, err)
+			}
+			return nil
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 }
 
 func (r *Postgres) queryReturns(query string, expected *godog.Table) error {

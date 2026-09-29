@@ -7,7 +7,7 @@ branding:
 
 inputs:
   version:
-    description: 'Tomato version to use (e.g., "v1.0.0"). Defaults to the action version tag.'
+    description: 'Tomato release to install (e.g., "v1.0.0"). Defaults to the action version tag; an action used at a commit or branch builds tomato from it instead.'
     required: false
     default: ''
   config:
@@ -50,7 +50,44 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # The action used at a commit or a branch (a pull request under review, say)
+    # runs tomato built from that same commit, not the latest release, so the
+    # action and the binary always match. Version tags and `version` install a
+    # release as before.
+    - name: Resolve Tomato source
+      id: source
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        ACTION_REF: ${{ github.action_ref }}
+      run: |
+        if [ -z "$INPUT_VERSION" ] && [ -n "$ACTION_REF" ] && ! [[ "$ACTION_REF" =~ ^v[0-9]+($|\.) ]]; then
+          echo "build=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "build=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Set up Go
+      if: steps.source.outputs.build == 'true'
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache-dependency-path: ${{ github.action_path }}/go.sum
+
+    - name: Build Tomato
+      if: steps.source.outputs.build == 'true'
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        ACTION_REF: ${{ github.action_ref }}
+      run: |
+        echo "Building Tomato at ${ACTION_REF}"
+        go build -ldflags "-X github.com/tomatool/tomato/internal/version.Commit=${ACTION_REF}" -o "$RUNNER_TEMP/tomato" .
+        sudo install -m 0755 "$RUNNER_TEMP/tomato" /usr/local/bin/tomato
+        tomato version
+
     - name: Install Tomato
+      if: steps.source.outputs.build != 'true'
       shell: bash
       run: |
         VERSION="${{ inputs.version }}"
@@ -94,11 +131,13 @@ runs:
         DOWNLOAD_URL="https://github.com/tomatool/tomato/releases/download/${VERSION}/tomato_${VERSION_NUM}_${OS}_${ARCH}.tar.gz"
         echo "Downloading from: ${DOWNLOAD_URL}"
 
-        curl -sL "$DOWNLOAD_URL" -o tomato.tar.gz
-        tar -xzf tomato.tar.gz
-        chmod +x tomato
-        sudo mv tomato /usr/local/bin/
-        rm tomato.tar.gz
+        # Download into a temp dir, not the workspace: a repo with a `tomato` file or
+        # directory at its root would otherwise collide with the extracted binary.
+        TMP_DIR=$(mktemp -d)
+        curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/tomato.tar.gz"
+        tar -xzf "$TMP_DIR/tomato.tar.gz" -C "$TMP_DIR" tomato
+        sudo install -m 0755 "$TMP_DIR/tomato" /usr/local/bin/tomato
+        rm -rf "$TMP_DIR"
 
         echo "Tomato installed successfully"
         tomato version
@@ -265,20 +304,37 @@ runs:
       if: inputs.comment == 'true' && always()
       id: build-comment
       uses: actions/github-script@v7
+      # Results come in through env, never spliced into the script: scenario names and
+      # error messages are test output, and a backtick or quote in them would break
+      # (or inject into) the JavaScript.
+      env:
+        TOMATO_TOTAL: ${{ steps.parse-results.outputs.total }}
+        TOMATO_PASSED: ${{ steps.parse-results.outputs.passed }}
+        TOMATO_FAILED: ${{ steps.parse-results.outputs.failed }}
+        TOMATO_SKIPPED: ${{ steps.parse-results.outputs.skipped }}
+        TOMATO_FEATURES: ${{ steps.parse-results.outputs.features }}
+        TOMATO_STEPS_PASSED: ${{ steps.parse-results.outputs.steps_passed }}
+        TOMATO_STEPS_FAILED: ${{ steps.parse-results.outputs.steps_failed }}
+        TOMATO_STEPS_SKIPPED: ${{ steps.parse-results.outputs.steps_skipped }}
+        TOMATO_DURATION: ${{ steps.parse-results.outputs.duration }}
+        TOMATO_STATUS: ${{ steps.parse-results.outputs.status }}
+        TOMATO_DETAILS: ${{ steps.parse-results.outputs.details }}
+        TOMATO_SCENARIOS: ${{ steps.parse-results.outputs.scenarios }}
       with:
         script: |
-          const total = parseInt('${{ steps.parse-results.outputs.total }}') || 0;
-          const passed = parseInt('${{ steps.parse-results.outputs.passed }}') || 0;
-          const failed = parseInt('${{ steps.parse-results.outputs.failed }}') || 0;
-          const skipped = parseInt('${{ steps.parse-results.outputs.skipped }}') || 0;
-          const features = parseInt('${{ steps.parse-results.outputs.features }}') || 0;
-          const stepsPassed = parseInt('${{ steps.parse-results.outputs.steps_passed }}') || 0;
-          const stepsFailed = parseInt('${{ steps.parse-results.outputs.steps_failed }}') || 0;
-          const stepsSkipped = parseInt('${{ steps.parse-results.outputs.steps_skipped }}') || 0;
-          const duration = parseInt('${{ steps.parse-results.outputs.duration }}') || 0;
-          const status = '${{ steps.parse-results.outputs.status }}';
-          const details = `${{ steps.parse-results.outputs.details }}`.trim();
-          const scenarios = `${{ steps.parse-results.outputs.scenarios }}`.trim();
+          const env = process.env;
+          const total = parseInt(env.TOMATO_TOTAL) || 0;
+          const passed = parseInt(env.TOMATO_PASSED) || 0;
+          const failed = parseInt(env.TOMATO_FAILED) || 0;
+          const skipped = parseInt(env.TOMATO_SKIPPED) || 0;
+          const features = parseInt(env.TOMATO_FEATURES) || 0;
+          const stepsPassed = parseInt(env.TOMATO_STEPS_PASSED) || 0;
+          const stepsFailed = parseInt(env.TOMATO_STEPS_FAILED) || 0;
+          const stepsSkipped = parseInt(env.TOMATO_STEPS_SKIPPED) || 0;
+          const duration = parseInt(env.TOMATO_DURATION) || 0;
+          const status = env.TOMATO_STATUS || '';
+          const details = (env.TOMATO_DETAILS || '').trim();
+          const scenarios = (env.TOMATO_SCENARIOS || '').trim();
 
           const emoji = status === 'success' ? '✅' : '❌';
           const mins = Math.floor(duration / 60);
@@ -318,18 +374,20 @@ runs:
     - name: Write Job Summary
       if: inputs.comment == 'true' && always()
       shell: bash
+      env:
+        TOMATO_COMMENT_BODY: ${{ steps.build-comment.outputs.body }}
       run: |
-        cat <<'EOF' >> "$GITHUB_STEP_SUMMARY"
-        ${{ steps.build-comment.outputs.body }}
-        EOF
+        printf '%s\n' "$TOMATO_COMMENT_BODY" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post PR Comment
       if: inputs.comment == 'true' && github.event_name == 'pull_request' && always()
       uses: actions/github-script@v7
+      env:
+        TOMATO_COMMENT_BODY: ${{ steps.build-comment.outputs.body }}
       with:
         script: |
           const marker = '<!-- tomato-test-results -->';
-          const body = marker + '\n' + `${{ steps.build-comment.outputs.body }}`;
+          const body = marker + '\n' + (process.env.TOMATO_COMMENT_BODY || '');
 
           const { data: comments } = await github.rest.issues.listComments({
             owner: context.repo.owner,

@@ -43,6 +43,12 @@ func New(cfg *config.Config, cm *container.Manager, opts Options) (*Runner, erro
 	return newRunner(cfg, cm, registry, opts)
 }
 
+// NewWithRegistry creates a runner over a registry the caller already built,
+// for when some resources had to be initialized before the app started.
+func NewWithRegistry(cfg *config.Config, cm *container.Manager, registry *handler.Registry, opts Options) (*Runner, error) {
+	return newRunner(cfg, cm, registry, opts)
+}
+
 // newRunner is the internal constructor that allows dependency injection for testing
 func newRunner(cfg *config.Config, container ContainerExecutor, handlers HandlerRegistry, opts Options) (*Runner, error) {
 	r := &Runner{

@@ -42,6 +42,7 @@ var resourceFileMapping = map[string]string{
 	"Shell":            "shell.md",
 	"WebSocket Client": "websocket-client.md",
 	"WebSocket Server": "websocket-server.md",
+	"AWS":              "aws.md",
 }
 
 func runDocs(ctx *cli.Context) error {
@@ -136,6 +137,10 @@ func collectStepCategories() []handler.StepCategory {
 	// gRPC
 	grpcHandler, _ := handler.NewGRPC("grpc", handler.DummyConfig(), nil)
 	categories = append(categories, grpcHandler.Steps())
+
+	// AWS
+	awsHandler, _ := handler.NewAWS("aws", handler.DummyConfig(), nil)
+	categories = append(categories, awsHandler.Steps())
 
 	return categories
 }
@@ -388,6 +393,7 @@ var resourceTypeMapping = map[string]string{
 	"Shell":            "shell",
 	"WebSocket Client": "websocket",
 	"WebSocket Server": "websocket-server",
+	"AWS":              "aws",
 }
 
 func generateMkDocs(outputDir string, categories []handler.StepCategory) error {
