@@ -45,3 +45,35 @@ func TestFileLogConsumer_AppendsEveryLogLine(t *testing.T) {
 		t.Errorf("log file got %q", buf.String())
 	}
 }
+
+// A built image used to get a random name on every run, so every run left one
+// more image behind.
+func TestBuildImageName_IsStablePerProjectAndValid(t *testing.T) {
+	repo, tag := buildImageName("Schema_Registry", "/work/a/docker", "Dockerfile")
+	if repo != "tomato-schema-registry" {
+		t.Errorf("repo %q, want tomato-schema-registry", repo)
+	}
+	if again, againTag := buildImageName("Schema_Registry", "/work/a/docker", "Dockerfile"); again != repo || againTag != tag {
+		t.Errorf("the name changed between runs: %s:%s then %s:%s", repo, tag, again, againTag)
+	}
+	if _, other := buildImageName("Schema_Registry", "/work/b/docker", "Dockerfile"); other == tag {
+		t.Error("two projects' images share a tag")
+	}
+	if repo, _ := buildImageName("--", "/x", "Dockerfile"); repo != "tomato-build" {
+		t.Errorf("a name with nothing usable gives %q", repo)
+	}
+}
+
+func TestContainerFiles_CopiesContentToItsPath(t *testing.T) {
+	files := containerFiles([]config.ContainerFile{{Path: "/opt/kafka/libs/x.jar", Content: []byte("jar"), Mode: 0o644}})
+	if len(files) != 1 || files[0].ContainerFilePath != "/opt/kafka/libs/x.jar" || files[0].FileMode != 0o644 {
+		t.Fatalf("files = %+v", files)
+	}
+	var got bytes.Buffer
+	if _, err := got.ReadFrom(files[0].Reader); err != nil || got.String() != "jar" {
+		t.Errorf("content %q, err %v", got.String(), err)
+	}
+	if containerFiles(nil) != nil {
+		t.Error("no files should copy nothing")
+	}
+}

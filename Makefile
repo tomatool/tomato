@@ -1,4 +1,4 @@
-.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all
+.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all kafka-plugin
 
 # Build variables
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -137,6 +137,10 @@ coverage: build
 	$(GOCMD) tool covdata textfmt -i=./coverage/merged -o=./coverage/coverage.out
 	$(GOCMD) tool cover -html=./coverage/coverage.out -o ./coverage/coverage.html
 	./scripts/report-coverage.sh
+
+## kafka-plugin: Rebuild the kafka preset's AWS_MSK_IAM plugin jar from internal/presets/kafka/src (needs Docker)
+kafka-plugin:
+	docker build --target jar --output type=local,dest=internal/presets/kafka internal/presets/kafka
 
 ## coverage-all: Run both unit tests and integration tests with combined coverage
 coverage-all: test-coverage integration-test-coverage
