@@ -24,6 +24,7 @@ type Kafka struct {
 	admin    sarama.ClusterAdmin
 	producer sarama.SyncProducer
 	consumer sarama.Consumer
+	client   sarama.Client   // the consumer's, also used to wait for new topics
 	registry *schemaRegistry // nil unless options.schema_registry is set
 
 	pendingHeaders []sarama.RecordHeader // applied to the next published message
@@ -76,7 +77,15 @@ func (r *Kafka) Init(ctx context.Context) error {
 	}
 	r.producer = producer
 
-	consumer, err := sarama.NewConsumer(brokers, cfg)
+	// The consumer shares its client with the wait for new topics, so the
+	// metadata that wait refreshes is the metadata the consumer starts from.
+	client, err := sarama.NewClient(brokers, cfg)
+	if err != nil {
+		return fmt.Errorf("creating client: %w", err)
+	}
+	r.client = client
+
+	consumer, err := sarama.NewConsumerFromClient(client)
 	if err != nil {
 		return fmt.Errorf("creating consumer: %w", err)
 	}
@@ -243,6 +252,7 @@ func (r *Kafka) deleteAndRecreatTopics(topics []string) error {
 
 	time.Sleep(500 * time.Millisecond)
 
+	created := make(map[string]bool, len(topics))
 	for _, topic := range topics {
 		detail := &sarama.TopicDetail{
 			NumPartitions:     int32(partitions),
@@ -252,10 +262,35 @@ func (r *Kafka) deleteAndRecreatTopics(topics []string) error {
 			if !strings.Contains(err.Error(), "already exists") {
 				return fmt.Errorf("creating topic %s: %w", topic, err)
 			}
+			continue
 		}
+		created[topic] = true
 	}
 
+	// Scenarios consume from these right away.
+	for _, topic := range topics {
+		minPartitions := 0 // one that already existed keeps its partitions
+		if created[topic] {
+			minPartitions = partitions
+		}
+		if err := waitTopicReady(r.client, topic, minPartitions, topicReadyTimeout); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// abortConsuming undoes a startConsuming that failed part way: it stops the
+// partitions already started and lets a later step try the topic again, which
+// the consuming flag would otherwise turn into a silent no-op.
+func (r *Kafka) abortConsuming(topic string, stopCh chan struct{}) {
+	r.consumingMu.Lock()
+	defer r.consumingMu.Unlock()
+	if r.stopChannels[topic] == stopCh {
+		close(stopCh)
+		delete(r.stopChannels, topic)
+		r.consuming[topic] = false
+	}
 }
 
 func (r *Kafka) stopAllConsumers() {
@@ -494,11 +529,14 @@ func (r *Kafka) createTopicWithPartitions(topic string, partitions int) error {
 		NumPartitions:     int32(partitions),
 		ReplicationFactor: 1,
 	}
-	err := r.admin.CreateTopic(topic, detail, false)
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		return err
+	minPartitions := partitions
+	if err := r.admin.CreateTopic(topic, detail, false); err != nil {
+		if !strings.Contains(err.Error(), "already exists") {
+			return err
+		}
+		minPartitions = 0 // an existing topic keeps its partitions
 	}
-	return nil
+	return waitTopicReady(r.client, topic, minPartitions, topicReadyTimeout)
 }
 
 func (r *Kafka) publishMessage(topic string, doc *godog.DocString) error {
@@ -588,12 +626,14 @@ func (r *Kafka) startConsuming(topic string) error {
 
 	partitions, err := r.consumer.Partitions(topic)
 	if err != nil {
+		r.abortConsuming(topic, stopCh)
 		return fmt.Errorf("getting partitions: %w", err)
 	}
 
 	for _, partition := range partitions {
 		pc, err := r.consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
 		if err != nil {
+			r.abortConsuming(topic, stopCh)
 			return fmt.Errorf("consuming partition %d: %w", partition, err)
 		}
 
@@ -850,6 +890,11 @@ func (r *Kafka) Cleanup(ctx context.Context) error {
 	}
 	if r.consumer != nil {
 		if err := r.consumer.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if r.client != nil { // after the consumer, which does not close it
+		if err := r.client.Close(); err != nil {
 			errs = append(errs, err)
 		}
 	}
