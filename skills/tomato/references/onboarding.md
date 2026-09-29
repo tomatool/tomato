@@ -99,6 +99,10 @@ Wiring rules:
 The `aws` resource removes inherited `AWS_*` credentials from the application's
 environment, so a developer's own credentials never stand in for the role.
 
+tomato splits `app.command` on spaces and runs it without a shell: no quotes,
+variables, pipes or `&&`. Build first, in CI or by hand, and point `app.command`
+at the result.
+
 ## 3. First features
 
 Start with one scenario per interface that proves the wiring, then the behaviors
