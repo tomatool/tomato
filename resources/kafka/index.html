@@ -844,6 +844,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configuration/aws/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AWS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1293,6 +1321,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#consumer-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer Groups
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1429,6 +1468,34 @@
     
   
     S3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AWS
   
 
     
@@ -1714,6 +1781,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#consumer-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer Groups
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1985,6 +2063,29 @@
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">    |</span><span class="s"> value</span><span class="k">  |</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">  |</span><span class="s"> key1</span><span class="k">   |</span><span class="s"> msg1</span><span class="k">   |</span>
 </span></code></pre></div></p>
+<h2 id="consumer-groups">Consumer Groups<a class="headerlink" href="#consumer-groups" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"{resource}" consumes from "events" as consumer group "billing"</code></td>
+<td>Joins a consumer group on a topic; its messages are received like any other</td>
+</tr>
+<tr>
+<td><code>"{resource}" consumer group "billing" is consuming "events" within "30s"</code></td>
+<td>Waits until a member of the consumer group is assigned the topic, as the broker sees it</td>
+</tr>
+<tr>
+<td><code>"{resource}" consumer group "billing" has no members</code></td>
+<td>Asserts the consumer group has no members, as the broker sees it</td>
+</tr>
+</tbody>
+</table>
 
 
 
