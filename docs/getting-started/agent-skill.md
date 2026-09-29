@@ -3,9 +3,9 @@
 tomato ships an [agent skill](https://agentskills.io/) for coding agents such as
 Claude Code, in [`skills/tomato`](https://github.com/tomatool/tomato/tree/main/skills/tomato).
 With it, an agent can add tomato to a repository, write and review scenarios,
-and debug failing runs the way this project intends: a suite is only
-`tomato.yml`, feature files and a CI job, it fails the way production fails, and
-it tests the application as a black box.
+and debug failing runs the way this project intends: a suite runs isolated, it
+is only `tomato.yml`, feature files and a CI job, it fails the way production
+fails, it tests the application as a black box, and each scenario has one focus.
 
 The skill takes step wording from `tomato steps`, so the agent needs the tomato
 CLI and Docker where it runs.
