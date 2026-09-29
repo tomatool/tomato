@@ -27,6 +27,23 @@ type Handler interface {
 	Cleanup(ctx context.Context) error
 }
 
+// AppEnv is environment a resource provides to the application under test.
+type AppEnv struct {
+	// Set is added to the app's environment; the app's own env settings win.
+	Set map[string]string
+	// Unset is removed from the environment the app inherits from tomato.
+	Unset []string
+}
+
+// AppEnvProvider is implemented by resources the application depends on while
+// it starts, like the aws resource it gets credentials from. They are
+// initialized before the app starts, and their AppEnv is added to its
+// environment. Their Init must be safe to call twice: every resource is
+// initialized again after the app is up.
+type AppEnvProvider interface {
+	AppEnv() AppEnv
+}
+
 // SQLExecutor is implemented by handlers that can execute SQL
 type SQLExecutor interface {
 	ExecSQL(ctx context.Context, query string) (int64, error)
