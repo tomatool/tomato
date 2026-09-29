@@ -1,22 +1,17 @@
 ---
 name: tomato
 description: >
-  Set up, write, review and debug tomato test suites: a tomato.yml that runs the
-  app against real dependencies in containers, and Gherkin features that test it
-  through its interfaces. Use when adding tomato to a repository, writing
-  scenarios, reviewing a suite, or when a tomato run fails.
+  Set up, write, review and debug tomato suites, which test an app through its
+  own interfaces against real dependencies. Use when adding tomato to a repo,
+  writing scenarios, reviewing a suite, or a run fails.
 license: MIT
-compatibility: >
-  Needs the tomato CLI (v2) and Docker where the agent runs. Step wording comes
-  from `tomato steps`, not from memory.
+compatibility: Needs the tomato CLI (v2) and Docker where the agent runs.
 ---
 
 # tomato
 
-tomato starts an application's dependencies in containers, starts the application
-against them, resets them before every scenario, and checks behavior through the
-application's own interfaces. `tomato.yml` describes all of it; feature files
-describe the behavior.
+tomato runs an app against its real dependencies in containers, resets them before
+every scenario, and checks behavior through the app's own interfaces.
 
 ## Principles
 
