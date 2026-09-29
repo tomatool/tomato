@@ -1,10 +1,4 @@
----
-layout: default
-title: gRPC
-nav_order: 7
----
-
-# gRPC Configuration
+# gRPC configuration
 
 The `grpc` resource calls unary gRPC methods and asserts on what comes back.
 

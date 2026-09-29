@@ -1,4 +1,4 @@
-# Kafka Configuration
+# Kafka configuration
 
 This guide covers how to configure Apache Kafka for integration testing with tomato.
 
@@ -76,21 +76,23 @@ copies the `AWS_MSK_IAM` server it carries in its binary into the container's
 or build. Set `image:` on the entry to run another apache/kafka tag; the plugin
 is copied into it the same way.
 
-## Overview
+## Manual setup without the preset
 
-Kafka integration testing with testcontainers requires special configuration due to how Kafka advertises its brokers to clients. This guide explains the recommended setup using Zookeeper-based Kafka with fixed port mapping.
+Reach for this only when you need a broker the preset does not cover — a
+different distribution, or a Zookeeper-based cluster to match production.
+Otherwise use `preset: kafka` above; it is what tomato's own integration suite
+runs.
 
-## The Challenge
+### Why a broker needs extra configuration
 
-When running Kafka in a container with dynamic port mapping, clients connecting from the host machine need to know the actual mapped port. However, Kafka's advertised listeners are configured at startup time, before the dynamic port is assigned.
+Kafka's advertised listeners are fixed at startup, before Docker assigns a
+dynamic host port, so a client on the host cannot discover the mapped port. The
+way around it is a fixed port mapping for the external listener plus a second
+listener for traffic between containers. The preset does this for you.
 
-**The solution**: Use fixed port mapping for the external listener and dual-listener configuration.
+### Container setup
 
-## Recommended Configuration
-
-### Container Setup
-
-The recommended approach uses Zookeeper with Kafka and dual listeners:
+Zookeeper with Kafka and dual listeners:
 
 ```yaml
 containers:
@@ -131,9 +133,9 @@ containers:
       timeout: 60s
 ```
 
-### Key Configuration Explained
+### Key configuration explained
 
-#### Dual Listeners
+#### Dual listeners
 
 Kafka is configured with two listeners:
 
@@ -142,7 +144,7 @@ Kafka is configured with two listeners:
 | `PLAINTEXT` | `kafka:29092` | Internal communication between containers |
 | `PLAINTEXT_HOST` | `localhost:9092` | External access from host machine (tests) |
 
-#### Fixed Port Mapping
+#### Fixed port mapping
 
 The external port uses fixed mapping (`9092:9092`) so the advertised listener (`localhost:9092`) matches the actual port:
 
@@ -152,7 +154,7 @@ ports:
   - "29092/tcp"    # Dynamic: just container port
 ```
 
-#### Environment Variable Templates
+#### Environment variable templates
 
 Tomato supports templates in container environment variables:
 
@@ -168,7 +170,7 @@ KAFKA_ZOOKEEPER_CONNECT: "{{.zookeeper.host}}:{{.zookeeper.port.2181}}"
 
 This resolves to `zookeeper:2181` (container DNS name + internal port).
 
-## Resource Configuration
+## Resource configuration
 
 Configure the Kafka resource to connect to the container:
 
@@ -187,7 +189,7 @@ resources:
       reset_strategy: delete_recreate
 ```
 
-### Resource Options
+### Resource options
 
 | Option | Type | Description |
 |--------|------|-------------|
@@ -196,16 +198,16 @@ resources:
 | `replication_factor` | int | Replication factor (default: 1) |
 | `reset_strategy` | string | How to reset between scenarios |
 
-### Reset Strategies
+### Reset strategies
 
 | Strategy | Description |
 |----------|-------------|
 | `delete_recreate` | Delete and recreate topics (recommended) |
 | `none` | No reset between scenarios |
 
-## Complete Example
+## Complete example
 
-Here's a complete `tomato.yml` with Kafka:
+A complete `tomato.yml` with Kafka, using the preset:
 
 ```yaml
 version: 2
@@ -218,38 +220,8 @@ settings:
     level: scenario
 
 containers:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
-    env:
-      ZOOKEEPER_CLIENT_PORT: "2181"
-      ZOOKEEPER_TICK_TIME: "2000"
-    ports:
-      - "2181/tcp"
-    wait_for:
-      type: port
-      target: "2181/tcp"
-      timeout: 30s
-
   kafka:
-    image: confluentinc/cp-kafka:7.6.1
-    depends_on:
-      - zookeeper
-    env:
-      KAFKA_BROKER_ID: "1"
-      KAFKA_ZOOKEEPER_CONNECT: "{{.zookeeper.host}}:{{.zookeeper.port.2181}}"
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    ports:
-      - "9092:9092"
-      - "29092/tcp"
-    wait_for:
-      type: port
-      target: "9092/tcp"
-      timeout: 60s
+    preset: kafka
 
 resources:
   events:
@@ -268,7 +240,7 @@ features:
     - ./features
 ```
 
-## Writing Kafka Tests
+## Writing Kafka tests
 
 Once configured, you can write Gherkin scenarios to test Kafka:
 
@@ -298,7 +270,7 @@ a magic byte, a 4-byte schema id, then the Avro body. That is what
 `KafkaAvroSerializer` and `KafkaAvroDeserializer` read and write, so a JVM app
 under test sees ordinary Avro messages. Feature files stay plain JSON.
 
-### Add a Schema Registry
+### Add a schema registry
 
 ```yaml
 containers:
@@ -341,7 +313,7 @@ app:
 | `schema_registry.port` | Registry port inside the container (default `8081`) |
 | `schema_registry.subjects` | Map a topic to a subject. Default is `<topic>-value` (TopicNameStrategy) |
 
-### Writing Avro Tests
+### Writing Avro tests
 
 ```gherkin
 Scenario: Order service emits an OrderCreated event
@@ -373,52 +345,27 @@ Scenario: Order service emits an OrderCreated event
 
 ## Troubleshooting
 
-### Connection Refused
+### Connection refused
 
 If tests fail with "connection refused":
 
 1. Verify Kafka container is healthy: `docker ps`
-2. Check port 9092 is mapped: `docker port <container_id>`
-3. Ensure no other process is using port 9092: `lsof -i :9092`
+2. Check the broker's port is mapped: `docker port <container_id>`
+3. With the manual setup, make sure nothing else holds port 9092: `lsof -i :9092`
 
-### Consumer Not Receiving Messages
+### Consumer not receiving messages
 
 1. Ensure `consumes from` is called before publishing
 2. The consumer starts at `OffsetNewest` - only messages published after consumer starts are received
 3. Verify topic exists with `topic "name" exists`
 
-### Port Already in Use
+### Port already in use
 
-Since Kafka uses fixed port mapping (`9092:9092`), ensure no other Kafka instance is running:
+The manual setup pins the external listener to `9092:9092`, so a second Kafka
+on that port clashes. The preset picks a free host port and is unaffected.
 
 ```bash
 # Kill any process using port 9092
 lsof -ti:9092 | xargs kill -9
 ```
 
-## Alternative: KRaft Mode (Experimental)
-
-For newer Kafka versions, KRaft mode eliminates Zookeeper. However, the advertised listener challenge remains. If you want to try KRaft:
-
-```yaml
-containers:
-  kafka:
-    image: confluentinc/cp-kafka:7.6.1
-    env:
-      KAFKA_NODE_ID: "1"
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-    ports:
-      - "9092:9092"
-      - "29092/tcp"
-```
-
-!!! warning "KRaft Compatibility"
-    KRaft mode may have compatibility issues with some Kafka client libraries. The Zookeeper-based setup is recommended for maximum compatibility.

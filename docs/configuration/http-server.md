@@ -1,4 +1,4 @@
-# HTTP Server Configuration
+# HTTP server configuration
 
 This guide covers how to configure the HTTP Server handler for mocking external services in integration tests.
 
@@ -6,14 +6,14 @@ This guide covers how to configure the HTTP Server handler for mocking external 
 
 The HTTP Server handler creates a local mock server that can stub HTTP endpoints. This is useful for testing how your application interacts with external APIs without actually calling them.
 
-## Use Cases
+## Use cases
 
 - Mock third-party APIs (payment gateways, notification services, etc.)
 - Simulate various response scenarios (success, errors, timeouts)
 - Verify your application sends correct requests
 - Test retry logic and error handling
 
-## Resource Configuration
+## Resource configuration
 
 The HTTP Server is a standalone handler that doesn't require a container:
 
@@ -25,13 +25,13 @@ resources:
       port: 9999
 ```
 
-### Resource Options
+### Resource options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `port` | int | `0` (random) | Port to listen on. Use `0` for system-assigned port, or specify a fixed port |
 
-## Configuring Your App to Use Mock Servers
+## Configuring your app to use mock servers
 
 Since your application needs to call the mock server instead of the real external API, you must configure the mock server URLs via environment variables.
 
@@ -71,7 +71,7 @@ paymentAPIURL := os.Getenv("PAYMENT_API_URL")
 !!! note "Fixed Ports Required"
     HTTP server resources must have a fixed `port` configured in options for the URL template to work. Without a port, the template cannot be resolved.
 
-## Complete Example
+## Complete example
 
 Here's a complete `tomato.yml` with multiple mock servers:
 
@@ -120,9 +120,9 @@ features:
     - ./features
 ```
 
-## Writing HTTP Server Tests
+## Writing HTTP server tests
 
-### Basic Stubbing
+### Basic stubbing
 
 ```gherkin
 Feature: Payment Processing
@@ -142,7 +142,7 @@ Feature: Payment Processing
     And "api" response json "status" is "completed"
 ```
 
-### Stubbing Different Responses
+### Stubbing different responses
 
 ```gherkin
 Scenario: Handle payment gateway error
@@ -157,7 +157,7 @@ Scenario: Handle payment gateway error
   Then "api" response status is "503"
 ```
 
-### Custom Response Headers
+### Custom response headers
 
 ```gherkin
 Scenario: API returns rate limit headers
@@ -169,7 +169,7 @@ Scenario: API returns rate limit headers
   Then "api" response status is "200"
 ```
 
-### Verifying Requests
+### Verifying requests
 
 ```gherkin
 Scenario: Verify authorization header is sent
@@ -190,7 +190,7 @@ Scenario: Verify request body
   Then "payment-api" received request with body containing "EUR"
 ```
 
-### Request Counting
+### Request counting
 
 ```gherkin
 Scenario: Verify retry behavior
@@ -201,7 +201,7 @@ Scenario: Verify retry behavior
   Then "payment-api" received "POST" "/charge" "3" times
 ```
 
-### Negative Assertions
+### Negative assertions
 
 ```gherkin
 Scenario: Verify no unauthorized calls
@@ -212,7 +212,7 @@ Scenario: Verify no unauthorized calls
 
 See [HTTP Server Steps](../resources/http-server.md) for the complete list of available steps.
 
-## Multiple Mock Servers
+## Multiple mock servers
 
 You can configure multiple mock servers for different external services:
 
@@ -234,7 +234,7 @@ resources:
       port: 9003
 ```
 
-## Reset Behavior
+## Reset behavior
 
 Between each scenario:
 - All stubs are cleared
@@ -244,19 +244,19 @@ This ensures each scenario starts with a clean slate.
 
 ## Troubleshooting
 
-### Port Already in Use
+### Port already in use
 
 If you get "address already in use" error:
 
 1. Use `port: 0` to let the system assign a free port
 2. Or kill processes using the specified port: `lsof -ti:9999 | xargs kill -9`
 
-### Requests Not Being Recorded
+### Requests not being recorded
 
 1. Verify the URL in your test matches the stub path exactly
 2. Check that the HTTP method matches (GET vs POST)
 3. Ensure your application is pointing to the mock server's port
 
-### Stub Not Matching
+### Stub not matching
 
 Stubs match in order they were defined. If a request doesn't match any stub, the server returns 404 with a message indicating no stub was found.

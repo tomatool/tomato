@@ -1,20 +1,31 @@
----
-layout: default
-title: Architecture
-nav_order: 6
----
-
 # Architecture
 
 This page provides an overview of tomato's internal architecture and how components interact during test execution.
 
-## High-Level Overview
+## High-level overview
 
 tomato is designed around three core concepts:
 
 1. **Containers** - Docker containers managed via Testcontainers
 2. **Resources** - Abstractions over external services (databases, APIs, message queues)
 3. **Handlers** - Step definitions that interact with resources
+
+## Where the code lives
+
+| Package | Responsibility |
+|---------|----------------|
+| `command/` | One file per CLI command, plus the step-docs generator |
+| `internal/config` | `tomato.yml` parsing, defaults, validation, preset expansion |
+| `internal/container` | Container lifecycle via Testcontainers, wait strategies, logs |
+| `internal/apprunner` | Starting the application under test, `app.env` templating |
+| `internal/handler` | One file per resource type, each with its step definitions |
+| `internal/runner` | godog wiring, hooks, tag filtering, reset between scenarios |
+| `internal/formatter` | Console, JUnit and Cucumber report output |
+| `internal/presets` | Files copied into preset containers (the MSK IAM jar) |
+| `internal/runlog` | Per-run log directory under `.tomato/runs/` |
+
+A resource type is registered in exactly one place, `handlerFactories` in
+`internal/handler/registry.go`.
 
 ```mermaid
 flowchart TB
@@ -63,7 +74,7 @@ flowchart TB
     G --> H
 ```
 
-## Test Execution Flow
+## Test execution flow
 
 When you run `tomato run`, the following sequence occurs:
 
@@ -88,6 +99,12 @@ sequenceDiagram
     end
 
     rect rgb(40, 40, 40)
+        Note over Handler: Resources the app depends on
+        Config->>Handler: Init app-env providers (aws STS)
+        Handler-->>Config: Environment for the app
+    end
+
+    rect rgb(40, 40, 40)
         Note over App: App Setup (optional)
         Config->>App: Start application
         App-->>App: Wait for ready check
@@ -95,7 +112,7 @@ sequenceDiagram
 
     rect rgb(40, 40, 40)
         Note over Handler: Resource Setup
-        Config->>Handler: Initialize handlers
+        Config->>Handler: Initialize remaining handlers
         Handler-->>Handler: Connect to services
     end
 
@@ -112,21 +129,22 @@ sequenceDiagram
     end
 
     Godog-->>CLI: Test results
-    CLI->>TC: Stop containers
     CLI->>App: Stop application
+    CLI->>Handler: Close resources
+    CLI->>TC: Stop containers
     CLI-->>User: Exit code
 ```
 
-## Handler Architecture
+## Handler architecture
 
 Handlers are responsible for translating Gherkin steps into actions against resources:
 
 ```mermaid
 flowchart LR
     subgraph Steps["Gherkin Steps"]
-        S1["Given I set 'db' table..."]
-        S2["When I send 'GET' request..."]
-        S3["Then response status is '200'"]
+        S1["Given 'db' table 'users' has values:"]
+        S2["When 'api' sends 'GET' to '/users/1'"]
+        S3["Then 'api' response status is '200'"]
     end
 
     subgraph Handlers["Handler Registry"]
@@ -159,7 +177,7 @@ flowchart LR
     SHELL --> CMD
 ```
 
-## Resource Lifecycle
+## Resource lifecycle
 
 Each resource follows a consistent lifecycle:
 
@@ -177,7 +195,7 @@ stateDiagram-v2
     Closed --> [*]
 ```
 
-## Container Orchestration
+## Container orchestration
 
 tomato uses Testcontainers to manage Docker containers:
 
@@ -194,7 +212,7 @@ flowchart TB
         subgraph Containers
             C1[postgres:15]
             C2[redis:7]
-            C3[kafka:latest]
+            C3[apache/kafka:3.9.1]
         end
     end
 
@@ -215,7 +233,7 @@ flowchart TB
     C3 --> LOG
 ```
 
-## Data Flow Example
+## Data flow example
 
 Here's how a typical database test scenario flows through the system:
 
@@ -228,24 +246,24 @@ sequenceDiagram
 
     Note over Feature: Scenario: Create user
 
-    Feature->>Godog: Given I set "db" table "users"...
+    Feature->>Godog: Given "db" table "users" has values:
     Godog->>PG: SetTableValues(table, data)
     PG->>DB: INSERT INTO users...
     DB-->>PG: OK
     PG-->>Godog: Success
 
-    Feature->>Godog: When I execute on "db" query...
+    Feature->>Godog: When "db" executes:
     Godog->>PG: ExecuteQuery(query)
     PG->>DB: SELECT * FROM users
     DB-->>PG: Results
     PG-->>Godog: Store results
 
-    Feature->>Godog: Then "db" query result should be...
+    Feature->>Godog: Then "db" query "..." returns:
     Godog->>PG: AssertQueryResult(expected)
     PG-->>Godog: Match/No match
 ```
 
-## HTTP Request/Response Flow
+## HTTP request/response flow
 
 ```mermaid
 sequenceDiagram
@@ -253,22 +271,22 @@ sequenceDiagram
     participant HTTP as HTTP Handler
     participant API as Target API
 
-    Feature->>HTTP: Given I set request header...
+    Feature->>HTTP: Given "api" header "X-Token" is "abc"
     HTTP-->>HTTP: Store header
 
-    Feature->>HTTP: When I send "POST" to "/users"
+    Feature->>HTTP: When "api" sends "POST" to "/users" with json:
     HTTP->>API: POST /users
     API-->>HTTP: 201 Created + JSON body
     HTTP-->>HTTP: Store response
 
-    Feature->>HTTP: Then response status is "201"
+    Feature->>HTTP: Then "api" response status is "201"
     HTTP-->>HTTP: Assert status
 
-    Feature->>HTTP: And response JSON "id" exists
+    Feature->>HTTP: And "api" response json "id" exists
     HTTP-->>HTTP: Assert JSON path
 ```
 
-## Configuration Structure
+## Configuration structure
 
 ```mermaid
 flowchart TB
@@ -297,7 +315,7 @@ flowchart TB
     end
 ```
 
-## Error Handling
+## Error handling
 
 When a step fails, tomato provides detailed error information:
 

@@ -1,10 +1,4 @@
----
-layout: default
-title: Stability
-nav_order: 7
----
-
-# Stability and Versioning
+# Stability and versioning
 
 tomato v2 is still under active development: the README says "use v2 at your own
 risk". This page defines what "stable" will mean, so that promise can be kept

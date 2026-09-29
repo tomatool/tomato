@@ -1,14 +1,8 @@
----
-layout: default
-title: Configuration
-nav_order: 3
----
-
-# Configuration Reference
+# Configuration reference
 
 Complete reference for `tomato.yml` configuration options.
 
-## File Structure
+## File structure
 
 ```yaml
 version: 2              # Required: config version
@@ -41,11 +35,11 @@ containers:             # Container definitions
     volumes: []
     depends_on: []
     wait_for: {}
-    reset: {}
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell
+    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws
+    # aliases: postgresql, http-client, grpc-client, websocket-client, minio
     container: container_name
     options: {}
 
@@ -96,7 +90,7 @@ passed on the command line (the GitHub Action passes `--format tomato` for PR
 comments), it replaces the console format but file outputs from `output` are
 still written.
 
-## App Configuration
+## App configuration
 
 Configure your application under test to run with test containers.
 
@@ -124,8 +118,8 @@ app:
 
   # Environment variables (supports container templates)
   env:
-    DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port}}/test"
-    REDIS_URL: "redis://{{.redis.host}}:{{.redis.port}}"
+    DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test"
+    REDIS_URL: "redis://{{.redis.host}}:{{.redis.port.6379}}"
 ```
 
 !!! note "Port already in use"
@@ -144,14 +138,18 @@ The app runs in its own process group, and stopping it stops the whole group,
 so `command: go run ./cmd/server` (where `go` does not pass signals on) does not
 leave the server running and holding the port.
 
-### Template Variables
+### Template variables
 
 In `app.env`, you can use templates to inject container addresses:
 
 | Template | Description |
 |----------|-------------|
-| `{{.container_name.host}}` | Container hostname (e.g., `localhost` or Docker network IP) |
-| `{{.container_name.port}}` | Container's mapped port (dynamically assigned) |
+| `{{.container_name.host}}` | Container hostname (`localhost` in command mode, the container's DNS name in container mode) |
+| `{{.container_name.port.NNNN}}` | Host port that `NNNN`, the port inside the container, is mapped to |
+| `{{.resource_name.url}}` | Base URL of an `http-server` resource |
+
+`NNNN` is required. A bare `{{.container_name.port}}` is left in the value
+verbatim, so the application receives the literal template text.
 
 **Example with PostgreSQL:**
 ```yaml
@@ -170,8 +168,8 @@ app:
   env:
     # These are resolved at runtime when containers start
     DB_HOST: "{{.postgres.host}}"
-    DB_PORT: "{{.postgres.port}}"
-    DATABASE_URL: "postgres://testuser:testpass@{{.postgres.host}}:{{.postgres.port}}/testdb"
+    DB_PORT: "{{.postgres.port.5432}}"
+    DATABASE_URL: "postgres://testuser:testpass@{{.postgres.host}}:{{.postgres.port.5432}}/testdb"
 ```
 
 **Note:** The `container` field in resource definitions automatically handles host/port resolution - you don't need to specify connection strings manually for resources.
@@ -198,10 +196,6 @@ containers:
       type: port
       target: "5432"
       timeout: 30s
-    reset:
-      strategy: truncate
-      exclude:
-        - schema_migrations
 ```
 
 `volumes` are `source:target[:mode]`. A source path (`./x`, `../x`, `/x`, `~/x`)
@@ -229,23 +223,20 @@ containers:
 |--------|--------------|
 | `kafka` | A single-node KRaft broker, reachable from the host and from other containers. With `auth: aws_msk_iam`, a second listener speaks SASL `AWS_MSK_IAM` like MSK's IAM port. See [Kafka](kafka.md#preset). |
 
-### Wait Strategies
+### Wait strategies
 
 | Type | Description | Fields |
 |------|-------------|--------|
 | `port` | Wait for port to be ready | `target` |
 | `log` | Wait for log message | `target` (regex) |
-| `http` | Wait for HTTP endpoint | `method`, `path`, `port` |
+| `http` | Wait for HTTP endpoint | `path`, `target` (port), `method` |
 | `exec` | Run command in container | `target` (command) |
 
-### Reset Strategies
+### Resetting state
 
-| Strategy | Description |
-|----------|-------------|
-| `truncate` | Truncate tables (Postgres) |
-| `flush` | Flush database (Redis) |
-| `delete_recreate` | Delete and recreate topics (Kafka) |
-| `none` | No reset |
+Resetting is configured per resource, not per container — see
+`options.reset_strategy` under [Resources](#resources) and on each resource's
+page. `settings.reset.level` controls how often it runs.
 
 ## Resources
 
@@ -260,9 +251,18 @@ resources:
     base_url: http://localhost:8080
     options:
       timeout: 30s
-      headers:
-        Authorization: Bearer token
 ```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `timeout` | `30s` | Per-request timeout |
+| `no_redirect` | `false` | Return the redirect response instead of following it |
+| `port` | `8080` | Container port the base URL is built from. Only with `container` |
+| `scheme` | `http` | Scheme for the base URL built from `container` |
+| `health_path` | *(none)* | Path polled once at startup to check the service answers |
+
+Request headers are set by steps (`"api" header "Authorization" is "..."`), not
+here, and are cleared between scenarios.
 
 ### PostgreSQL
 
@@ -285,7 +285,7 @@ resources:
         - countries        # reference data seeded by a migration
 ```
 
-#### Reset Behavior
+#### Reset behavior
 
 By default, PostgreSQL resources truncate **all tables** in the public schema before each scenario. You can control this behavior:
 
@@ -294,8 +294,8 @@ By default, PostgreSQL resources truncate **all tables** in the public schema be
 | `tables` | If set, only these tables are truncated (instead of all) |
 | `exclude` | Extra tables to never truncate, on top of the defaults |
 
-Migration history tables are never truncated, so migration tools still see
-their migrations as applied:
+Unless `tables` is set, migration history tables are never truncated, so
+migration tools still see their migrations as applied:
 
 | Tool | Tables |
 |------|--------|
@@ -307,6 +307,10 @@ their migrations as applied:
 Reference data that migrations insert (countries, roles, permissions) is
 truncated like any other table. Add those tables to `exclude` so scenarios
 don't have to re-seed them.
+
+`tables` and `exclude` are mutually exclusive: when `tables` is set, exactly
+those tables are truncated and both `exclude` and the migration-table list
+above are ignored.
 
 The `container` field automatically provides the connection details - tomato resolves the container's host and port at runtime.
 
@@ -446,7 +450,7 @@ hooks:
       container: redis
 ```
 
-### Hook Types
+### Hook types
 
 | Type | Description |
 |------|-------------|
@@ -467,7 +471,7 @@ features:
   tags: "@smoke and not @slow"
 ```
 
-### Tag Expressions
+### Tag expressions
 
 | Expression | Description |
 |------------|-------------|
@@ -481,14 +485,19 @@ features:
 `not` binds tighter than `and`, which binds tighter than `or`. godog's legacy
 syntax (`@smoke && ~@slow`, `,` for or) is still accepted.
 
-## Environment Variables
+## Environment variables
 
 Use environment variables anywhere in the config:
 
 ```yaml
 containers:
   postgres:
-    image: postgres:${POSTGRES_VERSION:-15}
+    image: postgres:${POSTGRES_VERSION}
     env:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
 ```
+
+Only `$VAR` and `${VAR}` are expanded. Shell default syntax such as
+`${VAR:-15}` is not supported: the whole `VAR:-15` is read as the variable
+name, so the value expands to an empty string. Set the variable, or keep the
+default in `tomato.yml`.

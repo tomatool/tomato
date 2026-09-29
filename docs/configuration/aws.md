@@ -1,4 +1,4 @@
-# AWS Configuration
+# AWS configuration
 
 The `aws` resource gives the application under test the AWS identity it gets on
 AWS through IRSA (IAM roles for service accounts): a role and a web identity

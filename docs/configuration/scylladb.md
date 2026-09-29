@@ -1,4 +1,4 @@
-# ScyllaDB Configuration
+# ScyllaDB configuration
 
 This guide covers how to configure ScyllaDB or Apache Cassandra for integration testing with tomato.
 
@@ -6,7 +6,7 @@ This guide covers how to configure ScyllaDB or Apache Cassandra for integration 
 
 The `scylladb` resource talks CQL, so it works with both ScyllaDB and Apache Cassandra (`type: cassandra` is an alias). Tomato creates the keyspace, runs your schema files, truncates tables between scenarios, and provides steps to seed and assert on data. See the [ScyllaDB step reference](../resources/scylladb.md) for all steps.
 
-## Container Setup
+## Container setup
 
 ### ScyllaDB
 
@@ -43,7 +43,7 @@ containers:
 
 The port opens before the node serves CQL. The resource keeps retrying until a query succeeds (`ready_timeout`, 90s by default), so the port wait is enough.
 
-## Resource Configuration
+## Resource configuration
 
 ```yaml
 resources:
@@ -59,7 +59,7 @@ resources:
         - countries
 ```
 
-### Resource Options
+### Resource options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -75,7 +75,7 @@ resources:
 | `hosts` | list | - | Connect to `host:port` instead of a container |
 | `ready_timeout` | duration | `90s` | How long to wait for CQL to accept queries |
 
-## Schema Files
+## Schema files
 
 Schema files are plain CQL scripts. Statements are split on `;`, and semicolons inside strings, quoted identifiers, `$$` strings and comments are ignored.
 
@@ -98,7 +98,7 @@ INSERT INTO app.countries (code, name) VALUES ('DE', 'Germany');
 
 If your application creates its own schema on startup (for example with a migration tool), you can leave `schema` out and let the app do it.
 
-## Seeding Data
+## Seeding data
 
 `table ... has values:` inserts rows with `INSERT ... JSON`, so cells are written as text and CQL converts them to the column type (int, uuid, timestamp, boolean, ...). A cell holding a JSON array or object fills a list, set, map or UDT column, and `null` writes a null.
 
@@ -114,7 +114,7 @@ CQL has no global row order, so `table ... contains:` and `query result of ... c
 
 Values are compared as text: timestamps in RFC 3339 UTC (`2026-01-01T00:00:00Z`), UUIDs in canonical form, collections as JSON. An unset text or number column reads back as its zero value (`""`, `0`), as gocql reports it.
 
-## Wiring the App
+## Wiring the app
 
 Pass the container address to your app like any other dependency:
 
