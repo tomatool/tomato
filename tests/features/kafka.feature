@@ -11,6 +11,30 @@ Feature: Kafka Handler
     Given "events" creates topic "partitioned-topic" with "3" partitions
     Then "events" topic "partitioned-topic" exists
 
+  # A topic tomato creates can be consumed as soon as the step returns. The
+  # broker answers CreateTopics before it serves the new partitions, and a
+  # consume in between failed with "not the leader for some partition".
+  Scenario Outline: A topic tomato just created can be consumed at once
+    Given "events" creates topic "<topic>" with "<partitions>" partitions
+    And "events" consumes from "<topic>"
+    When "events" publishes to "<topic>":
+      """
+      fresh
+      """
+    Then "events" receives from "<topic>" within "10s":
+      """
+      fresh
+      """
+
+    Examples:
+      | topic   | partitions |
+      | fresh-1 | 1          |
+      | fresh-2 | 3          |
+      | fresh-3 | 1          |
+      | fresh-4 | 3          |
+      | fresh-5 | 1          |
+      | fresh-6 | 3          |
+
   # Publishing - Simple messages
   Scenario: Publish and consume simple message
     Given "events" creates topic "simple-topic"
