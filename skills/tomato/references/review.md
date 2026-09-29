@@ -33,6 +33,7 @@ Read `tomato.yml`, the feature files and the CI job. Report each finding with
 
 ## Low: hard to read or maintain
 
+- Feature files not laid out by the interface they exercise, or named after a layer, like `api-tests.feature`, instead of a behavior.
 - Scenario names that describe steps rather than behavior.
 - Several behaviors in one scenario.
 - A feature file without a description of the rule it covers.
