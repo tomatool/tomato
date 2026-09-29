@@ -17,7 +17,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/docker/go-connections/nat"
 	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -547,12 +546,12 @@ func (r *Runner) startContainer(ctx context.Context) error {
 		}
 		r.appHost = host
 
-		mappedPort, err := appContainer.MappedPort(ctx, nat.Port(fmt.Sprintf("%d/tcp", r.config.Port)))
+		mappedPort, err := appContainer.MappedPort(ctx, fmt.Sprintf("%d/tcp", r.config.Port))
 		if err != nil {
 			r.Stop()
 			return fmt.Errorf("getting mapped port: %w", err)
 		}
-		r.appPort = mappedPort.Int()
+		r.appPort = int(mappedPort.Num())
 	}
 
 	log.Debug().
@@ -578,7 +577,7 @@ func (r *Runner) buildWaitStrategy() wait.Strategy {
 	if r.config.Ready == nil {
 		// Default: wait for TCP port if configured
 		if r.config.Port > 0 {
-			return wait.ForListeningPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+			return wait.ForListeningPort(fmt.Sprintf("%d/tcp", r.config.Port)).
 				WithStartupTimeout(30 * time.Second)
 		}
 		// No ready check, just wait briefly
@@ -601,12 +600,12 @@ func (r *Runner) buildWaitStrategy() wait.Strategy {
 			expectedStatus = 200
 		}
 		return wait.ForHTTP(path).
-			WithPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+			WithPort(fmt.Sprintf("%d/tcp", r.config.Port)).
 			WithStatusCodeMatcher(func(status int) bool { return status == expectedStatus }).
 			WithStartupTimeout(timeout)
 
 	case "tcp":
-		return wait.ForListeningPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+		return wait.ForListeningPort(fmt.Sprintf("%d/tcp", r.config.Port)).
 			WithStartupTimeout(timeout)
 
 	case "exec":
@@ -614,7 +613,7 @@ func (r *Runner) buildWaitStrategy() wait.Strategy {
 			WithStartupTimeout(timeout)
 
 	default:
-		return wait.ForListeningPort(nat.Port(fmt.Sprintf("%d/tcp", r.config.Port))).
+		return wait.ForListeningPort(fmt.Sprintf("%d/tcp", r.config.Port)).
 			WithStartupTimeout(timeout)
 	}
 }

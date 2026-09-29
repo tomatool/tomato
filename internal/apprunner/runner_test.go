@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/network"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
@@ -36,11 +36,11 @@ type fakeContainer struct {
 
 func (f *fakeContainer) Host(context.Context) (string, error) { return f.host, nil }
 
-func (f *fakeContainer) MappedPort(_ context.Context, p nat.Port) (nat.Port, error) {
-	if port, ok := f.mapped[string(p)]; ok {
-		return nat.Port(fmt.Sprintf("%d/tcp", port)), nil
+func (f *fakeContainer) MappedPort(_ context.Context, p string) (network.Port, error) {
+	if port, ok := f.mapped[p]; ok {
+		return network.ParsePort(fmt.Sprintf("%d/tcp", port))
 	}
-	return "", fmt.Errorf("port %s not mapped", p)
+	return network.Port{}, fmt.Errorf("port %s not mapped", p)
 }
 
 func (f *fakeContainer) Logs(context.Context) (io.ReadCloser, error) {
