@@ -116,6 +116,20 @@ See [Reports](../configuration/index.md#reports) for all formats.
     config: 'tomato.yml'
 ```
 
+### Try an Unreleased Commit
+
+Used at a commit or a branch instead of a version tag, the action builds tomato
+from that same commit (with Go, which it sets up), so a change can run in your
+CI before it is released:
+
+```yaml
+- uses: tomatool/tomato@3f2c1e0d9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e
+  with:
+    config: 'tomato.yml'
+```
+
+Setting `version` still installs that release instead.
+
 ## Complete Workflow Example
 
 ```yaml

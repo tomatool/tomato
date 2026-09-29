@@ -248,6 +248,31 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		WaitingFor: m.buildWaitStrategy(cfg.WaitFor),
 	}
 
+	// Build the image when the entry has a build section and no image. The
+	// context path was made absolute against the config file when it loaded.
+	if cfg.Build != nil && cfg.Image == "" {
+		dockerfile := cfg.Build.Dockerfile
+		if dockerfile == "" {
+			dockerfile = "Dockerfile"
+		}
+		req.FromDockerfile = testcontainers.FromDockerfile{
+			Context:    cfg.Build.Context,
+			Dockerfile: dockerfile,
+			// Keep the image, so the next run reuses its layers.
+			KeepImage: true,
+		}
+	}
+
+	// Follow the container's output from the moment it starts, so a container
+	// that fails its wait strategy still leaves its logs behind.
+	if m.runCtx != nil {
+		if consumer := m.openLogConsumer(name); consumer != nil {
+			req.LogConsumerCfg = &testcontainers.LogConsumerConfig{
+				Consumers: []testcontainers.LogConsumer{consumer},
+			}
+		}
+	}
+
 	// Parse ports - support both dynamic (9092/tcp) and fixed (9092:9092) mapping
 	fixedPorts := make(nat.PortMap)
 	for _, portSpec := range cfg.Ports {
@@ -276,15 +301,20 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		}
 	}
 
-	// Set fixed port bindings if any
-	if len(fixedPorts) > 0 {
+	// Fixed port bindings and volumes ("source:target[:mode]"; bind sources were
+	// made absolute when the config loaded, a name is a Docker volume)
+	binds := append([]string(nil), cfg.Volumes...)
+	if len(fixedPorts) > 0 || len(binds) > 0 {
 		req.HostConfigModifier = func(hc *container.HostConfig) {
-			if hc.PortBindings == nil {
-				hc.PortBindings = make(nat.PortMap)
+			if len(fixedPorts) > 0 {
+				if hc.PortBindings == nil {
+					hc.PortBindings = make(nat.PortMap)
+				}
+				for port, bindings := range fixedPorts {
+					hc.PortBindings[port] = bindings
+				}
 			}
-			for port, bindings := range fixedPorts {
-				hc.PortBindings[port] = bindings
-			}
+			hc.Binds = append(hc.Binds, binds...)
 		}
 	}
 
@@ -314,11 +344,6 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		Dur("duration", time.Since(startTime)).
 		Msg("container ready")
 
-	// Start capturing container logs if run context is set
-	if m.runCtx != nil {
-		go m.captureContainerLogs(ctx, name, ctr)
-	}
-
 	return nil
 }
 
@@ -333,12 +358,15 @@ func (m *Manager) resolveEnvTemplates(env map[string]string) map[string]string {
 	for key, value := range env {
 		resolved := value
 
-		// Find all template patterns
-		for {
-			start := strings.Index(resolved, "{{")
+		// Find all template patterns. Scanning resumes after each replacement:
+		// a template that does not resolve is returned unchanged, and searching
+		// from the start again would find it forever.
+		for pos := 0; pos < len(resolved); {
+			start := strings.Index(resolved[pos:], "{{")
 			if start == -1 {
 				break
 			}
+			start += pos
 			end := strings.Index(resolved[start:], "}}")
 			if end == -1 {
 				break
@@ -348,6 +376,7 @@ func (m *Manager) resolveEnvTemplates(env map[string]string) map[string]string {
 			template := resolved[start:end]
 			replacement := m.resolveTemplate(template)
 			resolved = resolved[:start] + replacement + resolved[end:]
+			pos = start + len(replacement)
 		}
 
 		result[key] = resolved
@@ -394,30 +423,34 @@ func (m *Manager) resolveTemplate(template string) string {
 	return template
 }
 
-// captureContainerLogs streams container logs to a file
-func (m *Manager) captureContainerLogs(ctx context.Context, name string, container testcontainers.Container) {
+// openLogConsumer creates the container's log file and a consumer that appends
+// to it for as long as the container runs. It used to be a one-shot read taken
+// after the wait strategy passed, which ended at that point: nothing the
+// container logged later, or before failing to start, reached the file.
+func (m *Manager) openLogConsumer(name string) *fileLogConsumer {
 	logFile, err := m.runCtx.CreateLogFile("container-" + name)
 	if err != nil {
 		log.Warn().Err(err).Str("container", name).Msg("failed to create container log file")
-		return
+		return nil
 	}
 
 	m.mu.Lock()
 	m.logFiles[name] = logFile
 	m.mu.Unlock()
 
-	// Get container logs
-	logs, err := container.Logs(ctx)
-	if err != nil {
-		log.Warn().Err(err).Str("container", name).Msg("failed to get container logs")
-		return
-	}
+	return &fileLogConsumer{w: logFile}
+}
 
-	// Stream logs to file
-	go func() {
-		defer logs.Close()
-		io.Copy(logFile, logs)
-	}()
+// fileLogConsumer writes a container's log stream to a file.
+type fileLogConsumer struct {
+	mu sync.Mutex
+	w  io.Writer
+}
+
+func (c *fileLogConsumer) Accept(l testcontainers.Log) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	_, _ = c.w.Write(l.Content)
 }
 
 // buildWaitStrategy converts config wait strategy to testcontainers wait strategy

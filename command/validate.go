@@ -368,8 +368,22 @@ func (v *Validator) validateContainers() {
 			Category: "Containers",
 			Item:     name,
 			Status:   "ok",
-			Message:  fmt.Sprintf("image: %s", cont.Image),
+			Message:  containerSource(cont),
 		})
+	}
+}
+
+// containerSource says what a container runs: its preset, image or build context.
+func containerSource(c config.Container) string {
+	switch {
+	case c.Preset != "" && c.Auth != "":
+		return fmt.Sprintf("preset: %s (auth: %s)", c.Preset, c.Auth)
+	case c.Preset != "":
+		return "preset: " + c.Preset
+	case c.Image != "":
+		return "image: " + c.Image
+	default:
+		return "build: " + c.Build.Context
 	}
 }
 
