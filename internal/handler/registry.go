@@ -18,6 +18,7 @@ type Registry struct {
 	resetConfig map[string]*bool // per-handler reset configuration
 	container   *container.Manager
 	mu          sync.RWMutex
+	cleanedUp   bool
 }
 
 // NewRegistry creates a new handler registry
@@ -209,10 +210,16 @@ func (r *Registry) RegisterSteps(ctx *godog.ScenarioContext) {
 	}
 }
 
-// Cleanup releases all handlers
+// Cleanup releases all handlers: it closes their connections and servers and
+// removes their files. It runs once; later calls do nothing, since some
+// clients (sarama's producer) panic when they are closed twice.
 func (r *Registry) Cleanup(ctx context.Context) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if r.cleanedUp {
+		return nil
+	}
+	r.cleanedUp = true
 
 	var errs []error
 	for name, h := range r.handlers {
