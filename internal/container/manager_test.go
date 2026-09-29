@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 	"github.com/testcontainers/testcontainers-go"
 	tcexec "github.com/testcontainers/testcontainers-go/exec"
 	"github.com/tomatool/tomato/internal/config"
@@ -18,7 +18,7 @@ import (
 type mockContainer struct {
 	hostVal    string
 	hostErr    error
-	ports      map[nat.Port][]nat.PortBinding
+	ports      network.PortMap
 	portsErr   error
 	execCode   int
 	execReader io.Reader
@@ -32,13 +32,17 @@ func (m *mockContainer) Terminate(ctx context.Context, opts ...testcontainers.Te
 func (m *mockContainer) Host(ctx context.Context) (string, error) {
 	return m.hostVal, m.hostErr
 }
-func (m *mockContainer) MappedPort(ctx context.Context, port nat.Port) (nat.Port, error) {
-	if bindings, ok := m.ports[port]; ok && len(bindings) > 0 {
-		return nat.Port(bindings[0].HostPort), nil
+func (m *mockContainer) MappedPort(ctx context.Context, port string) (network.Port, error) {
+	parsed, err := network.ParsePort(port)
+	if err != nil {
+		return network.Port{}, err
 	}
-	return "", fmt.Errorf("port not found: %s", port)
+	if bindings, ok := m.ports[parsed]; ok && len(bindings) > 0 {
+		return network.ParsePort(bindings[0].HostPort)
+	}
+	return network.Port{}, fmt.Errorf("port not found: %s", port)
 }
-func (m *mockContainer) Ports(ctx context.Context) (nat.PortMap, error) {
+func (m *mockContainer) Ports(ctx context.Context) (network.PortMap, error) {
 	return m.ports, m.portsErr
 }
 func (m *mockContainer) SessionID() string { return "session" }
@@ -60,7 +64,7 @@ func (m *mockContainer) State(ctx context.Context) (*container.State, error) { r
 func (m *mockContainer) Networks(ctx context.Context) ([]string, error) { return nil, nil }
 func (m *mockContainer) NetworkAliases(ctx context.Context) (map[string][]string, error) { return nil, nil }
 func (m *mockContainer) Endpoint(ctx context.Context, proto string) (string, error) { return "", nil }
-func (m *mockContainer) PortEndpoint(ctx context.Context, port nat.Port, proto string) (string, error) { return "", nil }
+func (m *mockContainer) PortEndpoint(ctx context.Context, port string, proto string) (string, error) { return "", nil }
 func (m *mockContainer) CopyToContainer(ctx context.Context, fileContent []byte, containerFilePath string, fileMode int64) error { return nil }
 func (m *mockContainer) CopyDirToContainer(ctx context.Context, hostDirPath string, containerParentPath string, fileMode int64) error { return nil }
 func (m *mockContainer) CopyFileToContainer(ctx context.Context, hostFilePath string, containerFilePath string, fileMode int64) error { return nil }
@@ -479,8 +483,8 @@ func TestGetPort(t *testing.T) {
 			name: "successful port retrieval",
 			containers: map[string]testcontainers.Container{
 				"postgres": &mockContainer{
-					ports: map[nat.Port][]nat.PortBinding{
-						"5432/tcp": {{HostPort: "32768"}},
+					ports: network.PortMap{
+						network.MustParsePort("5432/tcp"): {{HostPort: "32768"}},
 					},
 				},
 			},
@@ -501,8 +505,8 @@ func TestGetPort(t *testing.T) {
 			name: "port not found",
 			containers: map[string]testcontainers.Container{
 				"postgres": &mockContainer{
-					ports: map[nat.Port][]nat.PortBinding{
-						"5432/tcp": {{HostPort: "32768"}},
+					ports: network.PortMap{
+						network.MustParsePort("5432/tcp"): {{HostPort: "32768"}},
 					},
 				},
 			},
@@ -559,8 +563,8 @@ func TestGetConnectionString(t *testing.T) {
 			containers: map[string]testcontainers.Container{
 				"postgres": &mockContainer{
 					hostVal: "localhost",
-					ports: map[nat.Port][]nat.PortBinding{
-						"5432/tcp": {{HostPort: "32768"}},
+					ports: network.PortMap{
+						network.MustParsePort("5432/tcp"): {{HostPort: "32768"}},
 					},
 				},
 			},
@@ -582,7 +586,7 @@ func TestGetConnectionString(t *testing.T) {
 			containers: map[string]testcontainers.Container{
 				"postgres": &mockContainer{
 					hostVal: "localhost",
-					ports:   map[nat.Port][]nat.PortBinding{},
+					ports:   network.PortMap{},
 				},
 			},
 			getName:     "postgres",

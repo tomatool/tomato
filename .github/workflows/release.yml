@@ -118,7 +118,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.26"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
@@ -188,7 +188,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.26"
 
       - name: Build tomato
         run: go build -o tomato .

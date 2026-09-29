@@ -8,6 +8,11 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 
 ## [Unreleased]
 
+### Security
+- Every open Dependabot alert patched: `google.golang.org/grpc` v1.83.2 (authorization bypass via a missing leading slash in `:path`, xDS crash and RBAC bypasses, HTTP/2 memory exhaustion), `github.com/rabbitmq/amqp091-go` v1.15.0 (frame injection and protocol desynchronization, plaintext credential exposure, several DoS paths), `golang.org/x/crypto` v0.57.0 (SSH authorization and certificate-constraint bypasses, DoS), `golang.org/x/net` v0.59.0 (HTML parser DoS), `github.com/moby/go-archive` v0.3.3 (tar extraction outside the target directory), and the OpenTelemetry modules at v1.46.0 (baggage-header allocation DoS).
+- `github.com/docker/docker` left the dependency graph entirely — its four alerts have no patched release on that module path, which Docker 29 abandoned. testcontainers-go v0.44.0 and tomato use the `github.com/moby/moby/api` and `github.com/moby/moby/client` modules instead.
+- The Go toolchain is pinned to 1.26.6, which carries the standard-library fixes govulncheck flags in earlier 1.26 releases. Building tomato now needs Go 1.26.
+
 ### Added
 - `kafka` container preset (`preset: kafka`): a single-node KRaft broker with its host port picked and advertised, reachable from the host and from other containers; `auth: aws_msk_iam` adds a listener speaking SASL `AWS_MSK_IAM` like MSK's IAM port. Release builds pull `ghcr.io/tomatool/tomato-kafka:<version>`, development builds build it from the binary.
 - `aws` resource: IRSA for the app under test. tomato serves STS (`AssumeRoleWithWebIdentity`, `AssumeRole`, `GetCallerIdentity`), writes the web identity token and credential files, points the app's SDK at them and drops inherited `AWS_*` credentials; `ambient_identity` adds the fallback identity a credential chain ends up with when the role cannot be had. An `AWS_MSK_IAM` preset listener lets in only the role sessions it issues. Steps: `role "..." was assumed` / `was not assumed`.

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"net/netip"
 	"os"
 	"os/exec"
 	"runtime"
@@ -15,9 +16,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
+	"github.com/moby/moby/api/types/container"
+	mobynetwork "github.com/moby/moby/api/types/network"
 	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/network"
@@ -285,7 +286,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	}
 
 	// Parse ports - support both dynamic (9092/tcp) and fixed (9092:9092) mapping
-	fixedPorts := make(nat.PortMap)
+	fixedPorts := make(mobynetwork.PortMap)
 	for _, portSpec := range cfg.Ports {
 		if strings.Contains(portSpec, ":") {
 			// Fixed port mapping: "hostPort:containerPort" or "hostPort:containerPort/tcp"
@@ -299,8 +300,12 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 			}
 
 			req.ExposedPorts = append(req.ExposedPorts, containerPort)
-			fixedPorts[nat.Port(containerPort)] = []nat.PortBinding{
-				{HostIP: "0.0.0.0", HostPort: hostPort},
+			parsedPort, err := mobynetwork.ParsePort(containerPort)
+			if err != nil {
+				return fmt.Errorf("container %s: invalid port %q: %w", name, portSpec, err)
+			}
+			fixedPorts[parsedPort] = []mobynetwork.PortBinding{
+				{HostIP: netip.IPv4Unspecified(), HostPort: hostPort},
 			}
 		} else {
 			// Dynamic port mapping: "9092/tcp" or "9092"
@@ -319,7 +324,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		req.HostConfigModifier = func(hc *container.HostConfig) {
 			if len(fixedPorts) > 0 {
 				if hc.PortBindings == nil {
-					hc.PortBindings = make(nat.PortMap)
+					hc.PortBindings = make(mobynetwork.PortMap)
 				}
 				for port, bindings := range fixedPorts {
 					hc.PortBindings[port] = bindings
@@ -507,11 +512,11 @@ func (m *Manager) buildWaitStrategy(ws config.WaitStrategy) wait.Strategy {
 
 	switch ws.Type {
 	case "port":
-		return wait.ForListeningPort(nat.Port(ws.Target)).WithStartupTimeout(timeout)
+		return wait.ForListeningPort(ws.Target).WithStartupTimeout(timeout)
 	case "log":
 		return wait.ForLog(ws.Target).WithStartupTimeout(timeout)
 	case "http":
-		strategy := wait.ForHTTP(ws.Path).WithPort(nat.Port(ws.Target)).WithStartupTimeout(timeout)
+		strategy := wait.ForHTTP(ws.Path).WithPort(ws.Target).WithStartupTimeout(timeout)
 		if ws.Method != "" {
 			strategy = strategy.WithMethod(ws.Method)
 		}
@@ -551,7 +556,7 @@ func (m *Manager) GetPort(ctx context.Context, name, port string) (string, error
 	if err != nil {
 		return "", err
 	}
-	mappedPort, err := container.MappedPort(ctx, nat.Port(port))
+	mappedPort, err := container.MappedPort(ctx, port)
 	if err != nil {
 		return "", err
 	}
@@ -565,11 +570,11 @@ func (m *Manager) GetMappedPort(name, port string) int {
 	if err != nil {
 		return 0
 	}
-	mappedPort, err := container.MappedPort(ctx, nat.Port(port))
+	mappedPort, err := container.MappedPort(ctx, port)
 	if err != nil {
 		return 0
 	}
-	return mappedPort.Int()
+	return int(mappedPort.Num())
 }
 
 // GetConnectionString builds a connection string for a container
