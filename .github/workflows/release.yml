@@ -25,8 +25,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -153,43 +151,6 @@ jobs:
           echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- [Release Page](https://github.com/tomatool/tomato/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
-
-  # The image the kafka preset runs in a release build of tomato, published
-  # under the release's version (without the v). Its build context is the one
-  # embedded in the binary, internal/presets/kafka.
-  publish-kafka-image:
-    needs: release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.release.outputs.version }}
-
-      - name: Image tag
-        id: tag
-        env:
-          VERSION: ${{ needs.release.outputs.version }}
-        run: echo "tag=${VERSION#v}" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: internal/presets/kafka
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/tomatool/tomato-kafka:${{ steps.tag.outputs.tag }}
 
   update-action-tag:
     needs: release
