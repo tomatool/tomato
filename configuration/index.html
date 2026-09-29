@@ -2397,7 +2397,8 @@ leave the server running and holding the port.</p>
 is bound into the container, relative paths resolved against the directory of
 <code>tomato.yml</code>; a bare name is a Docker volume. <code>build</code> (<code>context</code>, <code>dockerfile</code>)
 builds the image instead of pulling one, with <code>context</code> relative to <code>tomato.yml</code>
-too. Each container's output is written to <code>.tomato/runs/&lt;run&gt;/container-&lt;name&gt;.log</code>
+too. The image is named <code>tomato-&lt;container&gt;</code> and kept, so the next run rebuilds
+from cache into the same image. Each container's output is written to <code>.tomato/runs/&lt;run&gt;/container-&lt;name&gt;.log</code>
 for as long as it runs, including when it fails to start.</p>
 <h3 id="presets">Presets<a class="headerlink" href="#presets" title="Permanent link">#</a></h3>
 <p>A preset is a container tomato knows how to run. It fills in the image, env,

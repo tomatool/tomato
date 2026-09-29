@@ -2148,10 +2148,11 @@ credentials (its SDK could not reach STS and fell back to another identity,
 say) fails here the way it fails against MSK. Without an aws resource, any
 identity gets in.</p>
 <h3 id="the-image">The image<a class="headerlink" href="#the-image" title="Permanent link">#</a></h3>
-<p>A release of tomato runs <code>ghcr.io/tomatool/tomato-kafka:&lt;version&gt;</code>: apache/kafka
-plus the <code>AWS_MSK_IAM</code> server, published with each release. A development build
-of tomato builds that image from the copy embedded in the binary the first time
-it runs. Set <code>image:</code> on the entry to use another.</p>
+<p>The preset runs the stock <code>apache/kafka:3.9.1</code>. For <code>auth: aws_msk_iam</code>, tomato
+copies the <code>AWS_MSK_IAM</code> server it carries in its binary into the container's
+<code>/opt/kafka/libs</code> before the broker starts, so there is no extra image to pull
+or build. Set <code>image:</code> on the entry to run another apache/kafka tag; the plugin
+is copied into it the same way.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
 <p>Kafka integration testing with testcontainers requires special configuration due to how Kafka advertises its brokers to clients. This guide explains the recommended setup using Zookeeper-based Kafka with fixed port mapping.</p>
 <h2 id="the-challenge">The Challenge<a class="headerlink" href="#the-challenge" title="Permanent link">#</a></h2>
