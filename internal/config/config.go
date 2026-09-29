@@ -112,6 +112,16 @@ type Container struct {
 	DependsOn []string          `yaml:"depends_on"`
 	WaitFor   WaitStrategy      `yaml:"wait_for"`
 	Reset     ContainerReset    `yaml:"reset"`
+	// Files are copied into the container after it is created and before it
+	// starts. Presets fill them in; tomato.yml cannot set them.
+	Files []ContainerFile `yaml:"-"`
+}
+
+// ContainerFile is a file tomato puts into a container before it starts.
+type ContainerFile struct {
+	Path    string // absolute path in the container
+	Content []byte
+	Mode    int64
 }
 
 // StringList accepts either a YAML sequence or a single scalar string, so both
