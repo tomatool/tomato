@@ -89,6 +89,7 @@ For complete documentation, visit **[tomatool.github.io/tomato](https://tomatool
 - [Configuration Reference](https://tomatool.github.io/tomato/configuration)
 - [Architecture](https://tomatool.github.io/tomato/architecture)
 - [Step Reference](https://tomatool.github.io/tomato/resources)
+- [Agent Skill](https://tomatool.github.io/tomato/getting-started/agent-skill/) - teach a coding agent to set up, write, review and debug suites
 
 ## Contributing
 
