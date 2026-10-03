@@ -27,13 +27,8 @@ The skill also has a protocol for when tomato lacks a step, resource or option:
 confirm the gap, mark it in the suite instead of working around it, file it
 upstream, and use the fix from its commit until a release carries it.
 
-Step wording always comes from `tomato steps`, so the agent needs the tomato CLI
-and Docker where it runs.
-
-Contributing to tomato itself is a different job with different rules. The
-tomato repository carries a separate skill for that in `.claude/skills/tomato-dev`,
-which Claude Code loads automatically when working in that repository. It is not
-part of the user skill and is not installed with it.
+Contributing to tomato itself is a different job with different rules and has
+its own skill; see [Contributing to tomato](#contributing-to-tomato).
 
 ## Install for Claude Code
 
@@ -49,6 +44,48 @@ For one repository, extract into its `.claude/skills` instead and commit it, so
 everyone working on the repository gets it.
 
 Other agents that read agentskills.io skills can use the same directory.
+
+## Using it
+
+The agent needs the tomato CLI and Docker on the machine it runs on, because the
+skill makes it take step wording from `tomato steps` and prove its work with
+`tomato validate` and `tomato run`. Start the agent in the repository of the
+service under test.
+
+The agent picks the skill up on its own when a task matches it. In Claude Code
+you can also call it directly with `/tomato`. Either way, say the job in plain
+words; the skill routes on it:
+
+| You say | The agent does |
+|---|---|
+| "Add tomato to this repository" | Inventories every dependency and interface from the code and manifests, writes `tomato.yml`, the first features and the CI job, and runs the suite twice |
+| "Write scenarios for placing an order" | Lays the feature out under the interface it exercises, one action per scenario with a Then for every effect, and runs the changed features |
+| "Review our tomato suite", or a review of one feature file | Reports findings by severity, each with `file:line`, the rule it breaks and the fix |
+| "This tomato run fails", "this scenario flakes on CI" | Reads `.tomato/runs/<run>/`, names the failing step, the evidence, the cause and the fix |
+| "tomato has no step for this" | Follows the gap protocol: confirms the gap, marks it in the suite, files it upstream, pins the fix's commit |
+
+What comes back is what the review reference checks, so a reviewer, human or
+agent, can hold the result to the same list: no host or credential outside the
+run, only config, every scenario one action with every effect asserted, nothing
+that can pass while the behavior is broken.
+
+Give the agent what the job needs: for onboarding, how production deploys and
+configures the service; for a scenario, the behavior in one sentence and which
+dependencies it touches; for a failing run, the run directory or the CI log.
+
+## Contributing to tomato
+
+The tomato repository carries a separate skill for people changing tomato
+itself, in [`.claude/skills/tomato-dev`](https://github.com/tomatool/tomato/tree/main/.claude/skills/tomato-dev):
+adding or changing steps, resources, presets, options and docs, and handling
+gaps that users report. Claude Code loads it automatically when working in a
+checkout of tomato, and `/tomato-dev` calls it directly; other agents can be
+pointed at the file. It is not part of the user skill and is not installed with
+it.
+
+Its one rule that reaches outside this repository: the user skill is the
+contract. A change to a step's wording, a config key or a CLI flag updates
+`skills/tomato` in the same pull request.
 
 ## Extending it
 
