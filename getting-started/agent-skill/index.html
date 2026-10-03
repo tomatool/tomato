@@ -651,6 +651,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#using-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing-to-tomato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributing to tomato
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#extending-it" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1608,6 +1630,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#using-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using it
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing-to-tomato" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contributing to tomato
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#extending-it" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1680,12 +1724,8 @@ each scenario has one focus and asserts every effect of it.</p>
 <p>The skill also has a protocol for when tomato lacks a step, resource or option:
 confirm the gap, mark it in the suite instead of working around it, file it
 upstream, and use the fix from its commit until a release carries it.</p>
-<p>Step wording always comes from <code>tomato steps</code>, so the agent needs the tomato CLI
-and Docker where it runs.</p>
-<p>Contributing to tomato itself is a different job with different rules. The
-tomato repository carries a separate skill for that in <code>.claude/skills/tomato-dev</code>,
-which Claude Code loads automatically when working in that repository. It is not
-part of the user skill and is not installed with it.</p>
+<p>Contributing to tomato itself is a different job with different rules and has
+its own skill; see <a href="#contributing-to-tomato">Contributing to tomato</a>.</p>
 <h2 id="install-for-claude-code">Install for Claude Code<a class="headerlink" href="#install-for-claude-code" title="Permanent link">#</a></h2>
 <p>For all your projects:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.claude/skills
@@ -1695,6 +1735,62 @@ part of the user skill and is not installed with it.</p>
 <p>For one repository, extract into its <code>.claude/skills</code> instead and commit it, so
 everyone working on the repository gets it.</p>
 <p>Other agents that read agentskills.io skills can use the same directory.</p>
+<h2 id="using-it">Using it<a class="headerlink" href="#using-it" title="Permanent link">#</a></h2>
+<p>The agent needs the tomato CLI and Docker on the machine it runs on, because the
+skill makes it take step wording from <code>tomato steps</code> and prove its work with
+<code>tomato validate</code> and <code>tomato run</code>. Start the agent in the repository of the
+service under test.</p>
+<p>The agent picks the skill up on its own when a task matches it. In Claude Code
+you can also call it directly with <code>/tomato</code>. Either way, say the job in plain
+words; the skill routes on it:</p>
+<table>
+<thead>
+<tr>
+<th>You say</th>
+<th>The agent does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Add tomato to this repository"</td>
+<td>Inventories every dependency and interface from the code and manifests, writes <code>tomato.yml</code>, the first features and the CI job, and runs the suite twice</td>
+</tr>
+<tr>
+<td>"Write scenarios for placing an order"</td>
+<td>Lays the feature out under the interface it exercises, one action per scenario with a Then for every effect, and runs the changed features</td>
+</tr>
+<tr>
+<td>"Review our tomato suite", or a review of one feature file</td>
+<td>Reports findings by severity, each with <code>file:line</code>, the rule it breaks and the fix</td>
+</tr>
+<tr>
+<td>"This tomato run fails", "this scenario flakes on CI"</td>
+<td>Reads <code>.tomato/runs/&lt;run&gt;/</code>, names the failing step, the evidence, the cause and the fix</td>
+</tr>
+<tr>
+<td>"tomato has no step for this"</td>
+<td>Follows the gap protocol: confirms the gap, marks it in the suite, files it upstream, pins the fix's commit</td>
+</tr>
+</tbody>
+</table>
+<p>What comes back is what the review reference checks, so a reviewer, human or
+agent, can hold the result to the same list: no host or credential outside the
+run, only config, every scenario one action with every effect asserted, nothing
+that can pass while the behavior is broken.</p>
+<p>Give the agent what the job needs: for onboarding, how production deploys and
+configures the service; for a scenario, the behavior in one sentence and which
+dependencies it touches; for a failing run, the run directory or the CI log.</p>
+<h2 id="contributing-to-tomato">Contributing to tomato<a class="headerlink" href="#contributing-to-tomato" title="Permanent link">#</a></h2>
+<p>The tomato repository carries a separate skill for people changing tomato
+itself, in <a href="https://github.com/tomatool/tomato/tree/main/.claude/skills/tomato-dev"><code>.claude/skills/tomato-dev</code></a>:
+adding or changing steps, resources, presets, options and docs, and handling
+gaps that users report. Claude Code loads it automatically when working in a
+checkout of tomato, and <code>/tomato-dev</code> calls it directly; other agents can be
+pointed at the file. It is not part of the user skill and is not installed with
+it.</p>
+<p>Its one rule that reaches outside this repository: the user skill is the
+contract. A change to a step's wording, a config key or a CLI flag updates
+<code>skills/tomato</code> in the same pull request.</p>
 <h2 id="extending-it">Extending it<a class="headerlink" href="#extending-it" title="Permanent link">#</a></h2>
 <p>A team can build a skill on top of this one for its own stack, covering how
 services are built, started and configured, and keep the principles here.</p>
