@@ -16,7 +16,7 @@ Each of them becomes something tomato starts or serves: a container, a preset, a
 run, not even read-only: no staging database, real cloud account or third-party
 API.
 
-Anything on that list the suite leaves out, or replaces with something that can't fail the same way, is a gap. Name each gap in a comment where it is taken.
+Anything on that list the suite leaves out, or replaces with something that can't fail the same way, is a gap. Name each gap in a comment where it is taken. A dependency tomato has no resource, preset or step for is a gap in tomato: follow [gaps.md](gaps.md), don't fake it.
 
 ## 2. Write tomato.yml
 
@@ -111,8 +111,10 @@ at the result.
 ## 3. First features
 
 Start with one scenario per interface that proves the wiring, then the behaviors
-that matter most. Lay them out by interface from the first file, like
-`features/http/api/v1/health.feature`. See [scenarios.md](scenarios.md#layout).
+that matter most. Each scenario is one action with a Then for every effect it
+has: the response, the row, the message, the object, the call to a dependency.
+Lay them out by interface from the first file, like
+`features/http/api/v1/health.feature`. See [scenarios.md](scenarios.md).
 
 ## 4. Verify
 

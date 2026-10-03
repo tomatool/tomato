@@ -5,6 +5,10 @@ welcome. Before changing anything user-facing, read
 [docs/stability.md](docs/stability.md): it says what counts as a breaking change and
 how to deprecate things.
 
+With Claude Code, the contributor skill in `.claude/skills/tomato-dev` loads
+automatically in this repository. The user-facing skill in `skills/tomato` is
+the contract to keep when you change steps, config or CLI flags.
+
 ## Development setup
 
 You need Go (the version in `go.mod`) and Docker, since tomato starts containers.

@@ -9,13 +9,15 @@ Read `tomato.yml`, the feature files and the CI job. Report each finding with
 |---|---|
 | A host, URL, account or credential outside the run: a staging database, a real cloud account, a third-party API, another team's running service | Isolated |
 | Harness scripts, wrapper commands, custom images or overlay config files the suite needs to run | Config only |
+| A workaround for something tomato lacks: a script, a sleep standing in for a wait, a log assertion, or a weaker Then in place of the missing one. The fix is the [gap protocol](gaps.md) | Config only |
 | A dependency replaced by something that can't fail the way production does: plaintext where production authenticates, a fake where the real server is cheap, runtime flags that differ from production's | Fail like production |
 | A mock for a service that belongs to the application itself, or another service's tables living in the application's database | Fail like production |
 | A step that reaches the application's internals: calling code, reading its logs, poking its in-memory state | Black box |
-| A scenario that goes on after its focus: a second When after the Thens, or assertions on what happens downstream of the action's direct effects | One focus |
+| A scenario that goes on after its focus: a second When after the Thens, assertions on what happens downstream of the action's direct effects, or a dependency's failure mode mixed into the happy path | One focus |
 
 ## High: can pass while the behavior is broken
 
+- A direct effect of the action with no Then: the row is checked but not the message, the message but not the object, or the call to a dependency is never asserted. The scenario passes while that effect is broken. A hole marked as a gap with its issue linked ([gaps](gaps.md)) is known, not a finding.
 - A Then that only restates what a Given seeded.
 - No assertion that tells the intended path from a fallthrough.
 - Fixtures that make the behavior vacuous: every row owned by everyone, every flag on.
@@ -38,6 +40,7 @@ Read `tomato.yml`, the feature files and the CI job. Report each finding with
 - Several behaviors in one scenario.
 - A feature file without a description of the rule it covers.
 - Non-obvious config lines or fixture values without a comment saying why.
+- A gap marked in the suite with no issue linked, or an issue that has since been released without the mark being removed.
 
 ## CI
 

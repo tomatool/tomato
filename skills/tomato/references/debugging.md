@@ -29,5 +29,5 @@ Read the evidence before changing anything. Every run writes
 - `tomato run --no-reset` skips resets to inspect leftover state. Never commit it.
 
 When the failure turns out to be tomato's, like a race in a step or something it
-can't express, fix it in tomato ([contributing.md](contributing.md)) rather than
-working around it in the suite.
+can't express, follow the [gap protocol](gaps.md) rather than working around
+it in the suite.
