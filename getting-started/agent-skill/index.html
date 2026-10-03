@@ -629,6 +629,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#who-it-is-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who it is for
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#install-for-claude-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1575,6 +1586,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#who-it-is-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who it is for
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#install-for-claude-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1618,13 +1640,52 @@
 
 <h1 id="agent-skill">Agent Skill<a class="headerlink" href="#agent-skill" title="Permanent link">#</a></h1>
 <p>tomato ships an <a href="https://agentskills.io/">agent skill</a> for coding agents such as
-Claude Code, in <a href="https://github.com/tomatool/tomato/tree/main/skills/tomato"><code>skills/tomato</code></a>.
-With it, an agent can add tomato to a repository, write and review scenarios,
-and debug failing runs the way this project intends: a suite runs isolated, it
-is only <code>tomato.yml</code>, feature files and a CI job, it fails the way production
-fails, it tests the application as a black box, and each scenario has one focus.</p>
-<p>The skill takes step wording from <code>tomato steps</code>, so the agent needs the tomato
-CLI and Docker where it runs.</p>
+Claude Code, in <a href="https://github.com/tomatool/tomato/tree/main/skills/tomato"><code>skills/tomato</code></a>.</p>
+<h2 id="who-it-is-for">Who it is for<a class="headerlink" href="#who-it-is-for" title="Permanent link">#</a></h2>
+<p>The skill is for the team that owns a service and tests it with tomato. It covers
+the four jobs that team has, each in its own reference file the agent reads on
+demand:</p>
+<table>
+<thead>
+<tr>
+<th>Job</th>
+<th>The agent gets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Onboarding a service</td>
+<td>An inventory of the production path, a <code>tomato.yml</code>, the first features and the CI job</td>
+</tr>
+<tr>
+<td>Writing scenarios</td>
+<td>Layout by interface, one action per scenario with a Then for every effect, and examples of weak, incomplete, strong and over-long scenarios</td>
+</tr>
+<tr>
+<td>Reviewing a suite</td>
+<td>Findings by severity with <code>file:line</code>, the rule broken and the fix</td>
+</tr>
+<tr>
+<td>Debugging a run</td>
+<td>The evidence in <code>.tomato/runs</code>, a table of failure signatures, and the tools</td>
+</tr>
+</tbody>
+</table>
+<p>It is one skill rather than four because the jobs share the same hard rules and
+run into each other: onboarding ends in writing, writing ends in reviewing, and
+a failing run leads back to writing. The rules are tomato's own principles: a
+suite runs isolated, it is only <code>tomato.yml</code>, feature files and a CI job, it
+fails the way production fails, it tests the application as a black box, and
+each scenario has one focus and asserts every effect of it.</p>
+<p>The skill also has a protocol for when tomato lacks a step, resource or option:
+confirm the gap, mark it in the suite instead of working around it, file it
+upstream, and use the fix from its commit until a release carries it.</p>
+<p>Step wording always comes from <code>tomato steps</code>, so the agent needs the tomato CLI
+and Docker where it runs.</p>
+<p>Contributing to tomato itself is a different job with different rules. The
+tomato repository carries a separate skill for that in <code>.claude/skills/tomato-dev</code>,
+which Claude Code loads automatically when working in that repository. It is not
+part of the user skill and is not installed with it.</p>
 <h2 id="install-for-claude-code">Install for Claude Code<a class="headerlink" href="#install-for-claude-code" title="Permanent link">#</a></h2>
 <p>For all your projects:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.claude/skills
