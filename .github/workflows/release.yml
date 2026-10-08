@@ -130,6 +130,28 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
+      # GoReleaser publishes tomato to Homebrew as a cask, and skips that for
+      # pre-releases. Check the tap now has this version, and that no formula
+      # named tomato shadows the cask: brew resolves a name to a formula
+      # first, and one left over from before the switch to casks kept
+      # installing 2.0.3 for months.
+      - name: Verify Homebrew tap
+        if: steps.version.outputs.is_prerelease == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          CASK=$(gh api repos/tomatool/homebrew-tap/contents/Casks/tomato.rb -H "Accept: application/vnd.github.raw")
+          if ! grep -q "version \"${VERSION#v}\"" <<<"$CASK"; then
+            echo "::error::Casks/tomato.rb in tomatool/homebrew-tap is not at ${VERSION#v}: $(grep -m1 'version "' <<<"$CASK")"
+            exit 1
+          fi
+          if gh api repos/tomatool/homebrew-tap/contents/Formula/tomato.rb --silent 2>/dev/null; then
+            echo "::error::tomatool/homebrew-tap has Formula/tomato.rb, which brew installs instead of the cask. Delete it."
+            exit 1
+          fi
+          echo "Homebrew cask is at ${VERSION#v}"
+
       - name: Summary
         run: |
           echo "## 🍅 Release Summary" >> $GITHUB_STEP_SUMMARY
