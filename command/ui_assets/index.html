@@ -1118,6 +1118,145 @@
             height: 100%;
             overflow: auto;
         }
+
+        /* Scenario graph: one lane per resource, one arrow per step */
+        .view-toggle {
+            display: inline-flex;
+            margin-top: 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .view-toggle button {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            border: none;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .view-toggle button + button { border-left: 1px solid var(--border); }
+        .view-toggle button.active {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        .graph-wrapper {
+            margin-top: 12px;
+            padding: 12px 0;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .graph-wrapper svg { display: block; }
+        .graph-note {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .graph-lane-line { stroke: var(--border); stroke-dasharray: 3 4; }
+        .graph-lane-box { fill: var(--bg-tertiary); stroke: var(--border); }
+        .graph-lane-name { fill: var(--text-primary); font-size: 12px; font-weight: 600; }
+        .graph-lane-type { fill: var(--text-muted); font-size: 11px; }
+        .graph-band { fill: var(--bg-tertiary); opacity: 0.45; }
+        .graph-band-label { fill: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .graph-keyword { font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .graph-label {
+            fill: var(--text-secondary);
+            font-size: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            /* A halo in the background colour keeps labels readable where they cross lanes */
+            paint-order: stroke;
+            stroke: var(--bg-secondary);
+            stroke-width: 4px;
+            stroke-linejoin: round;
+        }
+        .graph-arrow { stroke-width: 1.6; fill: none; }
+        .graph-unmatched { fill: var(--error); font-size: 12px; }
+        .phase-given { stroke: var(--accent-green); fill: var(--accent-green); color: var(--accent-green); }
+        .phase-when { stroke: var(--accent-yellow); fill: var(--accent-yellow); color: var(--accent-yellow); }
+        .phase-then { stroke: var(--accent-blue); fill: var(--accent-blue); color: var(--accent-blue); }
+        .graph-row:hover .graph-label { fill: var(--text-primary); }
+
+        /* Scenario flow: tomato, the app and every resource; each step draws a line */
+        .flow-wrapper { position: relative; }
+        .flow-node rect { fill: var(--bg-tertiary); stroke: var(--border); stroke-width: 1.2; transition: stroke 0.3s, stroke-width 0.3s; }
+        .flow-node.tomato rect { stroke: var(--accent-peach); }
+        .flow-node.app rect { stroke: var(--accent-mauve); }
+        .flow-node.active rect { stroke: var(--accent-sky); stroke-width: 2.5; }
+        .flow-node .name { fill: var(--text-primary); font-size: 12px; font-weight: 600; }
+        .flow-node .type { fill: var(--text-muted); font-size: 11px; }
+        .flow-edge { fill: none; stroke: var(--text-muted); stroke-width: 1.5; opacity: 0.45; pointer-events: none; }
+        .flow-edge.inferred { stroke: var(--accent-teal); }
+        .flow-edge.inferred.drawn { stroke-dasharray: 6 6; animation: flow-march 1s linear infinite; }
+        .flow-edge.current { opacity: 1; stroke-width: 2.4; }
+        .flow-edge.current.phase-given { stroke: var(--accent-green); }
+        .flow-edge.current.phase-when { stroke: var(--accent-yellow); }
+        .flow-edge.current.phase-then { stroke: var(--accent-blue); }
+        @keyframes flow-march { to { stroke-dashoffset: -12; } }
+        .flow-head.phase-given { fill: var(--accent-green); }
+        .flow-head.phase-when { fill: var(--accent-yellow); }
+        .flow-head.phase-then { fill: var(--accent-blue); }
+        .flow-head.inferred { fill: var(--accent-teal); }
+        .flow-head.muted { fill: var(--text-muted); }
+        .flow-hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
+        .flow-hit:hover + .flow-edge, .flow-edge.hover { opacity: 1; stroke-width: 2.8; }
+        .flow-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px 0;
+            font-size: 13px;
+        }
+        .flow-controls button {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .flow-controls button:disabled { opacity: 0.4; cursor: default; }
+        .flow-caption { flex: 1; color: var(--text-secondary); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .flow-caption .kw { font-weight: 600; text-transform: uppercase; margin-right: 6px; }
+        .flow-caption .kw.given { color: var(--accent-green); }
+        .flow-caption .kw.when { color: var(--accent-yellow); }
+        .flow-caption .kw.then { color: var(--accent-blue); }
+        .flow-legend { display: flex; gap: 18px; padding: 0 16px; font-size: 11px; color: var(--text-muted); }
+        .flow-legend span::before { content: ''; display: inline-block; width: 18px; margin-right: 6px; vertical-align: middle; border-top: 2px solid var(--text-muted); }
+        .flow-legend .inferred::before { border-top: 2px dashed var(--accent-teal); }
+        .flow-tip {
+            position: absolute;
+            z-index: 10;
+            max-width: 440px;
+            max-height: 360px;
+            overflow: hidden;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            font-size: 12px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            display: none;
+        }
+        .flow-tip .tip-title { color: var(--text-muted); font-size: 11px; margin-bottom: 6px; }
+        .flow-tip .tip-step { padding: 6px 0; border-top: 1px solid var(--bg-tertiary); }
+        .flow-tip .tip-step:first-of-type { border-top: none; }
+        .flow-tip .tip-step.future { opacity: 0.55; }
+        .flow-tip .tip-text { font-family: 'SF Mono', 'Fira Code', monospace; color: var(--text-primary); }
+        .flow-tip .tip-desc { color: var(--text-muted); margin-top: 2px; }
+        .flow-tip pre { margin-top: 6px; padding: 6px 8px; background: var(--bg-tertiary); border-radius: 4px; font-size: 11px; white-space: pre-wrap; color: var(--accent-green); }
+        .flow-tip table { margin-top: 6px; border-collapse: collapse; font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace; }
+        .flow-tip td { border: 1px solid var(--border); padding: 2px 6px; }
+        .flow-tip tr:first-child td { color: var(--text-primary); font-weight: 600; }
+        @media (prefers-reduced-motion: reduce) {
+            .flow-edge.inferred.drawn { animation: none; }
+        }
     </style>
 </head>
 <body>
@@ -1201,6 +1340,7 @@
         let changedFiles = new Set();
         let expandedFolders = new Set();
         let expandedScenarios = new Set();
+        let scenarioViews = {}; // {scenarioKey: 'steps'|'flow'|'sequence'}
         let scenarioStatus = {}; // {scenarioName: 'running'|'passed'|'failed'}
         let scenarioErrors = {}; // {scenarioName: 'error message'}
         let featureStatus = {}; // {featureName: 'running'|'passed'|'failed'}
@@ -1236,6 +1376,7 @@
                 case 'init':
                 case 'update':
                     features = data.features || [];
+                    topology = data.topology || null;
                     if (data.runs) {
                         debugRuns = data.runs;
                         renderDebugRuns();
@@ -1632,7 +1773,14 @@
                         <span class="scenario-steps-count">${(scenario.steps || []).length} steps</span>
                     </div>
                     <div class="steps">
-                        ${(scenario.steps || []).map(step => renderStep(step, status, scenario.name)).join('')}
+                        <div class="view-toggle">
+                            ${['steps', 'flow', 'sequence'].map(v => `<button class="${(scenarioViews[scenarioKey] || 'steps') === v ? 'active' : ''}" onclick="setScenarioView('${scenarioKey}', '${v}')">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}
+                        </div>
+                        ${scenarioViews[scenarioKey] === 'sequence'
+                            ? renderScenarioGraph(feature.background || [], scenario.steps || [])
+                            : scenarioViews[scenarioKey] === 'flow'
+                            ? renderScenarioFlow(si, feature.background || [], scenario.steps || [])
+                            : (scenario.steps || []).map(step => renderStep(step, status, scenario.name)).join('')}
                     </div>
                 </div>
             `}).join('');
@@ -1678,6 +1826,378 @@
             }
 
             return html;
+        }
+
+        function setScenarioView(scenarioKey, view) {
+            stopFlow();
+            scenarioViews[scenarioKey] = view;
+            renderMainContent();
+        }
+
+        // renderScenarioGraph draws a scenario as a sequence diagram: tomato and
+        // every resource the steps use are lanes, each step an arrow from tomato
+        // to the resource it acts on. Background steps sit in a shaded band.
+        function renderScenarioGraph(background, steps) {
+            const rows = [
+                ...background.map(step => ({ step, background: true })),
+                ...steps.map(step => ({ step, background: false })),
+            ];
+            if (!rows.some(r => r.step.resource || r.step.unmatched)) {
+                return `<div class="graph-note">The graph needs tomato.yml to know which resource each step uses. Start the UI with <code>-c path/to/tomato.yml</code>.</div>`;
+            }
+
+            const lanes = ['tomato'];
+            const laneType = { tomato: '' };
+            rows.forEach(({ step }) => {
+                if (step.resource && !lanes.includes(step.resource)) {
+                    lanes.push(step.resource);
+                    laneType[step.resource] = step.resourceType;
+                }
+            });
+
+            const keywordWidth = 70, laneGap = 190, laneBoxW = 130, headerH = 46, rowH = 46, pad = 16;
+            const laneX = i => keywordWidth + pad + laneBoxW / 2 + i * laneGap;
+            const labelMax = 64, charW = 7.4;
+            const longest = Math.max(0, ...rows.filter(r => r.step.resource).map(r => Math.min(graphLabel(r.step).length, labelMax)));
+            const width = Math.max(laneX(lanes.length - 1) + laneBoxW / 2, laneX(0) + 12 + longest * charW) + pad;
+            const top = pad + headerH + 14;
+            const height = top + rows.length * rowH + pad;
+
+            let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+                <defs>${['given', 'when', 'then'].map(p =>
+                    `<marker id="arrow-${p}" class="phase-${p}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>`).join('')}
+                </defs>`;
+
+            const bgRows = rows.filter(r => r.background).length;
+            if (bgRows > 0) {
+                svg += `<rect class="graph-band" x="4" y="${top - 6}" width="${width - 8}" height="${bgRows * rowH}" rx="6"/>`;
+                svg += `<text class="graph-band-label" x="${width - 10}" y="${top + 6}" text-anchor="end">Background</text>`;
+            }
+
+            lanes.forEach((lane, i) => {
+                const x = laneX(i);
+                svg += `<line class="graph-lane-line" x1="${x}" y1="${pad + headerH}" x2="${x}" y2="${height - pad}"/>`;
+                svg += `<rect class="graph-lane-box" x="${x - laneBoxW / 2}" y="${pad}" width="${laneBoxW}" height="${headerH}" rx="6"/>`;
+                svg += `<text class="graph-lane-name" x="${x}" y="${pad + (laneType[lane] ? 20 : 27)}" text-anchor="middle">${escapeHtml(truncate(lane, 18))}</text>`;
+                if (laneType[lane]) {
+                    svg += `<text class="graph-lane-type" x="${x}" y="${pad + 36}" text-anchor="middle">${escapeHtml(laneType[lane])}</text>`;
+                }
+            });
+
+            rows.forEach(({ step }, r) => {
+                const y = top + r * rowH + rowH / 2;
+                const phase = step.phase || 'given';
+                const tip = escapeHtml([step.keyword.trim() + ' ' + step.text, step.description].filter(Boolean).join('\n'));
+                svg += `<g class="graph-row"><title>${tip}</title>`;
+                svg += `<text class="graph-keyword phase-${phase}" style="stroke:none" x="${pad}" y="${y + 4}">${escapeHtml(step.keyword.trim())}</text>`;
+
+                if (step.resource) {
+                    const x1 = laneX(0) + 4, x2 = laneX(lanes.indexOf(step.resource)) - 4;
+                    svg += `<line class="graph-arrow phase-${phase}" x1="${x1}" y1="${y + 6}" x2="${x2}" y2="${y + 6}" marker-end="url(#arrow-${phase})"/>`;
+                    svg += `<text class="graph-label" x="${x1 + 8}" y="${y - 2}">${escapeHtml(truncate(graphLabel(step), labelMax))}</text>`;
+                } else {
+                    svg += `<text class="graph-unmatched" x="${laneX(0) + 10}" y="${y + 4}">⚠ no step matches: ${escapeHtml(truncate(step.text, 60))}</text>`;
+                }
+                svg += `</g>`;
+            });
+
+            svg += `</svg>`;
+            return `<div class="graph-wrapper">${svg}</div>`;
+        }
+
+        // The flow view draws tomato, the app and every resource tomato.yml
+        // defines, with no lines; each step then draws a line from tomato to
+        // what it acts on. A client resource (api, grpc, ws) is a line to what
+        // it calls, the app or a mock. After a When on the app, dashed lines
+        // show the effects the later Thens expect of it.
+        let topology = null;
+        let flowPlans = {};
+        let flowState = null; // {si, index, timer}
+
+        function flowEndpoint(resource) {
+            const r = (topology?.resources || []).find(r => r.name === resource);
+            return r?.target || resource;
+        }
+
+        function buildFlow(background, steps) {
+            const rows = [...background, ...steps];
+            const edges = new Map();
+            const addEdge = (from, to, inferred, i) => {
+                const key = `${from}>${to}`;
+                if (!edges.has(key)) edges.set(key, { key, from, to, inferred, steps: [] });
+                if (!edges.get(key).steps.includes(i)) edges.get(key).steps.push(i);
+                return key;
+            };
+            let actor = null;
+            const plan = rows.map((step, i) => {
+                const p = { step, background: i < background.length, edge: null, effects: [] };
+                if (!step.resource) return p;
+                const to = flowEndpoint(step.resource);
+                p.edge = addEdge('tomato', to, false, i);
+                if (step.phase === 'when' && to === 'app') {
+                    actor = p;
+                } else if (step.phase === 'then' && actor && to !== 'app' && step.resourceType !== 'shell') {
+                    const key = addEdge('app', to, true, i);
+                    if (!actor.effects.includes(key)) actor.effects.push(key);
+                }
+                return p;
+            });
+            return { plan, edges: [...edges.values()] };
+        }
+
+        function renderScenarioFlow(si, background, steps) {
+            if (!topology) {
+                return `<div class="graph-note">The flow needs tomato.yml to know the app and its resources. Start the UI with <code>-c path/to/tomato.yml</code>.</div>`;
+            }
+            const flow = buildFlow(background, steps);
+            const clients = topology.resources.filter(r => r.target === 'app').map(r => r.name);
+            const deps = topology.resources.filter(r => !r.target);
+
+            const nodeW = 150, nodeH = 44, appH = clients.length ? 62 : 44, rowGap = 60, pad = 24, colGap = 240;
+            const height = Math.max(deps.length * rowGap, appH + 140) + pad * 2;
+            const midY = height / 2;
+            const pos = {
+                tomato: { x: pad + nodeW / 2, y: midY, h: nodeH },
+                app: { x: pad + nodeW / 2 + colGap, y: midY, h: appH },
+            };
+            const depsTop = midY - (deps.length * rowGap) / 2;
+            deps.forEach((r, j) => { pos[r.name] = { x: pad + nodeW / 2 + colGap * 2, y: depsTop + j * rowGap + rowGap / 2, h: nodeH }; });
+            const width = pad * 2 + nodeW + colGap * 2;
+
+            // Lines from tomato to a resource go around the app: above it for
+            // resources above the middle, below it for the others.
+            const around = { above: [], below: [] };
+            flow.edges.filter(e => e.from === 'tomato' && e.to !== 'app' && pos[e.to])
+                .forEach(e => around[pos[e.to].y < midY ? 'above' : 'below'].push(e.key));
+            const paths = {};
+            flow.edges.forEach(e => {
+                const a = pos[e.from], b = pos[e.to];
+                if (!a || !b) return;
+                const x1 = a.x + nodeW / 2, x2 = b.x - nodeW / 2;
+                if (e.from === 'tomato' && e.to === 'app') {
+                    paths[e.key] = `M${x1},${a.y} L${x2},${b.y}`;
+                    return;
+                }
+                if (e.from === 'app') {
+                    const dx = (x2 - x1) / 2, y2 = b.y - 6;
+                    paths[e.key] = `M${x1},${a.y} C${x1 + dx},${a.y} ${x2 - dx},${y2} ${x2},${y2}`;
+                    return;
+                }
+                const side = pos[e.to].y < midY ? 'above' : 'below';
+                const k = around[side].indexOf(e.key);
+                const laneY = side === 'above' ? midY - appH / 2 - 26 - k * 7 : midY + appH / 2 + 26 + k * 7;
+                const mx = pos.app.x, y2 = b.y + 6;
+                paths[e.key] = `M${x1},${a.y} C${x1 + 50},${a.y} ${mx - 110},${laneY} ${mx},${laneY} S${x2 - 50},${y2} ${x2},${y2}`;
+            });
+
+            const node = (id, cls, title, sub, p) => `
+                <g class="flow-node ${cls}" data-node="${escapeHtml(id)}">
+                    <rect x="${p.x - nodeW / 2}" y="${p.y - p.h / 2}" width="${nodeW}" height="${p.h}" rx="10"/>
+                    <text class="name" x="${p.x}" y="${p.y + (sub ? -3 : 4)}" text-anchor="middle">${escapeHtml(truncate(title, 20))}</text>
+                    ${sub ? `<text class="type" x="${p.x}" y="${p.y + 13}" text-anchor="middle">${escapeHtml(truncate(sub, 24))}</text>` : ''}
+                </g>`;
+            const heads = ['given', 'when', 'then', 'inferred', 'muted'].map(c =>
+                `<marker id="flow-head-${si}-${c}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="flow-head ${['inferred', 'muted'].includes(c) ? c : 'phase-' + c}" d="M0,0 L10,5 L0,10 z"/></marker>`).join('');
+
+            let svg = `<svg class="flow-svg" id="flow-${si}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+                <defs>${heads}</defs>
+                <g class="flow-edges"></g>`;
+            svg += node('tomato', 'tomato', '🍅 tomato', '', pos.tomato);
+            svg += node('app', 'app', topology.appPort ? `app :${topology.appPort}` : 'app', clients.join(' · '), pos.app);
+            deps.forEach(r => { svg += node(r.name, '', r.name, r.type, pos[r.name]); });
+            svg += `</svg>`;
+
+            flowPlans[si] = { flow, paths, background, steps };
+            if (flowState?.si === si && flowState.index >= 0) requestAnimationFrame(() => drawFlow(si, false));
+
+            const unmatched = flow.plan.filter(p => p.step.unmatched).length;
+            return `<div class="graph-wrapper flow-wrapper" id="flow-wrap-${si}">
+                <div class="flow-controls">
+                    <button onclick="flowGo(${si}, -1)" title="Previous step">⏮ Prev</button>
+                    <button onclick="flowGo(${si}, 1)" title="Next step">Next ⏭</button>
+                    <button id="flow-play-${si}" onclick="toggleFlow(${si})">▶ Play</button>
+                    <button onclick="resetFlow(${si})" title="Clear the lines">↺</button>
+                    <span class="flow-caption" id="flow-cap-${si}">Press Next to walk through the scenario.${unmatched ? ` ⚠ ${unmatched} ${unmatched > 1 ? 'steps match' : 'step matches'} no step definition.` : ''}</span>
+                </div>
+                ${svg}
+                <div class="flow-legend"><span>tomato acts or checks</span><span class="inferred">effect the scenario expects of the app</span></div>
+                <div class="flow-tip" id="flow-tip-${si}"></div>
+            </div>`;
+        }
+
+        function ensureFlowState(si) {
+            if (!flowState || flowState.si !== si) {
+                stopFlow();
+                flowState = { si, index: -1, timer: null };
+            }
+        }
+
+        function flowGo(si, delta) {
+            ensureFlowState(si);
+            pauseFlow();
+            const n = flowPlans[si].flow.plan.length;
+            const next = Math.min(n - 1, Math.max(-1, flowState.index + delta));
+            if (next === flowState.index) return;
+            flowState.index = next;
+            drawFlow(si, delta > 0);
+        }
+
+        function toggleFlow(si) {
+            ensureFlowState(si);
+            if (flowState.timer) return pauseFlow();
+            const n = flowPlans[si].flow.plan.length;
+            if (flowState.index >= n - 1) flowState.index = -1;
+            const tick = () => {
+                if (!flowState || flowState.index >= flowPlans[si].flow.plan.length - 1) return pauseFlow();
+                flowState.index++;
+                drawFlow(si, true);
+            };
+            tick();
+            flowState.timer = setInterval(tick, 1600);
+            setFlowButton(si, true);
+        }
+
+        function pauseFlow() {
+            if (!flowState) return;
+            if (flowState.timer) clearInterval(flowState.timer);
+            flowState.timer = null;
+            setFlowButton(flowState.si, false);
+        }
+
+        function resetFlow(si) {
+            ensureFlowState(si);
+            pauseFlow();
+            flowState.index = -1;
+            drawFlow(si, false);
+        }
+
+        function stopFlow() {
+            if (flowState?.timer) clearInterval(flowState.timer);
+            flowState = null;
+        }
+
+        function setFlowButton(si, playing) {
+            const btn = document.getElementById(`flow-play-${si}`);
+            if (btn) btn.textContent = playing ? '⏸ Pause' : '▶ Play';
+        }
+
+        // drawFlow draws the lines of every step up to the current one. The
+        // current step's lines are drawn in its phase's colour, animated when
+        // moving forward; earlier ones stay, muted.
+        function drawFlow(si, animate) {
+            const svg = document.getElementById(`flow-${si}`);
+            const fp = flowPlans[si];
+            if (!svg || !fp || !flowState) return;
+            const { flow, paths } = fp;
+            const index = flowState.index;
+            const layer = svg.querySelector('.flow-edges');
+            layer.innerHTML = '';
+            svg.querySelectorAll('.flow-node.active').forEach(el => el.classList.remove('active'));
+
+            const cap = document.getElementById(`flow-cap-${si}`);
+            if (index < 0) {
+                cap.textContent = 'Press Next to walk through the scenario.';
+                return;
+            }
+
+            const p = flow.plan[index];
+            const phase = p.step.phase || 'given';
+            const current = new Set([p.edge, ...p.effects].filter(Boolean));
+            const shown = new Set();
+            flow.plan.slice(0, index + 1).forEach(q => {
+                if (q.edge) shown.add(q.edge);
+                q.effects.forEach(k => shown.add(k));
+            });
+
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            flow.edges.forEach((e, ei) => {
+                if (!shown.has(e.key) || !paths[e.key]) return;
+                const isCurrent = current.has(e.key);
+                const head = isCurrent ? (e.inferred ? 'inferred' : phase) : (e.inferred ? 'inferred' : 'muted');
+                // Effect lines keep their own colour; tomato's take the step's phase.
+                const cls = ['flow-edge', e.inferred ? 'inferred' : '', isCurrent ? 'current' : '', isCurrent && !e.inferred ? `phase-${phase}` : ''].join(' ');
+                const ns = 'http://www.w3.org/2000/svg';
+                const hit = document.createElementNS(ns, 'path');
+                hit.setAttribute('class', 'flow-hit');
+                hit.setAttribute('d', paths[e.key]);
+                hit.addEventListener('mousemove', ev => showFlowTip(si, ei, ev));
+                hit.addEventListener('mouseleave', () => hideFlowTip(si));
+                const path = document.createElementNS(ns, 'path');
+                path.setAttribute('class', cls);
+                path.setAttribute('d', paths[e.key]);
+                layer.append(hit, path);
+
+                const finish = () => {
+                    path.style.strokeDasharray = '';
+                    path.style.strokeDashoffset = '';
+                    path.style.transition = '';
+                    path.classList.add('drawn');
+                    path.setAttribute('marker-end', `url(#flow-head-${si}-${head})`);
+                    if (isCurrent) svg.querySelector(`.flow-node[data-node="${CSS.escape(e.to)}"]`)?.classList.add('active');
+                };
+                if (!animate || !isCurrent || reduced) return finish();
+                // Draw the line from its start: dash it as long as itself and
+                // slide the dash in. Effects start once tomato's line is there.
+                const len = path.getTotalLength();
+                path.style.strokeDasharray = `${len} ${len}`;
+                path.style.strokeDashoffset = `${len}`;
+                const delay = e.inferred ? 650 : 0;
+                path.getBoundingClientRect();
+                path.style.transition = `stroke-dashoffset 0.6s ease-in-out ${delay}ms`;
+                path.style.strokeDashoffset = '0';
+                setTimeout(() => { if (path.isConnected) finish(); }, 600 + delay);
+            });
+
+            cap.innerHTML = `${index + 1}/${flow.plan.length}${p.background ? ' · background' : ''} · <span class="kw ${phase}">${escapeHtml(p.step.keyword.trim())}</span>${p.step.unmatched ? '⚠ no step matches: ' : ''}${escapeHtml(p.step.text)}`;
+            cap.title = p.step.description || p.step.text;
+        }
+
+        // showFlowTip lists what a line carries: every step drawn on it so far,
+        // with its description, doc string and table. An effect line lists
+        // the Thens that check it, later ones faded.
+        function showFlowTip(si, ei, ev) {
+            const tip = document.getElementById(`flow-tip-${si}`);
+            const wrap = document.getElementById(`flow-wrap-${si}`);
+            const { flow } = flowPlans[si];
+            const e = flow.edges[ei];
+            const index = flowState?.index ?? -1;
+            const list = e.inferred ? e.steps : e.steps.filter(i => i <= index);
+
+            tip.innerHTML = `<div class="tip-title">${e.inferred ? `app → ${escapeHtml(e.to)} · expected effect, checked by` : `tomato → ${escapeHtml(e.to)}`}</div>` +
+                list.map(i => {
+                    const st = flow.plan[i].step;
+                    let html = `<div class="tip-step${i > index ? ' future' : ''}">
+                        <div class="tip-text"><span class="kw">${escapeHtml(st.keyword.trim())}</span> ${escapeHtml(st.text)}</div>`;
+                    if (st.description) html += `<div class="tip-desc">${escapeHtml(st.description)}</div>`;
+                    if (st.docString) html += `<pre>${escapeHtml(truncate(st.docString, 600))}</pre>`;
+                    if (st.table?.length) html += `<table>${st.table.slice(0, 8).map(r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+                    return html + `</div>`;
+                }).join('');
+
+            const box = wrap.getBoundingClientRect();
+            tip.style.display = 'block';
+            let x = ev.clientX - box.left + 14, y = ev.clientY - box.top + 14;
+            if (x + tip.offsetWidth > box.width) x = ev.clientX - box.left - tip.offsetWidth - 14;
+            if (y + tip.offsetHeight > box.height) y = Math.max(0, box.height - tip.offsetHeight - 4);
+            tip.style.left = `${x}px`;
+            tip.style.top = `${y}px`;
+        }
+
+        function hideFlowTip(si) {
+            const tip = document.getElementById(`flow-tip-${si}`);
+            if (tip) tip.style.display = 'none';
+        }
+
+        // graphLabel is a step's text without the resource it names, which the
+        // arrow already points at.
+        function graphLabel(step) {
+            const prefix = `"${step.resource}" `;
+            const text = step.text.startsWith(prefix) ? step.text.slice(prefix.length) : step.text;
+            return text.replace(/:$/, '');
+        }
+
+        function truncate(text, max) {
+            return text.length > max ? text.slice(0, max - 1) + '…' : text;
         }
 
         function filterScenarios(scenarios) {
