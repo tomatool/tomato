@@ -85,6 +85,7 @@ type FeatureJSON struct {
 	Description string         `json:"description,omitempty"`
 	Tags        []string       `json:"tags,omitempty"`
 	FilePath    string         `json:"filePath"`
+	Background  []StepJSON     `json:"background,omitempty"`
 	Scenarios   []ScenarioJSON `json:"scenarios"`
 }
 
@@ -102,6 +103,15 @@ type StepJSON struct {
 	Text      string     `json:"text"`
 	DocString string     `json:"docString,omitempty"`
 	Table     [][]string `json:"table,omitempty"`
+	// Phase is given, when or then; And and But take the one before them.
+	Phase string `json:"phase,omitempty"`
+	// The resource and step definition the step runs, when tomato.yml was
+	// read. Unmatched is set when it was read and no step definition matches.
+	Resource     string `json:"resource,omitempty"`
+	ResourceType string `json:"resourceType,omitempty"`
+	Group        string `json:"group,omitempty"`
+	Description  string `json:"description,omitempty"`
+	Unmatched    bool   `json:"unmatched,omitempty"`
 }
 
 type ExampleJSON struct {
@@ -115,6 +125,9 @@ type WSMessage struct {
 	Features     []FeatureJSON `json:"features,omitempty"`
 	ChangedFiles []string      `json:"changedFiles,omitempty"`
 	Error        string        `json:"error,omitempty"`
+	// Topology is the app and the resources tomato.yml defines, for the flow
+	// view; nil when tomato.yml can't be read.
+	Topology *TopologyJSON `json:"topology,omitempty"`
 	// Run status fields
 	Scenario string `json:"scenario,omitempty"`
 	Status   string `json:"status,omitempty"` // "running", "passed", "failed"
@@ -305,7 +318,7 @@ func (s *UIServer) watchLoop() {
 func (s *UIServer) broadcastUpdate(changedFiles []string) {
 	features, err := s.loadFeatures()
 
-	msg := WSMessage{Type: "update"}
+	msg := WSMessage{Type: "update", Topology: s.loadTopology()}
 	if err != nil {
 		msg.Type = "error"
 		msg.Error = err.Error()
@@ -800,7 +813,7 @@ func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Send initial data
 	features, _ := s.loadFeatures()
 	runs, _ := runlog.ListRuns()
-	msg := WSMessage{Type: "init", Features: features, Runs: runs}
+	msg := WSMessage{Type: "init", Features: features, Runs: runs, Topology: s.loadTopology()}
 	data, _ := json.Marshal(msg)
 	conn.WriteMessage(websocket.TextMessage, data)
 
@@ -813,8 +826,23 @@ func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *UIServer) loadTopology() *TopologyJSON {
+	cfg, err := config.Load(s.configPath)
+	if err != nil {
+		return nil
+	}
+	t := topology(cfg)
+	return &t
+}
+
 func (s *UIServer) loadFeatures() ([]FeatureJSON, error) {
 	var features []FeatureJSON
+
+	// Without a readable tomato.yml the steps are shown unannotated.
+	var matcher *stepMatcher
+	if cfg, err := config.Load(s.configPath); err == nil {
+		matcher = newStepMatcher(cfg.Resources)
+	}
 
 	for _, path := range s.featurePaths {
 		files, err := findFeatureFiles(path)
@@ -823,7 +851,7 @@ func (s *UIServer) loadFeatures() ([]FeatureJSON, error) {
 		}
 
 		for _, file := range files {
-			f, err := parseFeatureFileJSON(file)
+			f, err := parseFeatureFileJSON(file, matcher)
 			if err != nil {
 				continue
 			}
@@ -864,7 +892,7 @@ func findFeatureFiles(root string) ([]string, error) {
 	return files, err
 }
 
-func parseFeatureFileJSON(filePath string) (*FeatureJSON, error) {
+func parseFeatureFileJSON(filePath string, matcher *stepMatcher) (*FeatureJSON, error) {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -895,6 +923,9 @@ func parseFeatureFileJSON(filePath string) (*FeatureJSON, error) {
 	}
 
 	for _, child := range feature.Children {
+		if child.Background != nil {
+			fd.Background = stepsJSON(child.Background.Steps, nil, matcher)
+		}
 		if child.Scenario != nil {
 			sc := child.Scenario
 			sd := ScenarioJSON{
@@ -902,29 +933,6 @@ func parseFeatureFileJSON(filePath string) (*FeatureJSON, error) {
 				Description: strings.TrimSpace(sc.Description),
 				Tags:        extractTagsJSON(sc.Tags),
 				IsOutline:   len(sc.Examples) > 0,
-			}
-
-			for _, step := range sc.Steps {
-				st := StepJSON{
-					Keyword: step.Keyword,
-					Text:    step.Text,
-				}
-
-				if step.DocString != nil {
-					st.DocString = step.DocString.Content
-				}
-
-				if step.DataTable != nil {
-					for _, row := range step.DataTable.Rows {
-						var cells []string
-						for _, cell := range row.Cells {
-							cells = append(cells, cell.Value)
-						}
-						st.Table = append(st.Table, cells)
-					}
-				}
-
-				sd.Steps = append(sd.Steps, st)
 			}
 
 			for _, ex := range sc.Examples {
@@ -949,11 +957,85 @@ func parseFeatureFileJSON(filePath string) (*FeatureJSON, error) {
 				sd.Examples = append(sd.Examples, ed)
 			}
 
+			sd.Steps = stepsJSON(sc.Steps, firstExampleRow(sd.Examples), matcher)
 			fd.Scenarios = append(fd.Scenarios, sd)
 		}
 	}
 
 	return fd, nil
+}
+
+// stepsJSON converts steps for the UI. An outline's steps are matched with
+// example's values in place of their <placeholders>; matcher may be nil.
+func stepsJSON(steps []*messages.Step, example map[string]string, matcher *stepMatcher) []StepJSON {
+	var out []StepJSON
+	phase := ""
+	for _, step := range steps {
+		st := StepJSON{
+			Keyword: step.Keyword,
+			Text:    step.Text,
+		}
+
+		switch strings.ToLower(strings.TrimSpace(step.Keyword)) {
+		case "given":
+			phase = "given"
+		case "when":
+			phase = "when"
+		case "then":
+			phase = "then"
+		}
+		st.Phase = phase
+
+		if step.DocString != nil {
+			st.DocString = step.DocString.Content
+		}
+
+		if step.DataTable != nil {
+			for _, row := range step.DataTable.Rows {
+				var cells []string
+				for _, cell := range row.Cells {
+					cells = append(cells, cell.Value)
+				}
+				st.Table = append(st.Table, cells)
+			}
+		}
+
+		if matcher != nil {
+			text := step.Text
+			for k, v := range example {
+				text = strings.ReplaceAll(text, "<"+k+">", v)
+			}
+			if m, ok := matcher.match(text); ok {
+				st.Resource = m.Resource
+				st.ResourceType = m.Type
+				st.Group = m.Def.Group
+				st.Description = m.Def.Description
+			} else {
+				st.Unmatched = true
+			}
+		}
+
+		out = append(out, st)
+	}
+	return out
+}
+
+// firstExampleRow is an outline's first row of examples by column name, or
+// nil when it has none.
+func firstExampleRow(examples []ExampleJSON) map[string]string {
+	for _, ex := range examples {
+		if len(ex.Rows) < 2 {
+			continue
+		}
+		row := map[string]string{}
+		for i, name := range ex.Rows[0] {
+			if i < len(ex.Rows[1]) {
+				row[name] = ex.Rows[1][i]
+			}
+		}
+		return row
+	}
+	return nil
 }
 
 func extractTagsJSON(tags []*messages.Tag) []string {

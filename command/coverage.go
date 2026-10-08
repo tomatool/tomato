@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -251,7 +250,7 @@ func computeCoverage(cfg *config.Config, steps []string, allTypes bool) Coverage
 		for _, def := range cat.Steps {
 			covered := false
 			for _, name := range names {
-				re, err := regexp.Compile(strings.ReplaceAll(def.Pattern, "{resource}", regexp.QuoteMeta(name)))
+				re, err := stepRegexp(def, name)
 				if err != nil {
 					continue
 				}
