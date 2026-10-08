@@ -51,8 +51,12 @@ func checkForUpdate() {
 	}
 
 	if latestVersion != currentVersion && latestVersion > currentVersion {
+		upgrade := "tomato update"
+		if brew := homebrewUpgrade(currentExecutable()); brew != "" {
+			upgrade = brew
+		}
 		fmt.Printf("\n%s New version available: %s (current: %s)\n", warnStyle.Render("⚠"), latestVersion, currentVersion)
-		fmt.Printf("  Run 'tomato update' to upgrade\n")
+		fmt.Printf("  Run '%s' to upgrade\n", upgrade)
 		fmt.Printf("  Set TOMATO_SKIP_UPDATE_CHECK=true to disable this check\n\n")
 	}
 }
@@ -126,8 +130,7 @@ func initialUpdateModel(useRC, useSelect bool) updateModel {
 		currentVersion = "v" + currentVersion
 	}
 
-	execPath, _ := os.Executable()
-	execPath, _ = filepath.EvalSymlinks(execPath)
+	execPath := currentExecutable()
 	platform := fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH)
 
 	return updateModel{
@@ -346,7 +349,35 @@ func (m updateModel) View() string {
 	return s.String()
 }
 
+// currentExecutable is the path of the running binary, symlinks resolved.
+func currentExecutable() string {
+	execPath, _ := os.Executable()
+	execPath, _ = filepath.EvalSymlinks(execPath)
+	return execPath
+}
+
+// homebrewUpgrade is the command that upgrades the tomato Homebrew installed
+// at execPath, or "" when Homebrew didn't install it. tomato update must not
+// replace such a binary itself: brew would still record the old version and
+// put it back on the next upgrade or reinstall.
+func homebrewUpgrade(execPath string) string {
+	for _, dir := range strings.Split(filepath.ToSlash(execPath), "/") {
+		switch dir {
+		case "Caskroom":
+			return "brew upgrade --cask tomatool/tap/tomato"
+		case "Cellar":
+			// tomato is published as a cask; a formula install has to move.
+			return "brew uninstall tomato && brew install --cask tomatool/tap/tomato"
+		}
+	}
+	return ""
+}
+
 func runUpdate(useRC, useSelect bool) error {
+	if brew := homebrewUpgrade(currentExecutable()); brew != "" {
+		return fmt.Errorf("tomato was installed with Homebrew, so Homebrew has to update it. Run:\n\n  %s", brew)
+	}
+
 	m := initialUpdateModel(useRC, useSelect)
 	p := tea.NewProgram(m)
 	result, err := p.Run()
