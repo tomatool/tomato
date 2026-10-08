@@ -33,6 +33,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- `tomato update` replaced a binary Homebrew had installed, so brew still recorded the old version and put it back on its next upgrade or reinstall. It now stops and prints the `brew` command to run instead, and the new-version notice names that command too.
 - The last lines of a run's output, the summary among them, could be lost: tomato exited before the pipe that copies its output to the console and the run log was drained.
 - Kafka: tomato waits until a topic it creates (the `creates topic` steps, `delete_recreate` resets) answers an offset lookup on every partition, so a `consumes from` right after it no longer fails with "not the leader for some partition". KRaft brokers, such as the `kafka` preset's, accept a topic before they serve it. A `consumes from` that fails can also be retried by a later step instead of being skipped.
 - Container `volumes` and `build` were parsed and ignored; they are applied now, with relative paths resolved against `tomato.yml`.
