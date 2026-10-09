@@ -1,17 +1,30 @@
 # tomato ui
 
-The web UI `tomato ui` serves. Vanilla DOM — no framework — bundled by Vite and
-embedded into the Go binary.
+The web UI `tomato ui` serves: React, built by Vite with pnpm and embedded into
+the Go binary.
 
 ## Layout
 
 ```
 ui/
-├── index.html          the shell, plus the inlined resource-icon sprite
-├── src/main.js         the renderer (entry point; imports the stylesheet)
-├── src/styles.css      the "Modernist" design system: tokens + components
-└── src/fonts/          Geist and Geist Mono, vendored so the UI works offline
+├── index.html          host page + the inlined resource-icon sprite
+└── src/
+    ├── main.jsx        mounts <App/>
+    ├── App.jsx         state, layout, keyboard, pane dragging
+    ├── styles.css      the "Modernist" design system: tokens + components
+    ├── components/     TopBar, Tree, ScenarioCard, StepRow, ConfigView,
+    │                   Flow, Topology, Runs, Transport, Peek, Console
+    ├── hooks/          useSocket (the /ws feed), useLocalNumber (remembered sizes)
+    ├── lib/            step tokenising, ANSI → nodes, flow model, formatting, icons
+    └── fonts/          Geist and Geist Mono, vendored so the UI works offline
 ```
+
+Everything renders to React nodes — there is no `dangerouslySetInnerHTML`
+anywhere, so step text, log lines and config values cannot inject markup.
+
+The design system's contract still holds: state lives in `data-*`/`aria-*`
+attributes and class names never change at runtime, so components spread
+`data-status={…}` rather than toggling classes.
 
 The build writes to `../command/ui_assets/dist`, which `command/ui.go` embeds
 with `//go:embed all:ui_assets/dist`.

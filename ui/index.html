@@ -27,66 +27,8 @@
 <symbol id="ri-aws" viewBox="0 0 14 14" fill="none" stroke="currentColor"><path d="M4.25 11.25h6.25a2.6 2.6 0 0 0 .35-5.17A3.6 3.6 0 0 0 3.9 5.6a2.85 2.85 0 0 0 .35 5.65z"></path></symbol>
 </svg>
 
-<div class="app" id="app" data-tree="open" data-side="open">
-  <header class="topbar">
-    <span class="brand"><i class="brand-mark"></i>tomato</span>
-    <span class="topbar-sep"></span>
-    <span class="crumb" id="crumb"></span>
-    <span class="topbar-spacer"></span>
-    <span class="live" id="live" data-state="offline">connecting</span>
-    <span class="topbar-sep"></span>
-    <div class="runbar" id="runbar" style="width:140px"></div>
-    <span class="tally" id="tally"></span>
-    <button class="btn" id="runFailedBtn" hidden>Run failed</button>
-    <button class="btn btn--primary" id="runAllBtn"><i class="ico-play"></i>Run all <span class="kbd">R</span></button>
-    <button class="btn btn--danger" id="stopBtn" hidden><i class="ico-stop"></i>Stop <span class="kbd">esc</span></button>
-  </header>
+<div id="root"></div>
 
-  <aside class="pane pane--tree">
-    <div class="rail">
-      <button class="btn btn--ghost btn--sm btn--icon" data-toggle="tree" title="Show features  ["><i class="ico-chev"></i></button>
-      <span class="rail-label">Features</span>
-      <span class="rail-meta" id="railMeta"></span>
-    </div>
-    <div class="pane-head">
-      <span class="label">Features</span>
-      <span class="count" id="featureCount">0</span>
-      <button class="btn btn--ghost btn--sm btn--icon" data-toggle="tree" title="Hide features  ["><i class="ico-chev" data-dir="left"></i></button>
-    </div>
-    <div style="padding:8px 12px 4px">
-      <label class="search"><input class="input" id="filter" placeholder="Filter or @tag" autocomplete="off" spellcheck="false"><span class="kbd">/</span></label>
-    </div>
-    <div class="pane-body"><div class="tree" id="tree" role="tree"></div></div>
-  </aside>
-
-  <main class="pane pane--doc" id="doc"></main>
-
-  <aside class="pane pane--side">
-    <div class="resize-x" id="sideResize" title="Drag to resize  ·  double-click to reset"></div>
-    <div class="rail">
-      <button class="btn btn--ghost btn--sm btn--icon" data-toggle="side" title="Show inspector  ]"><i class="ico-chev" data-dir="left"></i></button>
-      <button class="rail-tab" data-tab="flow">Flow</button>
-      <button class="rail-tab" data-tab="topology">Topology</button>
-      <button class="rail-tab" data-tab="runs">Runs</button>
-    </div>
-    <div class="tabs" role="tablist">
-      <button class="tab" role="tab" data-tab="flow">Flow <span class="count" id="flowCount">0</span></button>
-      <button class="tab" role="tab" data-tab="topology">Topology</button>
-      <button class="tab" role="tab" data-tab="runs">Runs <span class="count" id="runsCount">0</span></button>
-      <span style="flex:1"></span>
-      <button class="btn btn--ghost btn--sm btn--icon" data-toggle="side" style="align-self:center" title="Hide inspector  ]"><i class="ico-chev"></i></button>
-    </div>
-    <div id="transport"></div>
-    <div class="pane-body" id="side"></div>
-  </aside>
-
-  <section class="pane pane--console" id="consolePane">
-    <div class="resize-y" id="consoleResize"></div>
-    <div class="tabs" id="consoleTabs"></div>
-    <div class="console" id="console"></div>
-  </section>
-</div>
-
-<script type="module" src="/src/main.js"></script>
+<script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

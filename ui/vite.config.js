@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 // The build lands inside the Go package so `//go:embed ui_assets/dist` can bake
 // it into the binary. Paths are relative because the Go file server mounts the
 // bundle at the server root and nothing guarantees a leading slash resolves.
 export default defineConfig({
+  plugins: [react()],
   base: './',
   build: {
     outDir: '../command/ui_assets/dist',

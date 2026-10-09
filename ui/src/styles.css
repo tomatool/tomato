@@ -323,7 +323,11 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .msg-arrow[data-from="1"][data-to="3"],.msg-arrow[data-from="2"][data-to="4"],.msg-arrow[data-from="3"][data-to="5"]{--span:2}
 .msg-arrow[data-from="1"][data-to="4"],.msg-arrow[data-from="2"][data-to="5"]{--span:3}
 .msg-arrow[data-from="1"][data-to="5"]{--span:4}.msg-arrow[data-from="1"][data-to="6"]{--span:5}
-.msg-label{display:flex;align-items:center;gap:var(--s-3);font:var(--fs-11)/16px var(--font-mono);color:var(--fg-1);white-space:nowrap;padding-left:var(--s-2)}
+.msg-label{display:flex;align-items:center;gap:var(--s-3);font:var(--fs-11)/16px var(--font-mono);color:var(--fg-1);white-space:nowrap;padding-left:var(--s-2);min-width:0;max-width:100%}
+/* A note sits half a lane in, so at one or two lanes there is very little room
+   left. Without max-width the label is align-self:flex-start and sizes to its
+   content, so it runs out of the pane instead of ellipsising. */
+.msg-label>span:last-child{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .msg[data-dir="left"] .msg-label{justify-content:flex-end;padding:0 var(--s-2) 0 0}
 .msg-num{display:inline-grid;place-items:center;flex:none;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bg-3);color:var(--fg-1);font:600 10px/1 var(--font-mono)}
 .msg-line{position:relative;height:0;border-top:1px solid currentColor;color:var(--fg-2)}
