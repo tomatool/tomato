@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -29,7 +30,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-//go:embed ui_assets/*
+//go:embed ui_assets
 var uiAssets embed.FS
 
 var uiCommand = &cli.Command{
@@ -48,9 +49,9 @@ var uiCommand = &cli.Command{
 			Usage:   "Path to feature files (can be specified multiple times)",
 		},
 		&cli.IntFlag{
-			Name:    "port",
-			Value:   0,
-			Usage:   "Port to run the UI server (default: random available port)",
+			Name:  "port",
+			Value: 0,
+			Usage: "Port to run the UI server (default: random available port)",
 		},
 		&cli.BoolFlag{
 			Name:  "no-browser",
@@ -102,6 +103,7 @@ type StepJSON struct {
 	Keyword   string     `json:"keyword"`
 	Text      string     `json:"text"`
 	DocString string     `json:"docString,omitempty"`
+	DocLang   string     `json:"docStringLang,omitempty"`
 	Table     [][]string `json:"table,omitempty"`
 	// Phase is given, when or then; And and But take the one before them.
 	Phase string `json:"phase,omitempty"`
@@ -129,9 +131,11 @@ type WSMessage struct {
 	// view; nil when tomato.yml can't be read.
 	Topology *TopologyJSON `json:"topology,omitempty"`
 	// Run status fields
-	Scenario string `json:"scenario,omitempty"`
-	Status   string `json:"status,omitempty"` // "running", "passed", "failed"
-	Output   string `json:"output,omitempty"`
+	Scenario   string `json:"scenario,omitempty"`
+	Status     string `json:"status,omitempty"` // "running", "passed", "failed"
+	Output     string `json:"output,omitempty"`
+	StepIndex  *int   `json:"stepIndex,omitempty"`
+	DurationMs *int64 `json:"durationMs,omitempty"`
 	// Debug logs fields
 	Runs  []runlog.RunInfo `json:"runs,omitempty"`
 	RunID string           `json:"runId,omitempty"`
@@ -139,17 +143,19 @@ type WSMessage struct {
 
 // TomatoEvent represents a structured event from the tomato formatter
 type TomatoEvent struct {
-	Type     string `json:"type"`
-	Feature  string `json:"feature,omitempty"`
-	Scenario string `json:"scenario,omitempty"`
-	Step     string `json:"step,omitempty"`
-	Status   string `json:"status,omitempty"`
-	Error    string `json:"error,omitempty"`
-	File     string `json:"file,omitempty"`
-	Total    int    `json:"total,omitempty"`
-	Passed   int    `json:"passed,omitempty"`
-	Failed   int    `json:"failed,omitempty"`
-	Skipped  int    `json:"skipped,omitempty"`
+	Type       string `json:"type"`
+	Feature    string `json:"feature,omitempty"`
+	Scenario   string `json:"scenario,omitempty"`
+	Step       string `json:"step,omitempty"`
+	Status     string `json:"status,omitempty"`
+	Error      string `json:"error,omitempty"`
+	File       string `json:"file,omitempty"`
+	StepIndex  *int   `json:"stepIndex,omitempty"`
+	DurationMs *int64 `json:"durationMs,omitempty"`
+	Total      int    `json:"total,omitempty"`
+	Passed     int    `json:"passed,omitempty"`
+	Failed     int    `json:"failed,omitempty"`
+	Skipped    int    `json:"skipped,omitempty"`
 }
 
 func runWebUI(c *cli.Context) error {
@@ -348,18 +354,299 @@ func (s *UIServer) handleFeatures(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(features)
 }
 
+// ConfigJSON is what the config screen renders. It carries the raw file for
+// the YAML tab plus a flattened view of the parts the structured tab shows, so
+// the browser never has to understand tomato's config schema.
+type ConfigJSON struct {
+	Path     string `json:"path"`
+	Content  string `json:"content"`
+	Error    string `json:"error,omitempty"`
+	Valid    bool   `json:"valid"`
+	Version  string `json:"version,omitempty"`
+	Watching string `json:"watching,omitempty"`
+
+	Settings   *SettingsJSON     `json:"settings,omitempty"`
+	App        *AppJSON          `json:"app,omitempty"`
+	Containers []ContainerJSON   `json:"containers,omitempty"`
+	Resources  []CfgResourceJSON `json:"resources,omitempty"`
+	Hooks      *HooksJSON        `json:"hooks,omitempty"`
+	Features   *FeaturesJSON     `json:"features,omitempty"`
+	HookCount  int               `json:"hookCount"`
+}
+
+type SettingsJSON struct {
+	Timeout  string `json:"timeout,omitempty"`
+	Parallel int    `json:"parallel,omitempty"`
+	FailFast bool   `json:"failFast"`
+	Output   string `json:"output,omitempty"`
+	Reset    string `json:"reset,omitempty"`
+}
+
+type AppJSON struct {
+	Configured bool         `json:"configured"`
+	Name       string       `json:"name,omitempty"`
+	Command    string       `json:"command,omitempty"`
+	Image      string       `json:"image,omitempty"`
+	Port       int          `json:"port,omitempty"`
+	Ready      string       `json:"ready,omitempty"`
+	Wait       string       `json:"wait,omitempty"`
+	Env        []AppEnvJSON `json:"env,omitempty"`
+}
+
+// AppEnvJSON shows a template next to what it resolved to, which is the only
+// place a reader can see why an app got the port it did.
+type AppEnvJSON struct {
+	Key      string `json:"key"`
+	Value    string `json:"value"`
+	Resolved string `json:"resolved,omitempty"`
+}
+
+type ContainerJSON struct {
+	Name    string   `json:"name"`
+	Image   string   `json:"image,omitempty"`
+	Preset  string   `json:"preset,omitempty"`
+	Ports   []string `json:"ports,omitempty"`
+	WaitFor string   `json:"waitFor,omitempty"`
+}
+
+type CfgResourceJSON struct {
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	ConnectsTo string `json:"connectsTo,omitempty"`
+	Options    string `json:"options,omitempty"`
+}
+
+type HooksJSON struct {
+	BeforeAll      []string `json:"beforeAll,omitempty"`
+	AfterAll       []string `json:"afterAll,omitempty"`
+	BeforeScenario []string `json:"beforeScenario,omitempty"`
+	AfterScenario  []string `json:"afterScenario,omitempty"`
+}
+
+type FeaturesJSON struct {
+	Paths []string `json:"paths,omitempty"`
+	Tags  string   `json:"tags,omitempty"`
+}
+
 func (s *UIServer) handleConfig(w http.ResponseWriter, r *http.Request) {
-	content, err := os.ReadFile(s.configPath)
+	out := ConfigJSON{
+		Path:     s.configPath,
+		Watching: strings.Join(s.featurePaths, ", "),
+	}
+
+	if raw, err := os.ReadFile(s.configPath); err == nil {
+		out.Content = string(raw)
+	} else {
+		out.Error = err.Error()
+	}
+
+	cfg, err := config.Load(s.configPath)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to read config: %v", err), http.StatusInternalServerError)
-		return
+		if out.Error == "" {
+			out.Error = err.Error()
+		}
+	} else {
+		out.Valid = true
+		out.Version = fmt.Sprintf("%d", cfg.Version)
+		out.Settings = &SettingsJSON{
+			Timeout:  durStr(cfg.Settings.Timeout),
+			Parallel: cfg.Settings.Parallel,
+			FailFast: cfg.Settings.FailFast,
+			Output:   cfg.Settings.Output,
+			Reset:    resetStr(cfg.Settings.Reset),
+		}
+		out.App = appJSON(&cfg.App)
+		out.Containers = containersJSON(cfg.Containers)
+		out.Resources = resourcesJSON(cfg.Resources)
+		out.Hooks, out.HookCount = hooksJSON(cfg.Hooks)
+		out.Features = &FeaturesJSON{Paths: cfg.Features.Paths, Tags: cfg.Features.Tags}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"path":    s.configPath,
-		"content": string(content),
-	})
+	json.NewEncoder(w).Encode(out)
+}
+
+func durStr(d time.Duration) string {
+	if d == 0 {
+		return ""
+	}
+	return d.String()
+}
+
+func resetStr(r config.ResetSettings) string {
+	if r.Level == "" && r.OnFailure == "" {
+		return ""
+	}
+	out := r.Level
+	if out == "" {
+		out = "scenario"
+	}
+	out = "per " + out
+	if r.OnFailure != "" {
+		out += " · on failure: " + r.OnFailure
+	}
+	return out
+}
+
+func appJSON(a *config.AppConfig) *AppJSON {
+	if !a.IsConfigured() {
+		return &AppJSON{Configured: false}
+	}
+	out := &AppJSON{
+		Configured: true,
+		Name:       a.GetName(),
+		Command:    a.Command,
+		Image:      a.Image,
+		Port:       a.Port,
+		Wait:       durStr(a.Wait),
+	}
+	if a.Build != nil && out.Image == "" {
+		out.Image = "build: " + a.Build.Dockerfile
+	}
+	if a.Ready != nil {
+		ready := a.Ready.Type
+		if a.Ready.Path != "" {
+			ready += " " + a.Ready.Path
+		}
+		if a.Ready.Status != 0 {
+			ready += fmt.Sprintf(" → %d", a.Ready.Status)
+		}
+		if a.Ready.Command != "" {
+			ready += " " + a.Ready.Command
+		}
+		if a.Ready.Timeout != 0 {
+			ready += " · timeout " + a.Ready.Timeout.String()
+		}
+		out.Ready = ready
+	}
+	for _, k := range sortedKeys(a.Env) {
+		out.Env = append(out.Env, AppEnvJSON{Key: k, Value: a.Env[k]})
+	}
+	return out
+}
+
+func containersJSON(cs map[string]config.Container) []ContainerJSON {
+	out := make([]ContainerJSON, 0, len(cs))
+	for _, name := range sortedKeys(cs) {
+		c := cs[name]
+		out = append(out, ContainerJSON{
+			Name:    name,
+			Image:   c.Image,
+			Preset:  c.Preset,
+			Ports:   c.Ports,
+			WaitFor: waitStr(c.WaitFor),
+		})
+	}
+	return out
+}
+
+func waitStr(w config.WaitStrategy) string {
+	if w.Type == "" {
+		return ""
+	}
+	out := w.Type
+	switch {
+	case w.Target != "":
+		out += " " + w.Target
+	case w.Path != "":
+		out += " " + w.Path
+	case w.Port != 0:
+		out += fmt.Sprintf(" %d", w.Port)
+	}
+	return out
+}
+
+func resourcesJSON(rs map[string]config.Resource) []CfgResourceJSON {
+	out := make([]CfgResourceJSON, 0, len(rs))
+	for _, name := range sortedKeys(rs) {
+		r := rs[name]
+		out = append(out, CfgResourceJSON{
+			Name:       name,
+			Type:       r.Type,
+			ConnectsTo: connectsTo(r),
+			Options:    optionsStr(r),
+		})
+	}
+	return out
+}
+
+func connectsTo(r config.Resource) string {
+	switch {
+	case r.BaseURL != "":
+		return r.BaseURL
+	case r.URL != "":
+		return r.URL
+	case r.Address != "":
+		return r.Address
+	case r.Container != "":
+		return "container " + r.Container
+	case len(r.Brokers) > 0:
+		return strings.Join(r.Brokers, ", ")
+	}
+	return ""
+}
+
+func optionsStr(r config.Resource) string {
+	var parts []string
+	if r.Database != "" {
+		parts = append(parts, "database "+r.Database)
+	}
+	if r.ConsumerGroup != "" {
+		parts = append(parts, "group "+r.ConsumerGroup)
+	}
+	for _, k := range sortedKeys(r.Options) {
+		parts = append(parts, fmt.Sprintf("%s %v", k, r.Options[k]))
+	}
+	return strings.Join(parts, " · ")
+}
+
+func hooksJSON(h config.Hooks) (*HooksJSON, int) {
+	out := &HooksJSON{
+		BeforeAll:      hookList(h.BeforeAll),
+		AfterAll:       hookList(h.AfterAll),
+		BeforeScenario: hookList(h.BeforeScenario),
+		AfterScenario:  hookList(h.AfterScenario),
+	}
+	n := len(out.BeforeAll) + len(out.AfterAll) + len(out.BeforeScenario) + len(out.AfterScenario)
+	return out, n
+}
+
+func hookList(hs []config.Hook) []string {
+	var out []string
+	for _, h := range hs {
+		var s string
+		switch {
+		case h.SQLFile != "":
+			s = "sql_file " + h.SQLFile
+		case h.SQL != "":
+			s = "sql " + h.SQL
+		case h.Shell != "":
+			s = "shell " + h.Shell
+		case h.Exec != "":
+			s = "exec " + h.Exec
+		default:
+			continue
+		}
+		if h.Resource != "" {
+			s += " on " + h.Resource
+		}
+		if h.Container != "" {
+			s += " in " + h.Container
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+// sortedKeys keeps the config screen stable between reloads; Go map order
+// would otherwise reshuffle the rows on every fetch.
+func sortedKeys[V any](m map[string]V) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func (s *UIServer) handleRun(w http.ResponseWriter, r *http.Request) {
@@ -558,21 +845,45 @@ func (s *UIServer) runTests(scenarioFilter string) {
 
 			case "scenario_end":
 				if event.Status == "failed" {
-					s.broadcastRunStatus("scenario_failed", event.Scenario, "failed", event.Error)
+					s.broadcast(WSMessage{
+						Type:       "scenario_failed",
+						Scenario:   event.Scenario,
+						Status:     "failed",
+						Output:     event.Error,
+						DurationMs: event.DurationMs,
+					})
 					featureResults[event.Feature] = "failed"
 				} else if event.Status == "passed" {
-					s.broadcastRunStatus("scenario_passed", event.Scenario, "passed", "")
+					s.broadcast(WSMessage{
+						Type:       "scenario_passed",
+						Scenario:   event.Scenario,
+						Status:     "passed",
+						DurationMs: event.DurationMs,
+					})
 					if featureResults[event.Feature] != "failed" {
 						featureResults[event.Feature] = "passed"
 					}
 				}
 
+			case "step_start":
+				// The UI marks the running step, so it needs the position as
+				// well as the name — step text repeats across scenarios.
+				s.broadcast(WSMessage{
+					Type:      "step_started",
+					Scenario:  event.Scenario,
+					Status:    "running",
+					StepIndex: event.StepIndex,
+				})
+
 			case "step_end":
-				// Could broadcast step status if needed for real-time step tracking
-				if event.Status == "failed" {
-					// Broadcast the error immediately for UI display
-					s.broadcastRunStatus("step_failed", event.Scenario, "failed", event.Error)
-				}
+				s.broadcast(WSMessage{
+					Type:       "step_finished",
+					Scenario:   event.Scenario,
+					Status:     event.Status,
+					Output:     event.Error,
+					StepIndex:  event.StepIndex,
+					DurationMs: event.DurationMs,
+				})
 
 			case "feature_end":
 				status := featureResults[event.Feature]
@@ -622,83 +933,72 @@ func stripAnsi(str string) string {
 	return result
 }
 
-// ansiToHTML converts ANSI color codes to HTML spans
-func ansiToHTML(str string) string {
-	// First escape HTML
-	str = strings.ReplaceAll(str, "&", "&amp;")
-	str = strings.ReplaceAll(str, "<", "&lt;")
-	str = strings.ReplaceAll(str, ">", "&gt;")
+// ansiClass maps an SGR parameter to one of the design system's console
+// classes. The stylesheet owns the actual colours, so the server never emits a
+// hex value — switching the palette is a CSS change, not a Go change.
+var ansiClass = map[string]string{
+	"1": "c-bold", "2": "c-dim",
+	"30": "c-dim", "90": "c-dim",
+	"31": "c-red", "91": "c-red",
+	"32": "c-green", "92": "c-green",
+	"33": "c-yellow", "93": "c-yellow",
+	"34": "c-blue", "94": "c-blue",
+	"35": "c-magenta", "95": "c-magenta",
+	"36": "c-cyan", "96": "c-cyan",
+}
 
-	// ANSI color map (foreground colors)
-	colors := map[string]string{
-		"30": "#6c7086", // black (gray)
-		"31": "#f38ba8", // red
-		"32": "#a6e3a1", // green
-		"33": "#f9e2af", // yellow
-		"34": "#89b4fa", // blue
-		"35": "#cba6f7", // magenta
-		"36": "#94e2d5", // cyan
-		"37": "#cdd6f4", // white
-		"90": "#6c7086", // bright black
-		"91": "#f38ba8", // bright red
-		"92": "#a6e3a1", // bright green
-		"93": "#f9e2af", // bright yellow
-		"94": "#89b4fa", // bright blue
-		"95": "#cba6f7", // bright magenta
-		"96": "#94e2d5", // bright cyan
-		"97": "#cdd6f4", // bright white
+var ansiSeq = regexp.MustCompile(`(?:\x1b)?\[([0-9;]*)m`)
+
+// ansiToHTML escapes a line and converts its ANSI colour codes into spans
+// carrying .c-* classes.
+func ansiToHTML(str string) string {
+	var out strings.Builder
+	open := 0
+	last := 0
+
+	for _, loc := range ansiSeq.FindAllStringSubmatchIndex(str, -1) {
+		out.WriteString(htmlEscape(str[last:loc[0]]))
+		last = loc[1]
+
+		params := str[loc[2]:loc[3]]
+		var classes []string
+		reset := params == "" || params == "0" || params == "00"
+		if !reset {
+			for _, code := range strings.Split(params, ";") {
+				if code == "0" || code == "00" {
+					reset = true
+					break
+				}
+				if c, ok := ansiClass[code]; ok {
+					classes = append(classes, c)
+				}
+			}
+		}
+
+		if reset {
+			for ; open > 0; open-- {
+				out.WriteString("</span>")
+			}
+			continue
+		}
+		if len(classes) > 0 {
+			out.WriteString(`<span class="` + strings.Join(classes, " ") + `">`)
+			open++
+		}
 	}
 
-	// Replace ANSI codes with spans
-	// Handle ESC[XXm and [XXm formats
-	ansiPattern := regexp.MustCompile(`(?:\x1b)?\[(\d+)(?:;(\d+))?m`)
+	out.WriteString(htmlEscape(str[last:]))
+	for ; open > 0; open-- {
+		out.WriteString("</span>")
+	}
+	return out.String()
+}
 
-	result := ansiPattern.ReplaceAllStringFunc(str, func(match string) string {
-		parts := ansiPattern.FindStringSubmatch(match)
-		if len(parts) < 2 {
-			return ""
-		}
-
-		code := parts[1]
-		if code == "0" || code == "00" {
-			return "</span>"
-		}
-
-		// Check for bold (1) prefix
-		if len(parts) > 2 && parts[2] != "" {
-			code = parts[2] // Use the color code after bold
-		}
-
-		if color, ok := colors[code]; ok {
-			return fmt.Sprintf(`<span style="color:%s">`, color)
-		}
-		return ""
-	})
-
-	// Also handle plain [XXm without ESC
-	bracketPattern := regexp.MustCompile(`\[(\d+)(?:;(\d+))?m`)
-	result = bracketPattern.ReplaceAllStringFunc(result, func(match string) string {
-		parts := bracketPattern.FindStringSubmatch(match)
-		if len(parts) < 2 {
-			return ""
-		}
-
-		code := parts[1]
-		if code == "0" || code == "00" {
-			return "</span>"
-		}
-
-		if len(parts) > 2 && parts[2] != "" {
-			code = parts[2]
-		}
-
-		if color, ok := colors[code]; ok {
-			return fmt.Sprintf(`<span style="color:%s">`, color)
-		}
-		return ""
-	})
-
-	return result
+func htmlEscape(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	return s
 }
 
 // isGherkinOutput checks if a line is relevant Gherkin test output
@@ -738,13 +1038,16 @@ func isGherkinOutput(line string) bool {
 }
 
 func (s *UIServer) broadcastRunStatus(msgType, scenario, status, output string) {
-	msg := WSMessage{
+	s.broadcast(WSMessage{
 		Type:     msgType,
 		Scenario: scenario,
 		Status:   status,
 		Output:   output,
-	}
+	})
+}
 
+// broadcast fans one message out to every connected client.
+func (s *UIServer) broadcast(msg WSMessage) {
 	data, _ := json.Marshal(msg)
 
 	s.clientsMux.RLock()
@@ -923,42 +1226,22 @@ func parseFeatureFileJSON(filePath string, matcher *stepMatcher) (*FeatureJSON, 
 	}
 
 	for _, child := range feature.Children {
-		if child.Background != nil {
+		switch {
+		case child.Background != nil:
 			fd.Background = stepsJSON(child.Background.Steps, nil, matcher)
-		}
-		if child.Scenario != nil {
-			sc := child.Scenario
-			sd := ScenarioJSON{
-				Name:        sc.Name,
-				Description: strings.TrimSpace(sc.Description),
-				Tags:        extractTagsJSON(sc.Tags),
-				IsOutline:   len(sc.Examples) > 0,
+		case child.Scenario != nil:
+			fd.Scenarios = append(fd.Scenarios, scenarioJSON(child.Scenario, matcher))
+		case child.Rule != nil:
+			// A Rule nests its own background and scenarios. They used to be
+			// dropped, so a feature written with Rule blocks looked empty.
+			for _, rc := range child.Rule.Children {
+				switch {
+				case rc.Background != nil:
+					fd.Background = append(fd.Background, stepsJSON(rc.Background.Steps, nil, matcher)...)
+				case rc.Scenario != nil:
+					fd.Scenarios = append(fd.Scenarios, scenarioJSON(rc.Scenario, matcher))
+				}
 			}
-
-			for _, ex := range sc.Examples {
-				ed := ExampleJSON{
-					Name: ex.Name,
-					Tags: extractTagsJSON(ex.Tags),
-				}
-				if ex.TableHeader != nil {
-					var header []string
-					for _, cell := range ex.TableHeader.Cells {
-						header = append(header, cell.Value)
-					}
-					ed.Rows = append(ed.Rows, header)
-				}
-				for _, row := range ex.TableBody {
-					var cells []string
-					for _, cell := range row.Cells {
-						cells = append(cells, cell.Value)
-					}
-					ed.Rows = append(ed.Rows, cells)
-				}
-				sd.Examples = append(sd.Examples, ed)
-			}
-
-			sd.Steps = stepsJSON(sc.Steps, firstExampleRow(sd.Examples), matcher)
-			fd.Scenarios = append(fd.Scenarios, sd)
 		}
 	}
 
@@ -967,6 +1250,40 @@ func parseFeatureFileJSON(filePath string, matcher *stepMatcher) (*FeatureJSON, 
 
 // stepsJSON converts steps for the UI. An outline's steps are matched with
 // example's values in place of their <placeholders>; matcher may be nil.
+func scenarioJSON(sc *messages.Scenario, matcher *stepMatcher) ScenarioJSON {
+	sd := ScenarioJSON{
+		Name:        sc.Name,
+		Description: strings.TrimSpace(sc.Description),
+		Tags:        extractTagsJSON(sc.Tags),
+		IsOutline:   len(sc.Examples) > 0,
+	}
+
+	for _, ex := range sc.Examples {
+		ed := ExampleJSON{
+			Name: ex.Name,
+			Tags: extractTagsJSON(ex.Tags),
+		}
+		if ex.TableHeader != nil {
+			var header []string
+			for _, cell := range ex.TableHeader.Cells {
+				header = append(header, cell.Value)
+			}
+			ed.Rows = append(ed.Rows, header)
+		}
+		for _, row := range ex.TableBody {
+			var cells []string
+			for _, cell := range row.Cells {
+				cells = append(cells, cell.Value)
+			}
+			ed.Rows = append(ed.Rows, cells)
+		}
+		sd.Examples = append(sd.Examples, ed)
+	}
+
+	sd.Steps = stepsJSON(sc.Steps, firstExampleRow(sd.Examples), matcher)
+	return sd
+}
+
 func stepsJSON(steps []*messages.Step, example map[string]string, matcher *stepMatcher) []StepJSON {
 	var out []StepJSON
 	phase := ""
@@ -988,6 +1305,7 @@ func stepsJSON(steps []*messages.Step, example map[string]string, matcher *stepM
 
 		if step.DocString != nil {
 			st.DocString = step.DocString.Content
+			st.DocLang = step.DocString.MediaType
 		}
 
 		if step.DataTable != nil {
