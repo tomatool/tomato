@@ -1,10 +1,12 @@
 /* tomato ui — renderer for the "Modernist" design system.
  *
- * Plain DOM, no framework and no build step. The contract from the design
- * system is that state lives in data-* and aria-* attributes and classes never
- * change at runtime, so every render here writes attributes, not class names.
+ * Plain DOM, no framework. Vite bundles it into command/ui_assets/dist, which
+ * the Go binary embeds. The contract from the design system is that state lives
+ * in data-* and aria-* attributes and classes never change at runtime, so every
+ * render here writes attributes, not class names.
  */
-'use strict';
+// Modules are strict by default.
+import './styles.css';
 
 // ——— state ———————————————————————————————————————————————————————————
 
@@ -441,19 +443,26 @@ function renderDoc() {
   if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
 }
 
+// A feature can have a scenario called anything, so the background's toggle key
+// is prefixed rather than a sentinel character: a NUL here became U+FFFD once
+// the browser parsed it back out of the data-arg attribute, and the toggle
+// wrote to a key the render never read.
+var BACKGROUND_KEY = 'background::feature';
+
 // Background is a feature-level field, not a scenario: it has no name, no
 // status of its own and never appears in counts or the run bar.
 function renderBackground(f) {
-  var collapsed = collapsedScenarios['\u0000background'] !== false;
+  var collapsed = collapsedScenarios[BACKGROUND_KEY] !== false;
   return '<div class="scenario" data-kind="background"' +
     (collapsed ? ' data-collapsed="true"' : '') + '>' +
-    '<div class="scenario-head" data-act="toggleScenario" data-arg="\u0000background">' +
+    '<div class="scenario-head" data-act="toggleScenario" data-arg="' + BACKGROUND_KEY + '"' +
+    ' role="button" tabindex="0" aria-expanded="' + (collapsed ? 'false' : 'true') + '">' +
     chev(!collapsed) +
     '<span class="scenario-kw">Background</span>' +
     '<span class="scenario-name" style="color:var(--fg-2);font-weight:400">' +
     plural(f.background.length, 'step') + ' · runs before each scenario</span></div>' +
     '<div class="steps">' +
-    f.background.map(function (st, i) { return renderStep(st, { name: '\u0000bg' }, i); }).join('') +
+    f.background.map(function (st, i) { return renderStep(st, { name: BACKGROUND_KEY }, i); }).join('') +
     '</div></div>';
 }
 
@@ -475,7 +484,11 @@ function renderScenario(s, i) {
   if (collapsed) a.push('data-collapsed="true"');
   if (selectedScenario === i) a.push('aria-current="true"');
 
-  var head = '<div class="scenario-head" data-act="toggleScenario" data-arg="' + attr(s.name) + '">' +
+  // The whole head toggles, so it needs the same caret the Background has —
+  // without one there is nothing to say the card opens.
+  var head = '<div class="scenario-head" data-act="toggleScenario" data-arg="' + attr(s.name) + '"' +
+    ' role="button" tabindex="0" aria-expanded="' + (collapsed ? 'false' : 'true') + '">' +
+    chev(!collapsed) +
     '<i class="pip" data-status="' + attr(st) + '"></i>' +
     '<span class="scenario-kw">' + kw + '</span>' +
     '<span class="scenario-name">' + esc(s.name) + '</span>' +
@@ -1201,8 +1214,11 @@ document.addEventListener('click', function (e) {
       selectFile(arg, true); selectedScenario = parseInt(arg2, 10) || 0; renderAll();
       break;
     case 'toggleScenario':
-      collapsedScenarios[arg] = !collapsedScenarios[arg];
-      renderDoc();
+      // Invert what is on screen, not the stored value: a card with nothing
+      // stored yet is showing a computed default (Background starts closed, a
+      // passing scenario folds itself away), and inverting `undefined` would
+      // write back the state it is already in — a dead first click.
+      toggleCard(t, arg);
       break;
     case 'runScenario': runScenario(arg); break;
     case 'tag':
@@ -1229,6 +1245,15 @@ document.addEventListener('click', function (e) {
   }
 });
 
+// toggleCard flips a scenario or Background card from whatever it currently
+// shows, then re-renders.
+function toggleCard(node, name) {
+  var card = node.closest ? node.closest('.scenario') : null;
+  var showing = card && card.getAttribute('data-collapsed') === 'true';
+  collapsedScenarios[name] = !showing;
+  renderDoc();
+}
+
 document.addEventListener('mouseover', function (e) {
   var t = e.target.closest('.msg[data-arg],.tedge[data-arg]');
   if (!t) return;
@@ -1250,6 +1275,15 @@ el('runFailedBtn').addEventListener('click', runFailed);
 
 document.addEventListener('keydown', function (e) {
   var t = e.target;
+
+  // A head is a button, so Enter and Space must work on it.
+  if ((e.key === 'Enter' || e.key === ' ') && t && t.classList &&
+      t.classList.contains('scenario-head')) {
+    e.preventDefault();
+    toggleCard(t, t.getAttribute('data-arg'));
+    return;
+  }
+
   var typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
 
   if (e.key === 'Escape') {
@@ -1274,23 +1308,94 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
-// console resize
+// ——— pane resizing ———————————————————————————————————————————————————
+//
+// Widths and heights a person sets are per-viewer conveniences, so they live in
+// localStorage and every access is guarded: a private window or blocked site
+// data makes these throw rather than return empty.
+function remember(k, v) {
+  try { localStorage.setItem('tomato-ui.' + k, String(v)); } catch (e) { /* not fatal */ }
+}
+function recall(k) {
+  try { return localStorage.getItem('tomato-ui.' + k); } catch (e) { return null; }
+}
+
+var SIDE_MIN = 240, SIDE_DEFAULT = 340, CONSOLE_MIN = 80;
+
+function setSideWidth(px) {
+  var max = Math.max(SIDE_MIN, window.innerWidth - 420);
+  var w = Math.round(Math.min(Math.max(px, SIDE_MIN), max));
+  el('app').style.setProperty('--side-open-w', w + 'px');
+  remember('sideWidth', w);
+  return w;
+}
+
+(function () {
+  var handle = el('sideResize'), app = el('app');
+  var dragging = false, startX = 0, startW = 0;
+
+  var saved = parseInt(recall('sideWidth'), 10);
+  if (saved > 0) setSideWidth(saved);
+
+  handle.addEventListener('mousedown', function (e) {
+    // Dragging the edge of a collapsed rail would be confusing; open it first.
+    if (app.getAttribute('data-side') === 'closed') return;
+    dragging = true;
+    startX = e.clientX;
+    startW = document.querySelector('.pane--side').offsetWidth;
+    handle.setAttribute('data-dragging', 'true');
+    app.setAttribute('data-resizing', 'true');
+    e.preventDefault();
+  });
+
+  handle.addEventListener('dblclick', function () { setSideWidth(SIDE_DEFAULT); });
+
+  document.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    // The handle is on the pane's left edge, so moving left widens it.
+    setSideWidth(startW - (e.clientX - startX));
+  });
+
+  document.addEventListener('mouseup', function () {
+    if (!dragging) return;
+    dragging = false;
+    handle.removeAttribute('data-dragging');
+    app.removeAttribute('data-resizing');
+  });
+
+  // Keep the pane inside the window when the window itself shrinks.
+  window.addEventListener('resize', function () {
+    var cur = parseInt(recall('sideWidth'), 10);
+    if (cur > 0) setSideWidth(cur);
+  });
+})();
+
+// console height
 (function () {
   var handle = el('consoleResize'), con = el('console');
   var dragging = false, startY = 0, startH = 0;
+
+  var saved = parseInt(recall('consoleHeight'), 10);
+  if (saved > 0) con.style.height = saved + 'px';
+
   handle.addEventListener('mousedown', function (e) {
     dragging = true; startY = e.clientY; startH = con.offsetHeight;
     handle.setAttribute('data-dragging', 'true');
+    el('app').setAttribute('data-resizing', 'true');
     e.preventDefault();
   });
   document.addEventListener('mousemove', function (e) {
     if (!dragging) return;
-    var h = Math.min(Math.max(startH + (startY - e.clientY), 80), window.innerHeight * 0.7);
+    var h = Math.round(Math.min(Math.max(startH + (startY - e.clientY), CONSOLE_MIN),
+      window.innerHeight * 0.7));
     con.style.height = h + 'px';
+    remember('consoleHeight', h);
   });
   document.addEventListener('mouseup', function () {
     if (!dragging) return;
-    dragging = false; handle.removeAttribute('data-dragging');
+    dragging = false;
+    handle.removeAttribute('data-dragging');
+    el('app').removeAttribute('data-resizing');
   });
 })();
 

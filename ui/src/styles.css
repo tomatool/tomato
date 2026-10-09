@@ -5,8 +5,8 @@
    Generated from the "Modernist" design system. Keep edits in sync with it. */
 
 /* Geist / Geist Mono, vendored so the UI works offline (see fonts/README.md). */
-@font-face{font-family:"Geist";font-style:normal;font-weight:400 600;font-display:swap;src:url("fonts/geist-latin.woff2") format("woff2")}
-@font-face{font-family:"Geist Mono";font-style:normal;font-weight:400 600;font-display:swap;src:url("fonts/geist-mono-latin.woff2") format("woff2")}
+@font-face{font-family:"Geist";font-style:normal;font-weight:400 600;font-display:swap;src:url("./fonts/geist-latin.woff2") format("woff2")}
+@font-face{font-family:"Geist Mono";font-style:normal;font-weight:400 600;font-display:swap;src:url("./fonts/geist-mono-latin.woff2") format("woff2")}
 
 :root{
   color-scheme:dark;
@@ -167,7 +167,7 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--pass);box-shadow:0 0 0 3px var(--pass-bg);flex:none}
 .live[data-state="offline"]::before{background:var(--fg-3);box-shadow:none}
 .live[data-state="error"]::before{background:var(--fail);box-shadow:0 0 0 3px var(--fail-bg)}
-.pane{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg-1)}
+.pane{position:relative;display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--bg-1)}
 .pane--tree{grid-area:tree;border-right:1px solid var(--line)}
 .pane--doc{grid-area:doc;background:var(--bg-0);overflow:auto}
 .pane--side{grid-area:side;border-left:1px solid var(--line)}
@@ -177,6 +177,9 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .pane-body{flex:1;min-height:0;overflow:auto}
 .resize-y{height:5px;margin-top:-3px;cursor:ns-resize;position:relative;z-index:1}
 .resize-y:hover,.resize-y[data-dragging="true"]{background:var(--line-strong)}
+/* Vertical twin of .resize-y: sits on a pane's leading edge, full height. */
+.resize-x{position:absolute;top:0;bottom:0;left:0;width:5px;margin-left:-2px;cursor:ew-resize;z-index:5}
+.resize-x:hover,.resize-x[data-dragging="true"]{background:var(--line-strong)}
 
 /* — run summary bar — */
 .runbar{display:flex;height:4px;gap:2px;width:100%;min-width:80px}
@@ -469,7 +472,12 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .y-k{color:var(--fg-2)}.y-s{color:var(--arg)}.y-n{color:var(--then)}.y-b{color:var(--when)}.y-c{color:var(--fg-3);font-style:italic}
 
 /* — collapsible side panes: [ toggles features, ] toggles inspector — */
-.app{--tree-w:260px;--side-w:340px;grid-template-columns:var(--tree-w) minmax(0,1fr) var(--side-w);transition:grid-template-columns .18s ease}
+/* No transition on grid-template-columns: when the track list comes from a
+   custom property, Chrome keeps serving the old used value and the column
+   never changes — which silently broke both the [ / ] pane collapse and
+   dragging the inspector edge. Panes snap instead. */
+.app{--tree-open-w:260px;--side-open-w:340px;--tree-w:var(--tree-open-w);--side-w:var(--side-open-w);grid-template-columns:var(--tree-w) minmax(0,1fr) var(--side-w)}
+.app[data-resizing="true"]{user-select:none}
 .rail{display:none;flex-direction:column;align-items:center;gap:var(--s-4);padding:var(--s-3) 0;height:100%}
 .rail-label{writing-mode:vertical-rl;font:500 var(--fs-11) var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
 .rail-meta{display:flex;flex-direction:column;align-items:center;gap:var(--s-2);font:var(--fs-11) var(--font-mono);color:var(--fg-3)}
@@ -480,7 +488,7 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .app[data-tree="closed"] .pane--tree>.rail,.app[data-side="closed"] .pane--side>.rail{display:flex}
 
 /* — responsive shell (keep last) — */
-@media (max-width:1180px){.app{--tree-w:220px;--side-w:280px}}
-@media (max-width:980px){.app{--tree-w:200px;grid-template-columns:var(--tree-w) minmax(0,1fr);grid-template-areas:"top top" "tree doc" "tree console"}.app .pane--side{display:none}}
+@media (max-width:1180px){.app{--tree-open-w:220px;--side-open-w:280px}}
+@media (max-width:980px){.app{--tree-open-w:200px;grid-template-columns:var(--tree-w) minmax(0,1fr);grid-template-areas:"top top" "tree doc" "tree console"}.app .pane--side{display:none}}
 .app[data-tree="closed"]{--tree-w:36px}
 .app[data-side="closed"]{--side-w:36px}

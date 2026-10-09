@@ -33,6 +33,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- `tomato ui`: collapsing either side pane with `[` or `]` did nothing. `transition: grid-template-columns` kept Chrome serving the old track list whenever the width came from a custom property, so the pane never resized.
 - `tomato update` replaced a binary Homebrew had installed, so brew still recorded the old version and put it back on its next upgrade or reinstall. It now stops and prints the `brew` command to run instead, and the new-version notice names that command too.
 - The last lines of a run's output, the summary among them, could be lost: tomato exited before the pipe that copies its output to the console and the run log was drained.
 - Kafka: tomato waits until a topic it creates (the `creates topic` steps, `delete_recreate` resets) answers an offset lookup on every partition, so a `consumes from` right after it no longer fails with "not the leader for some partition". KRaft brokers, such as the `kafka` preset's, accept a topic before they serve it. A `consumes from` that fails can also be retried by a later step instead of being skipped.
@@ -50,6 +51,9 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - A container built from `build:` got a random image name on every run and left one more image behind each time. The image is named `tomato-<container>:<hash>` and rebuilt from cache into the same image.
 
 ### Changed
+- The web UI is a Vite project under `ui/`, built with pnpm. `pnpm build` writes `command/ui_assets/dist`, which the binary embeds; the bundle is committed so `go build` still works without Node, and CI (`make ui-check`) fails when it is stale. `make ui`, `make ui-dev` and `make ui-check` drive it, and goreleaser builds it before a release.
+- The inspector pane's width is draggable from its left edge and remembered per browser; double-clicking the handle resets it. The console's height is remembered too.
+- Scenario cards carry a caret and respond to Enter and Space, so it is visible that they open and close. Background cards toggle correctly — their first click used to do nothing.
 - `tomato ui` rebuilt on a dark-only design system. The embedded assets are now `index.html`, `styles.css`, `main.js` and vendored Geist/Geist Mono woff2 under `command/ui_assets/` (previously a single HTML file); the light theme is gone. The screen is a four-pane shell — feature tree, feature document, an inspector with Flow / Topology / Runs tabs and a step transport, and the output console — with run state carried in `data-*`/`aria-*` attributes and each status given its own pip shape so it reads without colour. Keys: `/` filter, `j`/`k` scenario, `r` run focused, `R` run all, `Esc` stop, `[`/`]` panes, `←`/`→`/space transport.
 - The UI's feature parser reads `Rule:` blocks, whose background and scenarios it used to drop, and records a docstring's fenced language.
 - The `tomato` event format carries `stepIndex` and `durationMs`, and adds `step_start`. The UI keys per-step status on the index, so a running step is marked while it runs and every step shows its own duration.

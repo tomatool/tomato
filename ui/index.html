@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>tomato ui</title>
-<link rel="stylesheet" href="styles.css">
+
 </head>
 <body>
 <!-- Resource icons, one 14px stroke glyph per tomato resource type.
@@ -62,6 +62,7 @@
   <main class="pane pane--doc" id="doc"></main>
 
   <aside class="pane pane--side">
+    <div class="resize-x" id="sideResize" title="Drag to resize  ·  double-click to reset"></div>
     <div class="rail">
       <button class="btn btn--ghost btn--sm btn--icon" data-toggle="side" title="Show inspector  ]"><i class="ico-chev" data-dir="left"></i></button>
       <button class="rail-tab" data-tab="flow">Flow</button>
@@ -86,6 +87,6 @@
   </section>
 </div>
 
-<script src="main.js"></script>
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>

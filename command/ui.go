@@ -30,7 +30,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-//go:embed ui_assets
+// The UI is a Vite project under ui/; `pnpm build` writes the bundle here and
+// this bakes it into the binary. The bundle is committed so `go build` works
+// without Node — `make ui` (or CI) regenerates it when the sources change.
+//
+//go:embed all:ui_assets/dist
 var uiAssets embed.FS
 
 var uiCommand = &cli.Command{
@@ -205,7 +209,7 @@ func runWebUI(c *cli.Context) error {
 	mux := http.NewServeMux()
 
 	// Serve embedded assets
-	assetsFS, err := fs.Sub(uiAssets, "ui_assets")
+	assetsFS, err := fs.Sub(uiAssets, "ui_assets/dist")
 	if err != nil {
 		return fmt.Errorf("failed to setup assets: %w", err)
 	}

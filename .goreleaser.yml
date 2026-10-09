@@ -4,6 +4,8 @@ project_name: tomato
 
 before:
   hooks:
+    # The binary embeds command/ui_assets/dist, so the UI is built first.
+    - sh -c "cd ui && pnpm install --frozen-lockfile && pnpm build"
     - go mod tidy
 
 builds:

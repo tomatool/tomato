@@ -1,4 +1,4 @@
-.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all kafka-plugin
+.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all kafka-plugin ui ui-dev ui-check
 
 # Build variables
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -27,7 +27,27 @@ help:
 	@echo "Targets:"
 	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
 
-## build: Build the tomato binary
+## ui: Build the web UI bundle that the binary embeds
+ui:
+	@echo "Building the web UI..."
+	@cd ui && pnpm install --frozen-lockfile && pnpm build
+
+## ui-dev: Vite dev server against a `tomato ui` already running on :7788
+ui-dev:
+	@cd ui && pnpm install && pnpm dev
+
+## ui-check: Fail when the committed bundle is stale against ui/
+# `git diff` alone would miss a brand-new asset, which is exactly what a hashed
+# filename produces, so this looks at untracked files too.
+ui-check: ui
+	@if [ -n "$$(git status --porcelain -- command/ui_assets/dist)" ]; then \
+		echo "command/ui_assets/dist is stale; run 'make ui' and commit the result"; \
+		git --no-pager status --short -- command/ui_assets/dist; \
+		exit 1; \
+	fi
+	@echo "UI bundle is up to date"
+
+## build: Build the tomato binary (rebuild the UI first with `make ui`)
 build:
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p ./bin
