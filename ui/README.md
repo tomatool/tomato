@@ -32,10 +32,15 @@ with `//go:embed all:ui_assets/dist`.
 ## Working on it
 
 ```sh
-make ui        # pnpm install --frozen-lockfile && pnpm build
+make build     # rebuilds the bundle first when anything under ui/ is newer
+make ui        # force a bundle rebuild
 make ui-dev    # Vite dev server with HMR
 make ui-check  # fail if the committed bundle is stale
 ```
+
+`make build` and `make install` depend on the bundle, so a UI change reaches
+the binary without a separate step. Without pnpm installed they warn and build
+with the committed bundle, so a Go-only contributor is never blocked.
 
 `make ui-dev` proxies `/api` and `/ws` to `http://localhost:7788`, so start a
 backend next to it:

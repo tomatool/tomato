@@ -8,6 +8,12 @@ LDFLAGS := -ldflags "-X github.com/tomatool/tomato/version.Version=$(VERSION) \
                      -X github.com/tomatool/tomato/version.Commit=$(COMMIT) \
                      -X github.com/tomatool/tomato/version.BuildDate=$(BUILD_DATE)"
 
+# Web UI. The binary embeds command/ui_assets/dist, so the bundle is a real
+# build artefact with real sources — listing them lets make skip pnpm when
+# nothing under ui/ has changed.
+UI_SOURCES := $(shell find ui/src ui/index.html ui/package.json ui/vite.config.js -type f 2>/dev/null)
+UI_BUNDLE := command/ui_assets/dist/index.html
+
 # Go variables
 GOCMD := go
 GOBUILD := $(GOCMD) build
@@ -32,6 +38,19 @@ ui:
 	@echo "Building the web UI..."
 	@cd ui && pnpm install --frozen-lockfile && pnpm build
 
+# Rebuild the bundle when anything under ui/ is newer than it. Without pnpm the
+# committed bundle is used as-is: a Go-only contributor can still build tomato,
+# they just cannot change the UI. The target is deliberately not touched in that
+# case, so the warning repeats instead of going quiet after the first build.
+$(UI_BUNDLE): $(UI_SOURCES)
+	@if command -v pnpm >/dev/null 2>&1; then \
+		echo "Web UI sources changed; rebuilding the bundle..."; \
+		cd ui && pnpm install --frozen-lockfile && pnpm build; \
+	else \
+		echo "warning: ui/ is newer than the committed bundle, but pnpm is not installed."; \
+		echo "warning: building with the committed bundle; install pnpm to pick up UI changes."; \
+	fi
+
 ## ui-dev: Vite dev server against a `tomato ui` already running on :7788
 ui-dev:
 	@cd ui && pnpm install && pnpm dev
@@ -47,14 +66,14 @@ ui-check: ui
 	fi
 	@echo "UI bundle is up to date"
 
-## build: Build the tomato binary (rebuild the UI first with `make ui`)
-build:
+## build: Build the tomato binary, rebuilding the web UI when ui/ has changed
+build: $(UI_BUNDLE)
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p ./bin
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY_PATH) .
 
 ## install: Install tomato to GOPATH/bin
-install:
+install: $(UI_BUNDLE)
 	@echo "Installing $(BINARY_NAME)..."
 	$(GOBUILD) $(LDFLAGS) -o $(GOPATH)/bin/$(BINARY_NAME) .
 
