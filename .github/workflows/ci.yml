@@ -22,11 +22,26 @@ jobs:
         with:
           go-version: "1.26"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Download dependencies
         run: go mod download
 
       - name: Build
         run: go build -v ./...
+
+      - name: Web UI bundle matches its sources
+        # tomato embeds the committed command/ui_assets/dist so `go build`
+        # works without Node. Rebuild it from ui/ and fail when it differs.
+        run: make ui-check
 
       - name: Kafka preset plugin matches its sources
         # tomato embeds the committed internal/presets/kafka/tomato-msk-iam.jar.
@@ -54,6 +69,16 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.26"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Download dependencies
         run: go mod download

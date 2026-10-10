@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="tomato">
+  <title>tomato</title>
+  <!-- The design system's brand mark: red fruit, green stem. The colours are
+       the status tokens converted from oklch, since a favicon cannot read the
+       stylesheet's custom properties. -->
+  <path d="M12.2 10.2V6.8a3.2 3.2 0 0 1 3.2-3.2h1.2a3.2 3.2 0 0 1 3.2 3.2v3.4z" fill="#66cb79"/>
+  <circle cx="16" cy="19.6" r="11.2" fill="#f75f4c"/>
+</svg>

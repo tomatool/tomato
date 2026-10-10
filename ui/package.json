@@ -1,0 +1,22 @@
+{
+  "name": "tomato-ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The web UI tomato serves from `tomato ui`, built into the Go binary.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "vite build --logLevel warn"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6",
+    "vite": "^8.3.4"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
