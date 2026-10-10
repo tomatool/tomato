@@ -70,6 +70,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - `tomato init` generates an `http-server` resource for external HTTP mocks and no longer offers MySQL. ([#149](https://github.com/tomatool/tomato/pull/149))
 
 ### Removed
+- The `ghcr.io/tomatool/tomato-kafka` package. It had one tag, `2.1.3`, and only tomato v2.1.3 ever pulled it: since v2.1.4 the kafka preset runs the stock `apache/kafka` image with the `AWS_MSK_IAM` server copied in from the binary, so nothing has published or pulled it for three releases. **If you are on v2.1.3 and use `preset: kafka`, upgrade to v2.1.4 or later** — v2.1.3 has no fallback and fails at container startup with `Head "https://ghcr.io/v2/tomatool/tomato-kafka/manifests/2.1.3": denied: denied`, which GHCR returns for a deleted image rather than a 404.
 - **Breaking.** `settings.reset.level` and `settings.reset.on_failure`, the `--no-reset` flag, the GitHub Action's `no-reset` input, the per-resource `reset: false`, and `reset_strategy: none`. Every resource is now reset before every scenario, with no way to turn it off: a scenario that needs a starting state builds it in a `Background`. The two `settings.reset` fields were accepted and validated but never read, so every level already behaved as `scenario`; the rest were the remaining ways to opt out of isolation.
 - The `mysql` and `wiremock` resource types, which were no-op stubs. Configs using them now fail with a hint. ([#149](https://github.com/tomatool/tomato/pull/149))
 
