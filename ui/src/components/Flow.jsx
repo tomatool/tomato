@@ -1,8 +1,7 @@
 import { ResourceIcon } from '../lib/icons'
 import { clip } from '../lib/format'
-import { Peek } from './Peek.jsx'
 
-export function Flow({ model, cursor, hot, onHot }) {
+export function Flow({ model, cursor, hot, pinned, onHot, onPin }) {
   const { lanes, msgs } = model
   const stateOf = (i) => (cursor < 0 ? undefined : i < cursor ? 'past' : i === cursor ? 'current' : 'future')
 
@@ -28,10 +27,11 @@ export function Flow({ model, cursor, hot, onHot }) {
             data-dir={m.dir}
             data-state={stateOf(m.idx)}
             data-status={m.status || undefined}
-            data-hot={hot === m.idx ? 'true' : undefined}
-            data-up={m.n >= msgs.length - 1 ? 'true' : undefined}
+            data-hot={hot === m.idx || pinned === m.idx ? 'true' : undefined}
+            data-pinned={pinned === m.idx ? 'true' : undefined}
             onMouseEnter={() => onHot(m.idx)}
             onMouseLeave={() => onHot(null)}
+            onClick={() => onPin(m.idx)}
           >
             <div className="msg-arrow" data-from={m.a} data-to={m.b}>
               <span className="msg-label">
@@ -41,13 +41,12 @@ export function Flow({ model, cursor, hot, onHot }) {
               </span>
               <span className="msg-line" />
             </div>
-            {hot === m.idx && <div className="peek-anchor"><Peek msg={m} /></div>}
           </div>
         ))}
       </div>
 
       <p className="muted" style={{ fontSize: 11, marginTop: 8 }}>
-        Derived from the scenario&apos;s steps. Hover a line to see the step and its payload.
+        Derived from the scenario&apos;s steps. Hover a line for its detail below, click to keep it.
       </p>
     </div>
   )

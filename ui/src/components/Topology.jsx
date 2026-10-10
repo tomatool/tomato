@@ -1,5 +1,4 @@
 import { iconId } from '../lib/icons'
-import { Peek } from './Peek.jsx'
 
 // Resource types tomato serves itself: the app sends traffic to these, tomato
 // only observes it arriving.
@@ -36,7 +35,7 @@ function Node({ x, y, w, h, kind, name, type, active, status, mock }) {
 // http-client is two routes, tomato → the client and the client → whatever
 // its base_url addresses, because that is what actually goes over the wire.
 // The per-step view is the Flow tab; this one answers "what talks to what".
-export function Topology({ model, topo, cursor, hot, onHot }) {
+export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
   const { msgs } = model
   const all = topo?.resources?.length
     ? topo.resources
@@ -130,7 +129,9 @@ export function Topology({ model, topo, cursor, hot, onHot }) {
     // Hovering a route explains it with the step the cursor is on when that
     // step uses it, and with the first step that does otherwise.
     const subject = (cur && onRoute ? cur : r.steps[0])
-    const isHot = hot != null && r.steps.some((m) => m.idx === hot)
+    const isHot = (hot != null && r.steps.some((m) => m.idx === hot))
+      || (pinned != null && r.steps.some((m) => m.idx === pinned))
+    const isPinned = pinned != null && r.steps.some((m) => m.idx === pinned)
 
     const fromX = r.a.x + r.a.w
     const toX = r.b.x
@@ -154,8 +155,10 @@ export function Topology({ model, topo, cursor, hot, onHot }) {
         data-status={failed ? 'failed' : undefined}
         data-inferred={r.inferred ? 'true' : undefined}
         data-hot={isHot ? 'true' : undefined}
+        data-pinned={isPinned ? 'true' : undefined}
         onMouseEnter={() => onHot(subject.idx)}
         onMouseLeave={() => onHot(null)}
+        onClick={() => onPin(subject.idx)}
       >
         <path className="tedge-hit" d={d} />
         <path className="tedge-line" pathLength="1" d={d} />
@@ -166,8 +169,6 @@ export function Topology({ model, topo, cursor, hot, onHot }) {
       </g>
     )
   })
-
-  const dock = hot != null ? msgs[hot] : cur
 
   return (
     <div className="tp">
@@ -210,8 +211,6 @@ export function Topology({ model, topo, cursor, hot, onHot }) {
           />
         ))}
       </svg>
-
-      {dock && <div className="tp-dock"><Peek msg={dock} /></div>}
 
       <div className="tp-legend">
         <span className="tp-key">traffic tomato sends</span>

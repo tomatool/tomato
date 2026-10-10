@@ -450,6 +450,17 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 @media (prefers-reduced-motion:reduce){.tedge .tedge-line{animation:none!important}}
 .tp-dock{min-height:120px}
 .tp-dock .peek{animation:none}
+/* The request detail docks at the foot of the inspector rather than floating
+   over the diagram. It is a pane footer, so it never scrolls with the view. */
+.peek-dock{flex:none;display:flex;flex-direction:column;border-top:1px solid var(--line);background:var(--bg-1);max-height:45%;min-height:0}
+.peek-dock-head{display:flex;align-items:center;gap:var(--s-3);height:26px;padding:0 var(--s-3) 0 var(--s-5);flex:none}
+.peek-dock-head .label{flex:1}
+.peek-dock-body{overflow:auto;padding:0 var(--s-4) var(--s-4);min-height:0}
+.peek-dock .peek{animation:none;box-shadow:0 0 0 1px var(--line)}
+.peek-dock[data-pinned="true"] .peek{box-shadow:0 0 0 1px var(--line-strong)}
+.peek-dock-hint{padding:var(--s-4) var(--s-5) var(--s-5);font:var(--fs-11) var(--font-ui);color:var(--fg-3)}
+/* A pinned line keeps its highlight when the pointer moves away. */
+.msg[data-pinned="true"],.tedge[data-pinned="true"]{cursor:pointer}
 .tp-legend{display:flex;flex-wrap:wrap;gap:var(--s-3) var(--s-6);font:var(--fs-11) var(--font-ui);color:var(--fg-3)}
 .tp-key{display:inline-flex;align-items:center;gap:var(--s-3)}
 .tp-key::before{content:"";width:16px;border-top:1.5px solid var(--fg-2)}

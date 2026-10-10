@@ -12,6 +12,7 @@ import { Topology } from './components/Topology.jsx'
 import { Runs } from './components/Runs.jsx'
 import { Transport } from './components/Transport.jsx'
 import { Console } from './components/Console.jsx'
+import { Peek } from './components/Peek.jsx'
 
 const SIDE_MIN = 240
 const SIDE_DEFAULT = 340
@@ -49,6 +50,7 @@ export function App() {
   const [logTabs, setLogTabs] = useState([])
   const [activeLog, setActiveLog] = useState(null)
   const [hot, setHot] = useState(null)
+  const [pinned, setPinned] = useState(null)
   const [cursor, setCursor] = useState(-1)
   const [playing, setPlaying] = useState(false)
   const playTimer = useRef(null)
@@ -199,6 +201,10 @@ export function App() {
   const scenario = shown[selectedScenario] ?? shown[0] ?? null
   const model = useMemo(() => flowModel(scenario, runState), [scenario, runState])
 
+  // The pointer is not over anything in a view you just switched away from,
+  // so a hover left highlighted there would be a lie.
+  useEffect(() => { setHot(null) }, [sideTab, scenario?.name])
+
   // Pick the first feature once something arrives.
   useEffect(() => {
     if (!selectedFile && features.length) setSelectedFile(features[0].filePath)
@@ -220,6 +226,10 @@ export function App() {
 
   const toggleCard = useCallback((key, isCollapsed) => {
     setCollapsed((p) => ({ ...p, [key]: !isCollapsed }))
+  }, [])
+
+  const togglePin = useCallback((i) => {
+    setPinned((p) => (p === i ? null : i))
   }, [])
 
   const seek = useCallback((i) => {
@@ -266,6 +276,7 @@ export function App() {
     if (!shown.length) return
     setSelectedScenario((i) => Math.max(0, Math.min(shown.length - 1, i + d)))
     setCursor(-1)
+    setPinned(null)
   }, [shown.length])
 
   // ——— keyboard ———
@@ -276,7 +287,8 @@ export function App() {
 
       if (e.key === 'Escape') {
         if (typing) t.blur()
-        if (filter) setFilter('')
+        if (pinned != null) setPinned(null)
+        else if (filter) setFilter('')
         else if (running) stopRun()
         return
       }
@@ -298,7 +310,7 @@ export function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, sideTab, cursor, seek, togglePlay])
+  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, sideTab, cursor, seek, togglePlay, pinned])
 
   // ——— pane dragging ———
   const [resizing, setResizing] = useState(null)
@@ -394,8 +406,8 @@ export function App() {
             visibleScenarios={visibleScenarios}
             onToggleDir={(d) => setOpenDirs((p) => ({ ...p, [d]: p[d] === false }))}
             onSelectConfig={() => { setView('config'); setActiveLog(null) }}
-            onSelectFile={(p) => { setView('feature'); setSelectedFile(p); setSelectedScenario(0); setCursor(-1) }}
-            onSelectScenario={(p, i) => { setView('feature'); setSelectedFile(p); setSelectedScenario(i); setCursor(-1) }}
+            onSelectFile={(p) => { setView('feature'); setSelectedFile(p); setSelectedScenario(0); setCursor(-1); setPinned(null) }}
+            onSelectScenario={(p, i) => { setView('feature'); setSelectedFile(p); setSelectedScenario(i); setCursor(-1); setPinned(null) }}
           />
         </div>
       </aside>
@@ -537,11 +549,48 @@ export function App() {
               <p>Pick a scenario to see what it talks to.</p>
             </div>
           ) : sideTab === 'topology' ? (
-            <Topology model={model} topo={topo} cursor={cursor} hot={hot} onHot={setHot} />
+            <Topology
+              model={model} topo={topo} cursor={cursor}
+              hot={hot} pinned={pinned} onHot={setHot} onPin={togglePin}
+            />
           ) : (
-            <Flow model={model} cursor={cursor} hot={hot} onHot={setHot} />
+            <Flow
+              model={model} cursor={cursor}
+              hot={hot} pinned={pinned} onHot={setHot} onPin={togglePin}
+            />
           )}
         </div>
+
+        {sideTab !== 'runs' && model && (() => {
+          // A pin wins over the pointer — that is what pinning is for. With
+          // neither, the dock follows the transport.
+          const shownMsg = pinned != null ? model.msgs[pinned]
+            : hot != null ? model.msgs[hot]
+              : cursor >= 0 ? model.msgs[cursor] : null
+          return (
+            <div className="peek-dock" data-pinned={pinned != null ? 'true' : undefined}>
+              <div className="peek-dock-head">
+                <span className="label">{pinned != null ? 'pinned' : 'detail'}</span>
+                {pinned != null && (
+                  <button
+                    className="btn btn--ghost btn--sm"
+                    type="button"
+                    onClick={() => setPinned(null)}
+                  >
+                    Unpin <span className="kbd">esc</span>
+                  </button>
+                )}
+              </div>
+              {shownMsg ? (
+                <div className="peek-dock-body"><Peek msg={shownMsg} /></div>
+              ) : (
+                <div className="peek-dock-hint">
+                  Hover a line for the step behind it. Click to keep it here.
+                </div>
+              )}
+            </div>
+          )
+        })()}
       </aside>
 
       <Console
