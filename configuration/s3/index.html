@@ -1964,7 +1964,7 @@ all three.</p>
 <tr>
 <td><code>reset_strategy</code></td>
 <td><code>purge</code></td>
-<td><code>purge</code>, <code>delete</code>, or <code>none</code>. See below.</td>
+<td><code>purge</code> or <code>delete</code>. See below.</td>
 </tr>
 <tr>
 <td><code>reset_buckets</code></td>
@@ -1990,12 +1990,11 @@ all three.</p>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">      </span><span class="nt">force_path_style</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">      </span><span class="nt">access_key</span><span class="p">:</span><span class="w"> </span><span class="s">"${AWS_ACCESS_KEY_ID}"</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">      </span><span class="nt">secret_key</span><span class="p">:</span><span class="w"> </span><span class="s">"${AWS_SECRET_ACCESS_KEY}"</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">      </span><span class="nt">reset_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Reset deletes objects</p>
 <p>Reset is destructive by design. Against a real account, set
-<code>reset_strategy: none</code> or scope it with <code>reset_buckets</code>.</p>
+scope it with <code>reset_buckets</code>.</p>
 </div>
 <h2 id="reset-behaviour">Reset behaviour<a class="headerlink" href="#reset-behaviour" title="Permanent link">#</a></h2>
 <p>Following tomato's clean-state principle, every scenario starts with empty storage.</p>
@@ -2032,42 +2031,37 @@ Narrow it with <code>reset_buckets</code>, or protect individual buckets with <c
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">      </span><span class="nt">buckets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">uploads</span><span class="p p-Indicator">]</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">      </span><span class="nt">reset_exclude</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fixtures</span><span class="p p-Indicator">]</span><span class="w">   </span><span class="c1"># seeded once in a before_all hook</span>
 </span></code></pre></div>
-<p>To keep storage across scenarios, either set <code>reset_strategy: none</code> or opt the
-resource out of reset entirely:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">resources</span><span class="p">:</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">reset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</span></code></pre></div>
+<p>A resource cannot opt out of reset altogether: every resource is wiped before
+every scenario. <code>reset_exclude</code> is how a bucket survives, and a <code>before_all</code>
+hook is where its contents are seeded.</p>
 <h2 id="wiring-your-application">Wiring your application<a class="headerlink" href="#wiring-your-application" title="Permanent link">#</a></h2>
 <p>Pass the endpoint to the application under test with container templates:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">app</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">S3_ENDPOINT</span><span class="p">:</span><span class="w"> </span><span class="s">"http://{{.minio.host}}:{{.minio.port.9000}}"</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="nt">S3_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minioadmin</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="nt">S3_SECRET_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minioadmin</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="nt">S3_FORCE_PATH_STYLE</span><span class="p">:</span><span class="w"> </span><span class="s">"true"</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">app</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">S3_ENDPOINT</span><span class="p">:</span><span class="w"> </span><span class="s">"http://{{.minio.host}}:{{.minio.port.9000}}"</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">    </span><span class="nt">S3_ACCESS_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minioadmin</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">S3_SECRET_KEY</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minioadmin</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">S3_FORCE_PATH_STYLE</span><span class="p">:</span><span class="w"> </span><span class="s">"true"</span>
 </span></code></pre></div>
 <h2 id="object-paths">Object paths<a class="headerlink" href="#object-paths" title="Permanent link">#</a></h2>
 <p>Every object step takes a single <code>bucket/key</code> path. An <code>s3://</code> prefix is stripped if present.</p>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/2026/01/report.pdf</span><span class="nf">" is "</span><span class="s">...</span><span class="nf">"</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/2026/01/report.pdf</span><span class="nf">" is "</span><span class="s">...</span><span class="nf">"</span>
 </span></code></pre></div>
 <p>Writing to a bucket that does not exist creates it, so seeding steps do not need a
 <code>bucket ... exists</code> line first.</p>
 <h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h2>
-<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">Feature:</span><span class="nf"> Report export</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Exporting writes a report to S3</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" with values:</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">      |</span><span class="s"> id</span><span class="k"> |</span><span class="s"> total</span><span class="k"> |</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="k">      |</span><span class="s"> 1</span><span class="k">  |</span><span class="s"> 42.00</span><span class="k"> |</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" request to "</span><span class="s">/exports</span><span class="nf">"</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response code should be "</span><span class="s">202</span><span class="nf">"</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" should exist within "</span><span class="s">10s</span><span class="nf">"</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" content should contain "</span><span class="s">42.00</span><span class="nf">"</span>
+<div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Feature:</span><span class="nf"> Report export</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Exporting writes a report to S3</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" with values:</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">      |</span><span class="s"> id</span><span class="k"> |</span><span class="s"> total</span><span class="k"> |</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">      |</span><span class="s"> 1</span><span class="k">  |</span><span class="s"> 42.00</span><span class="k"> |</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" request to "</span><span class="s">/exports</span><span class="nf">"</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response code should be "</span><span class="s">202</span><span class="nf">"</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" should exist within "</span><span class="s">10s</span><span class="nf">"</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" content should contain "</span><span class="s">42.00</span><span class="nf">"</span>
 </span></code></pre></div>
 <p>The <code>within</code> steps matter here: applications usually upload in the background, so a
 plain <code>should exist</code> would race the write.</p>
