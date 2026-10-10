@@ -18,9 +18,8 @@ import (
 
 // Options configures runner behavior
 type Options struct {
-	NoReset bool
-	Watch   bool
-	Format  string // Override output format (e.g., "tomato" for structured events)
+	Watch  bool
+	Format string // Override output format (e.g., "tomato" for structured events)
 }
 
 // Runner executes behavioral tests
@@ -137,14 +136,14 @@ func (r *Runner) setupScenarioHooks(ctx ScenarioContext) {
 			return ctx, godog.ErrSkip
 		}
 
-		if !r.opts.NoReset {
-			log.Debug().Str("scenario", sc.Name).Msg("resetting state")
-			if err := r.handlers.ResetAll(ctx); err != nil {
-				return ctx, fmt.Errorf("reset failed: %w", err)
-			}
-			// Reset captured variables between scenarios
-			handler.ResetGlobalVariables()
+		// Every scenario starts from the same state. There is no way to turn
+		// this off: a scenario that needs a starting point builds it in a
+		// Background, which godog runs after this hook.
+		log.Debug().Str("scenario", sc.Name).Msg("resetting state")
+		if err := r.handlers.ResetAll(ctx); err != nil {
+			return ctx, fmt.Errorf("reset failed: %w", err)
 		}
+		handler.ResetGlobalVariables()
 
 		if err := r.runHooks(ctx, r.config.Hooks.BeforeScenario); err != nil {
 			return ctx, fmt.Errorf("before_scenario hooks failed: %w", err)

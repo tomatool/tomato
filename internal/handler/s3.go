@@ -156,12 +156,8 @@ func (r *S3) Ready(ctx context.Context) error {
 // Strategies:
 //   - purge (default): delete every object in the managed buckets, keep buckets
 //   - delete: drop the managed buckets entirely, then recreate declared ones
-//   - none: leave storage untouched
 func (r *S3) Reset(ctx context.Context) error {
 	strategy := r.option("reset_strategy", "purge")
-	if strategy == "none" {
-		return nil
-	}
 
 	buckets, err := r.bucketsToReset(ctx)
 	if err != nil {

@@ -118,12 +118,6 @@ func TestParseFeatureRecordsDocStringLanguage(t *testing.T) {
 }
 
 func TestConfigSummaryHelpers(t *testing.T) {
-	if got := resetStr(config.ResetSettings{Level: "scenario", OnFailure: "reset"}); got != "per scenario · on failure: reset" {
-		t.Errorf("resetStr = %q", got)
-	}
-	if got := resetStr(config.ResetSettings{}); got != "" {
-		t.Errorf("resetStr(zero) = %q, want empty", got)
-	}
 	if got := durStr(0); got != "" {
 		t.Errorf("durStr(0) = %q, want empty", got)
 	}

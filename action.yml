@@ -26,10 +26,6 @@ inputs:
     description: 'Filter scenarios by name (regex pattern)'
     required: false
     default: ''
-  no-reset:
-    description: 'Skip state reset between scenarios (for debugging)'
-    required: false
-    default: 'false'
   verbose:
     description: 'Verbose output (show debug logs)'
     required: false
@@ -168,11 +164,6 @@ runs:
         # Scenario filter
         if [ -n "${{ inputs.scenario }}" ]; then
           ARGS="$ARGS --scenario '${{ inputs.scenario }}'"
-        fi
-
-        # No reset flag
-        if [ "${{ inputs.no-reset }}" = "true" ]; then
-          ARGS="$ARGS --no-reset"
         fi
 
         # Verbose flag

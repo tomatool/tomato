@@ -5,8 +5,6 @@ settings:
   parallel: 1
   fail_fast: true
   output: pretty
-  reset:
-    level: scenario
 
 containers:
   postgres:

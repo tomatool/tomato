@@ -112,12 +112,12 @@ func newTestConfig() *config.Config {
 
 func TestNewRunner(t *testing.T) {
 	tests := []struct {
-		name          string
-		config        *config.Config
-		opts          Options
-		wantErr       bool
-		errContains   string
-		checkRegex    bool
+		name        string
+		config      *config.Config
+		opts        Options
+		wantErr     bool
+		errContains string
+		checkRegex  bool
 	}{
 		{
 			name:    "successful creation with defaults",
@@ -148,15 +148,7 @@ func TestNewRunner(t *testing.T) {
 			errContains: "invalid scenario filter regex",
 		},
 		{
-			name: "with NoReset option",
-			config: newTestConfig(),
-			opts: Options{
-				NoReset: true,
-			},
-			wantErr: false,
-		},
-		{
-			name: "with Watch option",
+			name:   "with Watch option",
 			config: newTestConfig(),
 			opts: Options{
 				Watch: true,
@@ -164,7 +156,7 @@ func TestNewRunner(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "with Format override",
+			name:   "with Format override",
 			config: newTestConfig(),
 			opts: Options{
 				Format: "json",
@@ -592,22 +584,15 @@ func TestRun(t *testing.T) {
 
 func TestOptions(t *testing.T) {
 	tests := []struct {
-		name   string
-		opts   Options
-		check  func(Options) bool
+		name  string
+		opts  Options
+		check func(Options) bool
 	}{
 		{
 			name: "default options",
 			opts: Options{},
 			check: func(o Options) bool {
-				return !o.NoReset && !o.Watch && o.Format == ""
-			},
-		},
-		{
-			name: "NoReset enabled",
-			opts: Options{NoReset: true},
-			check: func(o Options) bool {
-				return o.NoReset
+				return !o.Watch && o.Format == ""
 			},
 		},
 		{
@@ -626,9 +611,9 @@ func TestOptions(t *testing.T) {
 		},
 		{
 			name: "all options enabled",
-			opts: Options{NoReset: true, Watch: true, Format: "json"},
+			opts: Options{Watch: true, Format: "json"},
 			check: func(o Options) bool {
-				return o.NoReset && o.Watch && o.Format == "json"
+				return o.Watch && o.Format == "json"
 			},
 		},
 	}
@@ -646,10 +631,10 @@ func TestOptions(t *testing.T) {
 
 func TestExecHookCommandConstruction(t *testing.T) {
 	tests := []struct {
-		name            string
-		hook            config.Hook
-		expectedCmd     []string
-		expectedCalls   int
+		name          string
+		hook          config.Hook
+		expectedCmd   []string
+		expectedCalls int
 	}{
 		{
 			name: "exec command wraps in sh -c",
@@ -773,55 +758,45 @@ func TestScenarioRegexMatching(t *testing.T) {
 
 func TestInitializeScenario(t *testing.T) {
 	tests := []struct {
-		name           string
-		config         *config.Config
-		registry       *mockRegistry
-		opts           Options
-		scenarioName   string
-		scenarioRegex  string
-		expectSkip     bool
-		expectReset    bool
-		beforeHookErr  bool
+		name          string
+		config        *config.Config
+		registry      *mockRegistry
+		opts          Options
+		scenarioName  string
+		scenarioRegex string
+		expectSkip    bool
+		expectReset   bool
+		beforeHookErr bool
 	}{
 		{
-			name:         "scenario matches filter - executes normally",
-			config:       newTestConfig(),
-			registry:     &mockRegistry{},
-			opts:         Options{},
-			scenarioName: "Test login",
+			name:          "scenario matches filter - executes normally",
+			config:        newTestConfig(),
+			registry:      &mockRegistry{},
+			opts:          Options{},
+			scenarioName:  "Test login",
 			scenarioRegex: "^Test.*",
-			expectSkip:   false,
-			expectReset:  true,
+			expectSkip:    false,
+			expectReset:   true,
 		},
 		{
-			name:         "scenario does not match filter - skipped",
-			config:       newTestConfig(),
-			registry:     &mockRegistry{},
-			opts:         Options{},
-			scenarioName: "User can login",
+			name:          "scenario does not match filter - skipped",
+			config:        newTestConfig(),
+			registry:      &mockRegistry{},
+			opts:          Options{},
+			scenarioName:  "User can login",
 			scenarioRegex: "^Test.*",
-			expectSkip:   true,
-			expectReset:  false,
+			expectSkip:    true,
+			expectReset:   false,
 		},
 		{
-			name:         "no filter - executes normally",
-			config:       newTestConfig(),
-			registry:     &mockRegistry{},
-			opts:         Options{},
-			scenarioName: "Any scenario",
+			name:          "no filter - executes normally",
+			config:        newTestConfig(),
+			registry:      &mockRegistry{},
+			opts:          Options{},
+			scenarioName:  "Any scenario",
 			scenarioRegex: "",
-			expectSkip:   false,
-			expectReset:  true,
-		},
-		{
-			name:         "NoReset option - skips reset",
-			config:       newTestConfig(),
-			registry:     &mockRegistry{},
-			opts:         Options{NoReset: true},
-			scenarioName: "Test scenario",
-			scenarioRegex: "",
-			expectSkip:   false,
-			expectReset:  false,
+			expectSkip:    false,
+			expectReset:   true,
 		},
 		{
 			name:   "reset fails",
@@ -829,11 +804,11 @@ func TestInitializeScenario(t *testing.T) {
 			registry: &mockRegistry{
 				resetAllErr: errors.New("reset failed"),
 			},
-			opts:         Options{},
-			scenarioName: "Test scenario",
+			opts:          Options{},
+			scenarioName:  "Test scenario",
 			scenarioRegex: "",
-			expectSkip:   false,
-			expectReset:  true,
+			expectSkip:    false,
+			expectReset:   true,
 		},
 		{
 			name: "before_scenario hook fails",

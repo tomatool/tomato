@@ -383,7 +383,6 @@ type SettingsJSON struct {
 	Parallel int    `json:"parallel,omitempty"`
 	FailFast bool   `json:"failFast"`
 	Output   string `json:"output,omitempty"`
-	Reset    string `json:"reset,omitempty"`
 }
 
 type AppJSON struct {
@@ -457,7 +456,6 @@ func (s *UIServer) handleConfig(w http.ResponseWriter, r *http.Request) {
 			Parallel: cfg.Settings.Parallel,
 			FailFast: cfg.Settings.FailFast,
 			Output:   cfg.Settings.Output,
-			Reset:    resetStr(cfg.Settings.Reset),
 		}
 		out.App = appJSON(&cfg.App)
 		out.Containers = containersJSON(cfg.Containers)
@@ -475,21 +473,6 @@ func durStr(d time.Duration) string {
 		return ""
 	}
 	return d.String()
-}
-
-func resetStr(r config.ResetSettings) string {
-	if r.Level == "" && r.OnFailure == "" {
-		return ""
-	}
-	out := r.Level
-	if out == "" {
-		out = "scenario"
-	}
-	out = "per " + out
-	if r.OnFailure != "" {
-		out += " · on failure: " + r.OnFailure
-	}
-	return out
 }
 
 func appJSON(a *config.AppConfig) *AppJSON {

@@ -14,6 +14,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - The Go toolchain is pinned to 1.26.6, which carries the standard-library fixes govulncheck flags in earlier 1.26 releases. Building tomato now needs Go 1.26.
 
 ### Added
+- `allow_destructive_reset` on a resource. A stateful resource with no `container:` points at a system tomato did not start, and tomato wipes every resource before every scenario — so loading such a config now fails until the suite says the data is meant to be destroyed. `tomato validate` flags it and every run prints which unmanaged resources are about to be wiped. Only `postgres`, `redis`, `kafka`, `rabbitmq`, `s3`, `scylladb` and their aliases are affected.
 - `tomato ui`: each scenario has a Flow view and a Sequence view besides its steps. Flow shows tomato, the app and every resource in `tomato.yml`; each Next draws the step's line from tomato to what it acts on, and after a When on the app, dashed lines to the effects the scenario expects of it. Hovering a line shows its steps with their payloads: doc strings and tables. Sequence draws each step as an arrow to its resource. Background steps are included, and a step no step definition matches is flagged before the run.
 - Agent skill (`skills/tomato`, agentskills.io format) for teams testing their service with tomato: a coding agent sets up a suite, writes and reviews scenarios, debugs runs, and follows a protocol when tomato lacks a step or resource, with the project's principles as hard rules. Contributors to tomato have a separate skill in `.claude/skills/tomato-dev`. See [Agent Skill](docs/getting-started/agent-skill.md).
 - `kafka` container preset (`preset: kafka`): a single-node KRaft broker with its host port picked and advertised, reachable from the host and from other containers; `auth: aws_msk_iam` adds a listener speaking SASL `AWS_MSK_IAM` like MSK's IAM port. Release builds pull `ghcr.io/tomatool/tomato-kafka:<version>`, development builds build it from the binary.
@@ -69,6 +70,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - `tomato init` generates an `http-server` resource for external HTTP mocks and no longer offers MySQL. ([#149](https://github.com/tomatool/tomato/pull/149))
 
 ### Removed
+- **Breaking.** `settings.reset.level` and `settings.reset.on_failure`, the `--no-reset` flag, the GitHub Action's `no-reset` input, the per-resource `reset: false`, and `reset_strategy: none`. Every resource is now reset before every scenario, with no way to turn it off: a scenario that needs a starting state builds it in a `Background`. The two `settings.reset` fields were accepted and validated but never read, so every level already behaved as `scenario`; the rest were the remaining ways to opt out of isolation.
 - The `mysql` and `wiremock` resource types, which were no-op stubs. Configs using them now fail with a hint. ([#149](https://github.com/tomatool/tomato/pull/149))
 
 ## [2.1.1] - 2026-09-21
