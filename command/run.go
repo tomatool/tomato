@@ -155,7 +155,7 @@ func runTests(c *cli.Context) error {
 		fmt.Println(subtitleStyle.Render("Starting dependencies..."))
 	}
 
-	cm, err := container.NewManager(cfg.Containers)
+	cm, err := container.NewManagerFor(cfg.Containers, c.String("config"), cfg.Settings.Containers)
 	if err != nil {
 		return fmt.Errorf("failed to initialize container manager: %w", err)
 	}
