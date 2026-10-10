@@ -50,9 +50,6 @@ settings:
   parallel: 4
   fail_fast: true
   output: json
-  reset:
-    level: feature
-    on_failure: keep
 containers:
   postgres:
     image: postgres:15
@@ -87,12 +84,6 @@ features:
 				}
 				if cfg.Settings.Output != "json" {
 					t.Errorf("expected output json, got %s", cfg.Settings.Output)
-				}
-				if cfg.Settings.Reset.Level != "feature" {
-					t.Errorf("expected reset level feature, got %s", cfg.Settings.Reset.Level)
-				}
-				if cfg.Settings.Reset.OnFailure != "keep" {
-					t.Errorf("expected on_failure keep, got %s", cfg.Settings.Reset.OnFailure)
 				}
 				if _, ok := cfg.Containers["postgres"]; !ok {
 					t.Error("expected postgres container")
@@ -219,17 +210,6 @@ version: 1
 			errContains: "unsupported config version",
 		},
 		{
-			name: "invalid reset level",
-			content: `
-version: 2
-settings:
-  reset:
-    level: invalid
-`,
-			wantErr:     true,
-			errContains: "invalid reset level",
-		},
-		{
 			name: "resource references unknown container",
 			content: `
 version: 2
@@ -342,12 +322,6 @@ func TestApplyDefaults(t *testing.T) {
 				if cfg.Settings.Output != "pretty" {
 					t.Errorf("expected default output pretty, got %s", cfg.Settings.Output)
 				}
-				if cfg.Settings.Reset.Level != "scenario" {
-					t.Errorf("expected default reset level scenario, got %s", cfg.Settings.Reset.Level)
-				}
-				if cfg.Settings.Reset.OnFailure != "reset" {
-					t.Errorf("expected default on_failure reset, got %s", cfg.Settings.Reset.OnFailure)
-				}
 				if len(cfg.Features.Paths) != 1 || cfg.Features.Paths[0] != "./features" {
 					t.Errorf("expected default features path ./features, got %v", cfg.Features.Paths)
 				}
@@ -361,10 +335,6 @@ func TestApplyDefaults(t *testing.T) {
 					Timeout:  10 * time.Minute,
 					Parallel: 8,
 					Output:   "json",
-					Reset: ResetSettings{
-						Level:     "feature",
-						OnFailure: "keep",
-					},
 				},
 				Features: Features{
 					Paths: []string{"./tests"},
@@ -379,9 +349,6 @@ func TestApplyDefaults(t *testing.T) {
 				}
 				if cfg.Settings.Output != "json" {
 					t.Errorf("output should be preserved, got %s", cfg.Settings.Output)
-				}
-				if cfg.Settings.Reset.Level != "feature" {
-					t.Errorf("reset level should be preserved, got %s", cfg.Settings.Reset.Level)
 				}
 				if cfg.Features.Paths[0] != "./tests" {
 					t.Errorf("features path should be preserved, got %v", cfg.Features.Paths)
@@ -412,39 +379,6 @@ func TestValidate(t *testing.T) {
 			name: "valid config",
 			config: Config{
 				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "valid reset level - feature",
-			config: Config{
-				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "feature"},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "valid reset level - run",
-			config: Config{
-				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "run"},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "valid reset level - none",
-			config: Config{
-				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "none"},
-				},
 			},
 			wantErr: false,
 		},
@@ -452,31 +386,14 @@ func TestValidate(t *testing.T) {
 			name: "invalid version",
 			config: Config{
 				Version: 1,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
 			},
 			wantErr:     true,
 			errContains: "unsupported config version",
 		},
 		{
-			name: "invalid reset level",
-			config: Config{
-				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "invalid"},
-				},
-			},
-			wantErr:     true,
-			errContains: "invalid reset level",
-		},
-		{
 			name: "resource references valid container",
 			config: Config{
 				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
 				Containers: map[string]Container{
 					"postgres": {Image: "postgres:15"},
 				},
@@ -490,9 +407,6 @@ func TestValidate(t *testing.T) {
 			name: "resource references unknown container",
 			config: Config{
 				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
 				Resources: map[string]Resource{
 					"db": {Type: "postgres", Container: "nonexistent"},
 				},
@@ -504,9 +418,6 @@ func TestValidate(t *testing.T) {
 			name: "resource with empty container is valid",
 			config: Config{
 				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
 				Resources: map[string]Resource{
 					"api": {Type: "http", BaseURL: "http://localhost:8080"},
 				},
@@ -517,9 +428,6 @@ func TestValidate(t *testing.T) {
 			name: "container dependencies valid",
 			config: Config{
 				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
 				Containers: map[string]Container{
 					"postgres": {Image: "postgres:15"},
 					"app":      {Image: "myapp", DependsOn: []string{"postgres"}},
@@ -531,9 +439,6 @@ func TestValidate(t *testing.T) {
 			name: "container depends on unknown",
 			config: Config{
 				Version: 2,
-				Settings: Settings{
-					Reset: ResetSettings{Level: "scenario"},
-				},
 				Containers: map[string]Container{
 					"app": {Image: "myapp", DependsOn: []string{"nonexistent"}},
 				},
@@ -730,7 +635,6 @@ resources:
     type: postgres
     container: postgres
     database: testdb
-    reset: false
     options:
       tables:
         - users
@@ -748,6 +652,7 @@ resources:
     brokers:
       - localhost:9092
     consumer_group: test-group
+    allow_destructive_reset: true
   ws:
     type: websocket
     url: ws://localhost:8080/ws
@@ -769,9 +674,6 @@ resources:
 	}
 	if db.Database != "testdb" {
 		t.Errorf("expected database testdb, got %s", db.Database)
-	}
-	if db.Reset == nil || *db.Reset != false {
-		t.Errorf("expected reset false, got %v", db.Reset)
 	}
 
 	// Check http resource
@@ -1148,5 +1050,66 @@ resources:
 				t.Errorf("VersionDeclared = %v, want %v", cfg.VersionDeclared, tt.wantDeclared)
 			}
 		})
+	}
+}
+
+// A stateful resource with no container is a system tomato did not start, and
+// tomato wipes every resource before every scenario — so it is refused until
+// someone says in the config that destroying its data is intended.
+func TestUnmanagedStatefulResourceIsRefused(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "features"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	write := func(body string) string {
+		path := filepath.Join(dir, "tomato.yml")
+		if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return path
+	}
+
+	unmanaged := `version: 2
+resources:
+  db:
+    type: postgres
+    options:
+      host: prod.internal
+features:
+  paths: [./features]
+`
+	if _, err := Load(write(unmanaged)); err == nil {
+		t.Fatal("an unmanaged postgres was accepted; it would be wiped before every scenario")
+	} else if !strings.Contains(err.Error(), "allow_destructive_reset") {
+		t.Errorf("the error should say how to proceed, got: %v", err)
+	}
+
+	acknowledged := strings.Replace(unmanaged, "    type: postgres\n",
+		"    type: postgres\n    allow_destructive_reset: true\n", 1)
+	if _, err := Load(write(acknowledged)); err != nil {
+		t.Errorf("an acknowledged resource should load: %v", err)
+	}
+}
+
+func TestStatelessResourceNeedsNoAcknowledgement(t *testing.T) {
+	// An http client holds no data, so resetting it destroys nothing.
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "features"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "tomato.yml")
+	body := `version: 2
+resources:
+  api:
+    type: http-client
+    base_url: https://example.com
+features:
+  paths: [./features]
+`
+	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(path); err != nil {
+		t.Errorf("a stateless external resource should load: %v", err)
 	}
 }

@@ -244,4 +244,3 @@ If keys persist between scenarios:
 
 1. Verify `reset_strategy` is set (defaults to `flush`)
 2. If using `pattern` strategy, verify `reset_pattern` matches your keys
-3. Check that `settings.reset.level` is set to `scenario`

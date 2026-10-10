@@ -11,8 +11,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/cucumber/gherkin/go/v26"
-	"github.com/mattn/go-isatty"
 	messages "github.com/cucumber/messages/go/v21"
+	"github.com/mattn/go-isatty"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/handler"
 	"github.com/urfave/cli/v2"
@@ -47,9 +47,9 @@ type ValidationResult struct {
 
 // Validator performs all validation checks
 type Validator struct {
-	configPath string
-	config     *config.Config
-	results    []ValidationResult
+	configPath   string
+	config       *config.Config
+	results      []ValidationResult
 	stepPatterns []*regexp.Regexp
 }
 
@@ -315,14 +315,28 @@ func (v *Validator) validateResources() {
 			continue
 		}
 
-		// Check container reference for container-based resources
-		if needsContainer[res.Type] && res.Container == "" {
+		// A stateful resource tomato did not start is a real system that
+		// tomato wipes before every scenario. Say so on every validate, even
+		// once it has been acknowledged — it is the kind of thing that should
+		// stay visible rather than be approved once and forgotten.
+		if res.IsDestructive() && res.Unmanaged() {
+			v.results = append(v.results, ValidationResult{
+				Category: "Resources",
+				Item:     name,
+				Status:   "warning",
+				Message: fmt.Sprintf(
+					"DANGER: %s is not managed by tomato, and tomato wipes it before every scenario",
+					name),
+				Suggestion: "Point it at a container tomato starts. If this really is a throwaway " +
+					"system, `allow_destructive_reset: true` acknowledges that its data is destroyed.",
+			})
+		} else if needsContainer[res.Type] && res.Container == "" {
 			v.results = append(v.results, ValidationResult{
 				Category:   "Resources",
 				Item:       name,
 				Status:     "warning",
 				Message:    fmt.Sprintf("%s resource without container reference", res.Type),
-				Suggestion: fmt.Sprintf("Add 'container: <name>' to connect to a container, or provide connection details"),
+				Suggestion: "Add 'container: <name>' to connect to a container, or provide connection details",
 			})
 		}
 

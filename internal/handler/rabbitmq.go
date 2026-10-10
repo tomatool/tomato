@@ -212,8 +212,6 @@ func (r *RabbitMQ) Reset(ctx context.Context) error {
 		return r.purgeQueues()
 	case "delete_recreate":
 		return r.deleteAndRecreate()
-	case "none":
-		return nil
 	default:
 		return r.purgeQueues()
 	}

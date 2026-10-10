@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -88,12 +89,6 @@ type Settings struct {
 	Parallel int           `yaml:"parallel"`
 	FailFast bool          `yaml:"fail_fast"`
 	Output   string        `yaml:"output"`
-	Reset    ResetSettings `yaml:"reset"`
-}
-
-type ResetSettings struct {
-	Level     string `yaml:"level"`      // scenario, feature, run, none
-	OnFailure string `yaml:"on_failure"` // keep, reset
 }
 
 type Container struct {
@@ -188,8 +183,11 @@ type Resource struct {
 	Type      string         `yaml:"type"`
 	Container string         `yaml:"container"`
 	Options   map[string]any `yaml:"options"`
-	// Reset configuration
-	Reset *bool `yaml:"reset,omitempty"` // nil = use global setting, true = always reset, false = never reset
+	// AllowDestructiveReset acknowledges that this resource is not one tomato
+	// starts, and that tomato will still wipe it before every scenario. It is
+	// required on a stateful resource with no container, so that pointing a
+	// suite at a real database is a deliberate act rather than a typo.
+	AllowDestructiveReset bool `yaml:"allow_destructive_reset,omitempty"`
 	// Database specific
 	Database string `yaml:"database,omitempty"`
 	// HTTP specific
@@ -224,6 +222,41 @@ type Features struct {
 	Paths    []string `yaml:"paths"`
 	Tags     string   `yaml:"tags"`
 	Scenario string   `yaml:"-"` // CLI only, not from config file
+}
+
+// destructiveTypes lose data when tomato resets them: it truncates tables,
+// flushes keys, recreates topics, purges buckets. The other types only hold
+// state in tomato's own memory.
+var destructiveTypes = map[string]bool{
+	"postgres": true, "postgresql": true,
+	"cassandra": true, "scylladb": true,
+	"redis": true, "kafka": true, "rabbitmq": true,
+	"s3": true, "minio": true,
+}
+
+// IsDestructive reports whether resetting this resource destroys data.
+func (r Resource) IsDestructive() bool {
+	return destructiveTypes[strings.ToLower(r.Type)]
+}
+
+// Unmanaged reports whether the resource points at something tomato did not
+// start. tomato resets what it is given either way, so an unmanaged stateful
+// resource is a real system about to be wiped.
+func (r Resource) Unmanaged() bool {
+	return r.Container == ""
+}
+
+// DangerousResources are the stateful resources tomato does not own. Every
+// one of them is wiped before every scenario.
+func (c *Config) DangerousResources() []string {
+	var out []string
+	for name, res := range c.Resources {
+		if res.IsDestructive() && res.Unmanaged() {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // Load reads and parses the tomato.yml configuration file
@@ -317,12 +350,6 @@ func (c *Config) applyDefaults() {
 	if c.Settings.Output == "" {
 		c.Settings.Output = "pretty"
 	}
-	if c.Settings.Reset.Level == "" {
-		c.Settings.Reset.Level = "scenario"
-	}
-	if c.Settings.Reset.OnFailure == "" {
-		c.Settings.Reset.OnFailure = "reset"
-	}
 	if len(c.Features.Paths) == 0 {
 		c.Features.Paths = []string{"./features"}
 	}
@@ -348,10 +375,18 @@ func (c *Config) validate() error {
 		return fmt.Errorf("app config can only have one of: 'command', 'image', or 'build'")
 	}
 
-	// Validate reset level
-	validLevels := map[string]bool{"scenario": true, "feature": true, "run": true, "none": true}
-	if !validLevels[c.Settings.Reset.Level] {
-		return fmt.Errorf("invalid reset level: %s", c.Settings.Reset.Level)
+	// A stateful resource with no container is a system tomato did not start,
+	// and tomato wipes what it is given before every scenario. Make that a
+	// decision someone wrote down rather than a typo in a host name.
+	for _, name := range c.DangerousResources() {
+		if !c.Resources[name].AllowDestructiveReset {
+			return fmt.Errorf(
+				"resource %q (%s) has no container, so it points at a system tomato does not manage \u2014 "+
+					"and tomato wipes every resource before every scenario, which would destroy its data. "+
+					"Give it `container:` to let tomato run it, or set `allow_destructive_reset: true` on it "+
+					"to confirm that wiping it is intended",
+				name, c.Resources[name].Type)
+		}
 	}
 
 	// Validate resource references

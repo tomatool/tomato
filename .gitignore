@@ -3,3 +3,4 @@ coverage-*
 coverage/
 # tomato run artifacts (logs written by `tomato run`)
 .tomato/
+*.swp

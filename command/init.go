@@ -47,6 +47,11 @@ var (
 	errorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FF6B6B")).
 			Bold(true)
+
+	// Like helpStyle without its top margin, for dimmed text that has to sit
+	// on the same line as something else.
+	mutedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#666666"))
 )
 
 var initCommand = &cli.Command{
@@ -97,14 +102,14 @@ type initModel struct {
 	selected map[string]bool
 
 	// App runner config
-	runnerType     string // "docker" or "command"
-	dockerfile     string
-	customCommand  string
-	dockerfiles    []string // found dockerfiles
+	runnerType    string // "docker" or "command"
+	dockerfile    string
+	customCommand string
+	dockerfiles   []string // found dockerfiles
 
 	// Text input state
-	textInput    string
-	textCursor   int
+	textInput  string
+	textCursor int
 
 	done      bool
 	cancelled bool

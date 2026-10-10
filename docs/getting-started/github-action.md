@@ -27,7 +27,6 @@ jobs:
 | `features` | Feature files or directories | |
 | `tags` | Filter by tags (e.g., `@smoke and not @slow`) | |
 | `scenario` | Filter by scenario name (regex) | |
-| `no-reset` | Skip state reset between scenarios | `false` |
 | `verbose` | Show debug logs | `false` |
 | `quiet` | Hide application logs | `false` |
 | `skip-validate` | Skip configuration validation before running tests | `false` |

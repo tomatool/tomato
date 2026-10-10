@@ -214,8 +214,6 @@ func (r *Kafka) Reset(ctx context.Context) error {
 	switch strategy {
 	case "delete_recreate":
 		return r.deleteAndRecreatTopics(topics)
-	case "none":
-		return nil
 	default:
 		return r.deleteAndRecreatTopics(topics)
 	}

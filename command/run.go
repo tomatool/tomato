@@ -46,10 +46,6 @@ are reset between each scenario to ensure clean state.`,
 			Usage:   "filter scenarios by name (regex pattern)",
 		},
 		&cli.BoolFlag{
-			Name:  "no-reset",
-			Usage: "skip state reset between scenarios (for debugging)",
-		},
-		&cli.BoolFlag{
 			Name:    "verbose",
 			Aliases: []string{"v"},
 			Usage:   "verbose output (show debug logs)",
@@ -122,6 +118,20 @@ func runTests(c *cli.Context) error {
 	fmt.Println()
 	fmt.Println(titleStyle.Render("🍅 Tomato"))
 	fmt.Printf("  %s run: %s\n", helpStyle.Render("📋"), runCtx.ID)
+
+	// Say out loud, every run, which real systems are about to be wiped.
+	// Acknowledging it in the config silences the refusal, not the warning.
+	if danger := cfg.DangerousResources(); len(danger) > 0 {
+		fmt.Println()
+		fmt.Printf("  %s these resources are not ones tomato started, and tomato wipes\n",
+			errorStyle.Render("DANGER"))
+		fmt.Printf("         every resource before every scenario:\n\n")
+		for _, name := range danger {
+			fmt.Printf("           %-16s %s\n", name, mutedStyle.Render(cfg.Resources[name].Type))
+		}
+		fmt.Printf("\n         %s\n\n",
+			mutedStyle.Render("Their data is destroyed. Point them at containers tomato starts instead."))
+	}
 	if cfg.Features.Scenario != "" {
 		fmt.Printf("  %s filtering scenarios matching: %s\n", helpStyle.Render("⚡"), cfg.Features.Scenario)
 	}
@@ -274,8 +284,7 @@ func runTests(c *cli.Context) error {
 	fmt.Println(subtitleStyle.Render("Initializing resources..."))
 
 	r, err := runner.NewWithRegistry(cfg, cm, registry, runner.Options{
-		NoReset: c.Bool("no-reset"),
-		Format:  c.String("format"),
+		Format: c.String("format"),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to initialize runner: %w", err)

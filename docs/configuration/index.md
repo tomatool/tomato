@@ -12,9 +12,6 @@ settings:               # Test execution settings
   parallel: 1
   fail_fast: false
   output: pretty
-  reset:
-    level: scenario
-    on_failure: reset
 
 app:                    # Application under test (optional)
   command: ./my-app
@@ -63,8 +60,6 @@ features:               # Feature file settings
 | `parallel` | int | `1` | Number of parallel scenarios |
 | `fail_fast` | bool | `false` | Stop on first failure |
 | `output` | string | `pretty` | Output formats, comma-separated; see [Reports](#reports) |
-| `reset.level` | string | `scenario` | Reset level: `scenario`, `feature`, `run`, `none` |
-| `reset.on_failure` | string | `reset` | On failure: `reset`, `keep` |
 
 ### Reports
 
@@ -223,6 +218,37 @@ containers:
 |--------|--------------|
 | `kafka` | A single-node KRaft broker, reachable from the host and from other containers. With `auth: aws_msk_iam`, a second listener speaks SASL `AWS_MSK_IAM` like MSK's IAM port. See [Kafka](kafka.md#preset). |
 
+### Resources tomato does not manage
+
+tomato resets every resource before every scenario, and that is not
+configurable. A resource with no `container:` is a system tomato did not
+start, so resetting it destroys someone's real data. tomato refuses to load
+such a config:
+
+```
+resource "db" (postgres) has no container, so it points at a system tomato
+does not manage — and tomato wipes every resource before every scenario,
+which would destroy its data.
+```
+
+Give it a `container:` so tomato runs it, or, if it genuinely is a throwaway
+system, say so:
+
+```yaml
+resources:
+  db:
+    type: postgres
+    allow_destructive_reset: true   # yes, wipe it before every scenario
+    options:
+      host: scratch-db.internal
+```
+
+The acknowledgement stops the refusal, not the warning: `tomato validate`
+still flags it, and every run prints which unmanaged resources it is about to
+wipe. Only the stateful types are affected — `postgres`, `redis`, `kafka`,
+`rabbitmq`, `s3`, `scylladb` and their aliases. An `http-client` pointed at a
+remote URL holds no data, so it needs nothing.
+
 ### Wait strategies
 
 | Type | Description | Fields |
@@ -236,7 +262,9 @@ containers:
 
 Resetting is configured per resource, not per container — see
 `options.reset_strategy` under [Resources](#resources) and on each resource's
-page. `settings.reset.level` controls how often it runs.
+page. How often it runs is not configurable: every resource is reset before
+every scenario. A scenario that needs a starting state builds it in a
+`Background`, which runs after the reset.
 
 ## Resources
 
@@ -409,7 +437,7 @@ resources:
     options:
       buckets:
         - uploads
-      reset_strategy: purge   # purge, delete, or none
+      reset_strategy: purge   # purge or delete
 ```
 
 See [S3 Configuration](s3.md) for MinIO and LocalStack setup.
