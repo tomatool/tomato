@@ -12,6 +12,8 @@ settings:               # Test execution settings
   parallel: 1
   fail_fast: false
   output: pretty
+  containers:
+    reuse: false        # keep containers between runs instead of starting fresh
 
 app:                    # Application under test (optional)
   command: ./my-app
@@ -248,6 +250,35 @@ still flags it, and every run prints which unmanaged resources it is about to
 wipe. Only the stateful types are affected — `postgres`, `redis`, `kafka`,
 `rabbitmq`, `s3`, `scylladb` and their aliases. An `http-client` pointed at a
 remote URL holds no data, so it needs nothing.
+### Container naming and reuse
+
+Every container and network tomato creates is named and labelled, so `docker ps`
+says whose they are:
+
+```
+tomato-<project>-<run>-<container>     e.g. tomato-9a987f0c-06e8b19f-postgres
+tomato-<project>-<run>-net             the network they share
+```
+
+`<project>` is derived from the config file's path, so two projects on one
+Docker host never collide; `<run>` is the run id, so two runs of the same
+project can go at once. Labels `tomato.managed`, `tomato.scope`, `tomato.run`
+and `tomato.role` are set on all of them, which is enough to find leftovers:
+
+```sh
+docker rm -f $(docker ps -aq --filter label=tomato.managed=true)
+```
+
+| Setting | Default | Meaning |
+|---------|---------|---------|
+| `settings.containers.reuse` | `false` | Keep containers between runs instead of starting fresh ones |
+
+With `reuse: true` the run id drops out of the names, so a rerun finds what the
+last run left behind and skips container startup entirely. Resets still run
+before every scenario, so scenarios stay isolated from each other. What you
+give up: a container an earlier run corrupted is no longer thrown away, and two
+runs of the same project can no longer run at the same time. tomato leaves the
+containers running when the suite ends and prints the command to remove them.
 
 ### Wait strategies
 

@@ -85,10 +85,22 @@ func (a *AppConfig) GetName() string {
 }
 
 type Settings struct {
-	Timeout  time.Duration `yaml:"timeout"`
-	Parallel int           `yaml:"parallel"`
-	FailFast bool          `yaml:"fail_fast"`
-	Output   string        `yaml:"output"`
+	Timeout    time.Duration     `yaml:"timeout"`
+	Parallel   int               `yaml:"parallel"`
+	FailFast   bool              `yaml:"fail_fast"`
+	Output     string            `yaml:"output"`
+	Containers ContainerSettings `yaml:"containers"`
+}
+
+// ContainerSettings tunes how tomato runs the containers it starts.
+type ContainerSettings struct {
+	// Reuse keeps containers between runs instead of starting fresh ones.
+	// The names then leave out the run id, so a rerun finds the containers
+	// the last run left behind. Resets still run before every scenario, so
+	// scenarios stay isolated; what reuse costs is that a container an
+	// earlier run corrupted is no longer thrown away, and two runs of the
+	// same project can no longer run at the same time.
+	Reuse bool `yaml:"reuse"`
 }
 
 type Container struct {

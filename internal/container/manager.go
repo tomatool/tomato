@@ -10,6 +10,7 @@ import (
 	"net/netip"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
@@ -19,9 +20,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/moby/moby/api/types/container"
 	mobynetwork "github.com/moby/moby/api/types/network"
+	mobyclient "github.com/moby/moby/client"
 	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/network"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/runlog"
@@ -92,15 +93,39 @@ type Manager struct {
 	logFiles    map[string]*os.File
 	network     *testcontainers.DockerNetwork
 	networkName string
+
+	// scope distinguishes one project's containers from another's on a
+	// shared Docker host; runID distinguishes one run from the next.
+	scope        string
+	runID        string
+	settings     config.ContainerSettings
+	networkReady bool
 }
 
-// NewManager creates a new container manager
+// NewManager creates a new container manager.
 func NewManager(configs map[string]config.Container) (*Manager, error) {
+	return NewManagerFor(configs, "", config.ContainerSettings{})
+}
+
+// NewManagerFor creates a manager scoped to a config file. The scope goes into
+// every container and network name, so two projects on one Docker host never
+// collide and anyone reading `docker ps` can tell whose containers these are.
+func NewManagerFor(configs map[string]config.Container, configPath string, settings config.ContainerSettings) (*Manager, error) {
 	m := &Manager{
-		configs:     configs,
-		containers:  make(map[string]testcontainers.Container),
-		logFiles:    make(map[string]*os.File),
-		networkName: fmt.Sprintf("tomato-%s", uuid.New().String()[:8]),
+		configs:    configs,
+		containers: make(map[string]testcontainers.Container),
+		logFiles:   make(map[string]*os.File),
+		scope:      scopeOf(configPath),
+		settings:   settings,
+	}
+	m.networkName = m.nameFor("net")
+
+	// testcontainers' reaper kills everything this session labelled once the
+	// process exits, which would defeat reuse before the next run starts.
+	if settings.Reuse {
+		if err := os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true"); err != nil {
+			return nil, fmt.Errorf("disabling the testcontainers reaper for reuse: %w", err)
+		}
 	}
 
 	// Calculate startup order based on dependencies
@@ -113,9 +138,58 @@ func NewManager(configs map[string]config.Container) (*Manager, error) {
 	return m, nil
 }
 
-// SetRunContext sets the run context for logging
+// scopeOf is a short stable id for a project: the config file's absolute path
+// hashed, so the same project reuses one scope and two projects never share.
+func scopeOf(configPath string) string {
+	if configPath == "" {
+		return uuid.New().String()[:8]
+	}
+	abs, err := filepath.Abs(configPath)
+	if err != nil {
+		abs = configPath
+	}
+	sum := sha256.Sum256([]byte(abs))
+	return hex.EncodeToString(sum[:])[:8]
+}
+
+// nameFor builds the Docker name for one of this run's objects.
+//
+// Without reuse the run id is in the name, so every run gets its own
+// containers and two runs can go at once. With reuse it is left out, so a
+// rerun finds what the last run left behind — which is the whole point, and
+// also why reuse means a project can only have one run at a time.
+func (m *Manager) nameFor(name string) string {
+	if m.settings.Reuse || m.runID == "" {
+		return fmt.Sprintf("tomato-%s-%s", m.scope, name)
+	}
+	return fmt.Sprintf("tomato-%s-%s-%s", m.scope, m.runID, name)
+}
+
+// labels mark everything tomato creates, so leftovers can be found and
+// cleaned up by anything that speaks Docker, not just tomato.
+func (m *Manager) labels(role string) map[string]string {
+	l := map[string]string{
+		"tomato.managed": "true",
+		"tomato.scope":   m.scope,
+		"tomato.role":    role,
+	}
+	if m.runID != "" {
+		l["tomato.run"] = m.runID
+	}
+	if m.settings.Reuse {
+		l["tomato.reuse"] = "true"
+	}
+	return l
+}
+
+// SetRunContext sets the run context for logging. It is called before the
+// containers start, so the run id reaches their names.
 func (m *Manager) SetRunContext(ctx *runlog.RunContext) {
 	m.runCtx = ctx
+	if ctx != nil {
+		m.runID = ctx.ID
+		m.networkName = m.nameFor("net")
+	}
 }
 
 // CreateNetwork creates the shared Docker network for all containers
@@ -126,16 +200,73 @@ func (m *Manager) CreateNetwork(ctx context.Context) error {
 
 	log.Debug().Str("network", m.networkName).Msg("creating docker network")
 
-	net, err := network.New(ctx, network.WithCheckDuplicate(), network.WithDriver("bridge"))
+	// network.New() hard-codes a uuid for the name, so the network goes
+	// through the request type directly: an unreadable network is no use when
+	// you are looking at `docker network ls` wondering what a run left behind.
+	labels := testcontainers.GenericLabels()
+	for k, v := range m.labels("network") {
+		labels[k] = v
+	}
+
+	// With reuse the previous run's network is still there; adopt it instead
+	// of failing on the duplicate name.
+	if m.settings.Reuse {
+		existing, err := m.findNetwork(ctx, m.networkName)
+		if err != nil {
+			return fmt.Errorf("looking for an existing network: %w", err)
+		}
+		if existing {
+			log.Debug().Str("network", m.networkName).Msg("reusing the existing docker network")
+			m.networkReady = true
+			return nil
+		}
+	}
+
+	//nolint:staticcheck // the named-network request is the only way to set a name
+	net, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
+		NetworkRequest: testcontainers.NetworkRequest{
+			Name:   m.networkName,
+			Driver: "bridge",
+			Labels: labels,
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("creating network: %w", err)
 	}
 
-	m.network = net
-	m.networkName = net.Name
+	dn, ok := net.(*testcontainers.DockerNetwork)
+	if !ok {
+		return fmt.Errorf("creating network: unexpected network type %T", net)
+	}
+	m.network = dn
+	m.networkName = dn.Name
+	m.networkReady = true
 
 	log.Debug().Str("network", m.networkName).Msg("docker network created")
 	return nil
+}
+
+// findNetwork reports whether a network of that exact name already exists.
+func (m *Manager) findNetwork(ctx context.Context, name string) (bool, error) {
+	cli, err := testcontainers.NewDockerClientWithOpts(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer cli.Close()
+
+	// Listing all and matching exactly avoids the filter API, and a name
+	// filter is a substring match anyway — "tomato-ab-net" would match
+	// "tomato-ab-net-2".
+	nets, err := cli.NetworkList(ctx, mobyclient.NetworkListOptions{})
+	if err != nil {
+		return false, err
+	}
+	for _, n := range nets.Items {
+		if n.Name == name {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // GetNetworkName returns the shared network name
@@ -250,6 +381,10 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 		Cmd:        cfg.Command,
 		Env:        resolvedEnv,
 		WaitingFor: m.buildWaitStrategy(cfg.WaitFor),
+		// Named rather than left to Docker's random words, so `docker ps`
+		// says which project and which run a container belongs to.
+		Name:   m.nameFor(name),
+		Labels: m.labels("container"),
 	}
 
 	// Build the image when the entry has a build section and no image. The
@@ -335,7 +470,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	}
 
 	// Attach to shared network with DNS alias
-	if m.network != nil {
+	if m.networkReady {
 		req.Networks = []string{m.networkName}
 		req.NetworkAliases = map[string][]string{
 			m.networkName: {name}, // Container accessible via its config name
@@ -346,6 +481,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	ctr, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+		Reuse:            m.settings.Reuse,
 	})
 	if err != nil {
 		return fmt.Errorf("creating container: %w", err)
@@ -595,6 +731,17 @@ func (m *Manager) StopAll(ctx context.Context, removeVolumes bool) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	// Reuse only means anything if the containers outlive the run that
+	// started them. They keep their names, so the next run finds them.
+	if m.settings.Reuse {
+		log.Info().
+			Int("containers", len(m.containers)).
+			Str("scope", m.scope).
+			Msg("leaving containers running for reuse; `docker rm -f $(docker ps -aq --filter label=tomato.scope=" + m.scope + ")` removes them")
+		m.containers = make(map[string]testcontainers.Container)
+		return nil
+	}
+
 	// Stop in reverse order
 	for i := len(m.order) - 1; i >= 0; i-- {
 		name := m.order[i]
@@ -627,7 +774,11 @@ func (m *Manager) Cleanup() {
 		log.Warn().Err(err).Msg("cleanup error")
 	}
 
-	// Remove the shared network
+	// Remove the shared network, unless the containers are staying on it.
+	if m.settings.Reuse {
+		m.network = nil
+		return
+	}
 	if m.network != nil {
 		log.Debug().Str("network", m.networkName).Msg("removing docker network")
 		if err := m.network.Remove(ctx); err != nil {
