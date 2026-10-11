@@ -50,7 +50,7 @@ func runDocs(ctx *cli.Context) error {
 	output := ctx.String("output")
 
 	// Collect all step categories from handlers
-	categories := collectStepCategories()
+	categories := handler.AllStepCategories()
 
 	switch format {
 	case "mkdocs":
@@ -84,65 +84,6 @@ func runDocs(ctx *cli.Context) error {
 	default:
 		return fmt.Errorf("unknown format: %s", format)
 	}
-}
-
-// collectStepCategories returns all step categories from all handler types
-func collectStepCategories() []handler.StepCategory {
-	categories := []handler.StepCategory{}
-
-	// HTTP Client
-	httpHandler, _ := handler.NewHTTPClient("api", handler.DummyConfig(), nil)
-	categories = append(categories, httpHandler.Steps())
-
-	// HTTP Server
-	httpServerHandler, _ := handler.NewHTTPServer("mock", handler.DummyConfig(), nil)
-	categories = append(categories, httpServerHandler.Steps())
-
-	// PostgreSQL
-	postgresHandler, _ := handler.NewPostgres("db", handler.DummyConfig(), nil)
-	categories = append(categories, postgresHandler.Steps())
-
-	// ScyllaDB / Cassandra
-	scyllaHandler, _ := handler.NewCassandra("scylla", handler.DummyConfig(), nil)
-	categories = append(categories, scyllaHandler.Steps())
-
-	// Redis
-	redisHandler, _ := handler.NewRedis("cache", handler.DummyConfig(), nil)
-	categories = append(categories, redisHandler.Steps())
-
-	// Kafka
-	kafkaHandler, _ := handler.NewKafka("queue", handler.DummyConfig(), nil)
-	categories = append(categories, kafkaHandler.Steps())
-
-	// RabbitMQ
-	rabbitmqHandler, _ := handler.NewRabbitMQ("broker", handler.DummyConfig(), nil)
-	categories = append(categories, rabbitmqHandler.Steps())
-
-	// Shell
-	shellHandler, _ := handler.NewShell("shell", handler.DummyConfig(), nil)
-	categories = append(categories, shellHandler.Steps())
-
-	// WebSocket Client
-	wsClientHandler, _ := handler.NewWebSocketClient("ws", handler.DummyConfig(), nil)
-	categories = append(categories, wsClientHandler.Steps())
-
-	// WebSocket Server
-	wsServerHandler, _ := handler.NewWebSocketServer("wsmock", handler.DummyConfig(), nil)
-	categories = append(categories, wsServerHandler.Steps())
-
-	// S3
-	s3Handler, _ := handler.NewS3("files", handler.DummyConfig(), nil)
-	categories = append(categories, s3Handler.Steps())
-
-	// gRPC
-	grpcHandler, _ := handler.NewGRPC("grpc", handler.DummyConfig(), nil)
-	categories = append(categories, grpcHandler.Steps())
-
-	// AWS
-	awsHandler, _ := handler.NewAWS("aws", handler.DummyConfig(), nil)
-	categories = append(categories, awsHandler.Steps())
-
-	return categories
 }
 
 // GroupedStep is a step with processed fields for docs

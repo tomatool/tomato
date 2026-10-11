@@ -227,6 +227,52 @@ func (r *Registry) Cleanup(ctx context.Context) error {
 	return nil
 }
 
+// canonicalTypes names each resource exactly once, in the order docs and
+// `tomato steps` present them. handlerFactories also holds aliases
+// ("postgresql" for postgres, "minio" for s3), so iterating that would list
+// some resources twice; this is the deduplicated view of it.
+//
+// A resource missing from here has no documentation page and is invisible to
+// `tomato steps`, so TestCanonicalTypesCoverEveryResource fails if the two
+// lists drift apart.
+var canonicalTypes = []string{
+	"http-client",
+	"http-server",
+	"postgres",
+	"cassandra",
+	"redis",
+	"kafka",
+	"rabbitmq",
+	"shell",
+	"websocket-client",
+	"websocket-server",
+	"s3",
+	"grpc",
+	"aws",
+}
+
+// CanonicalTypes returns one type name per resource, in presentation order.
+func CanonicalTypes() []string {
+	return append([]string(nil), canonicalTypes...)
+}
+
+// AllStepCategories returns every resource's step definitions, in a stable
+// order. It is what `tomato steps`, `tomato docs` and `tomato validate` read;
+// no connection is made and no container is started.
+//
+// Commands call this rather than building each handler themselves: that way
+// adding a resource does not mean editing three commands that each knew the
+// full list.
+func AllStepCategories() []StepCategory {
+	categories := make([]StepCategory, 0, len(canonicalTypes))
+	for _, typ := range canonicalTypes {
+		if cat, ok := StepCategoryForType(typ); ok {
+			categories = append(categories, cat)
+		}
+	}
+	return categories
+}
+
 // ValidResourceTypes returns all valid resource type names
 func ValidResourceTypes() []string {
 	types := make([]string, 0, len(handlerFactories))

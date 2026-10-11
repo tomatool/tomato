@@ -36,7 +36,7 @@ func runSteps(ctx *cli.Context) error {
 	typeFilter := strings.ToLower(ctx.String("type"))
 	jsonOutput := ctx.Bool("json")
 
-	categories := collectStepCategories()
+	categories := handler.AllStepCategories()
 
 	var filteredCategories []handler.StepCategory
 

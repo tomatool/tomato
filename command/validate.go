@@ -186,7 +186,7 @@ func (v *Validator) validate() {
 }
 
 func (v *Validator) loadStepPatterns() {
-	categories := collectStepCategories()
+	categories := handler.AllStepCategories()
 	for _, cat := range categories {
 		for _, step := range cat.Steps {
 			// Convert pattern to regex - replace {resource} with a capture group

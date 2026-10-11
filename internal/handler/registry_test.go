@@ -102,3 +102,46 @@ func TestUnimplementedTypes_FailLoudly(t *testing.T) {
 		}
 	}
 }
+
+// TestCanonicalTypesCoverEveryResource pins the second half of the same
+// invariant. handlerFactories decides what can be built; canonicalTypes
+// decides what gets documented and listed by `tomato steps`. A resource added
+// to the first and not the second builds and runs fine, so nothing fails —
+// it just has no documentation page and cannot be found with `tomato steps`,
+// which is the kind of gap that survives review.
+func TestCanonicalTypesCoverEveryResource(t *testing.T) {
+	documented := map[string]bool{}
+	for _, cat := range AllStepCategories() {
+		documented[cat.Name] = true
+	}
+
+	for typ := range handlerFactories {
+		cat, ok := StepCategoryForType(typ)
+		if !ok {
+			continue // not a step provider; nothing to document
+		}
+		if !documented[cat.Name] {
+			t.Errorf("resource type %q (%q) is buildable but absent from canonicalTypes, "+
+				"so it has no docs page and `tomato steps` cannot find it", typ, cat.Name)
+		}
+	}
+}
+
+// TestCanonicalTypesAreBuildableAndUnique guards the other direction: a typo
+// in canonicalTypes would silently drop a resource from the docs, because
+// AllStepCategories skips a type it cannot build.
+func TestCanonicalTypesAreBuildableAndUnique(t *testing.T) {
+	seen := map[string]bool{}
+	for _, typ := range canonicalTypes {
+		if _, ok := handlerFactories[typ]; !ok {
+			t.Errorf("canonicalTypes has %q, which is not a buildable resource type", typ)
+		}
+		if seen[typ] {
+			t.Errorf("canonicalTypes lists %q twice", typ)
+		}
+		seen[typ] = true
+	}
+	if got, want := len(canonicalTypes), len(AllStepCategories()); got != want {
+		t.Errorf("canonicalTypes has %d entries but only %d produced a step category", got, want)
+	}
+}
