@@ -559,9 +559,9 @@ func generateTomatoConfig(m initModel) string {
 
 		if m.runnerType == "docker" && m.dockerfile != "" {
 			s.WriteString("  build:\n")
-			s.WriteString(fmt.Sprintf("    dockerfile: %s\n", m.dockerfile))
+			s.WriteString(fmt.Sprintf("    dockerfile: %s\n", yamlScalar(m.dockerfile)))
 		} else if m.runnerType == "command" && m.customCommand != "" {
-			s.WriteString(fmt.Sprintf("  command: %s\n", m.customCommand))
+			s.WriteString(fmt.Sprintf("  command: %s\n", yamlScalar(m.customCommand)))
 		}
 
 		s.WriteString("  port: 8080\n")
@@ -575,16 +575,16 @@ func generateTomatoConfig(m initModel) string {
 
 		// Add database connection
 		if m.selected["postgresql"] {
-			s.WriteString("    DATABASE_URL: postgres://postgres:postgres@{{.postgres.host}}:{{.postgres.port.5432}}/testdb\n")
+			s.WriteString("    DATABASE_URL: \"postgres://postgres:postgres@{{.postgres.host}}:{{.postgres.port.5432}}/testdb\"\n")
 		}
 		if m.selected["redis"] {
-			s.WriteString("    REDIS_URL: redis://{{.redis.host}}:{{.redis.port.6379}}\n")
+			s.WriteString("    REDIS_URL: \"redis://{{.redis.host}}:{{.redis.port.6379}}\"\n")
 		}
 		if m.selected["kafka"] {
-			s.WriteString("    KAFKA_BROKERS: {{.kafka.host}}:{{.kafka.port.9092}}\n")
+			s.WriteString("    KAFKA_BROKERS: \"{{.kafka.host}}:{{.kafka.port.9092}}\"\n")
 		}
 		if m.selected["rabbitmq"] {
-			s.WriteString("    RABBITMQ_URL: amqp://guest:guest@{{.rabbitmq.host}}:{{.rabbitmq.port.5672}}\n")
+			s.WriteString("    RABBITMQ_URL: \"amqp://guest:guest@{{.rabbitmq.host}}:{{.rabbitmq.port.5672}}\"\n")
 		}
 
 		s.WriteString("\n")
@@ -802,4 +802,14 @@ func generateExampleFeatureFile(m initModel) string {
 	s.WriteString("    And \"shell\" stdout contains \"hello\"\n")
 
 	return s.String()
+}
+
+// yamlScalar quotes a value so YAML reads it as the string it is.
+//
+// A value starting with "{" opens a flow mapping, so an env var set to a bare
+// template — KAFKA_BROKERS: {{.kafka.host}}:{{.kafka.port.9092}} — produced a
+// config that would not parse. The others survived only because they start
+// with a scheme. Anything typed by the user gets the same treatment.
+func yamlScalar(v string) string {
+	return `"` + strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(v) + `"`
 }
