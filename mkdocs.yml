@@ -66,10 +66,11 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Overview: getting-started/index.md
-    - GitHub Action: getting-started/github-action.md
+  - Guide:
+    - Getting Started: getting-started/index.md
+    - Writing a Suite: guide/philosophy.md
     - Step Coverage: getting-started/coverage.md
+    - GitHub Action: getting-started/github-action.md
   - Configuration:
     - Reference: configuration/index.md
     - HTTP Server: configuration/http-server.md
@@ -80,7 +81,7 @@ nav:
     - Redis: configuration/redis.md
     - S3: configuration/s3.md
     - AWS: configuration/aws.md
-  - Available Resources:
+  - Step Reference:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
     - HTTP Server: resources/http-server.md
@@ -95,9 +96,10 @@ nav:
     - WebSocket Server: resources/websocket-server.md
     - S3: resources/s3.md
     - AWS: resources/aws.md
-  - Stability: stability.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
+    - Adding a Step or Resource: developer-guide/adding-a-resource.md
+  - Stability: stability.md
 
 plugins:
   - search
