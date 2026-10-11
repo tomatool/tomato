@@ -2741,6 +2741,27 @@ above are ignored.</p>
 </span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">      </span><span class="nt">schema_registry</span><span class="p">:</span>
 </span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">        </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">schema-registry</span><span class="w">   </span><span class="c1"># or url: http://localhost:8081</span>
 </span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>container</code></td>
+<td>—</td>
+<td>The container tomato starts and connects to</td>
+</tr>
+<tr>
+<td><code>brokers</code></td>
+<td>—</td>
+<td>Broker addresses, instead of <code>container</code>. A broker tomato does not start needs <code>allow_destructive_reset: true</code>, since its topics are recreated before every scenario</td>
+</tr>
+</tbody>
+</table>
 <p>See <a href="kafka/#avro-and-schema-registry">Kafka: Avro and Schema Registry</a>.</p>
 <h3 id="websocket">WebSocket<a class="headerlink" href="#websocket" title="Permanent link">#</a></h3>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">resources</span><span class="p">:</span>

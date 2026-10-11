@@ -683,6 +683,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#browsing-a-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browsing a suite
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#testing-your-application" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1851,6 +1862,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#browsing-a-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browsing a suite
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#testing-your-application" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2023,19 +2045,27 @@
 <p>Run with verbose output:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>tomato<span class="w"> </span>run<span class="w"> </span>-v
 </span></code></pre></div>
+<h2 id="browsing-a-suite">Browsing a suite<a class="headerlink" href="#browsing-a-suite" title="Permanent link">#</a></h2>
+<p><code>tomato ui</code> opens a local web page that lists the feature files, shows each
+scenario's steps with the resource every step runs against, and runs scenarios
+on demand. It watches the feature files and reloads as they change.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>tomato<span class="w"> </span>ui
+</span></code></pre></div>
+<p>It is a development aid, not part of the stable surface: see
+<a href="../stability/#not-covered">Stability</a>.</p>
 <h2 id="testing-your-application">Testing your application<a class="headerlink" href="#testing-your-application" title="Permanent link">#</a></h2>
 <p>Tomato can also start your application and connect it to test containers:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># tomato.yml</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nt">app</span><span class="p">:</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">  </span><span class="nt">ready</span><span class="p">:</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/health</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">  </span><span class="nt">wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="nt">DATABASE_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test"</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="nt">REDIS_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"redis://{{.redis.host}}:{{.redis.port.6379}}"</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># tomato.yml</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nt">app</span><span class="p">:</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">go run ./cmd/server</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="nt">ready</span><span class="p">:</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/health</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span><span class="nt">wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">    </span><span class="nt">DATABASE_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test"</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">    </span><span class="nt">REDIS_URL</span><span class="p">:</span><span class="w"> </span><span class="s">"redis://{{.redis.host}}:{{.redis.port.6379}}"</span>
 </span></code></pre></div>
 <p>The <code>{{.container.host}}</code> and <code>{{.container.port.&lt;port&gt;}}</code> templates are replaced
 with the container's address and its mapped host port. The number is the port
