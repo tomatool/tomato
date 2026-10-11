@@ -15,7 +15,7 @@ stable, they only change in backwards-compatible ways within v2.
 | `tomato.yml` schema | Every field documented in the [Configuration Reference](configuration/index.md) under `version: 2`, its meaning and its default |
 | Step vocabulary | Every step listed by `tomato steps` (and on the [resource pages](resources/index.md)): its wording, its arguments and what it asserts |
 | Resource types | The `type:` names accepted by `tomato validate`, including aliases (`postgresql`, `http-client`, `minio`, …) |
-| CLI | Commands `init`, `run`, `validate`, `steps`, `version`, `update`, their flags, and exit codes (0 pass, non-zero fail) |
+| CLI | Commands `init`, `run`, `validate`, `steps`, `coverage`, `version`, `update`, their flags, and exit codes (0 pass, non-zero fail) |
 | Report formats | The console formats and the `junit` and `cucumber` file outputs described under [Reports](configuration/index.md#reports) |
 | GitHub Action | Inputs of `tomatool/tomato@v2`: `version`, `config`, `features`, `tags`, `scenario`, `verbose`, `quiet`, `skip-validate`, `comment` |
 | Template variables | `{{.container.host}}`, `{{.container.port.N}}` and `{{.resource.url}}` in `app.env` |

@@ -45,4 +45,5 @@ Read `tomato.yml`, the feature files and the CI job. Report each finding with
 ## CI
 
 - The job must run on pull requests, build the artifact production runs, and have `pull-requests: write` for the results comment.
-- `--no-reset` or `--keep-alive` never belong in CI.
+- `--keep-alive` never belongs in CI.
+- `allow_destructive_reset: true` on a resource: the suite is pointed at a system tomato does not start, and wipes it before every scenario. Confirm that is a throwaway system, never a shared or production one.

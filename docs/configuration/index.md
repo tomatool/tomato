@@ -424,6 +424,11 @@ resources:
         container: schema-registry   # or url: http://localhost:8081
 ```
 
+| Field | Default | Description |
+|-------|---------|-------------|
+| `container` | — | The container tomato starts and connects to |
+| `brokers` | — | Broker addresses, instead of `container`. A broker tomato does not start needs `allow_destructive_reset: true`, since its topics are recreated before every scenario |
+
 See [Kafka: Avro and Schema Registry](kafka.md#avro-and-schema-registry).
 
 ### WebSocket

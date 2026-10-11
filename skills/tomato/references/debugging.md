@@ -26,7 +26,7 @@ Read the evidence before changing anything. Every run writes
 
 - `tomato run --scenario "<regex>"` runs one scenario.
 - `tomato run --keep-alive` leaves the containers running after the run and prints how to reach them.
-- `tomato run --no-reset` skips resets to inspect leftover state. Never commit it.
+- Reset cannot be switched off. To look at the state a scenario left behind, run that one scenario with `tomato run --scenario '<regex>' --keep-alive`: nothing resets after it, and the containers stay up. Never commit `--keep-alive`.
 
 When the failure turns out to be tomato's, like a race in a step or something it
 can't express, follow the [gap protocol](gaps.md) rather than working around

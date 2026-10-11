@@ -11,7 +11,9 @@ the contract to keep when you change steps, config or CLI flags.
 
 ## Development setup
 
-You need Go (the version in `go.mod`) and Docker, since tomato starts containers.
+You need Go (the version in `go.mod`) and Docker, since tomato starts
+containers. Changing the web UI additionally needs Node and pnpm; everything
+else builds without them.
 
 ```bash
 git clone https://github.com/tomatool/tomato.git
@@ -25,10 +27,36 @@ make coverage       # what CI runs: unit + integration coverage, report and gate
 Other targets: `make lint`, `make fmt`, `make vet`, `make tidy`.
 Run `make help` for the full list.
 
+## Changing the web UI
+
+`tomato ui` is a React app under `ui/`, bundled by Vite into
+`command/ui_assets/dist`, which the binary embeds.
+
+```bash
+make ui        # build the bundle
+make ui-dev    # Vite dev server, proxied at a `tomato ui` on :7788
+make ui-check  # fail if the committed bundle is stale
+```
+
+`make build` rebuilds the bundle itself when anything under `ui/` is newer, and
+warns and carries on with the committed bundle when pnpm is missing.
+
+**Commit `command/ui_assets/dist` with any UI change.** Go cannot run pnpm, so
+without the committed bundle `go build`, `go install` and `go test` would need
+Node. CI runs `make ui-check` and fails when it is stale, the same arrangement
+the kafka preset's jar uses. See [ui/README.md](ui/README.md).
+
 The integration suite is `tests/tomato.yml` plus `tests/features/*.feature`. It
-starts Postgres, Redis, Kafka, RabbitMQ, MinIO and a small test app from
-`tests/app`, on fixed ports (8080 and 9090 among them). Stop anything else using
-those ports first; tomato refuses to start the app if its port is taken.
+starts Postgres, Redis, Kafka, RabbitMQ, MinIO, ScyllaDB and a small test app
+from `tests/app`, on fixed ports (8080 and 9090 among them). Stop anything else
+using those ports first; tomato refuses to start the app if its port is taken.
+
+tomato names everything it creates `tomato-<project>-<run>-<name>` and labels
+it, so a run that died without cleaning up leaves findable debris:
+
+```bash
+docker rm -f $(docker ps -aq --filter label=tomato.managed=true)
+```
 
 ## Adding a step to an existing resource
 

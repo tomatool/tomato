@@ -1,3 +1,5 @@
-# Reviewers for everything in the repository. Add maintainers here as they join
-# (see MAINTAINERS.md).
+# Default reviewer for everything in the repository. Not every maintainer in
+# MAINTAINERS.md is listed here — being listed means GitHub requests your
+# review on every pull request, which is a separate choice from having the
+# access to merge one.
 * @alileza
