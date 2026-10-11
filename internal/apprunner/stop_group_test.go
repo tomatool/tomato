@@ -32,8 +32,14 @@ func TestStopCommand_StopsTheWholeProcessGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// The deadlines here are generous on purpose. Forking a shell and writing
+	// a pid file takes milliseconds, but `go test ./...` runs one binary per
+	// package in parallel, and on a loaded machine a 5s deadline was missed
+	// often enough to fail the suite while this test passed on its own.
+	// Waiting longer costs nothing: both loops exit as soon as they see what
+	// they are waiting for.
 	var childPid int
-	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
+	for deadline := time.Now().Add(30 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
 		if data, err := os.ReadFile(pidFile); err == nil && len(strings.TrimSpace(string(data))) > 0 {
 			childPid, _ = strconv.Atoi(strings.TrimSpace(string(data)))
 			break
@@ -46,7 +52,7 @@ func TestStopCommand_StopsTheWholeProcessGroup(t *testing.T) {
 	if err := r.stopCommand(); err != nil {
 		t.Fatalf("stopCommand: %v", err)
 	}
-	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
+	for deadline := time.Now().Add(10 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
 		if syscall.Kill(childPid, 0) != nil {
 			return
 		}
