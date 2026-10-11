@@ -117,7 +117,6 @@ func TestNewRunner(t *testing.T) {
 		opts        Options
 		wantErr     bool
 		errContains string
-		checkRegex  bool
 	}{
 		{
 			name:    "successful creation with defaults",
@@ -126,15 +125,18 @@ func TestNewRunner(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "successful creation with valid scenario regex",
+			// A filter selects scenarios up front, so one that matches
+			// nothing has to fail here. It used to be accepted and then
+			// skip every scenario, which godog counts as passing.
+			name: "scenario filter matching nothing",
 			config: func() *config.Config {
 				cfg := newTestConfig()
 				cfg.Features.Scenario = "^Test.*"
 				return cfg
 			}(),
-			opts:       Options{},
-			wantErr:    false,
-			checkRegex: true,
+			opts:        Options{},
+			wantErr:     true,
+			errContains: "no scenario matches",
 		},
 		{
 			name: "invalid scenario regex",
@@ -199,9 +201,6 @@ func TestNewRunner(t *testing.T) {
 				t.Error("options not set correctly")
 			}
 
-			if tt.checkRegex && runner.scenarioRegex == nil {
-				t.Error("expected scenario regex to be set")
-			}
 		})
 	}
 }
@@ -694,66 +693,6 @@ func TestExecHookCommandConstruction(t *testing.T) {
 	}
 }
 
-// Tests for scenario regex matching
-
-func TestScenarioRegexMatching(t *testing.T) {
-	tests := []struct {
-		name         string
-		pattern      string
-		scenarioName string
-		shouldMatch  bool
-	}{
-		{
-			name:         "prefix match",
-			pattern:      "^Test.*",
-			scenarioName: "Test user login",
-			shouldMatch:  true,
-		},
-		{
-			name:         "prefix no match",
-			pattern:      "^Test.*",
-			scenarioName: "User can login",
-			shouldMatch:  false,
-		},
-		{
-			name:         "contains match",
-			pattern:      ".*login.*",
-			scenarioName: "User can login successfully",
-			shouldMatch:  true,
-		},
-		{
-			name:         "exact match pattern",
-			pattern:      "^User creates account$",
-			scenarioName: "User creates account",
-			shouldMatch:  true,
-		},
-		{
-			name:         "case sensitive no match",
-			pattern:      "^Test.*",
-			scenarioName: "test user login",
-			shouldMatch:  false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := newTestConfig()
-			cfg.Features.Scenario = tt.pattern
-
-			runner, err := newRunner(cfg, &mockContainerExecutor{}, &mockRegistry{}, Options{})
-			if err != nil {
-				t.Fatalf("failed to create runner: %v", err)
-			}
-
-			matches := runner.scenarioRegex.MatchString(tt.scenarioName)
-			if matches != tt.shouldMatch {
-				t.Errorf("pattern %q on %q: expected match=%v, got match=%v",
-					tt.pattern, tt.scenarioName, tt.shouldMatch, matches)
-			}
-		})
-	}
-}
-
 // Tests for initializeScenario
 
 func TestInitializeScenario(t *testing.T) {
@@ -763,40 +702,16 @@ func TestInitializeScenario(t *testing.T) {
 		registry      *mockRegistry
 		opts          Options
 		scenarioName  string
-		scenarioRegex string
-		expectSkip    bool
 		expectReset   bool
 		beforeHookErr bool
 	}{
 		{
-			name:          "scenario matches filter - executes normally",
-			config:        newTestConfig(),
-			registry:      &mockRegistry{},
-			opts:          Options{},
-			scenarioName:  "Test login",
-			scenarioRegex: "^Test.*",
-			expectSkip:    false,
-			expectReset:   true,
-		},
-		{
-			name:          "scenario does not match filter - skipped",
-			config:        newTestConfig(),
-			registry:      &mockRegistry{},
-			opts:          Options{},
-			scenarioName:  "User can login",
-			scenarioRegex: "^Test.*",
-			expectSkip:    true,
-			expectReset:   false,
-		},
-		{
-			name:          "no filter - executes normally",
-			config:        newTestConfig(),
-			registry:      &mockRegistry{},
-			opts:          Options{},
-			scenarioName:  "Any scenario",
-			scenarioRegex: "",
-			expectSkip:    false,
-			expectReset:   true,
+			name:         "no filter - executes normally",
+			config:       newTestConfig(),
+			registry:     &mockRegistry{},
+			opts:         Options{},
+			scenarioName: "Any scenario",
+			expectReset:  true,
 		},
 		{
 			name:   "reset fails",
@@ -804,11 +719,9 @@ func TestInitializeScenario(t *testing.T) {
 			registry: &mockRegistry{
 				resetAllErr: errors.New("reset failed"),
 			},
-			opts:          Options{},
-			scenarioName:  "Test scenario",
-			scenarioRegex: "",
-			expectSkip:    false,
-			expectReset:   true,
+			opts:         Options{},
+			scenarioName: "Test scenario",
+			expectReset:  true,
 		},
 		{
 			name: "before_scenario hook fails",
@@ -822,8 +735,6 @@ func TestInitializeScenario(t *testing.T) {
 			registry:      &mockRegistry{},
 			opts:          Options{},
 			scenarioName:  "Test scenario",
-			scenarioRegex: "",
-			expectSkip:    false,
 			expectReset:   true,
 			beforeHookErr: true,
 		},
@@ -831,11 +742,6 @@ func TestInitializeScenario(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set up runner with scenario regex if specified
-			if tt.scenarioRegex != "" {
-				tt.config.Features.Scenario = tt.scenarioRegex
-			}
-
 			container := &mockContainerExecutor{}
 			if tt.beforeHookErr {
 				container.execErr = errors.New("hook failed")
@@ -863,12 +769,7 @@ func TestInitializeScenario(t *testing.T) {
 			ctx := context.Background()
 			_, err = capturingCtx.beforeHook(ctx, sc)
 
-			// Check if scenario was skipped
-			if tt.expectSkip {
-				if err != godog.ErrSkip {
-					t.Errorf("expected ErrSkip, got %v", err)
-				}
-			} else if tt.registry.resetAllErr != nil {
+			if tt.registry.resetAllErr != nil {
 				if err == nil || !contains(err.Error(), "reset failed") {
 					t.Errorf("expected reset error, got %v", err)
 				}
@@ -883,7 +784,7 @@ func TestInitializeScenario(t *testing.T) {
 			}
 
 			// Check if reset was called
-			if tt.expectReset && !tt.expectSkip {
+			if tt.expectReset {
 				if !tt.registry.resetAllCalled {
 					t.Error("expected ResetAll to be called")
 				}

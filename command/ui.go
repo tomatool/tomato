@@ -731,7 +731,11 @@ func (s *UIServer) runTests(scenarioFilter string) {
 	// Build command with quiet flag and tomato format for structured events
 	args := []string{"run", "-c", s.configPath, "--quiet", "--format", "tomato"}
 	if scenarioFilter != "" {
-		args = append(args, "--scenario", scenarioFilter)
+		// --scenario is a regex for people typing it, but the UI is naming
+		// one scenario exactly. Without quoting, a name like
+		// `Rejecting bad orders (400)` is a regex that does not match
+		// itself, and Run on that card would run nothing.
+		args = append(args, "--scenario", "^"+regexp.QuoteMeta(scenarioFilter)+"$")
 	}
 
 	// Get executable path
