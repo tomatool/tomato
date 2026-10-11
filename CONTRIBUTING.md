@@ -5,9 +5,6 @@ welcome. Before changing anything user-facing, read
 [docs/stability.md](docs/stability.md): it says what counts as a breaking change and
 how to deprecate things.
 
-The user-facing skill in `skills/tomato` is the contract to keep when you
-change steps, config or CLI flags.
-
 ## Ground rules
 
 - **A suite is configuration, not code.** Anything a user would have to script
@@ -16,9 +13,6 @@ change steps, config or CLI flags.
 - **Step wording is the product.** Every step carries a `Description` and an
   `Example`, and `tomato docs` regenerates `docs/resources/` from them. Users
   read wording from `tomato steps`, never from prose.
-- **The user skill is a contract.** When a change alters something
-  `skills/tomato` states — a step's wording, a config key, the run directory
-  layout, a CLI flag — update it in the same pull request.
 
 ## Where things are
 
@@ -158,8 +152,8 @@ PR, so coverage only goes up. Please run `make test` locally as well.
 ## Handling a gap report
 
 A gap is a user's suite needing a step, resource or option tomato does not
-have. The user skill tells them to report it rather than work around it, so the
-report is the spec:
+have. Reporting it beats working around it — a suite is configuration, not
+code — so treat the report as the spec:
 
 1. Reproduce it as a scenario in `tests/features` first — the production
    behaviour they have to cover, in the wording they expected.
