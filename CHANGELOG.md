@@ -36,6 +36,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- `tomato init` generated a suite that did not work. Every step in the example feature used wording no resource registers any more — five steps, five undefined — and the config carried `settings.reset.level`, removed when reset became unconditional and silently ignored by the loader ever since. Choosing both Kafka and RabbitMQ produced a config with a duplicate `queue:` key that would not parse at all, and the external-HTTP example called a resource that was never declared. A generated suite now validates clean and runs green, and three tests tie the generator to the live step definitions and the config struct so it cannot drift again.
 - `tomato ui`: collapsing either side pane with `[` or `]` did nothing. `transition: grid-template-columns` kept Chrome serving the old track list whenever the width came from a custom property, so the pane never resized.
 - `tomato update` replaced a binary Homebrew had installed, so brew still recorded the old version and put it back on its next upgrade or reinstall. It now stops and prints the `brew` command to run instead, and the new-version notice names that command too.
 - The last lines of a run's output, the summary among them, could be lost: tomato exited before the pipe that copies its output to the console and the run log was drained.

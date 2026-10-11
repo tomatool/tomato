@@ -548,11 +548,8 @@ func generateTomatoConfig(m initModel) string {
 	// Settings
 	s.WriteString("settings:\n")
 	s.WriteString("  timeout: 5m\n")
-	s.WriteString("  parallel: 1\n")
 	s.WriteString("  fail_fast: false\n")
 	s.WriteString("  output: pretty\n")
-	s.WriteString("  reset:\n")
-	s.WriteString("    level: scenario\n")
 	s.WriteString("\n")
 
 	// App section - how to run the application under test
@@ -695,7 +692,9 @@ func generateTomatoConfig(m initModel) string {
 	}
 
 	if m.selected["rabbitmq"] {
-		s.WriteString("  queue:\n")
+		// Not "queue": kafka already takes that name, and selecting both
+		// produced a config with a duplicate mapping key that would not parse.
+		s.WriteString("  broker:\n")
 		s.WriteString("    type: rabbitmq\n")
 		s.WriteString("    container: rabbitmq\n")
 		s.WriteString("\n")
@@ -735,6 +734,10 @@ func generateTomatoConfig(m initModel) string {
 	return s.String()
 }
 
+// generateExampleFeatureFile writes a feature whose every step is a real step
+// definition. The wording here is not prose: it has to match the patterns the
+// resources register, which TestInit_GeneratedSuiteIsValid checks against the
+// registry so a renamed step cannot leave this generating a broken suite.
 func generateExampleFeatureFile(m initModel) string {
 	var s strings.Builder
 
@@ -745,33 +748,58 @@ func generateExampleFeatureFile(m initModel) string {
 
 	if m.selected["postgresql"] {
 		s.WriteString("  Scenario: Database operations\n")
-		s.WriteString("    Given I set \"db\" table \"users\" with values:\n")
-		s.WriteString("      | id | name  | email           |\n")
-		s.WriteString("      | 1  | Alice | alice@test.com  |\n")
-		s.WriteString("    Then \"db\" table \"users\" should have \"1\" rows\n\n")
+		s.WriteString("    Given \"db\" table \"users\" has values:\n")
+		s.WriteString("      | id | name  | email          |\n")
+		s.WriteString("      | 1  | Alice | alice@test.com |\n")
+		s.WriteString("    Then \"db\" table \"users\" has \"1\" rows\n\n")
 	}
 
 	if m.selected["redis"] {
 		s.WriteString("  Scenario: Cache operations\n")
-		s.WriteString("    Given I set \"cache\" key \"session:123\" with value \"user_data\"\n")
-		s.WriteString("    Then \"cache\" key \"session:123\" should exist\n\n")
+		s.WriteString("    Given \"cache\" key \"session:123\" is \"user_data\"\n")
+		s.WriteString("    Then \"cache\" key \"session:123\" exists\n\n")
 	}
 
 	if m.selected["kafka"] {
 		s.WriteString("  Scenario: Kafka messaging\n")
-		s.WriteString("    Given I start consuming from \"queue\" topic \"events\"\n")
-		s.WriteString("    When I publish JSON to \"queue\" topic \"events\":\n")
+		s.WriteString("    Given \"queue\" consumes from \"events\"\n")
+		s.WriteString("    When \"queue\" publishes json to \"events\":\n")
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      {\"type\": \"test_event\"}\n")
 		s.WriteString("      \"\"\"\n")
-		s.WriteString("    Then I should receive message from \"queue\" topic \"events\" within \"5s\"\n\n")
+		s.WriteString("    Then \"queue\" receives from \"events\" within \"5s\":\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("      {\"type\": \"test_event\"}\n")
+		s.WriteString("      \"\"\"\n\n")
+	}
+
+	if m.selected["rabbitmq"] {
+		s.WriteString("  Scenario: Queue messaging\n")
+		s.WriteString("    Given \"broker\" declares queue \"orders\"\n")
+		s.WriteString("    And \"broker\" consumes from queue \"orders\"\n")
+		s.WriteString("    When \"broker\" publishes json to queue \"orders\":\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("      {\"id\": 1}\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("    Then \"broker\" queue \"orders\" has \"1\" messages\n\n")
+	}
+
+	if m.selected["http"] {
+		// The "External HTTP" dependency is a mock the application calls,
+		// an http-server resource named "http" — not a client named "api".
+		s.WriteString("  Scenario: Stubbing an external API\n")
+		s.WriteString("    Given \"http\" stub \"GET\" \"/users\" returns \"200\" with json:\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("      [{\"id\": 1}]\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("    Then \"http\" received \"GET\" \"/users\"\n\n")
 	}
 
 	// Always include shell example
 	s.WriteString("  Scenario: Shell commands\n")
-	s.WriteString("    When I run \"echo hello\" on \"shell\"\n")
-	s.WriteString("    Then \"shell\" should succeed\n")
-	s.WriteString("    And \"shell\" stdout should contain \"hello\"\n")
+	s.WriteString("    When \"shell\" runs \"echo hello\"\n")
+	s.WriteString("    Then \"shell\" succeeds\n")
+	s.WriteString("    And \"shell\" stdout contains \"hello\"\n")
 
 	return s.String()
 }
