@@ -9,7 +9,6 @@ version: 2              # Required: config version
 
 settings:               # Test execution settings
   timeout: 5m
-  parallel: 1
   fail_fast: false
   output: pretty
   containers:
@@ -59,7 +58,6 @@ features:               # Feature file settings
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `timeout` | duration | `5m` | Global test timeout |
-| `parallel` | int | `1` | Number of parallel scenarios |
 | `fail_fast` | bool | `false` | Stop on first failure |
 | `output` | string | `pretty` | Output formats, comma-separated; see [Reports](#reports) |
 

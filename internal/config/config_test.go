@@ -47,7 +47,7 @@ version: 2
 version: 2
 settings:
   timeout: 10m
-  parallel: 4
+  parallel: 1
   fail_fast: true
   output: json
 containers:
@@ -76,8 +76,8 @@ features:
 				if cfg.Settings.Timeout != 10*time.Minute {
 					t.Errorf("expected timeout 10m, got %v", cfg.Settings.Timeout)
 				}
-				if cfg.Settings.Parallel != 4 {
-					t.Errorf("expected parallel 4, got %d", cfg.Settings.Parallel)
+				if cfg.Settings.Parallel != 1 {
+					t.Errorf("expected parallel 1, got %d", cfg.Settings.Parallel)
 				}
 				if !cfg.Settings.FailFast {
 					t.Error("expected fail_fast true")
@@ -1111,5 +1111,31 @@ features:
 	}
 	if _, err := Load(path); err != nil {
 		t.Errorf("a stateless external resource should load: %v", err)
+	}
+}
+
+// Scenarios have to run one at a time. tomato resets every resource before
+// every scenario and the resources are shared, so two scenarios in flight
+// means one scenario's reset wiping state the other is still asserting on.
+// settings.parallel was wired straight into godog's Concurrency and nothing
+// checked it, so a suite could silently lose the isolation tomato promises.
+func TestValidate_RejectsParallelScenarios(t *testing.T) {
+	for _, n := range []int{2, 8} {
+		cfg := &Config{Version: SupportedVersion, Settings: Settings{Parallel: n}}
+		err := cfg.validate()
+		if err == nil {
+			t.Errorf("parallel=%d was accepted; scenarios cannot run concurrently", n)
+			continue
+		}
+		if !strings.Contains(err.Error(), "one at a time") {
+			t.Errorf("parallel=%d: error should explain why, got %q", n, err)
+		}
+	}
+
+	for _, n := range []int{0, 1} {
+		cfg := &Config{Version: SupportedVersion, Settings: Settings{Parallel: n}}
+		if err := cfg.validate(); err != nil {
+			t.Errorf("parallel=%d should be accepted, got %v", n, err)
+		}
 	}
 }
