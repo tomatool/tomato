@@ -26,10 +26,10 @@ type HTTPServer struct {
 	listener net.Listener
 	port     int
 
-	stubs    []*HTTPStub
-	calls    []*RecordedCall
-	stubsMu  sync.RWMutex
-	callsMu  sync.RWMutex
+	stubs   []*HTTPStub
+	calls   []*RecordedCall
+	stubsMu sync.RWMutex
+	callsMu sync.RWMutex
 }
 
 // HTTPStub represents a stub configuration

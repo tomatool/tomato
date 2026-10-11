@@ -1,4 +1,4 @@
-package handler
+package jsonmatch
 
 import (
 	"testing"
@@ -82,9 +82,9 @@ func TestMatchSpecial_TypeMatchers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
@@ -111,9 +111,9 @@ func TestMatchSpecial_RegexMatcher(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
@@ -138,9 +138,9 @@ func TestMatchSpecial_ContainsMatcher(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
@@ -164,9 +164,9 @@ func TestMatchSpecial_StartsWithMatcher(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
@@ -191,9 +191,9 @@ func TestMatchSpecial_EndsWithMatcher(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
@@ -240,9 +240,9 @@ func TestMatchSpecial_NumericComparisons(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
@@ -277,16 +277,16 @@ func TestMatchSpecial_LengthMatcher(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := MatchSpecial(tt.matcher, tt.actual, "test")
+			err := Special(tt.matcher, tt.actual, "test")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchSpecial(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
+				t.Errorf("Special(%q, %v) error = %v, wantErr %v", tt.matcher, tt.actual, err, tt.wantErr)
 			}
 		})
 	}
 }
 
 func TestMatchSpecial_UnknownMatcher(t *testing.T) {
-	err := MatchSpecial("@unknown", "value", "test")
+	err := Special("@unknown", "value", "test")
 	if err == nil {
 		t.Error("expected error for unknown matcher")
 	}
@@ -401,9 +401,9 @@ func TestCompareJSON_ExactMatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := CompareJSON(tt.expected, tt.actual, "", false)
+			err := Compare(tt.expected, tt.actual, "", false)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CompareJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Compare() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -459,9 +459,9 @@ func TestCompareJSON_PartialMatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := CompareJSON(tt.expected, tt.actual, "", true)
+			err := Compare(tt.expected, tt.actual, "", true)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CompareJSON() partial error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Compare() partial error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -647,9 +647,9 @@ func TestCompareJSON_WithMatchers(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := CompareJSON(tt.expected, tt.actual, "", tt.partial)
+			err := Compare(tt.expected, tt.actual, "", tt.partial)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CompareJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Compare() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -695,7 +695,7 @@ func TestCompareJSON_ErrorMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := CompareJSON(tt.expected, tt.actual, "", tt.partial)
+			err := Compare(tt.expected, tt.actual, "", tt.partial)
 			if err == nil {
 				t.Error("expected error but got nil")
 				return

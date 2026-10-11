@@ -19,6 +19,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 )
 
 // defaultS3Ports are probed in order when no explicit port option is set.
@@ -902,7 +903,7 @@ func (r *S3) objectContentShouldMatch(path string, doc *godog.DocString) error {
 	if err := json.Unmarshal(body, &actual); err != nil {
 		return fmt.Errorf("object %q is not valid JSON: %w", path, err)
 	}
-	return CompareJSON(expected, actual, "", true)
+	return jsonmatch.Compare(expected, actual, "", true)
 }
 
 func (r *S3) objectSizeShouldBe(path string, expected int64) error {

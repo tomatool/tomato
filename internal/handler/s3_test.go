@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -142,7 +143,7 @@ func TestPoll(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected timeout error")
 		}
-		if !contains(err.Error(), "object missing") {
+		if !strings.Contains(err.Error(), "object missing") {
 			t.Errorf("error %q should wrap the last failure", err)
 		}
 		if elapsed := time.Since(start); elapsed < 300*time.Millisecond {
@@ -227,7 +228,7 @@ func TestS3StepsAreWellFormed(t *testing.T) {
 		if step.Group == "" {
 			t.Errorf("step %q has no group, so it will not render in the docs", step.Pattern)
 		}
-		if !contains(step.Pattern, "{resource}") {
+		if !strings.Contains(step.Pattern, "{resource}") {
 			t.Errorf("step %q does not use the {resource} placeholder", step.Pattern)
 		}
 		if seen[step.Pattern] {

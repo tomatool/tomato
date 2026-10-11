@@ -11,6 +11,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -496,7 +497,7 @@ func (r *GRPC) responseJSONPathShouldBe(path, expected string) error {
 	if err := r.haveBody(); err != nil {
 		return err
 	}
-	actual, err := jsonPathValue(r.lastBody, path)
+	actual, err := jsonmatch.Path(r.lastBody, path)
 	if err != nil {
 		return err
 	}
@@ -510,7 +511,7 @@ func (r *GRPC) responseJSONPathShouldExist(path string) error {
 	if err := r.haveBody(); err != nil {
 		return err
 	}
-	_, err := jsonPathValue(r.lastBody, path)
+	_, err := jsonmatch.Path(r.lastBody, path)
 	return err
 }
 
@@ -518,7 +519,7 @@ func (r *GRPC) responseJSONPathShouldNotExist(path string) error {
 	if err := r.haveBody(); err != nil {
 		return err
 	}
-	if _, err := jsonPathValue(r.lastBody, path); err == nil {
+	if _, err := jsonmatch.Path(r.lastBody, path); err == nil {
 		return fmt.Errorf("JSON path %q exists but should not", path)
 	}
 	return nil
@@ -535,7 +536,7 @@ func (r *GRPC) responseJSONShouldMatch(body *godog.DocString) error {
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
 		return fmt.Errorf("response is not valid JSON: %w", err)
 	}
-	return CompareJSON(expected, actual, "", false)
+	return jsonmatch.Compare(expected, actual, "", false)
 }
 
 func (r *GRPC) responseJSONShouldContain(body *godog.DocString) error {
@@ -549,7 +550,7 @@ func (r *GRPC) responseJSONShouldContain(body *godog.DocString) error {
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
 		return fmt.Errorf("response is not valid JSON: %w", err)
 	}
-	return CompareJSON(expected, actual, "", true)
+	return jsonmatch.Compare(expected, actual, "", true)
 }
 
 // --- discovery assertions ---

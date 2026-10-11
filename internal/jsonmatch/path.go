@@ -1,4 +1,4 @@
-package handler
+package jsonmatch
 
 import (
 	"encoding/json"
@@ -7,16 +7,11 @@ import (
 	"strings"
 )
 
-// jsonPathValue walks a dotted path into a JSON document and returns the
-// value at it.
+// Path walks a dotted path into a JSON document and returns the value at it.
 //
 // Paths are dotted, with bracketed indexes for arrays: "data.items[0].id".
 // A leading index ("[0].id") indexes the document itself.
-//
-// This lives at package level rather than on a handler because every
-// resource that gets a JSON-shaped response back wants the same traversal,
-// and a second copy is a second place for the array-index handling to drift.
-func jsonPathValue(body []byte, path string) (any, error) {
+func Path(body []byte, path string) (any, error) {
 	var data any
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)

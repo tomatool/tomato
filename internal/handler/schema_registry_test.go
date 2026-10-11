@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/tomatool/tomato/internal/jsonmatch"
 )
 
 const orderSchema = `{
@@ -104,7 +106,7 @@ func TestSchemaRegistry_RoundTrip(t *testing.T) {
 		t.Fatalf("decoded JSON is invalid: %v (%s)", err, text)
 	}
 	want := map[string]any{"id": "order-1", "amount": float64(42), "note": "rush"}
-	if err := CompareJSON(any(want), any(got), "", false); err != nil {
+	if err := jsonmatch.Compare(any(want), any(got), "", false); err != nil {
 		t.Errorf("round trip mismatch: %v (decoded %s)", err, text)
 	}
 }

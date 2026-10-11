@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 )
 
 type Kafka struct {
@@ -986,7 +987,7 @@ func (r *Kafka) shouldReceiveAvro(topic, timeout string, doc *godog.DocString) e
 				lastMismatch = err
 				continue
 			}
-			if err := CompareJSON(expected, actual, "", true); err != nil {
+			if err := jsonmatch.Compare(expected, actual, "", true); err != nil {
 				lastMismatch = err
 				continue
 			}
@@ -1034,7 +1035,7 @@ func (r *Kafka) compareLastAvro(doc *godog.DocString, partial bool) error {
 	if err != nil {
 		return err
 	}
-	return CompareJSON(expected, actual, "", partial)
+	return jsonmatch.Compare(expected, actual, "", partial)
 }
 
 // decodeAvroJSON decodes a wire-format Avro message value into generic JSON.
