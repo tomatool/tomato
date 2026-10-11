@@ -1528,6 +1528,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Where the code lives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-one-package-per-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why one package per resource
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1680,6 +1697,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Where the code lives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-one-package-per-resource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why one package per resource
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1825,8 +1859,20 @@
 <td>Starting the application under test, <code>app.env</code> templating</td>
 </tr>
 <tr>
-<td><code>internal/handler</code></td>
-<td>One file per resource type, each with its step definitions</td>
+<td><code>internal/resource</code></td>
+<td>The contract every resource implements: <code>Handler</code>, step definitions, the variable store</td>
+</tr>
+<tr>
+<td><code>internal/resource/&lt;name&gt;</code></td>
+<td>One package per resource type, with its step definitions and nothing else's</td>
+</tr>
+<tr>
+<td><code>internal/registry</code></td>
+<td>Builds resources from config and is the only package that knows the full set</td>
+</tr>
+<tr>
+<td><code>internal/jsonmatch</code></td>
+<td>Dotted-path lookup and tomato's <code>@</code> matchers, shared by every resource that asserts on JSON</td>
 </tr>
 <tr>
 <td><code>internal/runner</code></td>
@@ -1846,8 +1892,15 @@
 </tr>
 </tbody>
 </table>
+<h3 id="why-one-package-per-resource">Why one package per resource<a class="headerlink" href="#why-one-package-per-resource" title="Permanent link">#</a></h3>
+<p>Each resource package imports <code>internal/resource</code> and nothing from any other
+resource, so a change to the Kafka steps cannot break the Postgres ones, and a
+contributor adding steps to one resource reads one directory. <code>go build
+./internal/resource/postgres/</code> compiles that resource alone.</p>
 <p>A resource type is registered in exactly one place, <code>handlerFactories</code> in
-<code>internal/handler/registry.go</code>.</p>
+<code>internal/registry/registry.go</code>. That table and <code>canonicalTypes</code> beside it are
+the only lists of resources in the codebase: the commands ask the registry
+rather than naming resources themselves.</p>
 <pre class="mermaid"><code>flowchart TB
     subgraph Config["tomato.yml"]
         C[Containers]
