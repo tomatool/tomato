@@ -3,12 +3,14 @@
 | Name | GitHub | Role |
 |------|--------|------|
 | Ali Reza Yahya | [@alileza](https://github.com/alileza) | Lead maintainer |
+| Stefan Naglee | [@snagles](https://github.com/snagles) | Maintainer |
 
 ## Current situation
 
-tomato has one active maintainer. That is a risk for anyone depending on it:
-reviews, releases and security fixes all wait on one person. Adding at least
-one more maintainer is one of the criteria for declaring v2 stable (see
+Two maintainers can review and merge, but day-to-day work — reviews, releases
+and security fixes — rests with the lead maintainer. That concentration is a
+risk for anyone depending on tomato, and widening it is one of the criteria
+for declaring v2 stable (see
 [docs/stability.md](docs/stability.md#dropping-the-at-your-own-risk-warning)).
 
 ## What maintainers do
