@@ -1520,6 +1520,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-is-in-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is in the repository
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-the-code-lives" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1689,6 +1700,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-is-in-the-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is in the repository
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-the-code-lives" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1833,6 +1855,66 @@
 <li><strong>Resources</strong> - Abstractions over external services (databases, APIs, message queues)</li>
 <li><strong>Handlers</strong> - Step definitions that interact with resources</li>
 </ol>
+<h2 id="what-is-in-the-repository">What is in the repository<a class="headerlink" href="#what-is-in-the-repository" title="Permanent link">#</a></h2>
+<p>tomato is a Go program with a web UI, a documentation site, and three things
+it ships besides the binary. The root reads more clearly once you know which
+is which, and which of them CI actually checks.</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>What it is</th>
+<th>Checked by CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>main.go</code>, <code>command/</code>, <code>internal/</code></td>
+<td>The Go program. <code>main.go</code> is the entry point, <code>command/</code> is one file per CLI command, <code>internal/</code> is everything else</td>
+<td><code>make test</code>, <code>make coverage</code></td>
+</tr>
+<tr>
+<td><code>ui/</code></td>
+<td>The web UI <code>tomato ui</code> serves: a React app built by Vite with pnpm. <code>pnpm build</code> writes the bundle into <code>command/ui_assets/dist</code>, which the binary embeds, so the bundle is committed too</td>
+<td><code>make ui-check</code> fails on a stale bundle</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>tomato's integration suite: tomato testing itself against real containers. <code>tests/tomato.yml</code> plus <code>tests/features/*.feature</code></td>
+<td><code>make coverage</code>; every step of every resource must be used by a scenario</td>
+</tr>
+<tr>
+<td><code>docs/</code></td>
+<td>The documentation site, built with <code>mkdocs.yml</code>. <code>docs/resources/</code> and <code>docs/index.md</code> are <strong>generated</strong> — the docs workflow overwrites them with <code>tomato docs</code> and <code>README.md</code> before deploying, so edit the generator or the README, never those files</td>
+<td>regenerated and deployed, not checked for drift</td>
+</tr>
+<tr>
+<td><code>skills/tomato</code></td>
+<td>A shipped deliverable: the agent skill for teams testing their service with tomato. Its path is a published install target, so it does not move</td>
+<td>not yet; keep it in step with the code by hand</td>
+</tr>
+<tr>
+<td><code>.claude/skills/tomato-dev</code></td>
+<td>The agent skill for working on tomato itself, which loads automatically in this repository</td>
+<td>not yet</td>
+</tr>
+<tr>
+<td><code>action.yml</code>, <code>install.sh</code></td>
+<td>The other two shipped deliverables: the GitHub Action and the install script</td>
+<td>no — neither is exercised by a workflow</td>
+</tr>
+<tr>
+<td><code>scripts/</code></td>
+<td><code>report-coverage.sh</code>, which builds the PR coverage comment and enforces the gates in <code>.coverage-min</code></td>
+<td>runs in <code>make coverage</code></td>
+</tr>
+<tr>
+<td><code>.tomato/</code>, <code>bin/</code>, <code>coverage/</code></td>
+<td>Generated at runtime, all git-ignored</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
 <h2 id="where-the-code-lives">Where the code lives<a class="headerlink" href="#where-the-code-lives" title="Permanent link">#</a></h2>
 <table>
 <thead>
