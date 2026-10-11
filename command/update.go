@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
@@ -462,65 +461,6 @@ func getRecentReleases(includeRC bool, limit int) ([]githubRelease, error) {
 	}
 
 	return filtered, nil
-}
-
-func getLatestVersion(useRC bool) (string, error) {
-	if useRC {
-		return getLatestRCVersion()
-	}
-	return getLatestStableVersion()
-}
-
-func getLatestStableVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/tomatool/tomato/releases/latest")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	var release githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return "", err
-	}
-
-	return release.TagName, nil
-}
-
-func getLatestRCVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/tomatool/tomato/releases")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	var releases []githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
-		return "", err
-	}
-
-	// Filter RC versions and sort by semver
-	var rcVersions []string
-	for _, r := range releases {
-		if strings.Contains(r.TagName, "-rc.") {
-			rcVersions = append(rcVersions, r.TagName)
-		}
-	}
-
-	if len(rcVersions) == 0 {
-		return "", fmt.Errorf("no release candidates found")
-	}
-
-	// Sort by semver (simple string sort works for vX.Y.Z-rc.N format)
-	sort.Slice(rcVersions, func(i, j int) bool {
-		return compareVersions(rcVersions[i], rcVersions[j]) < 0
-	})
-
-	return rcVersions[len(rcVersions)-1], nil
-}
-
-func compareVersions(a, b string) int {
-	// Simple version comparison for vX.Y.Z-rc.N format
-	return strings.Compare(a, b)
 }
 
 func downloadFile(url, filepath string) error {

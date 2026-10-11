@@ -805,14 +805,6 @@ func (r *HTTPClient) responseJSONShouldContain(doc *godog.DocString) error {
 	return jsonmatch.Compare(expected, actual, "", true)
 }
 
-func (r *HTTPClient) compareJSON(expected, actual interface{}, path string) error {
-	return jsonmatch.Compare(expected, actual, path, false)
-}
-
-func (r *HTTPClient) matchSpecial(matcher string, actual interface{}, path string) error {
-	return jsonmatch.Special(matcher, actual, path)
-}
-
 // getJSONPath reads a dotted path out of the last response body. The
 // traversal itself is shared with the other resources that assert on JSON —
 // see jsonPathValue.
