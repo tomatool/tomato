@@ -226,3 +226,43 @@ func TestDocsConfigExamplesAreValid(t *testing.T) {
 	}
 	t.Logf("checked %d config examples", checked)
 }
+
+// The documentation map is the one page that should reach everywhere, which
+// makes it the page most likely to fall behind: add a page, forget the map,
+// and it is invisible to anyone using it to navigate. Hand-written prose,
+// machine-checked completeness.
+func TestDocsMapLinksEveryPage(t *testing.T) {
+	const mapPage = "../docs/overview.md"
+	body, err := os.ReadFile(mapPage)
+	if err != nil {
+		t.Fatalf("reading the documentation map: %v", err)
+	}
+	linked := map[string]bool{}
+	for _, m := range mdLink.FindAllStringSubmatch(string(body), -1) {
+		target := m[2]
+		if i := strings.Index(target, "#"); i >= 0 {
+			target = target[:i]
+		}
+		linked[filepath.ToSlash(filepath.Clean(target))] = true
+	}
+
+	nav, err := os.ReadFile("../mkdocs.yml")
+	if err != nil {
+		t.Fatalf("reading mkdocs.yml: %v", err)
+	}
+	var missing []string
+	for _, m := range regexp.MustCompile(`([A-Za-z0-9/._-]+\.md)`).FindAllStringSubmatch(string(nav), -1) {
+		page := m[1]
+		// the home page and the map itself are not entries on the map
+		if page == "index.md" || page == "overview.md" {
+			continue
+		}
+		if !linked[page] {
+			missing = append(missing, page)
+		}
+	}
+	if len(missing) > 0 {
+		t.Errorf("docs/overview.md does not link %d page(s) that are in the nav:\n  %s",
+			len(missing), strings.Join(missing, "\n  "))
+	}
+}

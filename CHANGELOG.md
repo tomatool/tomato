@@ -14,6 +14,8 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - The Go toolchain is pinned to 1.26.6, which carries the standard-library fixes govulncheck flags in earlier 1.26 releases. Building tomato now needs Go 1.26.
 
 ### Added
+- A [Documentation Map](docs/overview.md): every page on one screen with a line on what it is for, so the whole documentation can be navigated from one place. A test fails if a page in the nav is missing from it.
+- The sidebar groups collapse. They were rendered as flat always-open headers, which made the step reference's fourteen entries hard to see past.
 - The documentation site is in the same palette as `tomato ui` — the Modernist tokens from `ui/src/styles.css`, Geist and Geist Mono, the tomato mark as the favicon, and a dark/light toggle that defaults to dark as the app does. Gherkin is highlighted the way the app colours it: keyword coloured, step text plain, quoted arguments picked out.
 - `markdown_extensions` are configured, so admonitions render as admonitions and code blocks are highlighted with a copy button. Sixteen `!!! tip` blocks had been rendering as literal text on the published site, one on every generated resource page.
 - [Writing a Suite](docs/guide/philosophy.md): how to write scenarios worth trusting — one behaviour per scenario, and asserting the effects your application produces (the row, the message, the file) rather than only the response it returns. Every example is a real step, checked against the live definitions.

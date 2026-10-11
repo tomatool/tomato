@@ -23,7 +23,7 @@ theme:
     text: Geist
     code: Geist Mono
   features:
-    - navigation.sections
+    - navigation.expand
     - navigation.top
     - navigation.instant
     - navigation.tracking
@@ -38,6 +38,7 @@ extra_css:
 
 nav:
   - Home: index.md
+  - Documentation Map: overview.md
   - Guide:
     - Getting Started: getting-started/index.md
     - Writing a Suite: guide/philosophy.md
