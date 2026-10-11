@@ -1781,15 +1781,12 @@ that can pass while the behavior is broken.</p>
 configures the service; for a scenario, the behavior in one sentence and which
 dependencies it touches; for a failing run, the run directory or the CI log.</p>
 <h2 id="contributing-to-tomato">Contributing to tomato<a class="headerlink" href="#contributing-to-tomato" title="Permanent link">#</a></h2>
-<p>The tomato repository carries a separate skill for people changing tomato
-itself, in <a href="https://github.com/tomatool/tomato/tree/main/.claude/skills/tomato-dev"><code>.claude/skills/tomato-dev</code></a>:
-adding or changing steps, resources, presets, options and docs, and handling
-gaps that users report. Claude Code loads it automatically when working in a
-checkout of tomato, and <code>/tomato-dev</code> calls it directly; other agents can be
-pointed at the file. It is not part of the user skill and is not installed with
-it.</p>
-<p>Its one rule that reaches outside this repository: the user skill is the
-contract. A change to a step's wording, a config key or a CLI flag updates
+<p>Changing tomato itself — adding or changing steps, resources, presets, options
+and docs, and handling gaps that users report — is a different job with
+different rules. They are in
+<a href="https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p>
+<p>The one rule that reaches outside the repository: this skill is the contract.
+A change to a step's wording, a config key or a CLI flag updates
 <code>skills/tomato</code> in the same pull request.</p>
 <h2 id="extending-it">Extending it<a class="headerlink" href="#extending-it" title="Permanent link">#</a></h2>
 <p>A team can build a skill on top of this one for its own stack, covering how
