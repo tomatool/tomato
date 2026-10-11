@@ -71,7 +71,12 @@ func (r *Postgres) Reset(ctx context.Context) error {
 	if len(tables) == 0 {
 		return nil
 	}
-	_, err = r.db.ExecContext(ctx, fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tables, ", ")))
+	// RESTART IDENTITY matters: plain TRUNCATE leaves sequences where they
+	// are, so a BIGSERIAL id keeps climbing across scenarios even though the
+	// rows are gone. A scenario asserting on a generated id then passes or
+	// fails depending on what ran before it, which is exactly the state
+	// leak reset exists to prevent.
+	_, err = r.db.ExecContext(ctx, fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", strings.Join(tables, ", ")))
 	return err
 }
 
@@ -237,7 +242,7 @@ func (r *Postgres) Steps() resource.StepCategory {
 }
 
 func (r *Postgres) clearTable(table string) error {
-	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table))
+	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", table))
 	return err
 }
 
@@ -251,7 +256,7 @@ func (r *Postgres) clearTables(data *godog.Table) error {
 	if len(tables) == 0 {
 		return nil
 	}
-	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tables, ", ")))
+	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY CASCADE", strings.Join(tables, ", ")))
 	return err
 }
 

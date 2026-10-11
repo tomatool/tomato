@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/feature"
 	_ "github.com/tomatool/tomato/internal/formatter" // Register tomato formatter
 	"github.com/tomatool/tomato/internal/registry"
 	"github.com/tomatool/tomato/internal/resource"
@@ -25,11 +26,13 @@ type Options struct {
 
 // Runner executes behavioral tests
 type Runner struct {
-	config        *config.Config
-	container     ContainerExecutor
-	handlers      HandlerRegistry
-	opts          Options
-	scenarioRegex *regexp.Regexp
+	config    *config.Config
+	container ContainerExecutor
+	handlers  HandlerRegistry
+	opts      Options
+	// scenarioPaths is "file.feature:12" per selected scenario, empty when
+	// no filter is set.
+	scenarioPaths []string
 	godogTags     string
 }
 
@@ -64,18 +67,38 @@ func newRunner(cfg *config.Config, container ContainerExecutor, handlers Handler
 	}
 	r.godogTags = tags
 
-	// Compile scenario filter regex if provided
+	// A scenario filter selects the scenarios up front rather than skipping
+	// the others as they start. Skipping made godog run and report every
+	// scenario, and a scenario skipped in a Before hook counts as passed —
+	// so filtering to one scenario reported the whole suite green, and a
+	// filter matching nothing reported a passing run that tested nothing.
 	if cfg.Features.Scenario != "" {
-		log.Debug().Str("pattern", cfg.Features.Scenario).Msg("compiling scenario filter regex")
 		regex, err := regexp.Compile(cfg.Features.Scenario)
 		if err != nil {
 			return nil, fmt.Errorf("invalid scenario filter regex: %w", err)
 		}
-		r.scenarioRegex = regex
-		log.Info().Str("pattern", cfg.Features.Scenario).Msg("scenario filter active")
+		matches, err := feature.Select(cfg.Features.Paths, regex)
+		if err != nil {
+			return nil, err
+		}
+		r.scenarioPaths = make([]string, len(matches))
+		for i, m := range matches {
+			r.scenarioPaths[i] = m.Path
+		}
+		log.Info().Str("pattern", cfg.Features.Scenario).
+			Int("scenarios", len(matches)).Msg("scenario filter active")
 	}
 
 	return r, nil
+}
+
+// featurePaths is what godog is told to run: the whole configured paths, or
+// just the scenarios a filter selected, each as "file.feature:line".
+func (r *Runner) featurePaths() []string {
+	if len(r.scenarioPaths) > 0 {
+		return r.scenarioPaths
+	}
+	return r.config.Features.Paths
 }
 
 // Run executes all tests
@@ -96,7 +119,7 @@ func (r *Runner) Run(ctx context.Context) error {
 
 	opts := &godog.Options{
 		Format:        format,
-		Paths:         r.config.Features.Paths,
+		Paths:         r.featurePaths(),
 		Tags:          r.godogTags,
 		StopOnFailure: r.config.Settings.FailFast,
 		Strict:        true,
@@ -131,12 +154,6 @@ func (r *Runner) initializeScenario(ctx *godog.ScenarioContext) {
 // This internal method accepts an interface for testability
 func (r *Runner) setupScenarioHooks(ctx ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		// Skip scenarios that don't match the filter regex
-		if r.scenarioRegex != nil && !r.scenarioRegex.MatchString(sc.Name) {
-			log.Info().Str("scenario", sc.Name).Msg("skipping scenario (doesn't match filter)")
-			return ctx, godog.ErrSkip
-		}
-
 		// Every scenario starts from the same state. There is no way to turn
 		// this off: a scenario that needs a starting point builds it in a
 		// Background, which godog runs after this hook.

@@ -73,7 +73,7 @@ are reset between each scenario to ensure clean state.`,
 	Action: runTests,
 }
 
-func runTests(c *cli.Context) error {
+func runTests(c *cli.Context) (err error) {
 	// Check for updates (non-blocking, skipped for RC versions)
 	checkForUpdate()
 
@@ -114,6 +114,17 @@ func runTests(c *cli.Context) error {
 
 	// Tee stdout to both console and log file, until the run returns.
 	defer teeStdout(tomatoLog)()
+
+	// Record why a run ended in the run log. main prints the error to stderr
+	// after this function returns — the tee only copies stdout, and by then
+	// it has been torn down anyway — so a run that dies while starting
+	// containers used to leave a log holding nothing but "Starting
+	// dependencies...". Deferred after the tee, so it runs before it.
+	defer func() {
+		if err != nil {
+			fmt.Fprintf(tomatoLog, "\nError: %v\n", err)
+		}
+	}()
 
 	fmt.Println()
 	fmt.Println(titleStyle.Render("🍅 Tomato"))
