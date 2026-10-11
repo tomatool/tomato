@@ -1,4 +1,10 @@
-package handler
+// Package resource is the contract every tomato resource implements.
+//
+// A resource is one kind of thing a test can talk to: a database, a queue, an
+// HTTP mock. Each lives in its own package under this one and depends on
+// nothing but this contract, so adding or changing one resource does not
+// reach into any other.
+package resource
 
 import (
 	"context"

@@ -13,9 +13,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // RabbitMQ provides RabbitMQ message broker testing capabilities
+// rabbitAssertWait is how long queue assertions wait: a published message is
+// still in flight when the step that published it returns.
+const rabbitAssertWait = 2 * time.Second
+
 type RabbitMQ struct {
 	name      string
 	config    config.Resource
@@ -761,7 +766,7 @@ func (r *RabbitMQ) getMessageCount(queue string) int {
 // consumer asynchronously, so a message published a step ago may still be
 // in flight.
 func (r *RabbitMQ) queueShouldHaveMessages(queue string, expected int) error {
-	eventually(func() bool { return r.getMessageCount(queue) == expected })
+	resource.Eventually(rabbitAssertWait, func() bool { return r.getMessageCount(queue) == expected })
 	if count := r.getMessageCount(queue); count != expected {
 		return fmt.Errorf("queue %q: expected %d messages, got %d", queue, expected, count)
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // WebSocketServer provides a mock WebSocket server for testing
@@ -54,20 +55,6 @@ func (c *wsServerConn) write(msg string) error {
 // connections register and messages arrive asynchronously to the client
 // steps that caused them.
 const wsAssertWait = 2 * time.Second
-
-// eventually polls cond until it holds or wsAssertWait passes.
-func eventually(cond func() bool) bool {
-	deadline := time.Now().Add(wsAssertWait)
-	for {
-		if cond() {
-			return true
-		}
-		if !time.Now().Before(deadline) {
-			return false
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-}
 
 // MessageRule defines how to respond to messages
 type MessageRule struct {
@@ -343,7 +330,7 @@ func (r *WebSocketServer) connectionCount() int {
 }
 
 func (r *WebSocketServer) hasConnections(count int) error {
-	if !eventually(func() bool { return r.connectionCount() == count }) {
+	if !resource.Eventually(wsAssertWait, func() bool { return r.connectionCount() == count }) {
 		return fmt.Errorf("expected %d connections, got %d", count, r.connectionCount())
 	}
 	return nil
@@ -367,14 +354,14 @@ func (r *WebSocketServer) receivedCount() int {
 }
 
 func (r *WebSocketServer) receivedMessage(message string) error {
-	if !eventually(func() bool { return r.hasReceived(message) }) {
+	if !resource.Eventually(wsAssertWait, func() bool { return r.hasReceived(message) }) {
 		return fmt.Errorf("message %q was not received", message)
 	}
 	return nil
 }
 
 func (r *WebSocketServer) receivedMessageCount(count int) error {
-	if !eventually(func() bool { return r.receivedCount() == count }) {
+	if !resource.Eventually(wsAssertWait, func() bool { return r.receivedCount() == count }) {
 		return fmt.Errorf("expected %d messages, got %d", count, r.receivedCount())
 	}
 	return nil

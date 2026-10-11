@@ -10,6 +10,7 @@ import (
 	"github.com/cucumber/godog"
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 func wsDoc(s string) *godog.DocString { return &godog.DocString{Content: s} }
@@ -47,7 +48,7 @@ func TestWebSocketClient_ReceivesReplyThatArrivedEarly(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Let the reply land before the receive step runs.
-	if !eventually(func() bool { return client.getMessageCount() == 1 }) {
+	if !resource.Eventually(wsAssertWait, func() bool { return client.getMessageCount() == 1 }) {
 		t.Fatal("reply never arrived")
 	}
 	if err := client.shouldReceiveMessage("1s", wsDoc("pong")); err != nil {
