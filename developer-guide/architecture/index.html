@@ -557,34 +557,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../getting-started/agent-skill/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Agent Skill
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1856,8 +1828,8 @@
 <li><strong>Handlers</strong> - Step definitions that interact with resources</li>
 </ol>
 <h2 id="what-is-in-the-repository">What is in the repository<a class="headerlink" href="#what-is-in-the-repository" title="Permanent link">#</a></h2>
-<p>tomato is a Go program with a web UI, a documentation site, and three things
-it ships besides the binary. The root reads more clearly once you know which
+<p>tomato is a Go program with a web UI, a documentation site, and two things it
+ships besides the binary. The root reads more clearly once you know which
 is which, and which of them CI actually checks.</p>
 <table>
 <thead>
@@ -1889,13 +1861,8 @@ is which, and which of them CI actually checks.</p>
 <td>regenerated and deployed, not checked for drift</td>
 </tr>
 <tr>
-<td><code>skills/tomato</code></td>
-<td>A shipped deliverable: the agent skill for teams testing their service with tomato. Its path is a published install target, so it does not move</td>
-<td>not yet; keep it in step with the code by hand</td>
-</tr>
-<tr>
 <td><code>action.yml</code>, <code>install.sh</code></td>
-<td>The other two shipped deliverables: the GitHub Action and the install script</td>
+<td>The two shipped deliverables besides the binary: the GitHub Action and the install script</td>
 <td>no — neither is exercised by a workflow</td>
 </tr>
 <tr>
