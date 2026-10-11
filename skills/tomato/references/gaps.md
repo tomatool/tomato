@@ -40,8 +40,7 @@ with the matching template. Include:
 - `tomato version`.
 
 To fix it yourself, follow
-[CONTRIBUTING.md](https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md);
-the tomato repository has its own skill for contributors in `.claude/skills/tomato-dev`.
+[CONTRIBUTING.md](https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md).
 
 ## 5. Use the fix before the release
 
