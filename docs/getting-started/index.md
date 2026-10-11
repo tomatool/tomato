@@ -1,13 +1,17 @@
 # Getting started
 
-This guide sets up tomato and runs your first behavioral test.
+This guide takes you from nothing to a passing suite in seven steps.
+
+Once it passes, read [Writing a Suite](../guide/philosophy.md) — it covers the
+habits that make a suite worth trusting, in particular asserting the *effects*
+your application produces rather than only the response it returns.
 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) — tomato starts your test containers
 - [Go 1.26+](https://go.dev/dl/) — only for the `go install` and from-source methods
 
-## Installation
+## 1. Install tomato
 
 ### Quick install (recommended)
 
@@ -33,7 +37,7 @@ brew install tomatool/tap/tomato
 tomato --version
 ```
 
-## Initialize a project
+## 2. Create a project
 
 Create a new project with the init command:
 
@@ -46,7 +50,7 @@ This creates:
 - `tomato.yml` - Main configuration file
 - `features/` - Directory for your feature files
 
-## Project structure
+### Project layout
 
 ```text
 my-project/
@@ -56,7 +60,7 @@ my-project/
 └── fixtures/            # Optional: SQL scripts, test data
 ```
 
-## Configuration
+## 3. Describe your dependencies
 
 Edit `tomato.yml` to define your test environment:
 
@@ -110,7 +114,7 @@ features:
   tags: "@smoke"  # Optional: filter by tags
 ```
 
-## Writing tests
+## 4. Write your first scenario
 
 Create a feature file in `features/`:
 
@@ -137,7 +141,7 @@ Feature: User API
     And "db" table "users" has "2" rows
 ```
 
-## Validate configuration
+## 5. Check it before you run it
 
 Before running tests, validate your configuration and feature files:
 
@@ -158,7 +162,7 @@ Use `--plain` for CI environments without interactive output:
 tomato validate --plain
 ```
 
-## Running tests
+## 6. Run it
 
 Run all tests:
 
@@ -178,7 +182,7 @@ Run with verbose output:
 tomato run -v
 ```
 
-## Browsing a suite
+## 7. Watch it run
 
 `tomato ui` opens a local web page that lists the feature files, shows each
 scenario's steps with the resource every step runs against, and runs scenarios
@@ -191,7 +195,7 @@ tomato ui
 It is a development aid, not part of the stable surface: see
 [Stability](../stability.md#not-covered).
 
-## Testing your application
+## Pointing tomato at your application
 
 Tomato can also start your application and connect it to test containers:
 
@@ -214,8 +218,12 @@ with the container's address and its mapped host port. The number is the port
 *inside* the container, so `{{.postgres.port.5432}}` resolves to whichever host
 port Docker mapped 5432 to. A bare `{{.postgres.port}}` is left untouched.
 
-## Next steps
+## Where to go next
 
-- [Configuration Reference](../configuration/index.md) - Full configuration options
-- [Resources](../resources/index.md) - All available step definitions
-- [Examples](https://github.com/tomatool/tomato/tree/main/examples) - Sample projects
+- [Writing a Suite](../guide/philosophy.md) — one behaviour per scenario, and
+  asserting the effects rather than just the response. Read this before you
+  write the second scenario.
+- [Configuration Reference](../configuration/index.md) — every `tomato.yml` field
+- [Step Reference](../resources/index.md) — every step, grouped by resource
+- [Step Coverage](coverage.md) — finding the steps no scenario uses
+- [GitHub Action](github-action.md) — running the suite in CI
