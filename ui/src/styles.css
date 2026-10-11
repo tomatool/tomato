@@ -582,3 +582,11 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 @media (max-width:980px){.app{--tree-open-w:200px;grid-template-columns:var(--tree-w) minmax(0,1fr);grid-template-areas:"top top" "tree doc" "tree console"}.app .pane--side{display:none}}
 .app[data-tree="closed"]{--tree-w:36px}
 .app[data-side="closed"]{--side-w:36px}
+
+/* A file's location on disk, with the button that gets it into your
+   clipboard. Shown rather than linked: an http page cannot open file://. */
+.srcpath{display:inline-flex;align-items:center;gap:var(--s-3);min-width:0;max-width:100%}
+.srcpath-text{font:var(--fs-11) var(--font-mono);color:var(--fg-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;text-align:left}
+.srcpath .btn{color:var(--fg-3)}
+.srcpath .btn:hover{color:var(--fg-1)}
+.srcpath .btn[data-copied="true"]{color:var(--pass)}

@@ -13,6 +13,7 @@ import { Runs } from './components/Runs.jsx'
 import { Transport } from './components/Transport.jsx'
 import { Console } from './components/Console.jsx'
 import { Peek } from './components/Peek.jsx'
+import { SourcePath } from './components/SourcePath.jsx'
 
 const SIDE_MIN = 240
 const SIDE_DEFAULT = 340
@@ -269,10 +270,10 @@ export function App() {
 
   useEffect(() => () => clearInterval(playTimer.current), [])
 
-  const openLog = useCallback((run, name) => {
+  const openLog = useCallback((run, name, absPath) => {
     setLogTabs((p) => (p.some((t) => t.run === run && t.name === name)
-      ? p : [...p, { run, name }].slice(-6)))
-    setActiveLog({ run, name })
+      ? p : [...p, { run, name, absPath }].slice(-6)))
+    setActiveLog({ run, name, absPath })
     fetch(`/api/runs/${encodeURIComponent(run)}/logs/${encodeURIComponent(name)}`)
       .then((r) => r.text())
       .then((txt) => setLines(txt.split('\n').map((text) => ({ text, at: null }))))
@@ -441,6 +442,7 @@ export function App() {
               <span className="feature-kw">FEATURE</span>
               <h1>{feature.name}</h1>
               <span className="feature-path">{feature.filePath}</span>
+              <SourcePath path={feature.absPath ?? feature.filePath} label="feature file" />
               {feature.description && <p className="feature-desc">{feature.description}</p>}
               {feature.tags?.length > 0 && (
                 <div className="row">
@@ -609,7 +611,7 @@ export function App() {
         runId={runId}
         running={running}
         height={consoleHeight}
-        onTab={(t) => { if (!t) { setActiveLog(null); setLines([]) } else openLog(t.run, t.name) }}
+        onTab={(t) => { if (!t) { setActiveLog(null); setLines([]) } else openLog(t.run, t.name, t.absPath) }}
         onResizeStart={(e) => {
           e.preventDefault()
           setResizing({ kind: 'console', at: e.clientY, start: consoleHeight })

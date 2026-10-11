@@ -93,6 +93,7 @@ type FeatureJSON struct {
 	Description string         `json:"description,omitempty"`
 	Tags        []string       `json:"tags,omitempty"`
 	FilePath    string         `json:"filePath"`
+	AbsPath     string         `json:"absPath,omitempty"`
 	Background  []StepJSON     `json:"background,omitempty"`
 	Scenarios   []ScenarioJSON `json:"scenarios"`
 }
@@ -344,7 +345,10 @@ func (s *UIServer) broadcastUpdate(changedFiles []string) {
 // the YAML tab plus a flattened view of the parts the structured tab shows, so
 // the browser never has to understand tomato's config schema.
 type ConfigJSON struct {
-	Path     string `json:"path"`
+	Path string `json:"path"`
+	// AbsPath is where the file is on disk. Path stays as the user typed it,
+	// because that is what reads well as a heading.
+	AbsPath  string `json:"absPath,omitempty"`
 	Content  string `json:"content"`
 	Error    string `json:"error,omitempty"`
 	Valid    bool   `json:"valid"`
@@ -416,6 +420,7 @@ type FeaturesJSON struct {
 func (s *UIServer) handleConfig(w http.ResponseWriter, r *http.Request) {
 	out := ConfigJSON{
 		Path:     s.configPath,
+		AbsPath:  absolutePath(s.configPath),
 		Watching: strings.Join(s.featurePaths, ", "),
 	}
 
@@ -1178,6 +1183,7 @@ func parseFeatureFileJSON(filePath string, matcher *stepMatcher) (*FeatureJSON, 
 		Name:        feature.Name,
 		Description: strings.TrimSpace(feature.Description),
 		FilePath:    filePath,
+		AbsPath:     absolutePath(filePath),
 		Tags:        extractTagsJSON(feature.Tags),
 	}
 
@@ -1339,4 +1345,15 @@ func openBrowser(url string) {
 	}
 
 	exec.Command(cmd, args...).Start()
+}
+
+// absolutePath resolves path against the working directory, falling back to
+// the path as given. The UI shows it so a reader can find the real file: a
+// page served over http cannot link to one.
+func absolutePath(path string) string {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	return abs
 }

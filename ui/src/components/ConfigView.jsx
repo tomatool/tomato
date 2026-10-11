@@ -1,4 +1,5 @@
 import { ResourceIcon } from '../lib/icons'
+import { SourcePath } from './SourcePath.jsx'
 import { tokenizeStep } from '../lib/steps.jsx'
 
 function Section({ title, yamlKey, icon, pill, children }) {
@@ -126,8 +127,9 @@ export function ConfigView({ config, mode, onMode, featureCount, scenarioCount }
           </div>
         </div>
         <span className="feature-path">
-          {config.path}{config.version ? ` · version ${config.version}` : ''}
+          {config.version ? `version ${config.version}` : ''}
         </span>
+        <SourcePath path={config.absPath ?? config.path} label="config" />
         <div className="row">
           <span className="pill" data-status={config.valid ? 'passed' : 'failed'}>
             {config.valid ? 'valid' : 'invalid'}
