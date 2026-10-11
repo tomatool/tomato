@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'internal/handler/**'
+      - 'internal/resource/**'
+      - 'internal/registry/**'
       - 'command/docs.go'
       - 'docs/**'
       - 'mkdocs.yml'

@@ -60,7 +60,7 @@ docker rm -f $(docker ps -aq --filter label=tomato.managed=true)
 
 ## Adding a step to an existing resource
 
-1. Add a `StepDef` to the resource's `Steps()` in `internal/handler/<resource>.go`:
+1. Add a `StepDef` to the resource's `Steps()` in `internal/resource/<name>/`:
    `Group`, `Pattern` (use `{resource}` for the resource name), `Description`,
    `Example` and `Handler`.
 2. Cover it in `tests/features/<resource>.feature`. CI fails if any step of any
@@ -71,22 +71,24 @@ docker rm -f $(docker ps -aq --filter label=tomato.managed=true)
 
 ## Adding a new resource type
 
-1. **Handler.** Create `internal/handler/<name>.go` with a constructor
-   `New<Name>(name string, cfg config.Resource, cm *container.Manager) (*<Name>, error)`
-   and implement the `Handler` interface in `internal/handler/handler.go`:
+1. **Handler.** Create `internal/resource/<name>/<name>.go` with a constructor
+   `New(name string, cfg config.Resource, cm *container.Manager) (*<Name>, error)`
+   and implement the `resource.Handler` interface from `internal/resource`:
    `Name`, `Init`, `Ready`, `Reset`, `RegisterSteps` and `Cleanup`. `Reset` must
    leave the resource clean for the next scenario without destroying things the
    app needs (see the Postgres migration-table exclusions).
 2. **Steps.** Implement `Steps() StepCategory` and call
    `RegisterStepsToGodog(ctx, r.name, r.Steps())` from `RegisterSteps`.
-3. **Register it once** in `handlerFactories` in `internal/handler/registry.go`. That
-   table drives both `tomato run` and `tomato validate`; add the type to
-   `ContainerBasedTypes()` too if it normally points at a container.
-4. **Docs generator.** Add the handler to `collectStepCategories()` in
-   `command/docs.go`, add a page under `docs/configuration/` for its options, and
-   add both to the `nav` in `mkdocs.yml`.
-5. **Tests.** Unit tests next to the handler, plus a container in `tests/tomato.yml`
-   and `tests/features/<name>.feature` exercising every step.
+3. **Register it once** in `handlerFactories` in `internal/registry/registry.go`,
+   and add it to `canonicalTypes` in the same file so it gets a docs page and
+   shows up in `tomato steps`. That table drives `tomato run`, `tomato validate`
+   and `tomato docs` alike; add the type to `ContainerBasedTypes()` too if it
+   normally points at a container.
+4. **Docs.** Add a page under `docs/configuration/` for its options and add both
+   it and the generated `docs/resources/` page to the `nav` in `mkdocs.yml`. The
+   step reference generates itself from the registry.
+5. **Tests.** Unit tests in the resource's own package, plus a container in
+   `tests/tomato.yml` and `tests/features/<name>.feature` exercising every step.
 6. **Changelog.** Add a line under `## [Unreleased]` in `CHANGELOG.md`.
 
 A new resource type is a good thing to discuss in an issue first (there's a
@@ -121,7 +123,7 @@ It fails when:
 - a scenario in the integration suite fails,
 - any step of any resource type is not used by at least one scenario, or
 - Go statement coverage (unit + integration, merged) drops below the floors in
-  `.coverage-min`: `handler` for the resource code in `internal/handler`,
+  `.coverage-min`: `resource` for the resource code in `internal/resource`,
   `total` for the whole module.
 
 When a change raises coverage, raise the floors in `.coverage-min` in the same

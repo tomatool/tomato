@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"github.com/tomatool/tomato/internal/config"
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // stepRegexp compiles a step pattern for one resource name.
-func stepRegexp(def handler.StepDef, resource string) (*regexp.Regexp, error) {
+func stepRegexp(def resource.StepDef, resource string) (*regexp.Regexp, error) {
 	return regexp.Compile(strings.ReplaceAll(def.Pattern, "{resource}", regexp.QuoteMeta(resource)))
 }
 
@@ -19,7 +20,7 @@ func stepRegexp(def handler.StepDef, resource string) (*regexp.Regexp, error) {
 type stepMatch struct {
 	Resource string
 	Type     string
-	Def      handler.StepDef
+	Def      resource.StepDef
 }
 
 type stepMatcherEntry struct {
@@ -43,7 +44,7 @@ func newStepMatcher(resources map[string]config.Resource) *stepMatcher {
 	m := &stepMatcher{}
 	for _, name := range names {
 		typ := resources[name].Type
-		cat, ok := handler.StepCategoryForType(typ)
+		cat, ok := registry.StepCategoryForType(typ)
 		if !ok {
 			continue
 		}

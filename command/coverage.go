@@ -12,7 +12,7 @@ import (
 	gherkin "github.com/cucumber/gherkin/go/v26"
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/tomatool/tomato/internal/config"
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
 	"github.com/urfave/cli/v2"
 )
 
@@ -203,8 +203,8 @@ func pickleExcluded(p *messages.Pickle, excluded map[string]bool) bool {
 func canonicalTypes() map[string]string {
 	byCategory := map[string]string{}
 	canonical := map[string]string{}
-	for _, typ := range handler.ValidResourceTypes() {
-		cat, ok := handler.StepCategoryForType(typ)
+	for _, typ := range registry.ValidResourceTypes() {
+		cat, ok := registry.StepCategoryForType(typ)
 		if !ok {
 			continue
 		}
@@ -213,8 +213,8 @@ func canonicalTypes() map[string]string {
 			byCategory[cat.Name] = typ
 		}
 	}
-	for _, typ := range handler.ValidResourceTypes() {
-		if cat, ok := handler.StepCategoryForType(typ); ok {
+	for _, typ := range registry.ValidResourceTypes() {
+		if cat, ok := registry.StepCategoryForType(typ); ok {
 			canonical[typ] = byCategory[cat.Name]
 		}
 	}
@@ -243,7 +243,7 @@ func computeCoverage(cfg *config.Config, steps []string, allTypes bool) Coverage
 	matched := make([]bool, len(steps))
 	var report CoverageReport
 	for typ := range types {
-		cat, _ := handler.StepCategoryForType(typ)
+		cat, _ := registry.StepCategoryForType(typ)
 		names := resourcesByType[typ]
 		sort.Strings(names)
 		tc := TypeCoverage{Type: typ, Name: cat.Name, Resources: names, Total: len(cat.Steps)}

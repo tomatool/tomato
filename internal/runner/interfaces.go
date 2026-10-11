@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/cucumber/godog"
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
-// HandlerRegistry abstracts handler.Registry for testing
+// HandlerRegistry abstracts registry.Registry for testing
 type HandlerRegistry interface {
 	WaitReady(ctx context.Context) error
 	ResetAll(ctx context.Context) error
 	RegisterSteps(ctx *godog.ScenarioContext)
-	Get(name string) (handler.Handler, error)
+	Get(name string) (resource.Handler, error)
 }
 
 // ContainerExecutor abstracts container execution for testing
