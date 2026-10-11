@@ -16,8 +16,7 @@ compatibility: Needs the tomato CLI (v2) and Docker where the agent runs.
 This skill is for the repository of a service under test. The team that owns the
 service writes `tomato.yml` and feature files there, and this skill says how.
 Changing tomato itself, such as adding a step or a resource, is a different job
-with different rules: the tomato repository has its own skill for that
-(`.claude/skills/tomato-dev`) and
+with different rules, which are in
 [CONTRIBUTING.md](https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md).
 
 tomato builds an isolated environment for an app: its dependencies run as

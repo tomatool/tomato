@@ -75,16 +75,13 @@ dependencies it touches; for a failing run, the run directory or the CI log.
 
 ## Contributing to tomato
 
-The tomato repository carries a separate skill for people changing tomato
-itself, in [`.claude/skills/tomato-dev`](https://github.com/tomatool/tomato/tree/main/.claude/skills/tomato-dev):
-adding or changing steps, resources, presets, options and docs, and handling
-gaps that users report. Claude Code loads it automatically when working in a
-checkout of tomato, and `/tomato-dev` calls it directly; other agents can be
-pointed at the file. It is not part of the user skill and is not installed with
-it.
+Changing tomato itself — adding or changing steps, resources, presets, options
+and docs, and handling gaps that users report — is a different job with
+different rules. They are in
+[CONTRIBUTING.md](https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md).
 
-Its one rule that reaches outside this repository: the user skill is the
-contract. A change to a step's wording, a config key or a CLI flag updates
+The one rule that reaches outside the repository: this skill is the contract.
+A change to a step's wording, a config key or a CLI flag updates
 `skills/tomato` in the same pull request.
 
 ## Extending it

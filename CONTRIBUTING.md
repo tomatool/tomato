@@ -5,9 +5,20 @@ welcome. Before changing anything user-facing, read
 [docs/stability.md](docs/stability.md): it says what counts as a breaking change and
 how to deprecate things.
 
-With Claude Code, the contributor skill in `.claude/skills/tomato-dev` loads
-automatically in this repository. The user-facing skill in `skills/tomato` is
-the contract to keep when you change steps, config or CLI flags.
+The user-facing skill in `skills/tomato` is the contract to keep when you
+change steps, config or CLI flags.
+
+## Ground rules
+
+- **A suite is configuration, not code.** Anything a user would have to script
+  around is something tomato is missing. The fix belongs here — as a step, a
+  resource option or a preset — not in their repository.
+- **Step wording is the product.** Every step carries a `Description` and an
+  `Example`, and `tomato docs` regenerates `docs/resources/` from them. Users
+  read wording from `tomato steps`, never from prose.
+- **The user skill is a contract.** When a change alters something
+  `skills/tomato` states — a step's wording, a config key, the run directory
+  layout, a CLI flag — update it in the same pull request.
 
 ## Where things are
 
@@ -33,6 +44,14 @@ make coverage       # what CI runs: unit + integration coverage, report and gate
 
 Other targets: `make lint`, `make fmt`, `make vet`, `make tidy`.
 Run `make help` for the full list.
+
+### When a change touches timing
+
+If a change touches timing or the infrastructure the suite runs on — a broker,
+a database image, startup order, a reset, anything concurrent — run the
+affected features several times before opening the pull request. One green run
+proves very little about a race, and tomato's whole claim is that a run means
+something.
 
 ## Changing the web UI
 
@@ -135,6 +154,20 @@ It fails when:
 
 When a change raises coverage, raise the floors in `.coverage-min` in the same
 PR, so coverage only goes up. Please run `make test` locally as well.
+
+## Handling a gap report
+
+A gap is a user's suite needing a step, resource or option tomato does not
+have. The user skill tells them to report it rather than work around it, so the
+report is the spec:
+
+1. Reproduce it as a scenario in `tests/features` first — the production
+   behaviour they have to cover, in the wording they expected.
+2. For a new resource type, agree the config and the wording in the issue
+   before writing code.
+3. After the merge, tell the reporter which commit to use:
+   `uses: tomatool/tomato@<sha>` builds tomato from it until a release carries
+   the change.
 
 ## Reporting bugs
 

@@ -23,7 +23,6 @@ is which, and which of them CI actually checks.
 | `tests/` | tomato's integration suite: tomato testing itself against real containers. `tests/tomato.yml` plus `tests/features/*.feature` | `make coverage`; every step of every resource must be used by a scenario |
 | `docs/` | The documentation site, built with `mkdocs.yml`. `docs/resources/` and `docs/index.md` are **generated** — the docs workflow overwrites them with `tomato docs` and `README.md` before deploying, so edit the generator or the README, never those files | regenerated and deployed, not checked for drift |
 | `skills/tomato` | A shipped deliverable: the agent skill for teams testing their service with tomato. Its path is a published install target, so it does not move | not yet; keep it in step with the code by hand |
-| `.claude/skills/tomato-dev` | The agent skill for working on tomato itself, which loads automatically in this repository | not yet |
 | `action.yml`, `install.sh` | The other two shipped deliverables: the GitHub Action and the install script | no — neither is exercised by a workflow |
 | `scripts/` | `report-coverage.sh`, which builds the PR coverage comment and enforces the gates in `.coverage-min` | runs in `make coverage` |
 | `.tomato/`, `bin/`, `coverage/` | Generated at runtime, all git-ignored | — |
