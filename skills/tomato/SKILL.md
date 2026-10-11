@@ -31,7 +31,7 @@ Hard rules. A suite that breaks one is wrong even when it is green.
 
 | Rule | Means | So |
 |---|---|---|
-| Isolated | The suite runs only against what tomato starts: containers, mocks, tomato's STS. | Nothing shared or external: no staging databases, real cloud accounts, third-party APIs or other teams' running services. A host, URL or credential that points outside the run is a bug. |
+| Isolated | The suite runs only against what tomato starts: containers, mocks, tomato's STS. | Nothing shared or external: no staging databases, real cloud accounts, third-party APIs or other teams' running services. A host, URL or credential that points outside the run is a bug. tomato refuses to load a stateful resource with no `container:` unless the suite sets `allow_destructive_reset: true` on it, because it wipes every resource before every scenario. |
 | Config only | A suite is `tomato.yml`, feature files and a CI workflow. | No harness scripts, wrapper commands or custom images. When tomato can't express something, follow the [gap protocol](references/gaps.md); never work around it in the suite. |
 | Fail like production | A scenario must be able to fail the way production fails. | Reproduce the path that matters: auth, runtime flags, broker, schema. A shortcut that can't fail that way proves nothing. |
 | Black box | Drive and assert only through what the application exposes or touches: its API, its database, its topics and queues, its buckets, the services it calls. | Never call its internals or assert on its logs. |
@@ -46,7 +46,7 @@ scenario starts from reset state, and the application's language doesn't matter.
 
 - `tomato steps [--type <resource>] [--filter <word>] [--json]` is the only source of step wording. Never write a step from memory or from prose docs; older examples use wording that no longer exists.
 - `tomato validate` before every run, `tomato run [--scenario <regex>] [--tags <expr>]` to run, `tomato coverage` for which steps the features use.
-- `--keep-alive` and `--no-reset` are for inspecting a run locally. Never commit them to CI.
+- `--keep-alive` is for inspecting a run locally: it leaves the containers up afterwards. Never commit it to CI. Reset cannot be turned off — pair it with `--scenario <regex>` to stop after the one scenario whose state you want to look at.
 - Every run leaves `.tomato/runs/<timestamp>_<id>/` with `tomato.log`, `app.log` and `container-<name>.log`.
 
 ## Process

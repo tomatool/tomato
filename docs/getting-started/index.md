@@ -178,6 +178,19 @@ Run with verbose output:
 tomato run -v
 ```
 
+## Browsing a suite
+
+`tomato ui` opens a local web page that lists the feature files, shows each
+scenario's steps with the resource every step runs against, and runs scenarios
+on demand. It watches the feature files and reloads as they change.
+
+```bash
+tomato ui
+```
+
+It is a development aid, not part of the stable surface: see
+[Stability](../stability.md#not-covered).
+
 ## Testing your application
 
 Tomato can also start your application and connect it to test containers:

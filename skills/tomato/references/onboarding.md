@@ -29,6 +29,9 @@ version: 2
 settings:
   timeout: 5m
   fail_fast: true
+  # containers.reuse: true keeps the containers between runs, which makes a
+  # rerun start in about a second. Local only: it means a container an earlier
+  # run corrupted is no longer thrown away.
 
 containers:
   # One container per dependency, pinned to the version production runs.
