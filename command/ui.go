@@ -133,7 +133,6 @@ type WSMessage struct {
 	Type         string        `json:"type"`
 	Features     []FeatureJSON `json:"features,omitempty"`
 	ChangedFiles []string      `json:"changedFiles,omitempty"`
-	Error        string        `json:"error,omitempty"`
 	// Topology is the app and the resources tomato.yml defines, for the flow
 	// view; nil when tomato.yml can't be read.
 	Topology *TopologyJSON `json:"topology,omitempty"`
@@ -219,11 +218,9 @@ func runWebUI(c *cli.Context) error {
 	mux.Handle("/", http.FileServer(http.FS(assetsFS)))
 
 	// API endpoints
-	mux.HandleFunc("/api/features", server.handleFeatures)
 	mux.HandleFunc("/api/config", server.handleConfig)
 	mux.HandleFunc("/api/run", server.handleRun)
 	mux.HandleFunc("/api/stop", server.handleStop)
-	mux.HandleFunc("/api/runs", server.handleRuns)
 	mux.HandleFunc("/api/runs/", server.handleRunLog)
 	mux.HandleFunc("/ws", server.handleWebSocket)
 
@@ -329,31 +326,18 @@ func (s *UIServer) watchLoop() {
 }
 
 func (s *UIServer) broadcastUpdate(changedFiles []string) {
-	features, err := s.loadFeatures()
+	features := s.loadFeatures()
 
-	msg := WSMessage{Type: "update", Topology: s.loadTopology()}
-	if err != nil {
-		msg.Type = "error"
-		msg.Error = err.Error()
-	} else {
-		msg.Features = features
-		msg.ChangedFiles = changedFiles
+	msg := WSMessage{
+		Type:         "update",
+		Topology:     s.loadTopology(),
+		Features:     features,
+		ChangedFiles: changedFiles,
 	}
 
 	data, _ := json.Marshal(msg)
 
 	s.send(data)
-}
-
-func (s *UIServer) handleFeatures(w http.ResponseWriter, r *http.Request) {
-	features, err := s.loadFeatures()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(features)
 }
 
 // ConfigJSON is what the config screen renders. It carries the raw file for
@@ -682,17 +666,6 @@ func (s *UIServer) handleStop(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "stopped"})
 }
 
-func (s *UIServer) handleRuns(w http.ResponseWriter, r *http.Request) {
-	runs, err := runlog.ListRuns()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(runs)
-}
-
 func (s *UIServer) handleRunLog(w http.ResponseWriter, r *http.Request) {
 	// Parse URL: /api/runs/{runName}/logs/{logName}
 	path := strings.TrimPrefix(r.URL.Path, "/api/runs/")
@@ -802,7 +775,6 @@ func (s *UIServer) runTests(scenarioFilter string) {
 	}()
 
 	const tomatoEventPrefix = "TOMATO_EVENT:"
-	featureResults := make(map[string]string) // feature -> passed/failed
 
 	for line := range lines {
 		cleanLine := stripAnsi(line)
@@ -841,7 +813,6 @@ func (s *UIServer) runTests(scenarioFilter string) {
 						Output:     event.Error,
 						DurationMs: event.DurationMs,
 					})
-					featureResults[event.Feature] = "failed"
 				} else if event.Status == "passed" {
 					s.broadcast(WSMessage{
 						Type:       "scenario_passed",
@@ -849,9 +820,6 @@ func (s *UIServer) runTests(scenarioFilter string) {
 						Status:     "passed",
 						DurationMs: event.DurationMs,
 					})
-					if featureResults[event.Feature] != "failed" {
-						featureResults[event.Feature] = "passed"
-					}
 				}
 
 			case "step_start":
@@ -873,13 +841,6 @@ func (s *UIServer) runTests(scenarioFilter string) {
 					StepIndex:  event.StepIndex,
 					DurationMs: event.DurationMs,
 				})
-
-			case "feature_end":
-				status := featureResults[event.Feature]
-				if status == "" {
-					status = "passed"
-				}
-				s.broadcastRunStatus("feature_finished", event.Feature, status, "")
 
 			case "summary":
 				// Summary is handled by run_finished
@@ -1103,7 +1064,7 @@ func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// Send initial data
-	features, _ := s.loadFeatures()
+	features := s.loadFeatures()
 	runs, _ := runlog.ListRuns()
 	msg := WSMessage{Type: "init", Features: features, Runs: runs, Topology: s.loadTopology()}
 	data, _ := json.Marshal(msg)
@@ -1129,7 +1090,11 @@ func (s *UIServer) loadTopology() *TopologyJSON {
 	return &t
 }
 
-func (s *UIServer) loadFeatures() ([]FeatureJSON, error) {
+// loadFeatures returns every feature it can parse. It has no error return on
+// purpose: a path it cannot walk or a file it cannot parse is skipped, so a
+// feature being edited into an invalid state drops out of the tree instead of
+// taking the whole tree down.
+func (s *UIServer) loadFeatures() []FeatureJSON {
 	var features []FeatureJSON
 
 	// Without a readable tomato.yml the steps are shown unannotated.
@@ -1155,7 +1120,7 @@ func (s *UIServer) loadFeatures() ([]FeatureJSON, error) {
 		}
 	}
 
-	return features, nil
+	return features
 }
 
 func findFeatureFiles(root string) ([]string, error) {

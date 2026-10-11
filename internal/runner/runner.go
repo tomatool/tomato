@@ -36,16 +36,6 @@ type Runner struct {
 	godogTags     string
 }
 
-// New creates a new test runner
-func New(cfg *config.Config, cm *container.Manager, opts Options) (*Runner, error) {
-	registry, err := registry.New(cfg.Resources, cm)
-	if err != nil {
-		return nil, fmt.Errorf("initializing handlers: %w", err)
-	}
-
-	return newRunner(cfg, cm, registry, opts)
-}
-
 // NewWithRegistry creates a runner over a registry the caller already built,
 // for when some resources had to be initialized before the app started.
 func NewWithRegistry(cfg *config.Config, cm *container.Manager, registry *registry.Registry, opts Options) (*Runner, error) {
