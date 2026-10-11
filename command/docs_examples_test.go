@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/registry"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -178,4 +180,49 @@ func TestDocsNavMatchesPages(t *testing.T) {
 			t.Errorf("docs/%s is not in the mkdocs nav, so it is invisible on the site", page)
 		}
 	}
+}
+
+var yamlFence = regexp.MustCompile("(?s)```ya?ml\n(.*?)```")
+
+// A `tomato.yml` printed in the documentation has to be one tomato would
+// accept. Five pages — Getting Started among them — showed
+// `settings.reset.level` for months after it was removed, because the loader
+// ignores unknown keys and nothing read the examples back.
+//
+// Only blocks that declare `version:` or `settings:` at the left margin are
+// checked: those are whole configs. Fragments showing one resource are not,
+// because they are not meant to stand alone.
+func TestDocsConfigExamplesAreValid(t *testing.T) {
+	var checked int
+	err := filepath.Walk("../docs", func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".md") {
+			return err
+		}
+		body, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		for _, m := range yamlFence.FindAllStringSubmatch(string(body), -1) {
+			block := m[1]
+			if !strings.Contains(block, "\nversion:") && !strings.HasPrefix(block, "version:") &&
+				!strings.Contains(block, "\nsettings:") && !strings.HasPrefix(block, "settings:") {
+				continue
+			}
+			checked++
+			dec := yaml.NewDecoder(strings.NewReader(block))
+			dec.KnownFields(true)
+			var into config.Config
+			if err := dec.Decode(&into); err != nil {
+				t.Errorf("%s: this tomato.yml example is not one tomato accepts:\n    %v", path, err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walking docs: %v", err)
+	}
+	if checked == 0 {
+		t.Fatal("no tomato.yml examples found in docs/; this test would pass vacuously")
+	}
+	t.Logf("checked %d config examples", checked)
 }

@@ -6,63 +6,35 @@ repo_name: tomatool/tomato
 
 theme:
   name: material
+  favicon: assets/favicon.svg
   palette:
-    - media: "(prefers-color-scheme)"
-      toggle:
-        icon: material/brightness-auto
-        name: Switch to light mode
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: black
-      accent: deep orange
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
+    # Dark is the default, as it is in `tomato ui`.
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: black
-      accent: deep orange
       toggle:
-        icon: material/brightness-4
-        name: Switch to system preference
+        icon: material/circle
+        name: Switch to the light theme
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/circle-outline
+        name: Switch to the dark theme
   font:
-    text: Inter
-    code: JetBrains Mono
+    text: Geist
+    code: Geist Mono
   features:
-    - navigation.tabs
     - navigation.sections
-    - navigation.expand
     - navigation.top
     - navigation.instant
     - navigation.tracking
-    - search.suggest
-    - search.highlight
     - content.code.copy
     - content.code.annotate
-  icon:
-    repo: fontawesome/brands/github
+    - search.suggest
+    - search.highlight
+    - toc.follow
 
-markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
-  - admonition
-  - pymdownx.details
-  - attr_list
-  - md_in_html
-  - def_list
-  - toc:
-      permalink: "#"
-      toc_depth: 3
+extra_css:
+  - stylesheets/tomato.css
 
 nav:
   - Home: index.md
@@ -100,6 +72,23 @@ nav:
     - Architecture: developer-guide/architecture.md
     - Adding a Step or Resource: developer-guide/adding-a-resource.md
   - Stability: stability.md
+
+markdown_extensions:
+  # Without these, `!!! tip` renders as literal text — which it did on every
+  # generated resource page — and code blocks get no highlighting at all.
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 
 plugins:
   - search
