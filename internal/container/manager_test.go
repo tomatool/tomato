@@ -25,10 +25,12 @@ type mockContainer struct {
 	execErr    error
 }
 
-func (m *mockContainer) GetContainerID() string { return "mock-id" }
-func (m *mockContainer) Start(ctx context.Context) error { return nil }
+func (m *mockContainer) GetContainerID() string                                 { return "mock-id" }
+func (m *mockContainer) Start(ctx context.Context) error                        { return nil }
 func (m *mockContainer) Stop(ctx context.Context, timeout *time.Duration) error { return nil }
-func (m *mockContainer) Terminate(ctx context.Context, opts ...testcontainers.TerminateOption) error { return nil }
+func (m *mockContainer) Terminate(ctx context.Context, opts ...testcontainers.TerminateOption) error {
+	return nil
+}
 func (m *mockContainer) Host(ctx context.Context) (string, error) {
 	return m.hostVal, m.hostErr
 }
@@ -46,7 +48,7 @@ func (m *mockContainer) Ports(ctx context.Context) (network.PortMap, error) {
 	return m.ports, m.portsErr
 }
 func (m *mockContainer) SessionID() string { return "session" }
-func (m *mockContainer) IsRunning() bool { return true }
+func (m *mockContainer) IsRunning() bool   { return true }
 func (m *mockContainer) Exec(ctx context.Context, cmd []string, options ...tcexec.ProcessOption) (int, io.Reader, error) {
 	return m.execCode, m.execReader, m.execErr
 }
@@ -57,22 +59,40 @@ func (m *mockContainer) Logs(ctx context.Context) (io.ReadCloser, error) {
 	return io.NopCloser(m.execReader), nil
 }
 func (m *mockContainer) FollowOutput(consumer testcontainers.LogConsumer) {}
-func (m *mockContainer) StartLogProducer(ctx context.Context, opts ...testcontainers.LogProductionOption) error { return nil }
-func (m *mockContainer) StopLogProducer() error { return nil }
-func (m *mockContainer) Name(ctx context.Context) (string, error) { return "mock", nil }
+func (m *mockContainer) StartLogProducer(ctx context.Context, opts ...testcontainers.LogProductionOption) error {
+	return nil
+}
+func (m *mockContainer) StopLogProducer() error                              { return nil }
+func (m *mockContainer) Name(ctx context.Context) (string, error)            { return "mock", nil }
 func (m *mockContainer) State(ctx context.Context) (*container.State, error) { return nil, nil }
-func (m *mockContainer) Networks(ctx context.Context) ([]string, error) { return nil, nil }
-func (m *mockContainer) NetworkAliases(ctx context.Context) (map[string][]string, error) { return nil, nil }
+func (m *mockContainer) Networks(ctx context.Context) ([]string, error)      { return nil, nil }
+func (m *mockContainer) NetworkAliases(ctx context.Context) (map[string][]string, error) {
+	return nil, nil
+}
 func (m *mockContainer) Endpoint(ctx context.Context, proto string) (string, error) { return "", nil }
-func (m *mockContainer) PortEndpoint(ctx context.Context, port string, proto string) (string, error) { return "", nil }
-func (m *mockContainer) CopyToContainer(ctx context.Context, fileContent []byte, containerFilePath string, fileMode int64) error { return nil }
-func (m *mockContainer) CopyDirToContainer(ctx context.Context, hostDirPath string, containerParentPath string, fileMode int64) error { return nil }
-func (m *mockContainer) CopyFileToContainer(ctx context.Context, hostFilePath string, containerFilePath string, fileMode int64) error { return nil }
-func (m *mockContainer) CopyFileFromContainer(ctx context.Context, filePath string) (io.ReadCloser, error) { return nil, nil }
+func (m *mockContainer) PortEndpoint(ctx context.Context, port string, proto string) (string, error) {
+	return "", nil
+}
+func (m *mockContainer) CopyToContainer(ctx context.Context, fileContent []byte, containerFilePath string, fileMode int64) error {
+	return nil
+}
+func (m *mockContainer) CopyDirToContainer(ctx context.Context, hostDirPath string, containerParentPath string, fileMode int64) error {
+	return nil
+}
+func (m *mockContainer) CopyFileToContainer(ctx context.Context, hostFilePath string, containerFilePath string, fileMode int64) error {
+	return nil
+}
+func (m *mockContainer) CopyFileFromContainer(ctx context.Context, filePath string) (io.ReadCloser, error) {
+	return nil, nil
+}
 func (m *mockContainer) GetLogProductionErrorChannel() <-chan error { return nil }
-func (m *mockContainer) Inspect(ctx context.Context) (*container.InspectResponse, error) { return nil, nil }
+func (m *mockContainer) Inspect(ctx context.Context) (*container.InspectResponse, error) {
+	return nil, nil
+}
 func (m *mockContainer) ContainerIP(ctx context.Context) (string, error) { return "172.17.0.2", nil }
-func (m *mockContainer) ContainerIPs(ctx context.Context) ([]string, error) { return []string{"172.17.0.2"}, nil }
+func (m *mockContainer) ContainerIPs(ctx context.Context) ([]string, error) {
+	return []string{"172.17.0.2"}, nil
+}
 
 // Tests for NewManager and calculateStartOrder
 
