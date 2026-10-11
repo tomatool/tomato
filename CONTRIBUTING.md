@@ -9,6 +9,13 @@ With Claude Code, the contributor skill in `.claude/skills/tomato-dev` loads
 automatically in this repository. The user-facing skill in `skills/tomato` is
 the contract to keep when you change steps, config or CLI flags.
 
+## Where things are
+
+[Architecture](docs/developer-guide/architecture.md) opens with a table of
+every top-level directory: which part is the Go program, which parts ship
+besides the binary, which files are generated rather than edited, and which
+of them CI actually checks. Worth two minutes before your first change.
+
 ## Development setup
 
 You need Go (the version in `go.mod`) and Docker, since tomato starts
