@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>tomato ui</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script>
+// Apply the remembered theme before the first paint, so choosing light does
+// not flash dark while the bundle loads. The markup defaults to dark.
+try {
+  var t = localStorage.getItem('tomato-ui.theme')
+  if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+} catch (e) { /* private window: dark it is */ }
+</script>
 
 </head>
 <body>

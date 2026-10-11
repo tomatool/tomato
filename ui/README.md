@@ -14,7 +14,8 @@ ui/
     ├── styles.css      the "Modernist" design system: tokens + components
     ├── components/     TopBar, Tree, ScenarioCard, StepRow, ConfigView,
     │                   Flow, Topology, Runs, Transport, Peek, Console
-    ├── hooks/          useSocket (the /ws feed), useLocalNumber (remembered sizes)
+    ├── hooks/          useSocket (the /ws feed), useLocalNumber / useLocalEnum
+    │                   (remembered pane sizes and theme)
     ├── lib/            step tokenising, ANSI → nodes, flow model, formatting, icons
     └── fonts/          Geist and Geist Mono, vendored so the UI works offline
 ```
@@ -62,6 +63,13 @@ anything under `ui/`.**
 ## Design system
 
 The CSS comes from a claude.ai/design project called *Modernist*. Its rules:
-dark only, state in `data-*`/`aria-*` attributes with classes static, every
-status shape-coded as well as coloured, red reserved for failure, and anything
-read out of a file set in mono. Changes to the look belong there first.
+state in `data-*`/`aria-*` attributes with classes static, every status
+shape-coded as well as coloured, red reserved for failure, and anything read
+out of a file set in mono. Changes to the look belong there first.
+
+Modernist is written as dark only. The UI now also ships a light theme, which
+is a deliberate departure to be folded back into the design system. Dark stays
+the one generated from it and the one to edit first: `:root` in `styles.css`
+holds the dark palette, and `[data-theme="light"]` redefines colour and
+nothing else. The button beside the wordmark flips between them and remembers
+the choice per browser.

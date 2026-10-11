@@ -25,3 +25,22 @@ export function useLocalNumber(key, fallback) {
 
   return [value, set]
 }
+
+// useLocalEnum remembers one of a fixed set of strings. Anything else in
+// storage — an old value, or something hand-edited — falls back, so a stale
+// key cannot put the UI in a state it has no rendering for.
+export function useLocalEnum(key, allowed, fallback) {
+  const [value, setValue] = useState(() => {
+    const raw = read(key, '')
+    return allowed.includes(raw) ? raw : fallback
+  })
+
+  const set = useCallback((next) => {
+    if (!allowed.includes(next)) return
+    setValue(next)
+    try { localStorage.setItem(`tomato-ui.${key}`, next) } catch { /* not fatal */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  return [value, set]
+}
