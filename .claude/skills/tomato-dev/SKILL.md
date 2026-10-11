@@ -41,7 +41,7 @@ fixed ports, 8080 and 9090 among them; stop anything else using them first.
 
 | Change | How |
 |---|---|
-| A step on an existing resource | `StepDef` in `internal/handler/<resource>.go`, a scenario in `tests/features/<resource>.feature`, then `go build -o tomato . && ./tomato docs`. [Details](../../../CONTRIBUTING.md#adding-a-step-to-an-existing-resource) |
+| A step on an existing resource | `StepDef` in `internal/resource/<name>/`, a scenario in `tests/features/<resource>.feature`, then `go build -o tomato . && ./tomato docs`. [Details](../../../CONTRIBUTING.md#adding-a-step-to-an-existing-resource) |
 | A new resource type | Handler, steps, registry, docs generator, config page, nav, tests, changelog. Agree the config and wording in an issue first. [Details](../../../CONTRIBUTING.md#adding-a-new-resource-type) |
 | Changing or removing a step or option | Deprecate, never replace in place. [Details](../../../CONTRIBUTING.md#changing-or-removing-steps-and-options) |
 

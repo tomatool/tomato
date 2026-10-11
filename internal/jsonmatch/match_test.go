@@ -657,11 +657,11 @@ func TestCompareJSON_WithMatchers(t *testing.T) {
 
 func TestCompareJSON_ErrorMessages(t *testing.T) {
 	tests := []struct {
-		name         string
-		expected     interface{}
-		actual       interface{}
-		partial      bool
-		errContains  string
+		name        string
+		expected    interface{}
+		actual      interface{}
+		partial     bool
+		errContains string
 	}{
 		{
 			"missing key error includes path",

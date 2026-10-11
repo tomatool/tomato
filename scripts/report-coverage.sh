@@ -8,9 +8,9 @@
 #
 # Gates:
 #   - every resource type's step coverage must be 100%
-#   - Go statement coverage of internal/handler (the resources) must be at
-#     least the value in .coverage-min (handler=...), and the whole module at
-#     least total=...
+#   - Go statement coverage of internal/resource (the contract and every
+#     resource) must be at least the value in .coverage-min (resource=...),
+#     and the whole module at least total=...
 #   - the integration suite must pass
 #
 # Writes coverage/report.md and exits non-zero when a gate fails.
@@ -21,7 +21,7 @@ profile=coverage/coverage.out
 steps=coverage/steps.json
 module=github.com/tomatool/tomato
 
-min_handler=$(sed -n 's/^handler=//p' .coverage-min 2>/dev/null || echo 0)
+min_resource=$(sed -n 's/^resource=//p' .coverage-min 2>/dev/null || echo 0)
 min_total=$(sed -n 's/^total=//p' .coverage-min 2>/dev/null || echo 0)
 
 # Statement coverage per file: coverage.out lines are
@@ -46,9 +46,9 @@ sum_prefix() {
 }
 
 read -r total_c total_t < <(sum_prefix "$module/")
-read -r handler_c handler_t < <(sum_prefix "$module/internal/handler/")
+read -r resource_c resource_t < <(sum_prefix "$module/internal/resource/")
 total_pct=$(pct "$total_c" "$total_t")
-handler_pct=$(pct "$handler_c" "$handler_t")
+resource_pct=$(pct "$resource_c" "$resource_t")
 
 step_total=$(jq '.total' "$steps")
 step_covered=$(jq '.covered' "$steps")
@@ -71,7 +71,7 @@ ge() { awk -v a="$1" -v b="$2" 'BEGIN { print (a + 0 >= b + 0) ? 1 : 0 }'; }
   echo "|---|---|---|"
   gate "Integration suite passes" "$([ "$integration_exit" = 0 ] && echo 1 || echo 0)" "exit code $integration_exit"
   gate "Every resource step used by a scenario" "$([ -z "$steps_below" ] && echo 1 || echo 0)" "$step_covered / $step_total steps ($step_pct%)${steps_below:+ — below 100%: $steps_below}"
-  gate "Resource code coverage (\`internal/handler\`) ≥ $min_handler%" "$(ge "$handler_pct" "$min_handler")" "$handler_pct%"
+  gate "Resource code coverage (\`internal/resource\`) ≥ $min_resource%" "$(ge "$resource_pct" "$min_resource")" "$resource_pct%"
   gate "Total code coverage ≥ $min_total%" "$(ge "$total_pct" "$min_total")" "$total_pct%"
   echo
   echo "Code coverage is unit tests and the integration suite (\`tests/tomato.yml\`) merged."
@@ -93,11 +93,11 @@ ge() { awk -v a="$1" -v b="$2" 'BEGIN { print (a + 0 >= b + 0) ? 1 : 0 }'; }
     echo "</details>"
   fi
   echo
-  echo "<details><summary>Code coverage by resource file (<code>internal/handler</code>)</summary>"
+  echo "<details><summary>Code coverage by resource file (<code>internal/resource</code>)</summary>"
   echo
   echo "| File | Statements | Coverage |"
   echo "|---|---|---|"
-  echo "$files" | awk -v p="$module/internal/handler/" 'index($1, p) == 1 && $1 !~ /_test\.go$/ {
+  echo "$files" | awk -v p="$module/internal/resource/" 'index($1, p) == 1 && $1 !~ /_test\.go$/ {
       f = substr($1, length(p) + 1); printf "| `%s` | %d / %d | %.1f%% |\n", f, $2, $3, ($3 ? 100 * $2 / $3 : 100) }'
   echo
   echo "</details>"

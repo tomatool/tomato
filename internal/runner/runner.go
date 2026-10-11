@@ -13,7 +13,8 @@ import (
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
 	_ "github.com/tomatool/tomato/internal/formatter" // Register tomato formatter
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // Options configures runner behavior
@@ -34,7 +35,7 @@ type Runner struct {
 
 // New creates a new test runner
 func New(cfg *config.Config, cm *container.Manager, opts Options) (*Runner, error) {
-	registry, err := handler.NewRegistry(cfg.Resources, cm)
+	registry, err := registry.New(cfg.Resources, cm)
 	if err != nil {
 		return nil, fmt.Errorf("initializing handlers: %w", err)
 	}
@@ -44,7 +45,7 @@ func New(cfg *config.Config, cm *container.Manager, opts Options) (*Runner, erro
 
 // NewWithRegistry creates a runner over a registry the caller already built,
 // for when some resources had to be initialized before the app started.
-func NewWithRegistry(cfg *config.Config, cm *container.Manager, registry *handler.Registry, opts Options) (*Runner, error) {
+func NewWithRegistry(cfg *config.Config, cm *container.Manager, registry *registry.Registry, opts Options) (*Runner, error) {
 	return newRunner(cfg, cm, registry, opts)
 }
 
@@ -143,7 +144,7 @@ func (r *Runner) setupScenarioHooks(ctx ScenarioContext) {
 		if err := r.handlers.ResetAll(ctx); err != nil {
 			return ctx, fmt.Errorf("reset failed: %w", err)
 		}
-		handler.ResetGlobalVariables()
+		resource.ResetGlobalVariables()
 
 		if err := r.runHooks(ctx, r.config.Hooks.BeforeScenario); err != nil {
 			return ctx, fmt.Errorf("before_scenario hooks failed: %w", err)
@@ -176,7 +177,7 @@ func (r *Runner) executeHook(ctx context.Context, hook config.Hook) error {
 		if err != nil {
 			return fmt.Errorf("handler %s not found: %w", hook.Resource, err)
 		}
-		if sqlHandler, ok := h.(handler.SQLExecutor); ok {
+		if sqlHandler, ok := h.(resource.SQLExecutor); ok {
 			if _, err := sqlHandler.ExecSQL(ctx, hook.SQL); err != nil {
 				return fmt.Errorf("executing SQL: %w", err)
 			}
@@ -189,7 +190,7 @@ func (r *Runner) executeHook(ctx context.Context, hook config.Hook) error {
 		if err != nil {
 			return fmt.Errorf("handler %s not found: %w", hook.Resource, err)
 		}
-		if sqlHandler, ok := h.(handler.SQLExecutor); ok {
+		if sqlHandler, ok := h.(resource.SQLExecutor); ok {
 			if err := sqlHandler.ExecSQLFile(ctx, hook.SQLFile); err != nil {
 				return fmt.Errorf("executing SQL file: %w", err)
 			}

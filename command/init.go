@@ -71,14 +71,14 @@ configuring how to run your application for testing.`,
 	Action: runInit,
 }
 
-// Resource represents a selectable dependency
-type resource struct {
+// dependency is one selectable entry in the `tomato init` prompt.
+type dependency struct {
 	name        string
 	description string
 	key         string
 }
 
-var availableResources = []resource{
+var availableResources = []dependency{
 	{"PostgreSQL", "SQL database for relational data", "postgresql"},
 	{"Redis", "In-memory cache and key-value store", "redis"},
 	{"Kafka", "Distributed event streaming platform", "kafka"},

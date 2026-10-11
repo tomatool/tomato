@@ -1,0 +1,516 @@
+// Package postgres provides tomato's `postgres` resource: seeding tables, running SQL and
+// asserting on rows.
+package postgres
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"os"
+	"slices"
+	"strings"
+	"time"
+
+	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
+	_ "github.com/lib/pq"
+	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/resource"
+)
+
+type Postgres struct {
+	name      string
+	config    config.Resource
+	container *container.Manager
+	db        *sql.DB
+}
+
+func New(name string, cfg config.Resource, cm *container.Manager) (*Postgres, error) {
+	return &Postgres{name: name, config: cfg, container: cm}, nil
+}
+
+func (r *Postgres) Name() string { return r.name }
+
+func (r *Postgres) Init(ctx context.Context) error {
+	host, err := r.container.GetHost(ctx, r.config.Container)
+	if err != nil {
+		return fmt.Errorf("getting container host: %w", err)
+	}
+	port, err := r.container.GetPort(ctx, r.config.Container, "5432/tcp")
+	if err != nil {
+		return fmt.Errorf("getting container port: %w", err)
+	}
+	dbName := r.config.Database
+	if dbName == "" {
+		dbName = "postgres"
+	}
+	user, password := "postgres", "postgres"
+	if u, ok := r.config.Options["user"].(string); ok {
+		user = u
+	}
+	if p, ok := r.config.Options["password"].(string); ok {
+		password = p
+	}
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbName)
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return fmt.Errorf("connecting to postgres: %w", err)
+	}
+	r.db = db
+	return nil
+}
+
+func (r *Postgres) Ready(ctx context.Context) error { return r.db.PingContext(ctx) }
+
+func (r *Postgres) Reset(ctx context.Context) error {
+	tables, err := r.getTablesToReset(ctx)
+	if err != nil {
+		return err
+	}
+	if len(tables) == 0 {
+		return nil
+	}
+	_, err = r.db.ExecContext(ctx, fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tables, ", ")))
+	return err
+}
+
+func (r *Postgres) getTablesToReset(ctx context.Context) ([]string, error) {
+	// If specific tables are configured, use those
+	if configuredTables := r.getConfiguredTables(); len(configuredTables) > 0 {
+		return configuredTables, nil
+	}
+
+	// Otherwise, get all tables from public schema
+	rows, err := r.db.QueryContext(ctx, "SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+	if err != nil {
+		return nil, fmt.Errorf("listing tables: %w", err)
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var table string
+		if err := rows.Scan(&table); err != nil {
+			return nil, err
+		}
+		if !r.isExcluded(table) {
+			tables = append(tables, table)
+		}
+	}
+	return tables, nil
+}
+
+func (r *Postgres) getConfiguredTables() []string {
+	if tables, ok := r.config.Options["tables"].([]interface{}); ok {
+		result := make([]string, 0, len(tables))
+		for _, t := range tables {
+			if s, ok := t.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+// defaultResetExclusions are the bookkeeping tables of common migration tools.
+// Truncating them makes the tool think no migration has run, so they are never
+// reset, whatever the user adds to `exclude`.
+var defaultResetExclusions = []string{
+	"schema_migrations",     // golang-migrate, Rails, sqlx
+	"goose_db_version",      // goose
+	"flyway_schema_history", // Flyway
+	"databasechangelog",     // Liquibase
+	"databasechangeloglock", // Liquibase
+}
+
+func (r *Postgres) isExcluded(table string) bool {
+	excludeList := slices.Clone(defaultResetExclusions)
+	if exclude, ok := r.config.Options["exclude"].([]interface{}); ok {
+		for _, e := range exclude {
+			if s, ok := e.(string); ok {
+				excludeList = append(excludeList, s)
+			}
+		}
+	}
+	for _, e := range excludeList {
+		if e == table {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Postgres) RegisterSteps(ctx *godog.ScenarioContext) {
+	resource.RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
+
+// Steps returns the structured step definitions for the Postgres handler
+func (r *Postgres) Steps() resource.StepCategory {
+	return resource.StepCategory{
+		Name:        "PostgreSQL",
+		Description: "Steps for interacting with PostgreSQL databases",
+		Steps: []resource.StepDef{
+			// Data Setup
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" table "([^"]*)" has values:$`,
+				Description: "Insert rows from table",
+				Example:     `"db" table "users" has values:`,
+				Handler:     r.setTableValues,
+			},
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" clears table "([^"]*)"$`,
+				Description: "Truncate a table (removes all rows)",
+				Example:     `"db" clears table "users"`,
+				Handler:     r.clearTable,
+			},
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" clears tables:$`,
+				Description: "Truncate multiple tables from list",
+				Example:     `"db" clears tables:`,
+				Handler:     r.clearTables,
+			},
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" executes:$`,
+				Description: "Execute raw SQL",
+				Example:     `"db" executes:`,
+				Handler:     r.executeSQL,
+			},
+			{
+				Group:       "Data Setup",
+				Pattern:     `^"{resource}" executes file "([^"]*)"$`,
+				Description: "Execute SQL from file",
+				Example:     `"db" executes file "fixtures/seed.sql"`,
+				Handler:     r.executeSQLFile,
+			},
+
+			// Assertions
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" table "([^"]*)" contains:$`,
+				Description: "Assert table contains rows",
+				Example:     `"db" table "users" contains:`,
+				Handler:     r.tableShouldContain,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" table "([^"]*)" is empty$`,
+				Description: "Assert table is empty",
+				Example:     `"db" table "users" is empty`,
+				Handler:     r.tableShouldBeEmpty,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" table "([^"]*)" has "(\d+)" rows$`,
+				Description: "Assert row count",
+				Example:     `"db" table "users" has "5" rows`,
+				Handler:     r.tableShouldHaveRows,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" query "([^"]*)" returns:$`,
+				Description: "Assert exact match of query result rows",
+				Example:     `"db" query "SELECT id, name FROM users" returns:`,
+				Handler:     r.queryReturns,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" query "([^"]*)" returns within "([^"]*)":$`,
+				Description: "Waits until the query result matches the rows exactly, for state the app writes asynchronously",
+				Example:     `"db" query "SELECT status FROM orders" returns within "10s":`,
+				Handler:     r.queryReturnsWithin,
+			},
+			{
+				Group:       "Assertions",
+				Pattern:     `^"{resource}" query result of "([^"]*)" contains:$`,
+				Description: "Assert query result contains expected rows (superset)",
+				Example:     `"db" query result of "SELECT id, name FROM users" contains:`,
+				Handler:     r.queryResultContains,
+			},
+		},
+	}
+}
+
+func (r *Postgres) clearTable(table string) error {
+	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table))
+	return err
+}
+
+func (r *Postgres) clearTables(data *godog.Table) error {
+	var tables []string
+	for _, row := range data.Rows {
+		if len(row.Cells) > 0 {
+			tables = append(tables, row.Cells[0].Value)
+		}
+	}
+	if len(tables) == 0 {
+		return nil
+	}
+	_, err := r.db.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", strings.Join(tables, ", ")))
+	return err
+}
+
+func (r *Postgres) setTableValues(table string, data *godog.Table) error {
+	if len(data.Rows) < 2 {
+		return fmt.Errorf("table must have headers and at least one data row")
+	}
+	headers := data.Rows[0].Cells
+	columns := make([]string, len(headers))
+	for i, cell := range headers {
+		columns[i] = cell.Value
+	}
+	for _, row := range data.Rows[1:] {
+		values := make([]string, len(row.Cells))
+		for i, cell := range row.Cells {
+			values[i] = fmt.Sprintf("'%s'", resource.ReplaceVariables(cell.Value))
+		}
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", table, strings.Join(columns, ", "), strings.Join(values, ", "))
+		if _, err := r.db.Exec(query); err != nil {
+			return fmt.Errorf("inserting row: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *Postgres) tableShouldContain(table string, expected *godog.Table) error {
+	if len(expected.Rows) < 2 {
+		return fmt.Errorf("expected table must have headers and at least one data row")
+	}
+	headers := expected.Rows[0].Cells
+	columns := make([]string, len(headers))
+	for i, cell := range headers {
+		columns[i] = cell.Value
+	}
+	query := fmt.Sprintf("SELECT %s FROM %s", strings.Join(columns, ", "), table)
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return fmt.Errorf("querying table: %w", err)
+	}
+	defer rows.Close()
+	var actual [][]string
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return fmt.Errorf("scanning row: %w", err)
+		}
+		row := make([]string, len(columns))
+		for i, v := range values {
+			row[i] = formatDBValue(v)
+		}
+		actual = append(actual, row)
+	}
+	for i, expectedRow := range expected.Rows[1:] {
+		if i >= len(actual) {
+			return fmt.Errorf("missing row %d", i+1)
+		}
+		for j, cell := range expectedRow.Cells {
+			expected := resource.ReplaceVariables(cell.Value)
+			if actual[i][j] != expected {
+				return fmt.Errorf("row %d, column %s: expected %q, got %q", i+1, columns[j], expected, actual[i][j])
+			}
+		}
+	}
+	return nil
+}
+
+func (r *Postgres) tableShouldBeEmpty(table string) error {
+	var count int
+	if err := r.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count); err != nil {
+		return err
+	}
+	if count != 0 {
+		return fmt.Errorf("table %s has %d rows, expected 0", table, count)
+	}
+	return nil
+}
+
+func (r *Postgres) tableShouldHaveRows(table string, expected int) error {
+	var count int
+	if err := r.db.QueryRow(fmt.Sprintf("SELECT COUNT(*) FROM %s", table)).Scan(&count); err != nil {
+		return err
+	}
+	if count != expected {
+		return fmt.Errorf("table %s has %d rows, expected %d", table, count, expected)
+	}
+	return nil
+}
+
+func (r *Postgres) executeSQL(query *godog.DocString) error {
+	_, err := r.db.Exec(resource.ReplaceVariables(query.Content))
+	return err
+}
+
+func (r *Postgres) executeSQLFile(path string) error {
+	return r.ExecSQLFile(context.Background(), path)
+}
+
+func (r *Postgres) ExecSQL(ctx context.Context, query string) (int64, error) {
+	result, err := r.db.ExecContext(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+func (r *Postgres) ExecSQLFile(ctx context.Context, path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("reading SQL file: %w", err)
+	}
+	_, err = r.db.ExecContext(ctx, string(content))
+	return err
+}
+
+// queryReturnsWithin retries queryReturns until it passes or the timeout ends,
+// and then reports the last mismatch.
+func (r *Postgres) queryReturnsWithin(query, timeout string, expected *godog.Table) error {
+	d, err := time.ParseDuration(timeout)
+	if err != nil {
+		return fmt.Errorf("invalid timeout: %w", err)
+	}
+	deadline := time.Now().Add(d)
+	for {
+		err := r.queryReturns(query, expected)
+		if err == nil || !time.Now().Before(deadline) {
+			if err != nil {
+				return fmt.Errorf("not within %s: %w", timeout, err)
+			}
+			return nil
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+func (r *Postgres) queryReturns(query string, expected *godog.Table) error {
+	if len(expected.Rows) < 2 {
+		return fmt.Errorf("expected table must have headers and at least one data row")
+	}
+	actual, columns, err := r.executeQuery(resource.ReplaceVariables(query), expected.Rows[0])
+	if err != nil {
+		return err
+	}
+	expectedRows := expected.Rows[1:]
+	if len(actual) != len(expectedRows) {
+		return fmt.Errorf("expected %d rows, got %d", len(expectedRows), len(actual))
+	}
+	return r.compareRows(actual, expectedRows, columns)
+}
+
+func (r *Postgres) queryResultContains(query string, expected *godog.Table) error {
+	if len(expected.Rows) < 2 {
+		return fmt.Errorf("expected table must have headers and at least one data row")
+	}
+	actual, columns, err := r.executeQuery(resource.ReplaceVariables(query), expected.Rows[0])
+	if err != nil {
+		return err
+	}
+	for i, expectedRow := range expected.Rows[1:] {
+		found := false
+		for _, actualRow := range actual {
+			if r.rowMatches(actualRow, expectedRow, columns) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			vals := make([]string, len(expectedRow.Cells))
+			for j, cell := range expectedRow.Cells {
+				vals[j] = fmt.Sprintf("%s=%q", columns[j], resource.ReplaceVariables(cell.Value))
+			}
+			return fmt.Errorf("expected row %d not found in results: %s", i+1, strings.Join(vals, ", "))
+		}
+	}
+	return nil
+}
+
+func (r *Postgres) executeQuery(query string, headerRow *messages.PickleTableRow) ([][]string, []string, error) {
+	columns := make([]string, len(headerRow.Cells))
+	for i, cell := range headerRow.Cells {
+		columns[i] = cell.Value
+	}
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("executing query: %w", err)
+	}
+	defer rows.Close()
+	var actual [][]string
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return nil, nil, fmt.Errorf("scanning row: %w", err)
+		}
+		row := make([]string, len(columns))
+		for i, v := range values {
+			row[i] = formatDBValue(v)
+		}
+		actual = append(actual, row)
+	}
+	return actual, columns, nil
+}
+
+func (r *Postgres) compareRows(actual [][]string, expectedRows []*messages.PickleTableRow, columns []string) error {
+	for i, expectedRow := range expectedRows {
+		if i >= len(actual) {
+			return fmt.Errorf("missing row %d", i+1)
+		}
+		for j, cell := range expectedRow.Cells {
+			expected := resource.ReplaceVariables(cell.Value)
+			if actual[i][j] != expected {
+				return fmt.Errorf("row %d, column %s: expected %q, got %q", i+1, columns[j], expected, actual[i][j])
+			}
+		}
+	}
+	return nil
+}
+
+func (r *Postgres) rowMatches(actualRow []string, expectedRow *messages.PickleTableRow, columns []string) bool {
+	if len(actualRow) != len(expectedRow.Cells) {
+		return false
+	}
+	for j, cell := range expectedRow.Cells {
+		if actualRow[j] != resource.ReplaceVariables(cell.Value) {
+			return false
+		}
+	}
+	return true
+}
+
+func (r *Postgres) Cleanup(ctx context.Context) error {
+	if r.db != nil {
+		return r.db.Close()
+	}
+	return nil
+}
+
+// formatDBValue converts a database value to its string representation.
+// This handles special types like []byte (used for UUIDs) that need
+// to be converted to strings rather than byte array representations.
+func formatDBValue(v interface{}) string {
+	if v == nil {
+		return "<nil>"
+	}
+	switch val := v.(type) {
+	case []byte:
+		// PostgreSQL returns UUIDs and other binary types as []byte
+		// Convert to string for proper comparison
+		return string(val)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+var _ resource.Handler = (*Postgres)(nil)
+var _ resource.SQLExecutor = (*Postgres)(nil)

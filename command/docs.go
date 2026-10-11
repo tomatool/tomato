@@ -8,7 +8,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
+	"github.com/tomatool/tomato/internal/resource"
 	"github.com/urfave/cli/v2"
 )
 
@@ -50,7 +51,7 @@ func runDocs(ctx *cli.Context) error {
 	output := ctx.String("output")
 
 	// Collect all step categories from handlers
-	categories := handler.AllStepCategories()
+	categories := registry.AllStepCategories()
 
 	switch format {
 	case "mkdocs":
@@ -112,7 +113,7 @@ type DocsData struct {
 	Categories []CategoryWithGroups
 }
 
-func buildCategoryWithGroups(cat handler.StepCategory) CategoryWithGroups {
+func buildCategoryWithGroups(cat resource.StepCategory) CategoryWithGroups {
 	catWithGroups := CategoryWithGroups{
 		Name:        cat.Name,
 		Description: cat.Description,
@@ -337,7 +338,7 @@ var resourceTypeMapping = map[string]string{
 	"AWS":              "aws",
 }
 
-func generateMkDocs(outputDir string, categories []handler.StepCategory) error {
+func generateMkDocs(outputDir string, categories []resource.StepCategory) error {
 	// Create output directory
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("creating output directory: %w", err)
@@ -429,7 +430,7 @@ This document lists all available Gherkin steps organized by resource type.
 {{end}}
 {{end}}`
 
-func generateMarkdown(w io.Writer, categories []handler.StepCategory) error {
+func generateMarkdown(w io.Writer, categories []resource.StepCategory) error {
 	tmpl, err := template.New("docs").Parse(markdownTemplate)
 	if err != nil {
 		return fmt.Errorf("parsing template: %w", err)
@@ -478,7 +479,7 @@ const htmlTemplate = `<!DOCTYPE html>
 </body>
 </html>`
 
-func generateHTML(w io.Writer, categories []handler.StepCategory) error {
+func generateHTML(w io.Writer, categories []resource.StepCategory) error {
 	tmpl, err := template.New("docs").Parse(htmlTemplate)
 	if err != nil {
 		return fmt.Errorf("parsing template: %w", err)

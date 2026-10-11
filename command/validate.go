@@ -14,7 +14,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 	"github.com/mattn/go-isatty"
 	"github.com/tomatool/tomato/internal/config"
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
 	"github.com/urfave/cli/v2"
 )
 
@@ -186,7 +186,7 @@ func (v *Validator) validate() {
 }
 
 func (v *Validator) loadStepPatterns() {
-	categories := handler.AllStepCategories()
+	categories := registry.AllStepCategories()
 	for _, cat := range categories {
 		for _, step := range cat.Steps {
 			// Convert pattern to regex - replace {resource} with a capture group
@@ -282,19 +282,19 @@ func (v *Validator) validateResources() {
 
 	// Build valid types map from handler package
 	validTypes := make(map[string]bool)
-	for _, t := range handler.ValidResourceTypes() {
+	for _, t := range registry.ValidResourceTypes() {
 		validTypes[t] = true
 	}
 
 	// Build container-based types map from handler package
 	needsContainer := make(map[string]bool)
-	for _, t := range handler.ContainerBasedTypes() {
+	for _, t := range registry.ContainerBasedTypes() {
 		needsContainer[t] = true
 	}
 
 	for name, res := range v.config.Resources {
 		// Check resource type
-		if hint, unimplemented := handler.UnimplementedTypeHint(res.Type); unimplemented {
+		if hint, unimplemented := registry.UnimplementedTypeHint(res.Type); unimplemented {
 			v.results = append(v.results, ValidationResult{
 				Category:   "Resources",
 				Item:       name,
@@ -310,7 +310,7 @@ func (v *Validator) validateResources() {
 				Item:       name,
 				Status:     "error",
 				Message:    fmt.Sprintf("unknown type %q", res.Type),
-				Suggestion: fmt.Sprintf("Valid types: %s", strings.Join(handler.ValidResourceTypes(), ", ")),
+				Suggestion: fmt.Sprintf("Valid types: %s", strings.Join(registry.ValidResourceTypes(), ", ")),
 			})
 			continue
 		}

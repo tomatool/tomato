@@ -9,7 +9,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // Mock implementations
@@ -17,7 +17,7 @@ import (
 type mockRegistry struct {
 	waitReadyErr    error
 	resetAllErr     error
-	getHandler      handler.Handler
+	getHandler      resource.Handler
 	getErr          error
 	registerCalled  bool
 	waitReadyCalled bool
@@ -38,7 +38,7 @@ func (m *mockRegistry) RegisterSteps(ctx *godog.ScenarioContext) {
 	m.registerCalled = true
 }
 
-func (m *mockRegistry) Get(name string) (handler.Handler, error) {
+func (m *mockRegistry) Get(name string) (resource.Handler, error) {
 	return m.getHandler, m.getErr
 }
 

@@ -18,14 +18,26 @@ tomato is designed around three core concepts:
 | `internal/config` | `tomato.yml` parsing, defaults, validation, preset expansion |
 | `internal/container` | Container lifecycle via Testcontainers, wait strategies, logs |
 | `internal/apprunner` | Starting the application under test, `app.env` templating |
-| `internal/handler` | One file per resource type, each with its step definitions |
+| `internal/resource` | The contract every resource implements: `Handler`, step definitions, the variable store |
+| `internal/resource/<name>` | One package per resource type, with its step definitions and nothing else's |
+| `internal/registry` | Builds resources from config and is the only package that knows the full set |
+| `internal/jsonmatch` | Dotted-path lookup and tomato's `@` matchers, shared by every resource that asserts on JSON |
 | `internal/runner` | godog wiring, hooks, tag filtering, reset between scenarios |
 | `internal/formatter` | Console, JUnit and Cucumber report output |
 | `internal/presets` | Files copied into preset containers (the MSK IAM jar) |
 | `internal/runlog` | Per-run log directory under `.tomato/runs/` |
 
+### Why one package per resource
+
+Each resource package imports `internal/resource` and nothing from any other
+resource, so a change to the Kafka steps cannot break the Postgres ones, and a
+contributor adding steps to one resource reads one directory. `go build
+./internal/resource/postgres/` compiles that resource alone.
+
 A resource type is registered in exactly one place, `handlerFactories` in
-`internal/handler/registry.go`.
+`internal/registry/registry.go`. That table and `canonicalTypes` beside it are
+the only lists of resources in the codebase: the commands ask the registry
+rather than naming resources themselves.
 
 ```mermaid
 flowchart TB

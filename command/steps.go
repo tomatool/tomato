@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
+	"github.com/tomatool/tomato/internal/resource"
 	"github.com/urfave/cli/v2"
 )
 
@@ -36,9 +37,9 @@ func runSteps(ctx *cli.Context) error {
 	typeFilter := strings.ToLower(ctx.String("type"))
 	jsonOutput := ctx.Bool("json")
 
-	categories := handler.AllStepCategories()
+	categories := registry.AllStepCategories()
 
-	var filteredCategories []handler.StepCategory
+	var filteredCategories []resource.StepCategory
 
 	for _, cat := range categories {
 		// Filter by type (match against name or type prefix)
@@ -49,7 +50,7 @@ func runSteps(ctx *cli.Context) error {
 			}
 		}
 
-		var matchingSteps []handler.StepDef
+		var matchingSteps []resource.StepDef
 		for _, step := range cat.Steps {
 			// Filter by keyword
 			if filter != "" {
@@ -65,7 +66,7 @@ func runSteps(ctx *cli.Context) error {
 			continue
 		}
 
-		filteredCategories = append(filteredCategories, handler.StepCategory{
+		filteredCategories = append(filteredCategories, resource.StepCategory{
 			Name:        cat.Name,
 			Description: cat.Description,
 			Steps:       matchingSteps,

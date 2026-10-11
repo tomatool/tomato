@@ -14,7 +14,7 @@ import (
 	"github.com/tomatool/tomato/internal/apprunner"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
-	"github.com/tomatool/tomato/internal/handler"
+	"github.com/tomatool/tomato/internal/registry"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/runner"
 	"github.com/urfave/cli/v2"
@@ -179,7 +179,7 @@ func runTests(c *cli.Context) error {
 	// Resources the app depends on while it starts (the aws resource's STS)
 	// are initialized before it, so its environment can point at them. The same
 	// registry then serves the tests.
-	registry, err := handler.NewRegistry(cfg.Resources, cm)
+	registry, err := registry.New(cfg.Resources, cm)
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources: %w", err)
 	}
@@ -355,7 +355,7 @@ func teeStdout(log io.Writer) (restore func()) {
 const teeDrainTimeout = 5 * time.Second
 
 // cleanupResources closes every resource's connections, servers and files.
-func cleanupResources(registry *handler.Registry) {
+func cleanupResources(registry *registry.Registry) {
 	if err := registry.Cleanup(context.Background()); err != nil {
 		fmt.Fprintf(os.Stderr, "%s %v\n", warnStyle.Render("⚠"), err)
 	}
