@@ -75,13 +75,16 @@ var upgrader = websocket.Upgrader{
 // UIServer handles the web UI
 type UIServer struct {
 	featurePaths []string
-	clients      map[*websocket.Conn]bool
-	clientsMux   sync.RWMutex
-	watcher      *fsnotify.Watcher
-	configPath   string
-	isRunning    bool
-	runningMux   sync.Mutex
-	runningCmd   *exec.Cmd
+	// clients maps each connection to the mutex that serialises writes to
+	// it. gorilla/websocket panics on concurrent writes to one connection,
+	// and the run goroutine and the file watcher both broadcast.
+	clients    map[*websocket.Conn]*sync.Mutex
+	clientsMux sync.RWMutex
+	watcher    *fsnotify.Watcher
+	configPath string
+	isRunning  bool
+	runningMux sync.Mutex
+	runningCmd *exec.Cmd
 }
 
 // Feature data structures for JSON
@@ -183,7 +186,7 @@ func runWebUI(c *cli.Context) error {
 	// Create server
 	server := &UIServer{
 		featurePaths: featurePaths,
-		clients:      make(map[*websocket.Conn]bool),
+		clients:      make(map[*websocket.Conn]*sync.Mutex),
 		configPath:   c.String("config"),
 	}
 
@@ -339,12 +342,7 @@ func (s *UIServer) broadcastUpdate(changedFiles []string) {
 
 	data, _ := json.Marshal(msg)
 
-	s.clientsMux.RLock()
-	defer s.clientsMux.RUnlock()
-
-	for client := range s.clients {
-		client.WriteMessage(websocket.TextMessage, data)
-	}
+	s.send(data)
 }
 
 func (s *UIServer) handleFeatures(w http.ResponseWriter, r *http.Request) {
@@ -1037,16 +1035,25 @@ func (s *UIServer) broadcastRunStatus(msgType, scenario, status, output string) 
 	})
 }
 
+// send writes one frame to every connected client, holding that client's
+// write mutex. Without it two broadcasts racing on the same connection panic
+// inside gorilla and take the whole UI server down.
+func (s *UIServer) send(data []byte) {
+	s.clientsMux.RLock()
+	defer s.clientsMux.RUnlock()
+
+	for client, mu := range s.clients {
+		mu.Lock()
+		client.WriteMessage(websocket.TextMessage, data)
+		mu.Unlock()
+	}
+}
+
 // broadcast fans one message out to every connected client.
 func (s *UIServer) broadcast(msg WSMessage) {
 	data, _ := json.Marshal(msg)
 
-	s.clientsMux.RLock()
-	defer s.clientsMux.RUnlock()
-
-	for client := range s.clients {
-		client.WriteMessage(websocket.TextMessage, data)
-	}
+	s.send(data)
 }
 
 func (s *UIServer) broadcastRunsUpdate() {
@@ -1062,12 +1069,7 @@ func (s *UIServer) broadcastRunsUpdate() {
 
 	data, _ := json.Marshal(msg)
 
-	s.clientsMux.RLock()
-	defer s.clientsMux.RUnlock()
-
-	for client := range s.clients {
-		client.WriteMessage(websocket.TextMessage, data)
-	}
+	s.send(data)
 }
 
 func (s *UIServer) broadcastNewRun(runID string) {
@@ -1078,12 +1080,7 @@ func (s *UIServer) broadcastNewRun(runID string) {
 
 	data, _ := json.Marshal(msg)
 
-	s.clientsMux.RLock()
-	defer s.clientsMux.RUnlock()
-
-	for client := range s.clients {
-		client.WriteMessage(websocket.TextMessage, data)
-	}
+	s.send(data)
 }
 
 func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -1095,7 +1092,8 @@ func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	s.clientsMux.Lock()
-	s.clients[conn] = true
+	connMu := &sync.Mutex{}
+	s.clients[conn] = connMu
 	s.clientsMux.Unlock()
 
 	defer func() {
@@ -1109,7 +1107,9 @@ func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	runs, _ := runlog.ListRuns()
 	msg := WSMessage{Type: "init", Features: features, Runs: runs, Topology: s.loadTopology()}
 	data, _ := json.Marshal(msg)
+	connMu.Lock()
 	conn.WriteMessage(websocket.TextMessage, data)
+	connMu.Unlock()
 
 	// Keep connection alive
 	for {
