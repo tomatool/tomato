@@ -116,7 +116,10 @@ type RunInfo struct {
 type LogFile struct {
 	Name string `json:"name"`
 	Path string `json:"path"`
-	Size int64  `json:"size"`
+	// AbsPath is where the file actually is, for a reader who wants to open
+	// it outside tomato. Path stays relative because it identifies the log.
+	AbsPath string `json:"absPath,omitempty"`
+	Size    int64  `json:"size"`
 }
 
 func listLogs(runDir string) ([]LogFile, error) {
@@ -137,9 +140,10 @@ func listLogs(runDir string) ([]LogFile, error) {
 		}
 
 		logs = append(logs, LogFile{
-			Name: entry.Name()[:len(entry.Name())-4], // Remove .log extension
-			Path: filepath.Join(runDir, entry.Name()),
-			Size: info.Size(),
+			Name:    entry.Name()[:len(entry.Name())-4], // Remove .log extension
+			Path:    filepath.Join(runDir, entry.Name()),
+			AbsPath: absolute(filepath.Join(runDir, entry.Name())),
+			Size:    info.Size(),
 		})
 	}
 
@@ -154,4 +158,14 @@ func GetLogContent(runName, logName string) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+// absolute resolves path against the working directory, falling back to the
+// path as given when that is not possible.
+func absolute(path string) string {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	return abs
 }

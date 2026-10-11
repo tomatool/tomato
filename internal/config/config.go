@@ -372,6 +372,20 @@ func (c *Config) validate() error {
 		return fmt.Errorf("unsupported config version: %d (expected %d)", c.Version, SupportedVersion)
 	}
 
+	// Scenarios run one at a time. tomato resets every resource before every
+	// scenario, and the resources are shared — so with two scenarios in
+	// flight, one scenario's reset truncates the tables the other is halfway
+	// through asserting on. Isolation is the guarantee tomato exists to make,
+	// and it cannot make it concurrently against one database.
+	if c.Settings.Parallel > 1 {
+		return fmt.Errorf(
+			"settings.parallel is %d, but scenarios have to run one at a time: "+
+				"every scenario resets every resource, and the resources are shared, "+
+				"so a concurrent scenario's reset would wipe state another scenario "+
+				"is still using. Remove the setting, or set it to 1",
+			c.Settings.Parallel)
+	}
+
 	// Validate app config - only one mode allowed
 	modes := 0
 	if c.App.Command != "" {

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ansiToNodes } from '../lib/ansi.jsx'
 import { fmtClock } from '../lib/format'
+import { SourcePath } from './SourcePath.jsx'
 
 export function Console({ lines, logTabs, activeLog, runId, running, height, onTab, onResizeStart }) {
   const body = useRef(null)
@@ -36,6 +37,7 @@ export function Console({ lines, logTabs, activeLog, runId, running, height, onT
             {t.name}
           </button>
         ))}
+        {activeLog?.absPath && <SourcePath path={activeLog.absPath} label="log file" />}
         <span style={{ flex: 1 }} />
         {runId && (
           <span className="live" data-state={running ? undefined : 'offline'} style={{ alignSelf: 'center' }}>

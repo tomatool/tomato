@@ -33,7 +33,7 @@ export function Runs({ runs, openRun, onOpenRun, onOpenLog }) {
                     className="log-link"
                     type="button"
                     key={l.name}
-                    onClick={(e) => { e.stopPropagation(); onOpenLog(r.name, l.name) }}
+                    onClick={(e) => { e.stopPropagation(); onOpenLog(r.name, l.name, l.absPath) }}
                   >
                     {l.name} <small>{fmtBytes(l.size)}</small>
                   </button>

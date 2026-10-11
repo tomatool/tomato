@@ -113,7 +113,9 @@ func (r *Runner) Run(ctx context.Context) error {
 		Tags:          r.godogTags,
 		StopOnFailure: r.config.Settings.FailFast,
 		Strict:        true,
-		Concurrency:   r.config.Settings.Parallel,
+		// One at a time, always: every scenario resets every resource, and
+		// the resources are shared. config rejects settings.parallel > 1.
+		Concurrency: 1,
 	}
 
 	suite := godog.TestSuite{
