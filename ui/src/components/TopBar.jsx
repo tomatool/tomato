@@ -1,6 +1,9 @@
 import { fmtDur } from '../lib/format'
 
+const THEME_LABEL = { dark: 'Switch to the light theme', light: 'Switch to the dark theme' }
+
 export function TopBar({
+  theme, onToggleTheme,
   crumb, live, liveText, scenarios, scStatus, scDur, running,
   onRunAll, onRunFailed, onStop,
 }) {
@@ -17,6 +20,16 @@ export function TopBar({
   return (
     <header className="topbar">
       <span className="brand"><i className="brand-mark" />tomato</span>
+      <button
+        className="btn btn--ghost btn--icon"
+        type="button"
+        data-mode={theme}
+        title={THEME_LABEL[theme]}
+        aria-label={THEME_LABEL[theme]}
+        onClick={onToggleTheme}
+      >
+        <i className="ico-theme" />
+      </button>
       <span className="topbar-sep" />
       <span className="crumb">{crumb}</span>
       <span className="topbar-spacer" />

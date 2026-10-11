@@ -1,8 +1,10 @@
 /* Tomato UI — tokens + component classes for `tomato ui`.
-   Dark only. Plain CSS on plain markup: state lives in data-* attributes
-   (data-status, data-phase) so the renderer drives it without class juggling.
+   Plain CSS on plain markup: state lives in data-* attributes (data-status,
+   data-phase, data-theme) so the renderer drives it without class juggling.
 
-   Generated from the "Modernist" design system. Keep edits in sync with it. */
+   The dark palette in :root is generated from the "Modernist" design system —
+   keep edits in sync with it. The light theme below redefines colour only and
+   is a departure from that system, which is written as dark only. */
 
 /* Geist / Geist Mono, vendored so the UI works offline (see fonts/README.md). */
 @font-face{font-family:"Geist";font-style:normal;font-weight:400 600;font-display:swap;src:url("./fonts/geist-latin.woff2") format("woff2")}
@@ -58,8 +60,75 @@
   --r-1:3px;--r-2:5px;--r-3:8px;
   --h-row:26px;--h-ctl:28px;--h-bar:44px;
 
+  /* roles the components used to spell out inline, named so the light theme
+     can differ without touching anything above */
+  --sel-bg:oklch(0.76 0.09 250 / 0.35);
+  --fail-line:oklch(0.68 0.19 30 / 0.5);
+  --fail-edge:oklch(0.68 0.19 30 / 0.45);
+  --fail-bg-hover:oklch(0.68 0.19 30 / 0.22);
+  --kbd-line:oklch(0 0 0 / 0.25);
+  --ring:oklch(0.95 0.006 70 / 0.08);
+  /* dark reads "raised" as "lighter", so these two are both --bg-3 here.
+     Light has to pull them apart: a white pressed segment, but a thumb that
+     is still visible against white. */
+  --seg-on:var(--bg-3);
+  --scroll-thumb:var(--bg-3);
+
   --shadow-pop:0 8px 24px oklch(0 0 0 / 0.45),0 0 0 1px var(--line-strong);
   --dur:120ms;
+}
+
+/* ─── Light theme ─────────────────────────────────────────────────────────
+   Only colour is redefined; every size, radius and duration above still
+   applies, and the dark palette in :root is untouched. */
+:root[data-theme="light"] {
+  color-scheme:light;
+  /* ground — white surfaces on a warm off-white canvas. Separation comes from
+     --line rather than from fills, so panels stay flat. */
+  --bg-0:oklch(0.970 0.003 70);
+  --bg-1:oklch(0.995 0.001 70);
+  --bg-2:oklch(0.953 0.004 70);
+  --bg-3:oklch(0.912 0.005 70);
+  --line:oklch(0.890 0.005 70);
+  --line-strong:oklch(0.800 0.007 70);
+  /* ink */
+  --fg-0:oklch(0.255 0.008 70);
+  --fg-1:oklch(0.380 0.009 70);
+  --fg-2:oklch(0.545 0.010 70);
+  --fg-3:oklch(0.660 0.010 70);
+
+  /* status — same hues, lightness dropped so they carry on white. The
+     chroma gap to the gherkin phases below is kept: results stay the
+     saturated colours, phases stay the muted ones. */
+  --pass:oklch(0.545 0.135 148);
+  --fail:oklch(0.545 0.180 30);
+  --warn:oklch(0.600 0.120 78);
+  --pass-bg:oklch(0.640 0.140 148 / 0.16);
+  --fail-bg:oklch(0.620 0.180 30 / 0.15);
+  --warn-bg:oklch(0.700 0.120 78 / 0.22);
+  --pass-ink:oklch(0.455 0.125 148);
+  --fail-ink:oklch(0.470 0.170 30);
+  --warn-ink:oklch(0.455 0.105 78);
+
+  --given:oklch(0.505 0.090 250);
+  --when:oklch(0.505 0.090 305);
+  --then:oklch(0.495 0.080 200);
+
+  --arg:oklch(0.475 0.080 120);
+  --var:oklch(0.480 0.100 340);
+
+  --sel-bg:oklch(0.505 0.090 250 / 0.20);
+  --fail-line:oklch(0.545 0.180 30 / 0.45);
+  --fail-edge:oklch(0.545 0.180 30 / 0.40);
+  --fail-bg-hover:oklch(0.545 0.180 30 / 0.16);
+  --kbd-line:oklch(0 0 0 / 0.16);
+  --ring:oklch(0.255 0.008 70 / 0.12);
+  /* light reads "raised" as "whiter", which dark does not: the pressed
+     segment lifts to white, while the scrollbar thumb needs its own grey. */
+  --seg-on:var(--bg-1);
+  --scroll-thumb:oklch(0.845 0.006 70);
+
+  --shadow-pop:0 8px 24px oklch(0.30 0.010 70 / 0.16),0 0 0 1px var(--line-strong);
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -72,11 +141,11 @@ p{margin:0}
 a{color:var(--fg-0);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px}
 a:hover{text-decoration-color:var(--fg-0)}
 code,pre,.mono{font-family:var(--font-mono);font-size:var(--fs-12)}
-::selection{background:oklch(0.76 0.09 250 / 0.35)}
+::selection{background:var(--sel-bg)}
 :focus{outline:none}
 :focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 ::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-thumb{background:var(--bg-3);border:3px solid transparent;background-clip:padding-box;border-radius:10px}
+::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border:3px solid transparent;background-clip:padding-box;border-radius:10px}
 ::-webkit-scrollbar-track{background:transparent}
 .muted{color:var(--fg-2)}
 .label{font-size:var(--fs-11);font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--fg-2)}
@@ -94,8 +163,8 @@ code,pre,.mono{font-family:var(--font-mono);font-size:var(--fs-12)}
 .btn--primary{background:var(--fg-0);border-color:var(--fg-0);color:var(--bg-0)}
 .btn--primary:hover{background:var(--fg-1);border-color:var(--fg-1)}
 .btn--primary:active{background:var(--fg-2)}
-.btn--danger{background:var(--fail-bg);border-color:oklch(0.68 0.19 30 / 0.5);color:var(--fail-ink)}
-.btn--danger:hover{background:oklch(0.68 0.19 30 / 0.22)}
+.btn--danger{background:var(--fail-bg);border-color:var(--fail-line);color:var(--fail-ink)}
+.btn--danger:hover{background:var(--fail-bg-hover)}
 .btn--ghost{background:transparent;border-color:transparent;color:var(--fg-1)}
 .btn--ghost:hover{background:var(--bg-2);color:var(--fg-0)}
 .btn--sm{height:22px;padding:0 var(--s-4);font-size:var(--fs-11)}
@@ -103,10 +172,16 @@ code,pre,.mono{font-family:var(--font-mono);font-size:var(--fs-12)}
 .btn--sm.btn--icon{width:22px}
 .ico-play{width:8px;height:9px;background:currentColor;clip-path:polygon(0 0,100% 50%,0 100%);flex:none}
 .ico-stop{width:8px;height:8px;background:currentColor;border-radius:1px;flex:none}
+/* Shape-coded like .pip so it reads without colour, and it shows where a
+   click goes rather than where you are: a filled disc switches to light, an
+   outline switches to dark. The button's label says the same thing. */
+.ico-theme{width:11px;height:11px;flex:none;position:relative}
+.ico-theme::before{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid currentColor;background:currentColor}
+[data-mode="light"] .ico-theme::before{background:transparent}
 .ico-chev{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);flex:none;transition:transform var(--dur)}
 [aria-expanded="true"]>.ico-chev,.ico-chev[data-open="true"]{transform:rotate(45deg)}
 .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--r-1);font:500 var(--fs-11)/1 var(--font-mono);color:var(--fg-2);background:var(--bg-1)}
-.btn .kbd{height:16px;background:transparent;border-color:oklch(0 0 0 / .25);color:inherit}
+.btn .kbd{height:16px;background:transparent;border-color:var(--kbd-line);color:inherit}
 
 /* — status pip: shape-coded so it reads without color — */
 .pip{display:inline-block;width:10px;height:10px;flex:none;position:relative}
@@ -154,7 +229,7 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .seg{display:inline-flex;padding:2px;gap:2px;border-radius:var(--r-2);background:var(--bg-0);border:1px solid var(--line)}
 .seg-opt{height:20px;padding:0 var(--s-4);border:0;border-radius:var(--r-1);background:none;color:var(--fg-2);font:500 var(--fs-11) var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:var(--s-2)}
 .seg-opt:hover{color:var(--fg-0)}
-.seg-opt[aria-pressed="true"]{background:var(--bg-3);color:var(--fg-0)}
+.seg-opt[aria-pressed="true"]{background:var(--seg-on);color:var(--fg-0)}
 
 /* — app shell — */
 .app{display:grid;height:100vh;grid-template-rows:var(--h-bar) minmax(0,1fr) auto;grid-template-areas:"top top top" "tree doc side" "tree console side";background:var(--bg-0)}
@@ -217,7 +292,7 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 
 /* — scenario card — */
 .scenario{border:1px solid var(--line);border-radius:var(--r-3);background:var(--bg-1);overflow:hidden}
-.scenario[data-status="failed"]{border-color:oklch(0.68 0.19 30 / 0.45)}
+.scenario[data-status="failed"]{border-color:var(--fail-edge)}
 .scenario[data-kind="background"]{background:transparent;border-style:dashed}
 .scenario-head{display:flex;align-items:center;gap:var(--s-4);min-height:40px;padding:var(--s-3) var(--s-4) var(--s-3) var(--s-5);border-bottom:1px solid var(--line);cursor:pointer}
 .scenario[data-collapsed="true"] .scenario-head{border-bottom:0}
@@ -299,7 +374,7 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .topo-col--out .node::before{left:-21px}
 .node--app{padding:var(--s-5) var(--s-5);border-color:var(--fg-2);background:var(--bg-3);align-items:flex-start}
 .node--app .node-name{font-size:var(--fs-13)}
-.node[aria-current="true"]{border-color:var(--fg-0);box-shadow:0 0 0 3px oklch(0.95 0.006 70 / 0.08)}
+.node[aria-current="true"]{border-color:var(--fg-0);box-shadow:0 0 0 3px var(--ring)}
 .node[aria-current="true"]::after,.node[aria-current="true"]::before{border-color:var(--fg-0)!important}
 .node[data-status="failed"]{border-color:var(--fail);background:var(--fail-bg)}
 .node[data-mock="true"]{border-style:dashed}

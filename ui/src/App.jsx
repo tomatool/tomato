@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSocket } from './hooks/useSocket'
-import { useLocalNumber } from './hooks/useLocalState'
+import { useLocalEnum, useLocalNumber } from './hooks/useLocalState'
 import { flowModel } from './lib/flow'
 import { stepKey, BACKGROUND_KEY } from './lib/steps.jsx'
 import { TopBar } from './components/TopBar.jsx'
@@ -19,6 +19,10 @@ const SIDE_DEFAULT = 340
 const CONSOLE_MIN = 80
 
 const emptyRun = () => ({ scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {} })
+
+// Dark is the default: it is what the design system is built around, and what
+// :root carries, so the attribute only ever has to name the exception.
+const THEMES = ['dark', 'light']
 
 export function App() {
   // server data
@@ -54,6 +58,9 @@ export function App() {
   const [cursor, setCursor] = useState(-1)
   const [playing, setPlaying] = useState(false)
   const playTimer = useRef(null)
+
+  const [theme, setTheme] = useLocalEnum('theme', THEMES, 'dark')
+  useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
 
   const [sideWidth, setSideWidth] = useLocalNumber('sideWidth', SIDE_DEFAULT)
   const [consoleHeight, setConsoleHeight] = useLocalNumber('consoleHeight', 220)
@@ -354,6 +361,8 @@ export function App() {
       style={{ '--side-open-w': `${sideWidth}px` }}
     >
       <TopBar
+        theme={theme}
+        onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         crumb={crumb}
         live={socket === 'online' ? '' : socket}
         liveText={socket === 'online'
