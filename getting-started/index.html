@@ -16,7 +16,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="github-action/">
+        <link rel="next" href="../guide/philosophy/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Overview - 🍅 tomato</title>
+        <title>Getting Started - 🍅 tomato</title>
       
     
     
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Getting Started
             
           </span>
         </div>
@@ -262,7 +262,7 @@
           
   
   
-  Getting Started
+  Guide
 
         </a>
       </li>
@@ -302,7 +302,27 @@
           
   
   
-  Available Resources
+  Step Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../developer-guide/architecture/" class="md-tabs__link">
+          
+  
+  
+  Developer Guide
 
         </a>
       </li>
@@ -326,26 +346,6 @@
 
       </a>
     </li>
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../developer-guide/architecture/" class="md-tabs__link">
-          
-  
-  
-  Developer Guide
-
-        </a>
-      </li>
-    
   
 
       
@@ -456,7 +456,7 @@
   <span class="md-ellipsis">
     
   
-    Getting Started
+    Guide
   
 
     
@@ -472,7 +472,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Getting Started
+    Guide
   
 
           </label>
@@ -501,7 +501,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    Getting Started
   
 
     
@@ -519,7 +519,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    Getting Started
   
 
     
@@ -556,15 +556,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#1-install-tomato" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        1. Install tomato
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation">
+    <nav class="md-nav" aria-label="1. Install tomato">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -617,10 +617,38 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#initialize-a-project" class="md-nav__link">
+  <a href="#2-create-a-project" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Initialize a project
+        2. Create a project
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Create a project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-describe-your-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Describe your dependencies
       
     </span>
   </a>
@@ -628,10 +656,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-structure" class="md-nav__link">
+  <a href="#4-write-your-first-scenario" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project structure
+        4. Write your first scenario
       
     </span>
   </a>
@@ -639,10 +667,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
+  <a href="#5-check-it-before-you-run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration
+        5. Check it before you run it
       
     </span>
   </a>
@@ -650,10 +678,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#writing-tests" class="md-nav__link">
+  <a href="#6-run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing tests
+        6. Run it
       
     </span>
   </a>
@@ -661,10 +689,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#validate-configuration" class="md-nav__link">
+  <a href="#7-watch-it-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Validate configuration
+        7. Watch it run
       
     </span>
   </a>
@@ -672,10 +700,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-tests" class="md-nav__link">
+  <a href="#pointing-tomato-at-your-application" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running tests
+        Pointing tomato at your application
       
     </span>
   </a>
@@ -683,32 +711,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#browsing-a-suite" class="md-nav__link">
+  <a href="#where-to-go-next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Browsing a suite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-your-application" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Testing your application
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
+        Where to go next
       
     </span>
   </a>
@@ -731,14 +737,14 @@
   
   
     <li class="md-nav__item">
-      <a href="github-action/" class="md-nav__link">
+      <a href="../guide/philosophy/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    GitHub Action
+    Writing a Suite
   
 
     
@@ -767,6 +773,34 @@
     
   
     Step Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="github-action/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Action
   
 
     
@@ -1132,7 +1166,7 @@
   <span class="md-ellipsis">
     
   
-    Available Resources
+    Step Reference
   
 
     
@@ -1148,7 +1182,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Available Resources
+    Step Reference
   
 
           </label>
@@ -1559,33 +1593,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../stability/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Stability
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
     
     
     
@@ -1602,10 +1609,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -1623,8 +1630,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1662,9 +1669,64 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer-guide/adding-a-resource/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding a Step or Resource
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1707,15 +1769,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#1-install-tomato" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation
+        1. Install tomato
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation">
+    <nav class="md-nav" aria-label="1. Install tomato">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1768,10 +1830,38 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#initialize-a-project" class="md-nav__link">
+  <a href="#2-create-a-project" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Initialize a project
+        2. Create a project
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Create a project">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#project-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-describe-your-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Describe your dependencies
       
     </span>
   </a>
@@ -1779,10 +1869,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-structure" class="md-nav__link">
+  <a href="#4-write-your-first-scenario" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project structure
+        4. Write your first scenario
       
     </span>
   </a>
@@ -1790,10 +1880,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
+  <a href="#5-check-it-before-you-run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration
+        5. Check it before you run it
       
     </span>
   </a>
@@ -1801,10 +1891,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#writing-tests" class="md-nav__link">
+  <a href="#6-run-it" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Writing tests
+        6. Run it
       
     </span>
   </a>
@@ -1812,10 +1902,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#validate-configuration" class="md-nav__link">
+  <a href="#7-watch-it-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Validate configuration
+        7. Watch it run
       
     </span>
   </a>
@@ -1823,10 +1913,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-tests" class="md-nav__link">
+  <a href="#pointing-tomato-at-your-application" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running tests
+        Pointing tomato at your application
       
     </span>
   </a>
@@ -1834,32 +1924,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#browsing-a-suite" class="md-nav__link">
+  <a href="#where-to-go-next" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Browsing a suite
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-your-application" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Testing your application
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps
+        Where to go next
       
     </span>
   </a>
@@ -1887,13 +1955,16 @@
 
 
 <h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">#</a></h1>
-<p>This guide sets up tomato and runs your first behavioral test.</p>
+<p>This guide takes you from nothing to a passing suite in seven steps.</p>
+<p>Once it passes, read <a href="../guide/philosophy/">Writing a Suite</a> — it covers the
+habits that make a suite worth trusting, in particular asserting the <em>effects</em>
+your application produces rather than only the response it returns.</p>
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">#</a></h2>
 <ul>
 <li><a href="https://docs.docker.com/get-docker/">Docker</a> — tomato starts your test containers</li>
 <li><a href="https://go.dev/dl/">Go 1.26+</a> — only for the <code>go install</code> and from-source methods</li>
 </ul>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
+<h2 id="1-install-tomato">1. Install tomato<a class="headerlink" href="#1-install-tomato" title="Permanent link">#</a></h2>
 <h3 id="quick-install-recommended">Quick install (recommended)<a class="headerlink" href="#quick-install-recommended" title="Permanent link">#</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/tomatool/tomato/main/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div>
@@ -1906,7 +1977,7 @@
 <h3 id="verify-installation">Verify installation<a class="headerlink" href="#verify-installation" title="Permanent link">#</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>tomato<span class="w"> </span>--version
 </span></code></pre></div>
-<h2 id="initialize-a-project">Initialize a project<a class="headerlink" href="#initialize-a-project" title="Permanent link">#</a></h2>
+<h2 id="2-create-a-project">2. Create a project<a class="headerlink" href="#2-create-a-project" title="Permanent link">#</a></h2>
 <p>Create a new project with the init command:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mkdir<span class="w"> </span>my-project<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>my-project
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>tomato<span class="w"> </span>init
@@ -1914,14 +1985,14 @@
 <p>This creates:
 - <code>tomato.yml</code> - Main configuration file
 - <code>features/</code> - Directory for your feature files</p>
-<h2 id="project-structure">Project structure<a class="headerlink" href="#project-structure" title="Permanent link">#</a></h2>
+<h3 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">#</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>my-project/
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── tomato.yml           # Main configuration
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>├── features/
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>│   └── example.feature  # Gherkin test files
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>└── fixtures/            # Optional: SQL scripts, test data
 </span></code></pre></div>
-<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">#</a></h2>
+<h2 id="3-describe-your-dependencies">3. Describe your dependencies<a class="headerlink" href="#3-describe-your-dependencies" title="Permanent link">#</a></h2>
 <p>Edit <code>tomato.yml</code> to define your test environment:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
@@ -1971,7 +2042,7 @@
 </span><span id="__span-6-46"><a id="__codelineno-6-46" name="__codelineno-6-46" href="#__codelineno-6-46"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./features</span>
 </span><span id="__span-6-47"><a id="__codelineno-6-47" name="__codelineno-6-47" href="#__codelineno-6-47"></a><span class="w">  </span><span class="nt">tags</span><span class="p">:</span><span class="w"> </span><span class="s">"@smoke"</span><span class="w">  </span><span class="c1"># Optional: filter by tags</span>
 </span></code></pre></div>
-<h2 id="writing-tests">Writing tests<a class="headerlink" href="#writing-tests" title="Permanent link">#</a></h2>
+<h2 id="4-write-your-first-scenario">4. Write your first scenario<a class="headerlink" href="#4-write-your-first-scenario" title="Permanent link">#</a></h2>
 <p>Create a feature file in <code>features/</code>:</p>
 <div class="language-gherkin highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c"># features/user_api.feature</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">Feature:</span><span class="nf"> User API</span>
@@ -1994,7 +2065,7 @@
 </span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
 </span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">users</span><span class="nf">" has "</span><span class="s">2</span><span class="nf">" rows</span>
 </span></code></pre></div>
-<h2 id="validate-configuration">Validate configuration<a class="headerlink" href="#validate-configuration" title="Permanent link">#</a></h2>
+<h2 id="5-check-it-before-you-run-it">5. Check it before you run it<a class="headerlink" href="#5-check-it-before-you-run-it" title="Permanent link">#</a></h2>
 <p>Before running tests, validate your configuration and feature files:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>tomato<span class="w"> </span>validate
 </span></code></pre></div>
@@ -2007,7 +2078,7 @@
 <p>Use <code>--plain</code> for CI environments without interactive output:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>tomato<span class="w"> </span>validate<span class="w"> </span>--plain
 </span></code></pre></div>
-<h2 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">#</a></h2>
+<h2 id="6-run-it">6. Run it<a class="headerlink" href="#6-run-it" title="Permanent link">#</a></h2>
 <p>Run all tests:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>tomato<span class="w"> </span>run
 </span></code></pre></div>
@@ -2017,7 +2088,7 @@
 <p>Run with verbose output:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>tomato<span class="w"> </span>run<span class="w"> </span>-v
 </span></code></pre></div>
-<h2 id="browsing-a-suite">Browsing a suite<a class="headerlink" href="#browsing-a-suite" title="Permanent link">#</a></h2>
+<h2 id="7-watch-it-run">7. Watch it run<a class="headerlink" href="#7-watch-it-run" title="Permanent link">#</a></h2>
 <p><code>tomato ui</code> opens a local web page that lists the feature files, shows each
 scenario's steps with the resource every step runs against, and runs scenarios
 on demand. It watches the feature files and reloads as they change.</p>
@@ -2025,7 +2096,7 @@ on demand. It watches the feature files and reloads as they change.</p>
 </span></code></pre></div>
 <p>It is a development aid, not part of the stable surface: see
 <a href="../stability/#not-covered">Stability</a>.</p>
-<h2 id="testing-your-application">Testing your application<a class="headerlink" href="#testing-your-application" title="Permanent link">#</a></h2>
+<h2 id="pointing-tomato-at-your-application">Pointing tomato at your application<a class="headerlink" href="#pointing-tomato-at-your-application" title="Permanent link">#</a></h2>
 <p>Tomato can also start your application and connect it to test containers:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># tomato.yml</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nt">app</span><span class="p">:</span>
@@ -2043,11 +2114,15 @@ on demand. It watches the feature files and reloads as they change.</p>
 with the container's address and its mapped host port. The number is the port
 <em>inside</em> the container, so <code>{{.postgres.port.5432}}</code> resolves to whichever host
 port Docker mapped 5432 to. A bare <code>{{.postgres.port}}</code> is left untouched.</p>
-<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">#</a></h2>
+<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">#</a></h2>
 <ul>
-<li><a href="../configuration/">Configuration Reference</a> - Full configuration options</li>
-<li><a href="../resources/">Resources</a> - All available step definitions</li>
-<li><a href="https://github.com/tomatool/tomato/tree/main/examples">Examples</a> - Sample projects</li>
+<li><a href="../guide/philosophy/">Writing a Suite</a> — one behaviour per scenario, and
+  asserting the effects rather than just the response. Read this before you
+  write the second scenario.</li>
+<li><a href="../configuration/">Configuration Reference</a> — every <code>tomato.yml</code> field</li>
+<li><a href="../resources/">Step Reference</a> — every step, grouped by resource</li>
+<li><a href="coverage/">Step Coverage</a> — finding the steps no scenario uses</li>
+<li><a href="github-action/">GitHub Action</a> — running the suite in CI</li>
 </ul>
 
 
