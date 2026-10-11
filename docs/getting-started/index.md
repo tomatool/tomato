@@ -71,8 +71,6 @@ version: 2
 settings:
   timeout: 5m
   fail_fast: true
-  reset:
-    level: scenario  # Reset resources between scenarios
 
 # Define containers to run
 containers:

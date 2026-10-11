@@ -14,6 +14,8 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - The Go toolchain is pinned to 1.26.6, which carries the standard-library fixes govulncheck flags in earlier 1.26 releases. Building tomato now needs Go 1.26.
 
 ### Added
+- The documentation site is in the same palette as `tomato ui` — the Modernist tokens from `ui/src/styles.css`, Geist and Geist Mono, the tomato mark as the favicon, and a dark/light toggle that defaults to dark as the app does. Gherkin is highlighted the way the app colours it: keyword coloured, step text plain, quoted arguments picked out.
+- `markdown_extensions` are configured, so admonitions render as admonitions and code blocks are highlighted with a copy button. Sixteen `!!! tip` blocks had been rendering as literal text on the published site, one on every generated resource page.
 - [Writing a Suite](docs/guide/philosophy.md): how to write scenarios worth trusting — one behaviour per scenario, and asserting the effects your application produces (the row, the message, the file) rather than only the response it returns. Every example is a real step, checked against the live definitions.
 - [Adding a Step or Resource](docs/developer-guide/adding-a-resource.md) in the developer guide, so the walkthrough sits beside the architecture it refers to. CONTRIBUTING links it rather than repeating it.
 - Three tests that keep the documentation honest: every Gherkin snippet in `docs/` must match a registered step, every internal link must resolve, and the mkdocs nav and the pages on disk must agree.
@@ -38,6 +40,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- Five documentation pages, Getting Started among them, showed `settings.reset.level` in a `tomato.yml` example — a setting removed when reset became unconditional. A test now parses every complete config example in the docs with `KnownFields`, so an example tomato would not accept fails CI.
 - Three steps in the S3 configuration page matched no step definition — `"db" table "x" with values:`, `sends "POST" request to`, and `response code should be` — wording from before a rename, published for as long as the page existed. Getting Started also linked the deleted `examples/` directory.
 - `tomato init` generated a suite that did not work. Every step in the example feature used wording no resource registers any more — five steps, five undefined — and the config carried `settings.reset.level`, removed when reset became unconditional and silently ignored by the loader ever since. Choosing both Kafka and RabbitMQ produced a config with a duplicate `queue:` key that would not parse at all, and the external-HTTP example called a resource that was never declared. A generated suite now validates clean and runs green, and three tests tie the generator to the live step definitions and the config struct so it cannot drift again.
 - `tomato ui`: collapsing either side pane with `[` or `]` did nothing. `transition: grid-template-columns` kept Chrome serving the old track list whenever the width came from a custom property, so the pane never resized.

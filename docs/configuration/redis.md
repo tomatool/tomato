@@ -98,8 +98,6 @@ settings:
   timeout: 5m
   fail_fast: false
   output: pretty
-  reset:
-    level: scenario
 
 containers:
   redis:

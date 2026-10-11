@@ -1,0 +1,246 @@
+/* The documentation site, in the same palette as `tomato ui`.
+ *
+ * The tokens below are copied from ui/src/styles.css, which is generated from
+ * the "Modernist" design system — the dark palette in :root, the light one
+ * under [data-theme="light"]. They are mapped onto the --md-* variables
+ * mkdocs-material reads, so the site and the app agree without Material
+ * needing to know anything about tomato.
+ *
+ * They hang off Material's own scheme names, slate and default, rather than
+ * custom ones. A custom scheme name inherits Material's *light* base, so
+ * every variable not overridden here would keep a light value — which is how
+ * an admonition ended up with near-black text on a near-black panel.
+ *
+ * When the app's palette changes, change it there first and copy here.
+ */
+
+/* ─── tomato tokens ──────────────────────────────────────────────────────── */
+
+[data-md-color-scheme="slate"] {
+  --bg-0: oklch(0.155 0.006 40);
+  --bg-1: oklch(0.185 0.007 40);
+  --bg-2: oklch(0.215 0.008 40);
+  --bg-3: oklch(0.255 0.009 40);
+  --line: oklch(0.285 0.009 40);
+  --line-strong: oklch(0.37 0.01 40);
+  --fg-0: oklch(0.95 0.006 70);
+  --fg-1: oklch(0.82 0.008 70);
+  --fg-2: oklch(0.64 0.01 70);
+  --fg-3: oklch(0.48 0.01 70);
+  --pass: oklch(0.76 0.15 148);
+  --fail: oklch(0.68 0.19 30);
+  --warn: oklch(0.80 0.14 78);
+  --given: oklch(0.76 0.09 250);
+  --when: oklch(0.76 0.09 305);
+  --then: oklch(0.78 0.08 200);
+  --arg: oklch(0.82 0.07 120);
+  --var: oklch(0.80 0.09 340);
+  color-scheme: dark;
+}
+
+[data-md-color-scheme="default"] {
+  --bg-0: oklch(0.970 0.003 70);
+  --bg-1: oklch(0.995 0.001 70);
+  --bg-2: oklch(0.953 0.004 70);
+  --bg-3: oklch(0.912 0.005 70);
+  --line: oklch(0.890 0.005 70);
+  --line-strong: oklch(0.800 0.007 70);
+  --fg-0: oklch(0.255 0.008 70);
+  --fg-1: oklch(0.380 0.009 70);
+  --fg-2: oklch(0.545 0.010 70);
+  --fg-3: oklch(0.660 0.010 70);
+  --pass: oklch(0.545 0.135 148);
+  --fail: oklch(0.545 0.180 30);
+  --warn: oklch(0.600 0.120 78);
+  --given: oklch(0.505 0.090 250);
+  --when: oklch(0.505 0.090 305);
+  --then: oklch(0.495 0.080 200);
+  --arg: oklch(0.475 0.080 120);
+  --var: oklch(0.480 0.100 340);
+  color-scheme: light;
+}
+
+/* ─── mapped onto what Material reads ────────────────────────────────────── */
+
+[data-md-color-scheme="slate"],
+[data-md-color-scheme="default"] {
+  --md-default-bg-color: var(--bg-0);
+  --md-default-fg-color: var(--fg-1);
+  --md-default-fg-color--light: var(--fg-2);
+  --md-default-fg-color--lighter: var(--fg-3);
+  --md-default-fg-color--lightest: var(--line);
+
+  --md-primary-fg-color: var(--bg-1);
+  --md-primary-bg-color: var(--fg-0);
+  --md-primary-bg-color--light: var(--fg-2);
+
+  --md-accent-fg-color: var(--fail);
+  --md-typeset-a-color: var(--fail);
+
+  --md-typeset-color: var(--fg-1);
+  --md-code-bg-color: var(--bg-1);
+  --md-code-fg-color: var(--fg-1);
+  --md-code-hl-comment-color: var(--fg-3);
+  --md-code-hl-string-color: var(--arg);
+  --md-code-hl-number-color: var(--var);
+  --md-code-hl-keyword-color: var(--given);
+  --md-code-hl-name-color: var(--fg-0);
+  --md-code-hl-constant-color: var(--when);
+  --md-code-hl-function-color: var(--then);
+
+  --md-admonition-bg-color: var(--bg-1);
+  --md-admonition-fg-color: var(--fg-1);
+  --md-footer-bg-color: var(--bg-1);
+  --md-footer-bg-color--dark: var(--bg-0);
+
+  --md-text-font: "Geist";
+  --md-code-font: "Geist Mono";
+}
+
+/* ─── the few places Material's defaults fight the palette ───────────────── */
+
+.md-header,
+.md-tabs {
+  background-color: var(--bg-1);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  color: var(--fg-0);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.md-typeset h2 {
+  margin-top: 2.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--line);
+}
+
+/* Code reads as something out of a file, as it does in the app. */
+.md-typeset code,
+.md-typeset pre > code {
+  font-feature-settings: "liga" 0;
+}
+
+.md-typeset :not(pre) > code {
+  background-color: var(--bg-2);
+  color: var(--fg-0);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+
+.md-typeset pre > code {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.md-typeset table:not([class]) {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 0.72rem;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--bg-2);
+  color: var(--fg-0);
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) td {
+  border-top: 1px solid var(--line);
+}
+
+.md-typeset blockquote {
+  border-left: 2px solid var(--line-strong);
+  color: var(--fg-2);
+}
+
+.md-typeset hr {
+  border-bottom: 1px solid var(--line);
+}
+
+/* Status colours keep their meaning from the app: red is failure, and
+   nothing else. */
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-color: var(--warn);
+}
+
+.md-typeset .admonition.danger,
+.md-typeset .admonition.failure,
+.md-typeset details.danger,
+.md-typeset details.failure {
+  border-color: var(--fail);
+}
+
+.md-typeset .admonition.tip,
+.md-typeset .admonition.success,
+.md-typeset details.tip,
+.md-typeset details.success {
+  border-color: var(--pass);
+}
+
+.md-search__form,
+.md-search__input {
+  background-color: var(--bg-2);
+  border-radius: 5px;
+}
+
+.md-nav__link--active,
+.md-nav__link:focus,
+.md-nav__link:hover {
+  color: var(--fail);
+}
+
+.md-typeset a:hover {
+  text-decoration: underline;
+}
+
+/* ─── Gherkin, coloured the way the app colours it ───────────────────────── */
+/* In `tomato ui` the phase keyword carries the colour and the step text stays
+   plain, so a scenario scans by shape. The app gives Given, When and Then a
+   colour each; here they share one, because Pygments tags all three as .k and
+   CSS cannot tell them apart. The important half — keyword coloured, step
+   text plain, quoted arguments picked out — carries over. */
+
+.highlight .k,
+.highlight .kn,
+.highlight .kr {
+  color: var(--given);
+  font-weight: 600;
+}
+
+.highlight .nf {
+  color: var(--fg-0);
+  font-weight: 600;
+}
+
+/* Quoted arguments are what the step acts on — the resource, the path, the
+   expected value — and they read as the important part in the app too. */
+.highlight .s,
+.highlight .s1,
+.highlight .s2 {
+  color: var(--arg);
+}
+
+.highlight .c,
+.highlight .c1,
+.highlight .cm {
+  color: var(--fg-3);
+  font-style: normal;
+}
+
+.highlight .nt {
+  color: var(--given);
+}
+
+.highlight .mi,
+.highlight .m {
+  color: var(--var);
+}
