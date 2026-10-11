@@ -272,11 +272,6 @@ var canonicalTypes = []string{
 	"aws",
 }
 
-// CanonicalTypes returns one type name per resource, in presentation order.
-func CanonicalTypes() []string {
-	return append([]string(nil), canonicalTypes...)
-}
-
 // AllStepCategories returns every resource's step definitions, in a stable
 // order. It is what `tomato steps`, `tomato docs` and `tomato validate` read;
 // no connection is made and no container is started.

@@ -61,12 +61,6 @@ type MessagePublisher interface {
 	Publish(ctx context.Context, target string, payload []byte, headers map[string]string) error
 }
 
-// MessageConsumer is implemented by handlers that can consume messages
-type MessageConsumer interface {
-	Consume(ctx context.Context, target string, timeout int) ([]byte, error)
-	Count(ctx context.Context, target string) (int, error)
-}
-
 // CacheStore is implemented by handlers that provide key-value storage
 type CacheStore interface {
 	Set(ctx context.Context, key string, value string) error

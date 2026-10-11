@@ -159,11 +159,6 @@ func (v *Variables) generateSequence(name string) (string, bool) {
 	return fmt.Sprintf("%d", v.sequences[seqName]), true
 }
 
-// GetGlobalVariables returns the global variable store
-func GetGlobalVariables() *Variables {
-	return globalVariables
-}
-
 // ResetGlobalVariables clears all global variables
 func ResetGlobalVariables() {
 	globalVariables.Reset()

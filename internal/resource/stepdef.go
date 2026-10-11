@@ -66,46 +66,6 @@ type StepCategory struct {
 	Steps       []StepDef `json:"steps"`
 }
 
-// StepRegistry holds all registered step definitions from all handlers
-type StepRegistry struct {
-	categories []StepCategory
-}
-
-// NewStepRegistry creates a new step registry
-func NewStepRegistry() *StepRegistry {
-	return &StepRegistry{
-		categories: make([]StepCategory, 0),
-	}
-}
-
-// AddCategory adds a category of steps to the registry
-func (r *StepRegistry) AddCategory(category StepCategory) {
-	r.categories = append(r.categories, category)
-}
-
-// Categories returns all registered categories
-func (r *StepRegistry) Categories() []StepCategory {
-	return r.categories
-}
-
-// AllSteps returns all steps across all categories
-func (r *StepRegistry) AllSteps() []StepDef {
-	var all []StepDef
-	for _, cat := range r.categories {
-		all = append(all, cat.Steps...)
-	}
-	return all
-}
-
-// RegisterToGodog registers all steps with a godog scenario context
-func (r *StepRegistry) RegisterToGodog(ctx *godog.ScenarioContext) {
-	for _, cat := range r.categories {
-		for _, step := range cat.Steps {
-			ctx.Step(step.Pattern, step.stepHandler(step.Pattern))
-		}
-	}
-}
-
 // StepProvider is implemented by handlers that provide structured step definitions
 type StepProvider interface {
 	// Steps returns the structured step definitions for this handler
@@ -118,16 +78,6 @@ func RegisterStepsToGodog(ctx *godog.ScenarioContext, resourceName string, categ
 		pattern := strings.ReplaceAll(step.Pattern, "{resource}", resourceName)
 		ctx.Step(pattern, step.stepHandler(pattern))
 	}
-}
-
-// FormatStepPattern replaces {resource} placeholder with the actual resource name
-func FormatStepPattern(pattern, resourceName string) string {
-	return strings.ReplaceAll(pattern, "{resource}", resourceName)
-}
-
-// FormatStepExample replaces {resource} placeholder with the actual resource name
-func FormatStepExample(example, resourceName string) string {
-	return strings.ReplaceAll(example, "{resource}", resourceName)
 }
 
 // DummyConfig returns a minimal config.Resource for documentation generation
