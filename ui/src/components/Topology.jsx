@@ -26,7 +26,7 @@ function fit(text, px, ch) {
 
 function Marker({ id, cls }) {
   return (
-    <marker id={id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <marker id={id} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
       <path className={`th ${cls}`} d="M0,0 L10,5 L0,10 z" />
     </marker>
   )
@@ -126,15 +126,28 @@ function layoutColumns({ clients, app, externals, services }) {
     for (const e of edges) e.spans = e.b.c - e.a.c > 1 && hasMid
     const above = edges.filter((e) => e.spans && e.b.cy < midY).sort((p, q) => q.b.cy - p.b.cy)
     const below = edges.filter((e) => e.spans && e.b.cy >= midY).sort((p, q) => p.b.cy - q.b.cy)
-    above.forEach((e, i) => { e.ch = appTop - 12 - i * 11 })
-    below.forEach((e, i) => { e.ch = appTop + APP_H + 12 + i * 11 })
+    above.forEach((e, i) => { e.ch = appTop - 12 - i * 11; e.lane = i })
+    below.forEach((e, i) => { e.ch = appTop + APP_H + 12 + i * 11; e.lane = i })
+    const R = 8
     for (const e of edges) {
       const x1 = e.a.x + e.a.w; const y1 = e.a.cy; const x2 = e.b.x; const y2 = e.b.cy
       if (e.spans) {
-        e.d = `M${x1},${y1} C${x1 + 18},${y1} ${x1 + 22},${e.ch} ${x1 + 44},${e.ch}`
-          + ` L${x2 - 44},${e.ch} C${x2 - 22},${e.ch} ${x2 - 18},${y2} ${x2 - 5},${y2}`
+        // Out of the source, up or down to the channel, across, then down
+        // or up to the target, with rounded corners: the inner channel
+        // takes the inner rise and drop, so lines nest instead of crossing,
+        // and the last leg is straight so the arrowhead sits on the line.
+        const riseX = x1 + 14 + e.lane * 8
+        const dropX = x2 - 14 - e.lane * 8
+        const up = e.ch < y1 ? -1 : 1
+        const down = y2 < e.ch ? -1 : 1
+        const r1 = Math.min(R, Math.abs(e.ch - y1) / 2)
+        const r2 = Math.min(R, Math.abs(y2 - e.ch) / 2)
+        e.d = `M${x1},${y1} L${riseX - r1},${y1} Q${riseX},${y1} ${riseX},${y1 + up * r1}`
+          + ` L${riseX},${e.ch - up * r1} Q${riseX},${e.ch} ${riseX + r1},${e.ch}`
+          + ` L${dropX - r2},${e.ch} Q${dropX},${e.ch} ${dropX},${e.ch + down * r2}`
+          + ` L${dropX},${y2 - down * r2} Q${dropX},${y2} ${dropX + r2},${y2} L${x2 - 1},${y2}`
       } else {
-        e.d = `M${x1},${y1} C${x1 + 28},${y1} ${x2 - 28},${y2} ${x2 - 5},${y2}`
+        e.d = `M${x1},${y1} C${x1 + 28},${y1} ${x2 - 28},${y2} ${x2 - 1},${y2}`
       }
     }
     const top = Math.min(TOP - 24, ...above.map((e) => e.ch - 10))
@@ -185,6 +198,9 @@ function layoutStack({ clients, app, externals, services }, paneW) {
   })
   const contentBottom = y
 
+  // Lines end on the box they enter, so the arrowhead touches it. On the
+  // left side the target is the box's left edge and the line arrives from
+  // the left, so the end is one pixel before it; on the right, one after.
   const route = (edges) => {
     // Longer hops take the outer channels so the arcs nest instead of cross.
     const side = (e) => (e.inferred || !e.steps ? 'right' : 'left')
@@ -202,7 +218,7 @@ function layoutStack({ clients, app, externals, services }, paneW) {
       const dir = y2 > y1 ? 1 : -1
       const r = Math.min(8, Math.abs(y2 - y1) / 2)
       e.d = `M${x1},${y1} L${chx - out * r},${y1} Q${chx},${y1} ${chx},${y1 + dir * r}`
-        + ` L${chx},${y2 - dir * r} Q${chx},${y2} ${chx - out * r},${y2} L${x2 - out * 5},${y2}`
+        + ` L${chx},${y2 - dir * r} Q${chx},${y2} ${chx - out * r},${y2} L${x2 + out},${y2}`
     }
     const span = Math.max(reach.left, reach.right)
     const width = Math.max(paneW, 2 * (halfW + 14 + span * 10) + 24)
