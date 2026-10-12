@@ -110,7 +110,8 @@ func TestParseFeatureWithoutConfigLeavesStepsUnannotated(t *testing.T) {
 
 func TestTopologyResolvesWhatClientsCall(t *testing.T) {
 	cfg := &config.Config{
-		App: config.AppConfig{Port: 8080},
+		// A client defaults to the app only when there is one to run.
+		App: config.AppConfig{Command: "go run ./app", Port: 8080},
 		Resources: map[string]config.Resource{
 			"api":           {Type: "http-client", BaseURL: "http://localhost:8080"},
 			"grpc":          {Type: "grpc", Address: "localhost:9090"},

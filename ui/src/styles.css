@@ -485,20 +485,36 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .msg[data-state="future"]{opacity:.22}
 .msg[data-state="current"] .msg-num{background:var(--fg-0);color:var(--bg-0)}
 
-/* — topology diagram: numbered, hoverable, drawn step by step — */
-.tp{display:flex;flex-direction:column;gap:var(--s-5);padding:var(--s-5)}
-.tsvg{display:block;width:100%;height:auto;overflow:visible;font-family:var(--font-mono)}
-.tcol{fill:var(--fg-3);font-size:9px;letter-spacing:.06em;text-transform:uppercase;text-anchor:middle}
+/* — topology diagram: what the scenario talks to, at natural size — */
+.tp{display:flex;flex-direction:column;gap:var(--s-5);padding:var(--s-5);min-height:0}
+.tp-scroll{overflow:auto;max-width:100%}
+.tsvg{display:block;overflow:visible;font-family:var(--font-mono)}
+.tcol{fill:var(--fg-3);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;text-anchor:middle}
+.tcol[data-align="left"]{text-anchor:start}
 .tnode rect{fill:var(--bg-2);stroke:var(--line-strong);stroke-width:1;transition:stroke var(--dur),fill var(--dur)}
 .tnode[data-kind="app"] rect{fill:var(--bg-3);stroke:var(--fg-3)}
+.tnode[data-kind="external"] rect{fill:var(--bg-1);stroke-dasharray:3 3}
+.tnode[data-mock="true"] rect{stroke-dasharray:3 3}
 .tnode[data-active="true"] rect{stroke:var(--fg-0);stroke-width:1.5}
 .tnode[data-status="failed"] rect{stroke:var(--fail);fill:var(--fail-bg)}
 .tnode use{color:var(--fg-2)}
 .tnode[data-kind="runner"] use{color:var(--brand)}
 .tnode[data-active="true"] use{color:var(--fg-0)}
 .tnode[data-status="failed"] use{color:var(--fail-ink)}
-.tnode-name{fill:var(--fg-0);font-size:11px;font-weight:500}
-.tnode-type{fill:var(--fg-3);font-size:9.5px}
+.tnode-name{fill:var(--fg-0);font-size:12px;font-weight:500}
+.tnode-type{fill:var(--fg-3);font-size:10px}
+.tnode[data-used="false"]{opacity:.38}
+/* A container tomato starts, with the resources it backs inside; and the
+   standing groups for what tomato serves, what is outside it, and the host. */
+.tgroup rect{fill:var(--bg-1);stroke:var(--line);stroke-width:1}
+.tgroup[data-kind="container"] rect{stroke:var(--line-strong);stroke-dasharray:4 3}
+.tgroup use{color:var(--fg-3)}
+.tgroup[data-kind="served"] use{color:var(--brand)}
+.tgroup-title{fill:var(--fg-1);font-size:11px;font-weight:500}
+.tgroup-sub{fill:var(--fg-3);font-size:9.5px}
+.tgroup[data-used="false"]{opacity:.45}
+/* Wiring tomato.yml declares — a client's base_url, the app's env templates. */
+.twire{fill:none;stroke:var(--fg-3);stroke-width:1;stroke-dasharray:1.5 3.5;stroke-linecap:round;opacity:.8;pointer-events:none}
 .tvar{fill:var(--var);font-size:9.5px;text-anchor:middle}
 .tvar[data-on="false"]{display:none}
 .tedge{cursor:pointer}
@@ -514,7 +530,7 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .tedge[data-inferred="true"] .tedge-line{stroke-dasharray:.03 .025;animation:tfade .4s .55s both}
 .th--muted{fill:var(--fg-3)}.th--cur{fill:var(--fg-0)}.th--fail{fill:var(--fail)}
 .tbadge circle{fill:var(--bg-1);stroke:var(--line-strong);stroke-width:1}
-.tbadge text{fill:var(--fg-1);font-size:8.5px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+.tbadge text{fill:var(--fg-1);font-size:9px;font-weight:600;text-anchor:middle;dominant-baseline:central}
 .tedge:hover .tbadge circle,.tedge[data-hot="true"] .tbadge circle{stroke:var(--fg-0)}
 .tedge[data-state="current"] .tbadge circle{fill:var(--fg-0);stroke:var(--fg-0)}
 .tedge[data-state="current"] .tbadge text{fill:var(--bg-0)}
@@ -540,6 +556,11 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .tp-key{display:inline-flex;align-items:center;gap:var(--s-3)}
 .tp-key::before{content:"";width:16px;border-top:1.5px solid var(--fg-2)}
 .tp-key[data-inferred="true"]::before{border-top-style:dashed}
+.tp-key[data-wire="true"]::before{border-top-style:dotted;border-top-width:2px}
+/* What the scenario never touches is listed, not drawn, until asked for. */
+.tp-unused{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-3) var(--s-4);padding:var(--s-4) var(--s-5);border:1px dashed var(--line);border-radius:var(--r-3);font:var(--fs-11) var(--font-ui);color:var(--fg-3)}
+.tp-unused-label{text-transform:uppercase;letter-spacing:.06em;font-size:10px}
+.tp-unused-list{flex:1 1 auto;min-width:0;font-family:var(--font-mono);color:var(--fg-2);overflow-wrap:anywhere}
 
 /* — config page (tomato.yml) — */
 .tree-row[data-kind="config"]{font-family:var(--font-mono);font-size:var(--fs-11);color:var(--fg-1)}
