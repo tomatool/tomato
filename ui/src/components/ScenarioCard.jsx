@@ -1,6 +1,8 @@
+import { Fragment } from 'react'
 import { StepRow } from './StepRow.jsx'
 import { fmtDur, plural } from '../lib/format'
 import { BACKGROUND_KEY } from '../lib/steps.jsx'
+import { stepKind } from '../lib/kind'
 
 function Head({ collapsed, onToggle, children }) {
   return (
@@ -34,7 +36,7 @@ export function BackgroundCard({ steps, collapsed, onToggle, runState }) {
       {!collapsed && (
         <div className="steps">
           {steps.map((s, i) => (
-            <StepRow key={i} step={s} scenarioName={BACKGROUND_KEY} index={i} runState={runState} />
+            <StepRow key={i} step={s} scenarioName={BACKGROUND_KEY} index={i} runState={runState} background />
           ))}
         </div>
       )}
@@ -95,9 +97,20 @@ export function ScenarioCard({
             </div>
           )}
           <div className="steps">
-            {(scenario.steps ?? []).map((s, i) => (
-              <StepRow key={i} step={s} scenarioName={scenario.name} index={i} runState={runState} />
-            ))}
+            {(() => {
+              // A rule between the preparation and the probe — or the first
+              // check when the scenario has no probe of its own. A capture
+              // belongs to whichever side it is on, so it never starts the live part.
+              const steps = scenario.steps ?? []
+              const kinds = steps.map((s) => stepKind(s))
+              const firstLive = kinds.includes('probe') ? kinds.indexOf('probe') : kinds.indexOf('check')
+              return steps.map((s, i) => (
+                <Fragment key={i}>
+                  {i === firstLive && i > 0 && <div className="steps-rule" role="separator" aria-label="preparation above, probe and checks below" />}
+                  <StepRow step={s} scenarioName={scenario.name} index={i} runState={runState} />
+                </Fragment>
+              ))
+            })()}
           </div>
           {(scenario.examples ?? []).map((ex, i) => (
             ex.rows?.length > 0 && (

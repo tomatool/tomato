@@ -326,6 +326,14 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .var{color:var(--var)}
 .step-desc{grid-column:3 / 5;font:var(--fs-11)/1.4 var(--font-ui);color:var(--fg-3)}
 .step[data-hot="true"]{background:var(--bg-2)}
+/* What part of the scenario a step is (lib/kind.js): the preparation reads
+   quieter, the probe stands out, and a rule separates the two blocks. */
+.kind{display:inline-flex;align-items:center;height:20px;padding:0 var(--s-3);border:1px solid var(--line);border-radius:var(--r-1);font:var(--fs-11)/1 var(--font-ui);letter-spacing:.04em;color:var(--fg-3);white-space:nowrap}
+.kind[data-kind="probe"]{color:var(--fg-0);border-color:var(--line-strong);background:var(--bg-2)}
+.kind[data-kind="check"]{color:var(--then);border-color:var(--line)}
+.kind[data-kind="capture"]{border-style:dashed}
+.step[data-kind="setup"] .step-text{color:var(--fg-2)}
+.steps-rule{height:0;margin:var(--s-3) var(--s-4) var(--s-3) 96px;border-top:1px dashed var(--line-strong)}
 
 /* docstring + data table */
 .docstring{position:relative;margin:0;padding:var(--s-4) var(--s-5);border:1px solid var(--line);border-radius:var(--r-2);background:var(--bg-0);font:var(--fs-12)/1.55 var(--font-mono);color:var(--fg-1);white-space:pre;overflow:auto}
@@ -413,6 +421,12 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .msg[data-kind="note"] .msg-line{display:none}
 .msg[data-kind="note"] .msg-label{align-self:flex-start;margin-left:-8px;padding:1px var(--s-3) 1px var(--s-2);border:1px solid var(--line-strong);border-radius:var(--r-2);background:var(--bg-1);color:var(--var)}
 .msg[data-status="failed"] .msg-line{color:var(--fail)}
+.msg[data-role="setup"] .msg-line{color:var(--fg-3)}
+.msg[data-role="setup"] .msg-label{color:var(--fg-3)}
+.msg[data-role="probe"] .msg-line{border-top-width:2px;color:var(--fg-0)}
+.msg[data-role="probe"] .msg-label{color:var(--fg-0);font-weight:500}
+.msg[data-role="check"] .msg-line{border-top-style:dotted}
+.msg[data-role="capture"] .msg-line{border-top-style:dashed;color:var(--fg-3)}
 .msg[data-status="failed"] .msg-label{color:var(--fail-ink)}
 .msg[data-status="failed"] .msg-num{background:var(--fail-bg);color:var(--fail-ink)}
 .msg[data-status="skipped"] .msg-line{color:var(--fg-3);border-top-style:dashed}

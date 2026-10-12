@@ -24,6 +24,7 @@ export function Flow({ model, cursor, hot, pinned, onHot, onPin }) {
             className="msg"
             key={m.n}
             data-kind={m.kind}
+            data-role={m.role || undefined}
             data-dir={m.dir}
             data-state={stateOf(m.idx)}
             data-status={m.status || undefined}

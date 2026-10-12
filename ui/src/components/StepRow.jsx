@@ -1,4 +1,5 @@
 import { tokenizeStep, stepKey } from '../lib/steps.jsx'
+import { stepKind, KIND_LABEL } from '../lib/kind'
 import { fmtDur } from '../lib/format'
 
 function DataTable({ rows }) {
@@ -15,8 +16,9 @@ function DataTable({ rows }) {
   )
 }
 
-export function StepRow({ step, scenarioName, index, runState }) {
+export function StepRow({ step, scenarioName, index, runState, background }) {
   const k = stepKey(scenarioName, index)
+  const kind = stepKind(step, { background })
   // `unmatched` is known from parsing alone, so a step with no definition
   // reads as undefined before the suite has ever run.
   const status = runState.stepStatus[k] ?? (step.unmatched ? 'undefined' : '')
@@ -28,6 +30,7 @@ export function StepRow({ step, scenarioName, index, runState }) {
     <div
       className="step"
       data-phase={step.phase || undefined}
+      data-kind={kind || undefined}
       data-and={isAnd ? 'true' : undefined}
       data-status={status || undefined}
       aria-current={status === 'running' ? 'true' : undefined}
@@ -37,6 +40,7 @@ export function StepRow({ step, scenarioName, index, runState }) {
       <span className="step-text">{tokenizeStep(step.text)}</span>
       <span className="step-res">
         {dur != null && <span className="step-dur">{fmtDur(dur)}</span>}
+        {kind && <span className="kind" data-kind={kind}>{KIND_LABEL[kind]}</span>}
         {step.resource && (
           <span className="res">
             <span className="res-name">{step.resource}</span>

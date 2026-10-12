@@ -1,4 +1,5 @@
 import { stepKey } from './steps.jsx'
+import { stepKind } from './kind'
 
 // What a scenario does, lane by lane: one message per step, numbered in step
 // order. This is derived from the feature file and tomato.yml — tomato does
@@ -30,6 +31,7 @@ export function flowModel(scenario, runState) {
       b: lane == null ? 2 : lane + 2,
       status: stepStatus[k] ?? (step.unmatched ? 'undefined' : ''),
       phase: step.phase ?? '',
+      role: stepKind(step),
       kw: String(step.keyword).trim(),
       label: step.resource ? `${verb} · ${step.resource}` : step.text,
       verb: verb.toUpperCase(),

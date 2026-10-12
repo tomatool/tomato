@@ -14,6 +14,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - The Go toolchain is pinned to 1.26.6, which carries the standard-library fixes govulncheck flags in earlier 1.26 releases. Building tomato now needs Go 1.26.
 
 ### Added
+- The web UI tells a scenario's preparation from its probe and its checks. Every step is classified from what its definition does and the keyword the author chose — `Given "api" sends` is preparation, `When "api" sends` is the probe, a check is a check under any keyword, and a Background is preparation throughout — and shown as a `setup` / `probe` / `check` / `capture` chip beside the resource, with a rule between the preparation block and the first probe. The Flow tab draws preparation quieter and the probe heavier. The rule lives in `ui/src/lib/kind.js`, keyed on the step groups the resources declare.
 - A [Documentation Map](docs/overview.md): every page on one screen with a line on what it is for, so the whole documentation can be navigated from one place. A test fails if a page in the nav is missing from it.
 - The sidebar groups collapse. They were rendered as flat always-open headers, which made the step reference's fourteen entries hard to see past.
 - The documentation site is in the same palette as `tomato ui` — the Modernist tokens from `ui/src/styles.css`, Geist and Geist Mono, the tomato mark as the favicon, and a dark/light toggle that defaults to dark as the app does. Gherkin is highlighted the way the app colours it: keyword coloured, step text plain, quoted arguments picked out.
