@@ -64,7 +64,15 @@ export function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
 
   const [sideWidth, setSideWidth] = useLocalNumber('sideWidth', SIDE_DEFAULT)
+  // What the centre pane shows for a feature: its document, or the topology
+  // at the pane's full width, with the inspector and the console untouched.
+  const [center, setCenter] = useLocalEnum('center', ['doc', 'topology'], 'doc')
+  // Bumped when the selected scenario should be brought into view.
+  const [follow, setFollow] = useState(0)
   const [consoleHeight, setConsoleHeight] = useLocalNumber('consoleHeight', 220)
+  // The output can be minimised to its tab bar; a run starting brings it back.
+  const [consoleOpen, setConsoleOpen] = useLocalEnum('console', ['open', 'closed'], 'open')
+  useEffect(() => { if (running) setConsoleOpen('open') }, [running, setConsoleOpen])
 
   // ——— server messages ———
   const onMessage = useCallback((m) => {
@@ -285,7 +293,25 @@ export function App() {
     setSelectedScenario((i) => Math.max(0, Math.min(shown.length - 1, i + d)))
     setCursor(-1)
     setPinned(null)
+    setFollow((n) => n + 1)
   }, [shown.length])
+
+  // The document follows the selection: the chosen scenario scrolls to the
+  // top of the pane, whether it was picked in the tree or with j/k.
+  useEffect(() => {
+    if (!follow) return
+    const el = document.querySelector('.pane--doc .scenario[aria-current="true"]')
+    el?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [follow])
+
+  // The topology in the centre takes the inspector's Topology tab with it:
+  // the inspector shows the flow beside it, and picking that tab again
+  // brings the topology back to the inspector.
+  const toggleCenter = useCallback(() => {
+    if (center === 'topology') { setCenter('doc'); setSideTab('topology') } else { setCenter('topology'); setSideTab('flow') }
+    // The pane keeps its scroll position across what it shows; start at the top.
+    document.querySelector('.pane--doc')?.scrollTo({ top: 0 })
+  }, [center, setCenter])
 
   // ——— keyboard ———
   useEffect(() => {
@@ -310,6 +336,8 @@ export function App() {
         case 'R': runAll(); break
         case '[': setTreeOpen((v) => !v); break
         case ']': setSideOpen((v) => !v); break
+        case '\\': toggleCenter(); break
+        case '-': setConsoleOpen(consoleOpen === 'open' ? 'closed' : 'open'); break
         case 'ArrowRight': if (sideTab !== 'runs') { e.preventDefault(); seek(cursor + 1) } break
         case 'ArrowLeft': if (sideTab !== 'runs') { e.preventDefault(); seek(cursor - 1) } break
         case ' ': if (sideTab !== 'runs') { e.preventDefault(); togglePlay() } break
@@ -318,7 +346,7 @@ export function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, sideTab, cursor, seek, togglePlay, pinned])
+  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, sideTab, cursor, seek, togglePlay, pinned, toggleCenter, consoleOpen, setConsoleOpen])
 
   // ——— pane dragging ———
   const [resizing, setResizing] = useState(null)
@@ -417,7 +445,13 @@ export function App() {
             onToggleDir={(d) => setOpenDirs((p) => ({ ...p, [d]: p[d] === false }))}
             onSelectConfig={() => { setView('config'); setActiveLog(null) }}
             onSelectFile={(p) => { setView('feature'); setSelectedFile(p); setSelectedScenario(0); setCursor(-1); setPinned(null) }}
-            onSelectScenario={(p, i) => { setView('feature'); setSelectedFile(p); setSelectedScenario(i); setCursor(-1); setPinned(null) }}
+            onSelectScenario={(p, i) => {
+              setView('feature'); setSelectedFile(p); setSelectedScenario(i); setCursor(-1); setPinned(null)
+              // Picked on purpose, so open it and bring it into view.
+              const name = features.find((f) => f.filePath === p)?.scenarios?.[i]?.name
+              if (name) setCollapsed((c) => ({ ...c, [name]: false }))
+              setFollow((n) => n + 1)
+            }}
           />
         </div>
       </aside>
@@ -428,6 +462,25 @@ export function App() {
             config={config} mode={cfgMode} onMode={setCfgMode}
             featureCount={features.length} scenarioCount={allScenarios.length}
           />
+        ) : center === 'topology' ? (
+          <div className="doc doc--wide">
+            <div className="feature-head">
+              <span className="feature-kw">TOPOLOGY</span>
+              <h1>{scenario?.name ?? feature?.name ?? 'No scenario selected'}</h1>
+              {feature && <span className="feature-path">{feature.filePath}</span>}
+            </div>
+            {model ? (
+              <Topology
+                model={model} topo={topo} cursor={cursor}
+                hot={hot} pinned={pinned} onHot={setHot} onPin={togglePin}
+              />
+            ) : (
+              <div className="empty">
+                <h3>No scenario selected</h3>
+                <p>Pick a scenario on the left to see what it talks to.</p>
+              </div>
+            )}
+          </div>
         ) : !feature ? (
           <div className="empty">
             <h3>No feature selected</h3>
@@ -532,13 +585,21 @@ export function App() {
           <button className="tab" type="button" role="tab" aria-selected={sideTab === 'flow' ? 'true' : undefined} onClick={() => setSideTab('flow')}>
             Flow <span className="count">{model?.msgs.length ?? 0}</span>
           </button>
-          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'topology' ? 'true' : undefined} onClick={() => setSideTab('topology')}>
+          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'topology' ? 'true' : undefined} onClick={() => { setSideTab('topology'); if (center === 'topology') setCenter('doc') }}>
             Topology
           </button>
           <button className="tab" type="button" role="tab" aria-selected={sideTab === 'runs' ? 'true' : undefined} onClick={() => setSideTab('runs')}>
             Runs <span className="count">{runs.length}</span>
           </button>
           <span style={{ flex: 1 }} />
+          <button
+            className="btn btn--ghost btn--sm btn--icon" type="button" style={{ alignSelf: 'center' }}
+            title={center === 'topology' ? 'Put the topology back in the inspector  \\' : 'Show the topology in the centre  \\'}
+            aria-pressed={center === 'topology' ? 'true' : undefined}
+            onClick={toggleCenter}
+          >
+            <i className="ico-center" />
+          </button>
           <button className="btn btn--ghost btn--sm btn--icon" type="button" style={{ alignSelf: 'center' }} title="Hide inspector  ]" onClick={() => setSideOpen(false)}>
             <i className="ico-chev" />
           </button>
@@ -611,6 +672,8 @@ export function App() {
         runId={runId}
         running={running}
         height={consoleHeight}
+        open={consoleOpen === 'open'}
+        onToggle={() => setConsoleOpen(consoleOpen === 'open' ? 'closed' : 'open')}
         onTab={(t) => { if (!t) { setActiveLog(null); setLines([]) } else openLog(t.run, t.name, t.absPath) }}
         onResizeStart={(e) => {
           e.preventDefault()

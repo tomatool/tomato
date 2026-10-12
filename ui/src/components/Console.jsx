@@ -3,7 +3,7 @@ import { ansiToNodes } from '../lib/ansi.jsx'
 import { fmtClock } from '../lib/format'
 import { SourcePath } from './SourcePath.jsx'
 
-export function Console({ lines, logTabs, activeLog, runId, running, height, onTab, onResizeStart }) {
+export function Console({ lines, logTabs, activeLog, runId, running, height, open = true, onToggle, onTab, onResizeStart }) {
   const body = useRef(null)
   const stuck = useRef(true)
 
@@ -18,8 +18,8 @@ export function Console({ lines, logTabs, activeLog, runId, running, height, onT
   }
 
   return (
-    <section className="pane pane--console">
-      <div className="resize-y" onMouseDown={onResizeStart} />
+    <section className="pane pane--console" data-open={open ? 'true' : 'false'}>
+      {open && <div className="resize-y" onMouseDown={onResizeStart} />}
       <div className="tabs">
         <button
           className="tab" type="button"
@@ -44,7 +44,16 @@ export function Console({ lines, logTabs, activeLog, runId, running, height, onT
             run {runId}
           </span>
         )}
+        <button
+          className="btn btn--ghost btn--sm btn--icon" type="button" style={{ alignSelf: 'center' }}
+          title={open ? 'Minimise output  -' : 'Show output  -'}
+          aria-expanded={open ? 'true' : 'false'}
+          onClick={onToggle}
+        >
+          <i className="ico-chev" data-open={open ? 'true' : undefined} />
+        </button>
       </div>
+      {open && (
       <div className="console" ref={body} style={{ height }} onScroll={onScroll}>
         {lines.length === 0 ? (
           <div className="line">
@@ -60,6 +69,7 @@ export function Console({ lines, logTabs, activeLog, runId, running, height, onT
           </div>
         ))}
       </div>
+      )}
     </section>
   )
 }
