@@ -34,7 +34,7 @@ export function Flow({ model, cursor, hot, pinned, onHot, onPin }) {
             onMouseLeave={() => onHot(null)}
             onClick={() => onPin(m.idx)}
           >
-            <div className="msg-arrow" data-from={m.a} data-to={m.b}>
+            <div className="msg-arrow" data-from={m.a} data-to={m.b} style={{ '--from': m.a, '--to': m.b, '--span': m.b - m.a }}>
               <span className="msg-label">
                 <span className="msg-num">{m.n}</span>
                 {/* Nowrap by design; .msg-label ellipsises what does not fit. */}

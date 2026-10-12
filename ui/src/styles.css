@@ -399,13 +399,10 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .msg{position:relative;z-index:1;padding:var(--s-3) 0;cursor:default;border-radius:var(--r-2)}
 .msg:hover,.msg[data-hot="true"]{background:var(--bg-2)}
 .msg-arrow{padding-inline:calc(50% / var(--span,1));display:flex;flex-direction:column;gap:3px;min-width:0}
-/* placement without inline styles: data-from / data-to are 1-based lane lines (to is exclusive) */
-.msg-arrow[data-from="1"]{grid-column-start:1}.msg-arrow[data-from="2"]{grid-column-start:2}.msg-arrow[data-from="3"]{grid-column-start:3}.msg-arrow[data-from="4"]{grid-column-start:4}
-.msg-arrow[data-to="2"]{grid-column-end:2}.msg-arrow[data-to="3"]{grid-column-end:3}.msg-arrow[data-to="4"]{grid-column-end:4}.msg-arrow[data-to="5"]{grid-column-end:5}.msg-arrow[data-to="6"]{grid-column-end:6}
-.msg-arrow[data-from="1"][data-to="2"],.msg-arrow[data-from="2"][data-to="3"],.msg-arrow[data-from="3"][data-to="4"],.msg-arrow[data-from="4"][data-to="5"]{--span:1}
-.msg-arrow[data-from="1"][data-to="3"],.msg-arrow[data-from="2"][data-to="4"],.msg-arrow[data-from="3"][data-to="5"]{--span:2}
-.msg-arrow[data-from="1"][data-to="4"],.msg-arrow[data-from="2"][data-to="5"]{--span:3}
-.msg-arrow[data-from="1"][data-to="5"]{--span:4}.msg-arrow[data-from="1"][data-to="6"]{--span:5}
+/* data-from / data-to are 1-based lane lines (to is exclusive); the same
+   numbers as custom properties place the arrow for any number of lanes,
+   where an enumerated rule per column stopped at the sixth. */
+.msg-arrow{grid-column:var(--from,1) / var(--to,2)}
 .msg-label{display:flex;align-items:center;gap:var(--s-3);font:var(--fs-11)/16px var(--font-mono);color:var(--fg-1);white-space:nowrap;padding-left:var(--s-2);min-width:0;max-width:100%}
 /* A note sits half a lane in, so at one or two lanes there is very little room
    left. Without max-width the label is align-self:flex-start and sizes to its
