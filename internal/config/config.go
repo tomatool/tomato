@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -287,7 +289,7 @@ func Load(path string) (*Config, error) {
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parsing config file: %w", err)
+		return nil, explainYAMLError(data, err)
 	}
 
 	if err := cfg.expandPresets(); err != nil {
@@ -326,7 +328,9 @@ func checkSchemaVersion(data []byte) error {
 		Resources yaml.Node `yaml:"resources"`
 	}
 	if err := yaml.Unmarshal(data, &probe); err != nil {
-		return fmt.Errorf("parsing config file: %w", err)
+		// This runs before the full decode, so it is where a syntax error
+		// surfaces first — and where it has to be explained.
+		return explainYAMLError(data, err)
 	}
 
 	if probe.Version != nil && *probe.Version != SupportedVersion {
@@ -438,4 +442,56 @@ func (c *Config) validate() error {
 	}
 
 	return nil
+}
+
+var (
+	yamlErrLine = regexp.MustCompile(`line (\d+):`)
+	// A mapping entry whose value opens with a Go template. Specifically
+	// "{{", not any "{": `resources: {}` and `env: {A: b}` are valid YAML
+	// flow mappings, and matching those turned an unrelated indentation
+	// error into confidently wrong advice.
+	bareTemplate = regexp.MustCompile(`^(\s*)([A-Za-z0-9_.-]+):\s+(\{\{.*)$`)
+)
+
+// explainYAMLError turns go-yaml's report into one someone can act on.
+//
+// "yaml: line 8: did not find expected key" names neither what is wrong nor
+// where. In a tomato.yml the cause is usually the same: a value starting with
+// "{{" that is not quoted. YAML reads "{" as the start of a flow mapping, so
+//
+//	KAFKA_BROKERS: {{.kafka.host}}:{{.kafka.port.9092}}
+//
+// is a syntax error, while DATABASE_URL: postgres://{{...}} is fine because it
+// starts with a letter. A tomato.yml is full of these templates, so it is
+// worth naming rather than leaving to the reader.
+//
+// YAML reports where the mapping began, not where it broke, so the search for
+// the offending line starts at the reported line and runs forward.
+func explainYAMLError(data []byte, err error) error {
+	lines := strings.Split(string(data), "\n")
+
+	from := 0
+	if m := yamlErrLine.FindStringSubmatch(err.Error()); m != nil {
+		if n, convErr := strconv.Atoi(m[1]); convErr == nil && n >= 1 && n <= len(lines) {
+			from = n - 1
+		}
+	}
+
+	for i := from; i < len(lines) && i < from+40; i++ {
+		m := bareTemplate.FindStringSubmatch(lines[i])
+		if m == nil {
+			continue
+		}
+		indent, key, value := m[1], m[2], strings.TrimSpace(m[3])
+		return fmt.Errorf(
+			"parsing config file: %v\n\n  %d | %s\n\n"+
+				"A value starting with \"{\" is read as the start of a YAML mapping, so a bare\n"+
+				"template is a syntax error. Quote it:\n\n  %s%s: %q",
+			err, i+1, lines[i], indent, key, value)
+	}
+
+	if from > 0 {
+		return fmt.Errorf("parsing config file: %v\n\n  %d | %s", err, from+1, lines[from])
+	}
+	return fmt.Errorf("parsing config file: %w", err)
 }

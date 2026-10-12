@@ -1139,3 +1139,69 @@ func TestValidate_RejectsParallelScenarios(t *testing.T) {
 		}
 	}
 }
+
+// "yaml: line 8: did not find expected key" names neither what is wrong nor
+// where — YAML reports where the mapping began, not where it broke. In a
+// tomato.yml the cause is almost always a bare {{template}}, because a value
+// opening with "{" is read as a flow mapping. `tomato init` generated exactly
+// that for KAFKA_BROKERS, so the first thing a new user ran produced a config
+// tomato then refused with an error that did not say why.
+func TestLoad_ExplainsABareTemplate(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tomato.yml")
+	body := `version: 2
+
+app:
+  env:
+    DATABASE_URL: postgres://u:p@{{.postgres.host}}:{{.postgres.port.5432}}/db
+    KAFKA_BROKERS: {{.kafka.host}}:{{.kafka.port.9092}}
+
+resources: {}
+`
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("expected the bare template to fail parsing")
+	}
+	msg := err.Error()
+
+	for _, want := range []string{
+		"KAFKA_BROKERS",                   // the offending line, not the one YAML blamed
+		`KAFKA_BROKERS: "{{.kafka.host}}`, // the corrected line, ready to paste
+		"Quote it",
+	} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("the error should contain %q.\ngot:\n%s", want, msg)
+		}
+	}
+	if strings.Contains(msg, "DATABASE_URL") {
+		t.Errorf("DATABASE_URL starts with a scheme and parses fine; it should not be blamed.\ngot:\n%s", msg)
+	}
+}
+
+// The advice is only right when there really is a bare template. `{}` and
+// `{a: b}` are valid YAML, and an earlier version of this matched them —
+// turning an unrelated indentation error into confidently wrong advice.
+func TestLoad_DoesNotInventTemplateAdviceForOtherErrors(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tomato.yml")
+	body := "version: 2\nsettings:\n  timeout: 5m\n   output: pretty\nresources: {}\n"
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("expected the bad indentation to fail parsing")
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "Quote it") {
+		t.Errorf("this is an indentation error, not a template one; the advice does not apply.\ngot:\n%s", msg)
+	}
+	if !strings.Contains(msg, "output: pretty") {
+		t.Errorf("the error should still show the offending line.\ngot:\n%s", msg)
+	}
+}

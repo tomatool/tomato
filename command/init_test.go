@@ -23,14 +23,37 @@ import (
 
 func allSelections() []initModel {
 	var models []initModel
-	// each dependency on its own, then all of them together
 	all := map[string]bool{}
 	for _, d := range availableResources {
-		models = append(models, initModel{selected: map[string]bool{d.key: true}})
 		all[d.key] = true
 	}
-	models = append(models, initModel{selected: all})
-	models = append(models, initModel{selected: map[string]bool{}}) // nothing selected
+
+	// Every runner, including the empty one. The app block — and the env
+	// vars inside it — is only written when a runner is chosen, so leaving
+	// runnerType empty skipped it entirely. That is how a generated config
+	// with an unquoted `{{.kafka.host}}` env var, which YAML cannot parse,
+	// got past these tests.
+	runners := []initModel{
+		{},
+		{runnerType: "command", customCommand: "go run ./cmd/app"},
+		{runnerType: "docker", dockerfile: "Dockerfile"},
+		// values that need quoting to survive YAML
+		{runnerType: "command", customCommand: `sh -c "echo {hi}: there"`},
+	}
+
+	for _, r := range runners {
+		for _, d := range availableResources {
+			m := r
+			m.selected = map[string]bool{d.key: true}
+			models = append(models, m)
+		}
+		m := r
+		m.selected = all
+		models = append(models, m)
+		m2 := r
+		m2.selected = map[string]bool{}
+		models = append(models, m2)
+	}
 	return models
 }
 
