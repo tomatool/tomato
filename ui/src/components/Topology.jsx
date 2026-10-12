@@ -11,11 +11,13 @@ const roleOf = (type) => (CLIENT_TYPES.has(type) ? 'client' : MOCK_TYPES.has(typ
 // scaled to the pane; scaling the whole picture made a sixteen-resource
 // suite unreadable. A pane too narrow for the columns gets the stack instead.
 const PAD = 12; const TOP = 30
-const RUNNER_W = 100; const CLIENT_W = 136; const APP_W = 128; const APP_H = 48
-const NODE_W = 150; const NODE_H = 38; const ROW_GAP = 8
+const RUNNER_W = 96; const CLIENT_W = 128; const APP_W = 120; const APP_H = 48
+const NODE_W = 144; const NODE_H = 38; const ROW_GAP = 8
 const GROUP_PAD = 8; const GROUP_TITLE = 34; const GROUP_GAP = 14
 const GROUP_W = NODE_W + GROUP_PAD * 2
-const COL_GAP = 56
+// The gap between columns, and the narrower one tried before giving up on
+// columns and stacking instead.
+const COL_GAP = 56; const COL_GAP_TIGHT = 28
 const CH_NAME = 7.25; const CH_SUB = 6.1 // px per character of the mono labels, for truncation
 
 function fit(text, px, ch) {
@@ -76,15 +78,15 @@ const groupH = (g) => GROUP_PAD * 2 + GROUP_TITLE + stackH(g.rows.length, NODE_H
 // Columns, left to right: tomato | clients | app | services. Lines run left
 // to right; one that skips a column climbs to a channel above or below the
 // app's row, runs flat past it and drops to its target.
-function layoutColumns({ clients, app, externals, services }) {
+function layoutColumns({ clients, app, externals, services }, gap = COL_GAP) {
   const boxes = new Map(); const labels = []
   let x = PAD
   const col = { runner: x }
-  x += RUNNER_W + COL_GAP
+  x += RUNNER_W + gap
   const wide = clients.length > 0
-  if (wide) { col.client = x; x += CLIENT_W + COL_GAP }
+  if (wide) { col.client = x; x += CLIENT_W + gap }
   const hasMid = Boolean(app) || externals.length > 0
-  if (hasMid) { col.app = x; x += APP_W + COL_GAP }
+  if (hasMid) { col.app = x; x += APP_W + gap }
   col.service = x
   const width = col.service + (services.length ? GROUP_W : 0) + PAD
 
@@ -304,12 +306,13 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
     ...containers.filter((c) => !isUsed(`c:${c.name}`)).map((c) => `${c.name} (container)`),
   ]
 
-  // Columns when the pane has room for them, the stack otherwise.
+  // Columns when the pane has room for them — with tighter gaps when it
+  // nearly does — and the stack otherwise.
   const shape = { clients, app, externals, services }
-  const columns = layoutColumns(shape)
-  const columnsW = columns.route([]).width
-  const stacked = paneW > 0 && paneW < columnsW
-  const L = stacked ? layoutStack(shape, Math.max(paneW, 240)) : columns
+  let L = layoutColumns(shape)
+  if (paneW > 0 && paneW < L.route([]).width) L = layoutColumns(shape, COL_GAP_TIGHT)
+  const stacked = paneW > 0 && paneW < L.route([]).width
+  if (stacked) L = layoutStack(shape, Math.max(paneW, 240))
   const { boxes } = L
 
   // The scenario's traffic, collapsed into routes. A request through a client
