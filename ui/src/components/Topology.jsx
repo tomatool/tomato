@@ -133,12 +133,8 @@ function layoutColumns({ clients, app, externals, services }) {
       if (e.spans) {
         e.d = `M${x1},${y1} C${x1 + 18},${y1} ${x1 + 22},${e.ch} ${x1 + 44},${e.ch}`
           + ` L${x2 - 44},${e.ch} C${x2 - 22},${e.ch} ${x2 - 18},${y2} ${x2 - 5},${y2}`
-        // A third of the way along the flat run, near the source, so the badge
-        // does not land on the badge of a hop that ends where this one passes.
-        e.mid = [x1 + 44 + (x2 - x1 - 88) / 3, e.ch]
       } else {
         e.d = `M${x1},${y1} C${x1 + 28},${y1} ${x2 - 28},${y2} ${x2 - 5},${y2}`
-        e.mid = [(x1 + x2) / 2, (y1 + y2) / 2]
       }
     }
     const top = Math.min(TOP - 24, ...above.map((e) => e.ch - 10))
@@ -207,7 +203,6 @@ function layoutStack({ clients, app, externals, services }, paneW) {
       const r = Math.min(8, Math.abs(y2 - y1) / 2)
       e.d = `M${x1},${y1} L${chx - out * r},${y1} Q${chx},${y1} ${chx},${y1 + dir * r}`
         + ` L${chx},${y2 - dir * r} Q${chx},${y2} ${chx - out * r},${y2} L${x2 - out * 5},${y2}`
-      e.mid = [chx, (y1 + y2) / 2]
     }
     const span = Math.max(reach.left, reach.right)
     const width = Math.max(paneW, 2 * (halfW + 14 + span * 10) + 24)
@@ -221,8 +216,7 @@ function layoutStack({ clients, app, externals, services }, paneW) {
 // sit inside the container that backs them, so two redis resources on one
 // container read as one service with two handles. Dotted lines are the wiring
 // configuration declares (a client's base_url, the app's env templates); the
-// solid and dashed lines are the scenario's traffic, one per route with the
-// number of steps on it. By default only what the scenario touches is drawn;
+// solid and dashed lines are the scenario's traffic, one per route. By default only what the scenario touches is drawn;
 // the rest is listed underneath, or drawn dimmed with "show all".
 export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
   const { msgs } = model
@@ -358,7 +352,6 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
     const subject = cur && onRoute ? cur : e.steps[0]
     const isHot = (hot != null && e.steps.some((m) => m.idx === hot)) || (pinned != null && e.steps.some((m) => m.idx === pinned))
     const isPinned = pinned != null && e.steps.some((m) => m.idx === pinned)
-    const [bx, by] = e.mid
     return (
       <g
         className="tedge"
@@ -372,12 +365,9 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
         onMouseLeave={() => onHot(null)}
         onClick={() => onPin(subject.idx)}
       >
+        <title>{`${e.steps.length === 1 ? 'step' : 'steps'} ${e.steps.map((m) => m.n).join(', ')} on this hop`}</title>
         <path className="tedge-hit" d={e.d} />
         <path className="tedge-line" pathLength="1" d={e.d} />
-        <g className="tbadge">
-          <circle cx={bx} cy={by} r="8" />
-          <text x={bx} y={by}>{e.steps.length}</text>
-        </g>
       </g>
     )
   })
@@ -427,7 +417,7 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
         <span className="tp-key">traffic tomato sends</span>
         <span className="tp-key" data-inferred="true">traffic the app sends</span>
         <span className="tp-key" data-wire="true">wired by tomato.yml</span>
-        <span className="muted">the number is how many steps use that hop</span>
+        <span className="muted">hover a hop for the steps on it; the Flow tab has their order</span>
       </div>
 
       {notInvolved.length > 0 && (

@@ -529,13 +529,6 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .tedge[data-status="skipped"] .tedge-line{stroke-dasharray:.015 .02;animation:tfade .4s both}
 .tedge[data-inferred="true"] .tedge-line{stroke-dasharray:.03 .025;animation:tfade .4s .55s both}
 .th--muted{fill:var(--fg-3)}.th--cur{fill:var(--fg-0)}.th--fail{fill:var(--fail)}
-.tbadge circle{fill:var(--bg-1);stroke:var(--line-strong);stroke-width:1}
-.tbadge text{fill:var(--fg-1);font-size:9px;font-weight:600;text-anchor:middle;dominant-baseline:central}
-.tedge:hover .tbadge circle,.tedge[data-hot="true"] .tbadge circle{stroke:var(--fg-0)}
-.tedge[data-state="current"] .tbadge circle{fill:var(--fg-0);stroke:var(--fg-0)}
-.tedge[data-state="current"] .tbadge text{fill:var(--bg-0)}
-.tedge[data-status="failed"] .tbadge circle{fill:var(--fail);stroke:var(--fail)}
-.tedge[data-status="failed"] .tbadge text{fill:var(--bg-0)}
 @keyframes tdraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 @keyframes tfade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.tedge .tedge-line{animation:none!important}}
