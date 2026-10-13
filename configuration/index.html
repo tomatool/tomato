@@ -2557,6 +2557,10 @@ containers running when the suite ends and prints the command to remove them.</p
 page. How often it runs is not configurable: every resource is reset before
 every scenario. A scenario that needs a starting state builds it in a
 <code>Background</code>, which runs after the reset.</p>
+<p>The opt-outs v2.3.0 removed, <code>settings.reset</code>, a resource's <code>reset</code> and
+<code>reset_strategy: none</code>, are refused at load with this explanation. A config
+written for an earlier release fails to load rather than having a resource it
+used to leave alone wiped before every scenario.</p>
 <h2 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
 <p>Define handlers for test steps.</p>
 <h3 id="http">HTTP<a class="headerlink" href="#http" title="Permanent link">&para;</a></h3>
