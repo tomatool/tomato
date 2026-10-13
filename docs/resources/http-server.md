@@ -55,6 +55,26 @@ Steps for stubbing HTTP services
 
 
 
+## Received Request
+
+| Step | Description |
+|------|-------------|
+| `"{resource}" last "POST" "/orders" request json "clientProcessId" saved as "{{process_id}}"` | Save a field of the body of the last matching request the stub received, e.g. an id the app generated and later refers to |
+| `"{resource}" last "POST" "/orders" request header "Idempotency-Key" saved as "{{key}}"` | Save a header of the last matching request the stub received |
+| `"{resource}" last "POST" "/orders" request json contains:` | Assert the body of the last matching request contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains") |
+
+
+### Examples
+
+**Assert the body of the last matching request contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains"):**
+```gherkin
+"{resource}" last "POST" "/orders" request json contains:
+  """
+  {"orderSize": "10"}
+  """
+```
+
+
 ## Server Info
 
 | Step | Description |

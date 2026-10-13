@@ -144,3 +144,28 @@ Feature: HTTP Server Handler
     Then "api" response status is "200"
     And "api" response body contains "stored url"
     And "mock" received "GET" "/from-variable"
+
+  # Received Request - save what the app sent, assert its body
+  Scenario: Save a field of a received request and assert its body
+    Given "mock" stub "POST" "/orders" returns "201"
+    And "mock" stub "POST" "/orders/ord-1/cancel" returns "200"
+    And "api" header "Idempotency-Key" is "key-7"
+    When "api" sends "POST" to "http://localhost:9999/orders" with json:
+      """
+      {"clientProcessId": "cp-42", "orderSize": "10", "leg": {"id": "ord-1"}}
+      """
+    Then "mock" last "POST" "/orders" request json contains:
+      """
+      {"orderSize": "10", "leg": {"id": "@notempty"}}
+      """
+    And "mock" last "POST" "/orders" request json "clientProcessId" saved as "{{process_id}}"
+    And "mock" last "POST" "/orders" request json "leg.id" saved as "{{order_id}}"
+    And "mock" last "POST" "/orders" request header "Idempotency-Key" saved as "{{key}}"
+    When "api" sends "POST" to "http://localhost:9999/orders/{{order_id}}/cancel" with json:
+      """
+      {"clientProcessId": "{{process_id}}", "key": "{{key}}"}
+      """
+    Then "mock" last "POST" "/orders/{{order_id}}/cancel" request json contains:
+      """
+      {"clientProcessId": "cp-42", "key": "key-7"}
+      """
