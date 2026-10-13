@@ -40,25 +40,25 @@ container to it:
 
 ## Steps, by resource
 
-248 steps across 14 resource types. Every page is generated from the step
+267 steps across 14 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and `tomato steps` prints the same thing in your terminal.
 
 | Resource | Steps | For |
 |----------|------:|-----|
-| [HTTP Client](resources/http-client.md) | 36 | Calling your application and asserting on the response |
+| [HTTP Client](resources/http-client.md) | 48 | Calling your application and asserting on the response |
 | [Kafka](resources/kafka.md) | 29 | Producing, consuming and asserting on topics |
 | [S3](resources/s3.md) | 27 | Object storage: MinIO, LocalStack or a real bucket |
 | [Redis](resources/redis.md) | 25 | Keys, TTLs, counters and hashes |
 | [RabbitMQ](resources/rabbitmq.md) | 23 | Queues, exchanges and routing |
 | [Shell](resources/shell.md) | 22 | Running commands and asserting on their output |
 | [gRPC](resources/grpc.md) | 19 | Calling unary methods via server reflection |
+| [HTTP Server](resources/http-server.md) | 18 | Stubbing the HTTP services your application calls |
 | [WebSocket Client](resources/websocket-client.md) | 17 | Connecting and exchanging messages |
-| [HTTP Server](resources/http-server.md) | 11 | Stubbing the HTTP services your application calls |
 | [PostgreSQL](resources/postgres.md) | 11 | Seeding tables, running SQL, asserting on rows |
 | [ScyllaDB](resources/scylladb.md) | 9 | Cassandra and ScyllaDB over CQL |
-| [WebSocket Server](resources/websocket-server.md) | 8 | Stubbing a WebSocket your application connects to |
 | [Lifecycle](resources/lifecycle.md) | 9 | Stopping and starting the app and its containers mid-scenario |
+| [WebSocket Server](resources/websocket-server.md) | 8 | Stubbing a WebSocket your application connects to |
 | [AWS](resources/aws.md) | 2 | The IRSA identity tomato hands the application |
 
 [Overview of all resources](resources/index.md) lists them together.
