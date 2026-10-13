@@ -412,6 +412,8 @@ func textHandler(w http.ResponseWriter, r *http.Request) {
 //	close=true        end the stream after the last event; otherwise keep it
 //	                  open with a ": heartbeat" comment every 100ms
 //	heartbeat=event   send heartbeats as "heartbeat" events without an id instead
+//	burst=true        large events without pause; a client that stops reading
+//	                  for 300ms is disconnected
 //
 // Each event's data echoes the X-Client request header, so a scenario can
 // check the stream was opened with the scenario's headers.
@@ -441,6 +443,24 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 
 	client := r.Header.Get("X-Client")
+
+	// burst=true: large events as fast as the client takes them, and a client
+	// that stops taking them for 300ms is dropped, as a server protecting
+	// itself from a slow consumer does.
+	if r.URL.Query().Get("burst") == "true" {
+		rc := http.NewResponseController(w)
+		payload := strings.Repeat("x", 16*1024)
+		for seq := first; ; seq++ {
+			rc.SetWriteDeadline(time.Now().Add(300 * time.Millisecond))
+			if _, err := fmt.Fprintf(w, "id: %d\nevent: tick\ndata: {\"seq\":%d,\"pad\":%q}\n\n", seq, seq, payload); err != nil {
+				return
+			}
+			if err := rc.Flush(); err != nil {
+				return
+			}
+		}
+	}
+
 	for i := 0; i < count; i++ {
 		seq := first + i
 		data, _ := json.Marshal(map[string]any{"seq": seq, "client": client})

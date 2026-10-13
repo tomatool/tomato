@@ -52,6 +52,7 @@ type eventStream struct {
 	path   string
 	cancel context.CancelFunc
 	done   chan struct{}
+	gate   *readGate
 
 	mu       sync.Mutex
 	events   []sseEvent
@@ -150,10 +151,31 @@ func (r *HTTPClient) streamSteps() []resource.StepDef {
 		},
 		{
 			Group:       "Event Streams",
+			Pattern:     `^"{resource}" stops reading the stream$`,
+			Description: "Stop reading the stream without closing it, as a stalled client does: what the server sends piles up in the connection's buffers until the server blocks, and a server that protects itself disconnects the slow consumer",
+			Example:     `"api" stops reading the stream`,
+			Handler:     r.pauseStream,
+		},
+		{
+			Group:       "Event Streams",
+			Pattern:     `^"{resource}" resumes reading the stream$`,
+			Description: "Read the stream again: what arrived while paused is delivered in order, then whatever the server did meanwhile (sent more, or closed the stream)",
+			Example:     `"api" resumes reading the stream`,
+			Handler:     r.resumeStream,
+		},
+		{
+			Group:       "Event Streams",
 			Pattern:     `^"{resource}" stream is closed by the server within "([^"]*)"$`,
 			Description: "Assert the server ends the stream within the duration",
 			Example:     `"api" stream is closed by the server within "5s"`,
 			Handler:     r.closedByServerWithin,
+		},
+		{
+			Group:       "Event Streams",
+			Pattern:     `^"{resource}" stream is disconnected by the server within "([^"]*)"$`,
+			Description: "Assert the server ends the stream within the duration, cleanly or by dropping the connection, as a server that disconnects a slow consumer does",
+			Example:     `"api" stream is disconnected by the server within "5s"`,
+			Handler:     r.disconnectedByServerWithin,
 		},
 		{
 			Group:       "Event Streams",
@@ -208,7 +230,7 @@ func (r *HTTPClient) startStream(path, lastEventID string) error {
 		return fmt.Errorf("opening stream %s: expected Content-Type text/event-stream, got %q", path, ct)
 	}
 
-	s := &eventStream{path: path, cancel: cancel, done: make(chan struct{})}
+	s := &eventStream{path: path, cancel: cancel, done: make(chan struct{}), gate: newReadGate()}
 	r.stream = s
 	go s.read(resp.Body)
 	return nil
@@ -219,7 +241,7 @@ func (s *eventStream) read(body io.ReadCloser) {
 	defer close(s.done)
 	defer body.Close()
 
-	err := parseEventStream(body, func(e sseEvent) {
+	err := parseEventStream(s.gate.wrap(body), func(e sseEvent) {
 		s.mu.Lock()
 		s.events = append(s.events, e)
 		s.mu.Unlock()
@@ -247,6 +269,8 @@ func (s *eventStream) close() {
 	}
 	s.mu.Unlock()
 	s.cancel()
+	// A paused reader is blocked before its next read; let it see the cancel.
+	s.gate.open()
 	<-s.done
 }
 
@@ -263,6 +287,82 @@ func (r *HTTPClient) closeStreamStep() error {
 	}
 	r.closeStream()
 	return nil
+}
+
+func (r *HTTPClient) pauseStream() error {
+	s, err := r.openedStream()
+	if err != nil {
+		return err
+	}
+	if !s.gate.close() {
+		return fmt.Errorf("the stream is already paused")
+	}
+	return nil
+}
+
+func (r *HTTPClient) resumeStream() error {
+	s, err := r.openedStream()
+	if err != nil {
+		return err
+	}
+	if !s.gate.open() {
+		return fmt.Errorf("the stream is not paused")
+	}
+	return nil
+}
+
+// readGate blocks reads while closed. Nothing is read from the connection
+// then, so the kernel's buffers fill and the server's writes block: the
+// server sees what a stalled client looks like on the wire.
+type readGate struct {
+	mu     sync.Mutex
+	cond   *sync.Cond
+	paused bool
+}
+
+func newReadGate() *readGate {
+	g := &readGate{}
+	g.cond = sync.NewCond(&g.mu)
+	return g
+}
+
+// close pauses reading; it reports false if reading was already paused.
+func (g *readGate) close() bool {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.paused {
+		return false
+	}
+	g.paused = true
+	return true
+}
+
+// open resumes reading; it reports false if reading was not paused.
+func (g *readGate) open() bool {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if !g.paused {
+		return false
+	}
+	g.paused = false
+	g.cond.Broadcast()
+	return true
+}
+
+func (g *readGate) wrap(r io.Reader) io.Reader { return gatedReader{g, r} }
+
+type gatedReader struct {
+	g *readGate
+	r io.Reader
+}
+
+func (gr gatedReader) Read(p []byte) (int, error) {
+	gr.g.mu.Lock()
+	for gr.g.paused {
+		gr.g.cond.Wait()
+	}
+	gr.g.mu.Unlock()
+	return gr.r.Read(p)
 }
 
 func (r *HTTPClient) skipEventTypes(types string) error {
@@ -506,6 +606,23 @@ func (r *HTTPClient) closedByServerWithin(within string) error {
 		return fmt.Errorf("stream %s failed instead of being closed: %v", s.path, s.readErr)
 	}
 	return nil
+}
+
+func (r *HTTPClient) disconnectedByServerWithin(within string) error {
+	timeout, err := time.ParseDuration(within)
+	if err != nil {
+		return fmt.Errorf("invalid duration: %w", err)
+	}
+	s, err := r.openedStream()
+	if err != nil {
+		return err
+	}
+	select {
+	case <-s.done:
+		return nil
+	case <-time.After(timeout):
+		return fmt.Errorf("stream %s still open after %s", s.path, timeout)
+	}
 }
 
 func (r *HTTPClient) saveLastEventID(varName string) error {
