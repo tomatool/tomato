@@ -31,6 +31,10 @@ type HTTPServer struct {
 	server   *http.Server
 	listener net.Listener
 	port     int
+	// refusing is true while "refuses connections" holds the port closed.
+	refusing  bool
+	listenMu  sync.Mutex
+	serveDone chan struct{}
 
 	stubs   []*HTTPStub
 	calls   []*RecordedCall
@@ -38,20 +42,57 @@ type HTTPServer struct {
 	callsMu sync.RWMutex
 }
 
-// HTTPStub represents a stub configuration
+// HTTPStub is one stubbed endpoint: what a request must match, and the
+// responses it gets, in order. The last response repeats once the others are
+// used up, so a single response answers every request.
 type HTTPStub struct {
 	Method      string
 	Path        string
 	PathPattern *regexp.Regexp
-	Status      int
-	Headers     map[string]string
-	Body        string
+	Conditions  []condition
+	Responses   []stubResponse
+	served      int
+}
+
+// stubResponse is one answer a stub gives.
+type stubResponse struct {
+	Status  int
+	Headers map[string]string
+	Body    string
+	Delay   time.Duration
+}
+
+// condition is one thing besides method and path a request must match.
+type condition struct {
+	kind  string // header, query or body
+	key   string
+	value string
+}
+
+func (c condition) matches(req *http.Request, body string) bool {
+	switch c.kind {
+	case "header":
+		return req.Header.Get(c.key) == c.value
+	case "query":
+		return req.URL.Query().Get(c.key) == c.value
+	case "body":
+		return strings.Contains(body, c.value)
+	}
+	return false
+}
+
+func (c condition) String() string {
+	if c.kind == "body" {
+		return fmt.Sprintf("body containing %q", c.value)
+	}
+	return fmt.Sprintf("%s %q %q", c.kind, c.key, c.value)
 }
 
 // RecordedCall represents a recorded HTTP request
 type RecordedCall struct {
 	Method  string
 	Path    string
+	Query   string
 	Headers http.Header
 	Body    string
 	Time    time.Time
@@ -75,6 +116,16 @@ func (r *HTTPServer) Init(ctx context.Context) error {
 		port = p
 	}
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", r.handleRequest)
+	r.server = &http.Server{Handler: mux}
+
+	return r.listen(port)
+}
+
+// listen opens the port and serves on it. After the first time the port is
+// fixed, so the app keeps the URL it was given.
+func (r *HTTPServer) listen(port int) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return fmt.Errorf("creating listener: %w", err)
@@ -82,17 +133,14 @@ func (r *HTTPServer) Init(ctx context.Context) error {
 	r.listener = listener
 	r.port = listener.Addr().(*net.TCPAddr).Port
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", r.handleRequest)
-
-	r.server = &http.Server{Handler: mux}
-
+	done := make(chan struct{})
+	r.serveDone = done
 	go func() {
-		if err := r.server.Serve(listener); err != nil && err != http.ErrServerClosed {
-			// Log error but don't fail - server might be shutting down
-		}
+		defer close(done)
+		// Serve returns when the listener closes, on shutdown or while
+		// refusing connections; neither is an error.
+		_ = r.server.Serve(listener)
 	}()
-
 	return nil
 }
 
@@ -109,42 +157,78 @@ func (r *HTTPServer) handleRequest(w http.ResponseWriter, req *http.Request) {
 	r.calls = append(r.calls, &RecordedCall{
 		Method:  req.Method,
 		Path:    req.URL.Path,
+		Query:   req.URL.RawQuery,
 		Headers: req.Header.Clone(),
 		Body:    body,
 		Time:    time.Now(),
 	})
 	r.callsMu.Unlock()
 
-	// Find matching stub
-	r.stubsMu.RLock()
-	var matchedStub *HTTPStub
-	for _, stub := range r.stubs {
-		if stub.Method != req.Method {
-			continue
-		}
-		if stub.PathPattern != nil {
-			if stub.PathPattern.MatchString(req.URL.Path) {
-				matchedStub = stub
-				break
-			}
-		} else if stub.Path == req.URL.Path {
-			matchedStub = stub
-			break
-		}
-	}
-	r.stubsMu.RUnlock()
-
-	if matchedStub == nil {
+	resp, ok := r.respond(req, body)
+	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(fmt.Sprintf("No stub found for %s %s", req.Method, req.URL.Path)))
 		return
 	}
 
-	for k, v := range matchedStub.Headers {
+	if resp.Delay > 0 {
+		select {
+		case <-time.After(resp.Delay):
+		case <-req.Context().Done():
+			return // the client gave up, as a timing-out app does
+		}
+	}
+	for k, v := range resp.Headers {
 		w.Header().Set(k, v)
 	}
-	w.WriteHeader(matchedStub.Status)
-	w.Write([]byte(matchedStub.Body))
+	w.WriteHeader(resp.Status)
+	w.Write([]byte(resp.Body))
+}
+
+// respond picks the stub for a request and takes its next response. The most
+// specific stub wins (more conditions beat fewer), then the most recently
+// added, so a scenario can override a stub its Background set.
+func (r *HTTPServer) respond(req *http.Request, body string) (stubResponse, bool) {
+	r.stubsMu.Lock()
+	defer r.stubsMu.Unlock()
+
+	var best *HTTPStub
+	for _, stub := range r.stubs {
+		if !stub.matches(req, body) {
+			continue
+		}
+		if best == nil || len(stub.Conditions) >= len(best.Conditions) {
+			best = stub
+		}
+	}
+	if best == nil {
+		return stubResponse{}, false
+	}
+	i := best.served
+	if i >= len(best.Responses) {
+		i = len(best.Responses) - 1
+	}
+	best.served++
+	return best.Responses[i], true
+}
+
+func (s *HTTPStub) matches(req *http.Request, body string) bool {
+	if s.Method != req.Method {
+		return false
+	}
+	if s.PathPattern != nil {
+		if !s.PathPattern.MatchString(req.URL.Path) {
+			return false
+		}
+	} else if s.Path != req.URL.Path {
+		return false
+	}
+	for _, c := range s.Conditions {
+		if !c.matches(req, body) {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *HTTPServer) Ready(ctx context.Context) error {
@@ -160,11 +244,32 @@ func (r *HTTPServer) Reset(ctx context.Context) error {
 	r.calls = make([]*RecordedCall, 0)
 	r.callsMu.Unlock()
 
-	return nil
+	// A scenario that refused connections must not leave the next one
+	// without a server.
+	return r.acceptConnections()
 }
 
 func (r *HTTPServer) RegisterSteps(ctx *godog.ScenarioContext) {
 	resource.RegisterStepsToGodog(ctx, r.name, r.Steps())
+}
+
+// conditions is the optional part of a stub step between the path and
+// "returns": any number of `with header "k" "v"`, `with query "k" "v"` and
+// `with body containing "x"`, in any order.
+const conditions = `((?: with (?:header|query) "[^"]*" "[^"]*"| with body containing "[^"]*")*)`
+
+var conditionRe = regexp.MustCompile(` with (header|query) "([^"]*)" "([^"]*)"| with body containing "([^"]*)"`)
+
+func parseConditions(s string) []condition {
+	var out []condition
+	for _, m := range conditionRe.FindAllStringSubmatch(s, -1) {
+		if m[1] != "" {
+			out = append(out, condition{kind: m[1], key: m[2], value: resource.ReplaceVariables(m[3])})
+		} else {
+			out = append(out, condition{kind: "body", value: resource.ReplaceVariables(m[4])})
+		}
+	}
+	return out
 }
 
 // Steps returns the structured step definitions for the HTTP server handler
@@ -176,31 +281,54 @@ func (r *HTTPServer) Steps() resource.StepCategory {
 			// Stub Setup
 			{
 				Group:       "Stub Setup",
-				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)"$`,
-				Description: "Creates a stub that returns a status code",
+				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)"` + conditions + ` returns "(\d+)"$`,
+				Description: "Creates a stub that returns a status code. Between the path and \"returns\", `with header \"k\" \"v\"`, `with query \"k\" \"v\"` and `with body containing \"x\"` narrow which requests it answers; the most specific stub wins, then the most recent",
 				Example:     `"{resource}" stub "GET" "/users" returns "200"`,
 				Handler:     r.stubReturnsStatus,
 			},
 			{
 				Group:       "Stub Setup",
-				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)" with body:$`,
+				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)"` + conditions + ` returns "(\d+)" with body:$`,
 				Description: "Creates a stub that returns a status code and body",
 				Example:     "\"{resource}\" stub \"GET\" \"/users\" returns \"200\" with body:\n  \"\"\"\n  [{\"id\": 1}]\n  \"\"\"",
 				Handler:     r.stubReturnsBody,
 			},
 			{
 				Group:       "Stub Setup",
-				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)" with json:$`,
+				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)"` + conditions + ` returns "(\d+)" with json:$`,
 				Description: "Creates a stub that returns JSON (auto sets Content-Type)",
-				Example:     "\"{resource}\" stub \"GET\" \"/users\" returns \"200\" with json:\n  \"\"\"\n  [{\"id\": 1}]\n  \"\"\"",
+				Example:     "\"{resource}\" stub \"POST\" \"/\" with header \"X-Amz-Target\" \"TrentService.Encrypt\" returns \"200\" with json:\n  \"\"\"\n  {\"KeyId\": \"test\"}\n  \"\"\"",
 				Handler:     r.stubReturnsJSON,
 			},
 			{
 				Group:       "Stub Setup",
-				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)" returns "(\d+)" with headers:$`,
+				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)"` + conditions + ` returns "(\d+)" with headers:$`,
 				Description: "Creates a stub that returns with custom headers",
 				Example:     "\"{resource}\" stub \"GET\" \"/users\" returns \"200\" with headers:\n  | header       | value            |\n  | X-Custom     | value            |",
 				Handler:     r.stubReturnsHeaders,
+			},
+			{
+				Group:       "Stub Setup",
+				Pattern:     `^"{resource}" stub "([^"]*)" "([^"]*)"` + conditions + ` returns in sequence:$`,
+				Description: "Creates a stub that answers each request with the next row, and repeats the last row once the rows are used up. Columns: status (required), json or body, and delay (e.g. 3s) to answer late, as a slow or timing-out dependency does",
+				Example:     "\"{resource}\" stub \"POST\" \"/token\" returns in sequence:\n  | status | json                         | delay |\n  | 200    | {\"pending\": true}            | 5s    |\n  | 200    | {\"token\": \"t\"}               |       |",
+				Handler:     r.stubReturnsSequence,
+			},
+
+			// Availability
+			{
+				Group:       "Availability",
+				Pattern:     `^"{resource}" refuses connections$`,
+				Description: "Close the server's port, so the app's connections are refused as when the service is down. Requests already in flight finish",
+				Example:     `"{resource}" refuses connections`,
+				Handler:     r.refuseConnections,
+			},
+			{
+				Group:       "Availability",
+				Pattern:     `^"{resource}" accepts connections$`,
+				Description: "Open the port again on the same address, with the stubs kept. Every scenario starts accepting",
+				Example:     `"{resource}" accepts connections`,
+				Handler:     r.acceptConnections,
 			},
 
 			// Verification
@@ -217,6 +345,13 @@ func (r *HTTPServer) Steps() resource.StepCategory {
 				Description: "Asserts a request was received N times",
 				Example:     `"{resource}" received "GET" "/users" "2" times`,
 				Handler:     r.receivedRequestTimes,
+			},
+			{
+				Group:       "Verification",
+				Pattern:     `^"{resource}" received "([^"]*)" "([^"]*)" with header "([^"]*)" "([^"]*)"$`,
+				Description: "Asserts a request was received with this exact header value, e.g. which operation of a one-path API was called",
+				Example:     `"{resource}" received "POST" "/" with header "X-Amz-Target" "TrentService.Encrypt"`,
+				Handler:     r.receivedRequestWithExactHeader,
 			},
 			{
 				Group:       "Verification",
@@ -282,43 +417,33 @@ func (r *HTTPServer) Steps() resource.StepCategory {
 	}
 }
 
-func (r *HTTPServer) stubReturnsStatus(method, path string, status int) error {
+func (r *HTTPServer) addStub(method, path, conds string, responses ...stubResponse) {
 	r.stubsMu.Lock()
 	defer r.stubsMu.Unlock()
-
 	r.stubs = append(r.stubs, &HTTPStub{
-		Method: method,
-		Path:   path,
-		Status: status,
+		Method:     method,
+		Path:       resource.ReplaceVariables(path),
+		Conditions: parseConditions(conds),
+		Responses:  responses,
 	})
+}
+
+func (r *HTTPServer) stubReturnsStatus(method, path, conds string, status int) error {
+	r.addStub(method, path, conds, stubResponse{Status: status})
 	return nil
 }
 
-func (r *HTTPServer) stubReturnsBody(method, path string, status int, doc *godog.DocString) error {
-	r.stubsMu.Lock()
-	defer r.stubsMu.Unlock()
-
-	r.stubs = append(r.stubs, &HTTPStub{
-		Method: method,
-		Path:   path,
-		Status: status,
-		Body:   doc.Content,
-	})
+func (r *HTTPServer) stubReturnsBody(method, path, conds string, status int, doc *godog.DocString) error {
+	r.addStub(method, path, conds, stubResponse{Status: status, Body: doc.Content})
 	return nil
 }
 
-func (r *HTTPServer) stubReturnsJSON(method, path string, status int, doc *godog.DocString) error {
+func (r *HTTPServer) stubReturnsJSON(method, path, conds string, status int, doc *godog.DocString) error {
 	var js json.RawMessage
 	if err := json.Unmarshal([]byte(doc.Content), &js); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
-
-	r.stubsMu.Lock()
-	defer r.stubsMu.Unlock()
-
-	r.stubs = append(r.stubs, &HTTPStub{
-		Method:  method,
-		Path:    path,
+	r.addStub(method, path, conds, stubResponse{
 		Status:  status,
 		Headers: map[string]string{"Content-Type": "application/json"},
 		Body:    doc.Content,
@@ -326,23 +451,99 @@ func (r *HTTPServer) stubReturnsJSON(method, path string, status int, doc *godog
 	return nil
 }
 
-func (r *HTTPServer) stubReturnsHeaders(method, path string, status int, table *godog.Table) error {
+func (r *HTTPServer) stubReturnsHeaders(method, path, conds string, status int, table *godog.Table) error {
 	headers := make(map[string]string)
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
 			headers[row.Cells[0].Value] = row.Cells[1].Value
 		}
 	}
+	r.addStub(method, path, conds, stubResponse{Status: status, Headers: headers})
+	return nil
+}
 
-	r.stubsMu.Lock()
-	defer r.stubsMu.Unlock()
+func (r *HTTPServer) stubReturnsSequence(method, path, conds string, table *godog.Table) error {
+	if len(table.Rows) < 2 {
+		return fmt.Errorf("the table needs a header row and at least one response")
+	}
+	cols := map[string]int{}
+	for i, c := range table.Rows[0].Cells {
+		cols[strings.TrimSpace(c.Value)] = i
+	}
+	if _, ok := cols["status"]; !ok {
+		return fmt.Errorf("the table needs a status column")
+	}
+	_, hasJSON := cols["json"]
+	_, hasBody := cols["body"]
+	if hasJSON && hasBody {
+		return fmt.Errorf("use a json or a body column, not both")
+	}
+	for name := range cols {
+		if name != "status" && name != "json" && name != "body" && name != "delay" {
+			return fmt.Errorf("unknown column %q: use status, json or body, and delay", name)
+		}
+	}
 
-	r.stubs = append(r.stubs, &HTTPStub{
-		Method:  method,
-		Path:    path,
-		Status:  status,
-		Headers: headers,
-	})
+	var responses []stubResponse
+	for i, row := range table.Rows[1:] {
+		cell := func(name string) string {
+			if idx, ok := cols[name]; ok {
+				return strings.TrimSpace(row.Cells[idx].Value)
+			}
+			return ""
+		}
+		status, err := strconv.Atoi(cell("status"))
+		if err != nil {
+			return fmt.Errorf("row %d: status %q is not a number", i+1, cell("status"))
+		}
+		resp := stubResponse{Status: status, Body: cell("body")}
+		if j := cell("json"); j != "" {
+			var js json.RawMessage
+			if err := json.Unmarshal([]byte(j), &js); err != nil {
+				return fmt.Errorf("row %d: invalid JSON: %w", i+1, err)
+			}
+			resp.Body = j
+			resp.Headers = map[string]string{"Content-Type": "application/json"}
+		}
+		if d := cell("delay"); d != "" {
+			if resp.Delay, err = time.ParseDuration(d); err != nil {
+				return fmt.Errorf("row %d: invalid delay: %w", i+1, err)
+			}
+		}
+		responses = append(responses, resp)
+	}
+	r.addStub(method, path, conds, responses...)
+	return nil
+}
+
+func (r *HTTPServer) refuseConnections() error {
+	r.listenMu.Lock()
+	defer r.listenMu.Unlock()
+	if r.refusing {
+		return nil
+	}
+	if err := r.listener.Close(); err != nil {
+		return fmt.Errorf("closing the port: %w", err)
+	}
+	<-r.serveDone
+	// Closing the port leaves idle keep-alive connections open, and an app
+	// would reuse one and still get answers. This closes them too.
+	r.server.SetKeepAlivesEnabled(false)
+	r.refusing = true
+	return nil
+}
+
+func (r *HTTPServer) acceptConnections() error {
+	r.listenMu.Lock()
+	defer r.listenMu.Unlock()
+	if !r.refusing {
+		return nil
+	}
+	if err := r.listen(r.port); err != nil {
+		return fmt.Errorf("reopening port %d: %w", r.port, err)
+	}
+	r.server.SetKeepAlivesEnabled(true)
+	r.refusing = false
 	return nil
 }
 
@@ -372,6 +573,27 @@ func (r *HTTPServer) receivedRequestTimes(method, path string, times int) error 
 		return fmt.Errorf("expected %d %s %s requests, got %d", times, method, path, count)
 	}
 	return nil
+}
+
+func (r *HTTPServer) receivedRequestWithExactHeader(method, path, header, value string) error {
+	value = resource.ReplaceVariables(value)
+	r.callsMu.RLock()
+	defer r.callsMu.RUnlock()
+
+	var seen []string
+	for _, call := range r.calls {
+		if call.Method == method && call.Path == path {
+			got := call.Headers.Get(header)
+			if got == value {
+				return nil
+			}
+			seen = append(seen, strconv.Quote(got))
+		}
+	}
+	if len(seen) == 0 {
+		return fmt.Errorf("no %s %s request received", method, path)
+	}
+	return fmt.Errorf("no %s %s request with %s %q; got %s", method, path, header, value, strings.Join(seen, ", "))
 }
 
 func (r *HTTPServer) didNotReceiveRequest(method, path string) error {
