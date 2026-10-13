@@ -604,6 +604,7 @@ func (r *HTTPClient) responseHeaderShouldBe(header, expected string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
+	expected = resource.ReplaceVariables(expected)
 	actual := r.lastResponse.Header.Get(header)
 	if actual != expected {
 		return fmt.Errorf("header %q: expected %q, got %q", header, expected, actual)
@@ -615,6 +616,7 @@ func (r *HTTPClient) responseHeaderShouldContain(header, substr string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
+	substr = resource.ReplaceVariables(substr)
 	actual := r.lastResponse.Header.Get(header)
 	if !strings.Contains(actual, substr) {
 		return fmt.Errorf("header %q value %q does not contain %q", header, actual, substr)
@@ -636,7 +638,7 @@ func (r *HTTPClient) responseBodyShouldBe(doc *godog.DocString) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
-	expected := strings.TrimSpace(doc.Content)
+	expected := strings.TrimSpace(resource.ReplaceVariables(doc.Content))
 	actual := strings.TrimSpace(string(r.lastBody))
 	if actual != expected {
 		return fmt.Errorf("body mismatch:\nexpected: %s\nactual: %s", expected, actual)
@@ -648,6 +650,7 @@ func (r *HTTPClient) responseBodyShouldContain(substr string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
+	substr = resource.ReplaceVariables(substr)
 	if !strings.Contains(string(r.lastBody), substr) {
 		return fmt.Errorf("body does not contain %q\nbody: %s", substr, string(r.lastBody))
 	}
@@ -655,11 +658,11 @@ func (r *HTTPClient) responseBodyShouldContain(substr string) error {
 }
 
 func (r *HTTPClient) responseBodyShouldContainDoc(doc *godog.DocString) error {
-	return r.responseBodyShouldContain(resource.ReplaceVariables(strings.TrimSpace(doc.Content)))
+	return r.responseBodyShouldContain(strings.TrimSpace(doc.Content))
 }
 
 func (r *HTTPClient) responseBodyShouldNotContainDoc(doc *godog.DocString) error {
-	return r.responseBodyShouldNotContain(resource.ReplaceVariables(strings.TrimSpace(doc.Content)))
+	return r.responseBodyShouldNotContain(strings.TrimSpace(doc.Content))
 }
 
 // responseCookie returns the named cookie from the response's Set-Cookie
@@ -709,6 +712,7 @@ func (r *HTTPClient) responseBodyShouldNotContain(substr string) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")
 	}
+	substr = resource.ReplaceVariables(substr)
 	if strings.Contains(string(r.lastBody), substr) {
 		return fmt.Errorf("body should not contain %q\nbody: %s", substr, string(r.lastBody))
 	}
@@ -735,6 +739,7 @@ func (r *HTTPClient) responseJSONPathShouldBe(path, expected string) error {
 		return err
 	}
 
+	expected = resource.ReplaceVariables(expected)
 	actualStr := fmt.Sprintf("%v", actual)
 	if actualStr != expected {
 		return fmt.Errorf("JSON path %q: expected %q, got %q", path, expected, actualStr)
@@ -801,7 +806,7 @@ func (r *HTTPClient) responseJSONShouldMatch(doc *godog.DocString) error {
 	}
 
 	var expected, actual interface{}
-	if err := json.Unmarshal([]byte(doc.Content), &expected); err != nil {
+	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
 		return fmt.Errorf("invalid expected JSON: %w", err)
 	}
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
@@ -817,7 +822,7 @@ func (r *HTTPClient) responseJSONShouldContain(doc *godog.DocString) error {
 	}
 
 	var expected, actual interface{}
-	if err := json.Unmarshal([]byte(doc.Content), &expected); err != nil {
+	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
 		return fmt.Errorf("invalid expected JSON: %w", err)
 	}
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
