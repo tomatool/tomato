@@ -987,6 +987,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#availability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Availability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verification" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1554,6 +1565,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#availability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Availability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verification" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1640,19 +1662,23 @@
 <tbody>
 <tr>
 <td><code>"{resource}" stub "GET" "/users" returns "200"</code></td>
-<td>Creates a stub that returns a status code</td>
+<td>Creates a stub that returns a status code. Between the path and "returns", <code>with header "k" "v"</code>, <code>with query "k" "v"</code> and <code>with body containing "x"</code> narrow which requests it answers; the most specific stub wins, then the most recent</td>
 </tr>
 <tr>
 <td><code>"{resource}" stub "GET" "/users" returns "200" with body:</code></td>
 <td>Creates a stub that returns a status code and body</td>
 </tr>
 <tr>
-<td><code>"{resource}" stub "GET" "/users" returns "200" with json:</code></td>
+<td><code>"{resource}" stub "POST" "/" with header "X-Amz-Target" "TrentService.Encrypt" returns "200" with json:</code></td>
 <td>Creates a stub that returns JSON (auto sets Content-Type)</td>
 </tr>
 <tr>
 <td><code>"{resource}" stub "GET" "/users" returns "200" with headers:</code></td>
 <td>Creates a stub that returns with custom headers</td>
+</tr>
+<tr>
+<td><code>"{resource}" stub "POST" "/token" returns in sequence:</code></td>
+<td>Creates a stub that answers each request with the next row, and repeats the last row once the rows are used up. Columns: status (required), json or body, and delay (e.g. 3s) to answer late, as a slow or timing-out dependency does</td>
 </tr>
 </tbody>
 </table>
@@ -1664,9 +1690,9 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Creates a stub that returns JSON (auto sets Content-Type):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" stub "</span><span class="s">GET</span><span class="nf">" "</span><span class="s">/users</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">" with json:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/</span><span class="nf">" with header "</span><span class="s">X-Amz-Target</span><span class="nf">" "</span><span class="s">TrentService.Encrypt</span><span class="nf">" returns "</span><span class="s">200</span><span class="nf">" with json:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  [{"id": 1}]</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  {"KeyId": "test"}</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Creates a stub that returns with custom headers:</strong>
@@ -1674,6 +1700,31 @@
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">  |</span><span class="s"> header</span><span class="k">       |</span><span class="s"> value</span><span class="k">            |</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">  |</span><span class="s"> X-Custom</span><span class="k">     |</span><span class="s"> value</span><span class="k">            |</span>
 </code></pre></div></p>
+<p><strong>Creates a stub that answers each request with the next row, and repeats the last row once the rows are used up. Columns: status (required), json or body, and delay (e.g. 3s) to answer late, as a slow or timing-out dependency does:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/token</span><span class="nf">" returns in sequence:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">  |</span><span class="s"> status</span><span class="k"> |</span><span class="s"> json</span><span class="k">                         |</span><span class="s"> delay</span><span class="k"> |</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">  |</span><span class="s"> 200</span><span class="k">    |</span><span class="s"> {"pending": true}</span><span class="k">            |</span><span class="s"> 5s</span><span class="k">    |</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">  |</span><span class="s"> 200</span><span class="k">    |</span><span class="s"> {"token": "t"}</span><span class="k">               |       |</span>
+</code></pre></div></p>
+<h2 id="availability">Availability<a class="headerlink" href="#availability" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"{resource}" refuses connections</code></td>
+<td>Close the server's port, so the app's connections are refused as when the service is down. Requests already in flight finish</td>
+</tr>
+<tr>
+<td><code>"{resource}" accepts connections</code></td>
+<td>Open the port again on the same address, with the stubs kept. Every scenario starts accepting</td>
+</tr>
+</tbody>
+</table>
 <h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1690,6 +1741,10 @@
 <tr>
 <td><code>"{resource}" received "GET" "/users" "2" times</code></td>
 <td>Asserts a request was received N times</td>
+</tr>
+<tr>
+<td><code>"{resource}" received "POST" "/" with header "X-Amz-Target" "TrentService.Encrypt"</code></td>
+<td>Asserts a request was received with this exact header value, e.g. which operation of a one-path API was called</td>
 </tr>
 <tr>
 <td><code>"{resource}" did not receive "DELETE" "/users"</code></td>
@@ -1734,10 +1789,10 @@
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
 <p><strong>Assert the body of the last matching request contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains"):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/orders</span><span class="nf">" request json contains:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"orderSize": "10"}</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/orders</span><span class="nf">" request json contains:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nf">  </span><span class="k">"""</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s">  {"orderSize": "10"}</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <h2 id="server-info">Server Info<a class="headerlink" href="#server-info" title="Permanent link">&para;</a></h2>
 <table>
