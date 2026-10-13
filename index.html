@@ -399,6 +399,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#upgrading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrading
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1650,6 +1661,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#upgrading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upgrading
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1727,26 +1749,27 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/tomatool/tomato" alt="License"></a>
 </p>
 
-<hr />
-<blockquote>
-<p>⚠️ <strong>Warning</strong>
-<strong>v2 is currently under active development.</strong> This version contains breaking changes and may not be stable.</p>
-<p>Looking for the stable version? <a href="https://github.com/tomatool/tomato/tree/v1"><strong>v1 is available here</strong></a>, but will not receive future updates as development focuses on v2.</p>
-<p><strong>Use v2 at your own risk</strong> - APIs and features may change without notice.</p>
-<p>See <a href="https://tomatool.github.io/tomato/stability/#dropping-the-at-your-own-risk-warning">what "stable" will mean and what's left before this warning goes</a>; breaking changes are listed in the <a href="https://github.com/tomatool/tomato/blob/main/CHANGELOG.md">changelog</a>.</p>
-</blockquote>
-<hr />
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=1zsAXQPFUiE" title="Tomato to keep your application healthy - watch on YouTube">
+    <img src="https://img.youtube.com/vi/1zsAXQPFUiE/maxresdefault.jpg" alt="Tomato to keep your application healthy - a one-minute introduction on YouTube" width="720">
+  </a>
+  <br>
+  <a href="https://www.youtube.com/watch?v=1zsAXQPFUiE">▶ Watch the one-minute introduction</a>
+</p>
+
 <p>Tomato is a language-agnostic behavioral testing framework that manages your test infrastructure automatically.</p>
 <h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Built-in Container Orchestration</strong> - Automatically manage test containers with Testcontainers</li>
-<li><strong>Clean State Testing</strong> - Reset resources between scenarios for reliable, isolated tests</li>
+<li><strong>Clean State Testing</strong> - Every resource is reset before every scenario for reliable, isolated tests</li>
 <li><strong>BDD/Gherkin Support</strong> - Write tests in plain English using Cucumber syntax</li>
-<li><strong>Multiple Resource Types</strong> - HTTP, gRPC, PostgreSQL, ScyllaDB/Cassandra, Redis, Kafka, RabbitMQ, S3, WebSocket, Shell</li>
+<li><strong>Multiple Resource Types</strong> - HTTP client and server, gRPC, PostgreSQL, ScyllaDB/Cassandra, Redis, Kafka, RabbitMQ, S3, WebSocket client and server, Shell</li>
 <li><strong>Presets</strong> - <code>preset: kafka</code> instead of a page of listener config, with MSK-style <code>AWS_MSK_IAM</code> authentication on the stock apache/kafka image</li>
 <li><strong>AWS identity</strong> - an <code>aws</code> resource gives the app IRSA against an STS tomato serves</li>
 <li><strong>Avro + Schema Registry</strong> - Publish and assert Kafka Avro messages as plain JSON</li>
+<li><strong>Web UI</strong> - <code>tomato ui</code> browses the suite, draws each scenario's flow and the topology of what it touches, and runs scenarios from the browser</li>
 <li><strong>CI Reports</strong> - JUnit XML and Cucumber JSON alongside console output</li>
+<li><strong>Step Coverage</strong> - <code>tomato coverage</code> reports which resource steps your features use, with <code>--min</code> to gate CI</li>
 <li><strong>Auto-generated Documentation</strong> - Keep step docs in sync with code</li>
 <li><strong>Application Runner</strong> - Start your app connected to test containers</li>
 </ul>
@@ -1765,25 +1788,38 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/tomatool/tomato@latest
 </code></pre></div>
 <h3 id="from-source">From source<a class="headerlink" href="#from-source" title="Permanent link">&para;</a></h3>
+<p>Requires Go 1.26 or later.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/tomatool/tomato.git
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">cd</span><span class="w"> </span>tomato
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>go<span class="w"> </span>build<span class="w"> </span>-o<span class="w"> </span>tomato<span class="w"> </span>.
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>sudo<span class="w"> </span>mv<span class="w"> </span>tomato<span class="w"> </span>/usr/local/bin/
 </code></pre></div>
+<h3 id="upgrading">Upgrading<a class="headerlink" href="#upgrading" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>tomato<span class="w"> </span>update
+</code></pre></div>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>tomato<span class="w"> </span>init<span class="w">    </span><span class="c1"># Initialize a new project</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>tomato<span class="w"> </span>run<span class="w">     </span><span class="c1"># Run behavioral tests</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>tomato<span class="w"> </span>steps<span class="w">   </span><span class="c1"># List available steps</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>tomato<span class="w"> </span>coverage<span class="w">  </span><span class="c1"># Which steps your features use</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>tomato<span class="w"> </span>init<span class="w">      </span><span class="c1"># Initialize a new project</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>tomato<span class="w"> </span>validate<span class="w">  </span><span class="c1"># Check tomato.yml and the feature files before running</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>tomato<span class="w"> </span>run<span class="w">       </span><span class="c1"># Run behavioral tests</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>tomato<span class="w"> </span>ui<span class="w">        </span><span class="c1"># Browse, visualize and run the suite in a web UI</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>tomato<span class="w"> </span>steps<span class="w">     </span><span class="c1"># List available steps</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>tomato<span class="w"> </span>coverage<span class="w">  </span><span class="c1"># Which steps your features use</span>
 </code></pre></div>
 <h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
 <p>For complete documentation, visit <strong><a href="https://tomatool.github.io/tomato">tomatool.github.io/tomato</a></strong></p>
 <ul>
+<li><a href="https://tomatool.github.io/tomato/overview">Documentation Map</a> - every page on one screen</li>
 <li><a href="https://tomatool.github.io/tomato/getting-started">Getting Started</a></li>
+<li><a href="https://tomatool.github.io/tomato/guide/philosophy">Writing a Suite</a> - how to write scenarios worth trusting</li>
+<li><a href="https://tomatool.github.io/tomato/getting-started/github-action">GitHub Action</a></li>
 <li><a href="https://tomatool.github.io/tomato/configuration">Configuration Reference</a></li>
-<li><a href="https://tomatool.github.io/tomato/developer-guide/architecture">Architecture</a></li>
 <li><a href="https://tomatool.github.io/tomato/resources">Step Reference</a></li>
+<li><a href="https://tomatool.github.io/tomato/developer-guide/architecture">Architecture</a></li>
+<li><a href="https://tomatool.github.io/tomato/stability">Stability and versioning</a> - what is covered by semantic versioning, and the deprecation policy</li>
 </ul>
+<p>Coming from tomato v1? v2 is a rewrite, not an upgrade in place: see
+<a href="https://tomatool.github.io/tomato/stability/#migrating-from-v1">Migrating from v1</a>. The
+<a href="https://github.com/tomatool/tomato/tree/v1"><code>v1</code> branch</a> no longer receives updates.</p>
 <h2 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h2>
 <p>See <a href="https://github.com/tomatool/tomato/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> for development setup and how to add steps and
 resources, and <a href="https://github.com/tomatool/tomato/blob/main/MAINTAINERS.md">MAINTAINERS.md</a> for who reviews and how to join.</p>
