@@ -60,3 +60,14 @@ Feature: HTTP event streams
     When "api" sends "GET" to "/health"
     Then "api" response status is "200"
     And "api" receives event "tick" within "2s"
+
+  Scenario: A client that stops reading is disconnected, and loses nothing it was sent
+    Given "api" opens stream "/events?burst=true"
+    And "api" receives event "tick" within "2s"
+    When "api" stops reading the stream
+    # Nothing to assert while paused: the server needs its 300ms write
+    # deadline to pass with the connection's buffers full.
+    And "shell" runs "sleep 1.5"
+    And "api" resumes reading the stream
+    Then "api" stream is disconnected by the server within "10s"
+    And "api" stream event ids are consecutive from "1"
