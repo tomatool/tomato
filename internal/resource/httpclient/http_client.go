@@ -35,6 +35,12 @@ type HTTPClient struct {
 
 	lastResponse *http.Response
 	lastBody     []byte
+
+	// streamClient opens event streams. It has no overall timeout, which
+	// would cut a stream off mid-scenario; see sse.go.
+	streamClient *http.Client
+	stream       *eventStream
+	skipEvents   map[string]bool
 }
 
 func New(name string, cfg config.Resource, cm *container.Manager) (*HTTPClient, error) {
@@ -45,6 +51,7 @@ func New(name string, cfg config.Resource, cm *container.Manager) (*HTTPClient, 
 		requestHeaders: make(map[string]string),
 		requestCookies: make(map[string]string),
 		requestParams:  make(url.Values),
+		skipEvents:     make(map[string]bool),
 	}, nil
 }
 
@@ -67,6 +74,8 @@ func (r *HTTPClient) Init(ctx context.Context) error {
 			return nil
 		},
 	}
+
+	r.streamClient = newStreamClient(timeout, r.client.CheckRedirect)
 
 	if r.config.BaseURL != "" {
 		r.baseURL = r.config.BaseURL
@@ -119,6 +128,8 @@ func (r *HTTPClient) Reset(ctx context.Context) error {
 	r.requestParams = make(url.Values)
 	r.lastResponse = nil
 	r.lastBody = nil
+	r.closeStream()
+	r.skipEvents = make(map[string]bool)
 	return nil
 }
 
@@ -130,8 +141,8 @@ func (r *HTTPClient) RegisterSteps(ctx *godog.ScenarioContext) {
 func (r *HTTPClient) Steps() resource.StepCategory {
 	return resource.StepCategory{
 		Name:        "HTTP Client",
-		Description: "Steps for making HTTP requests and validating responses",
-		Steps: []resource.StepDef{
+		Description: "Steps for making HTTP requests, validating responses and reading event streams",
+		Steps: append([]resource.StepDef{
 			// Request Setup
 			{
 				Group:       "Request Setup",
@@ -401,7 +412,7 @@ func (r *HTTPClient) Steps() resource.StepCategory {
 				Example:     `"api" response header "Location" saved as "{{location}}"`,
 				Handler:     r.saveHeaderToVariable,
 			},
-		},
+		}, r.streamSteps()...),
 	}
 }
 
@@ -480,18 +491,6 @@ func (r *HTTPClient) sendRequestWithJSON(method, path string, doc *godog.DocStri
 }
 
 func (r *HTTPClient) doRequest(method, path string, body []byte) error {
-	// Replace variables in path
-	path = resource.ReplaceVariables(path)
-
-	reqURL := resolveRequestURL(r.baseURL, path)
-	if len(r.requestParams) > 0 {
-		sep := "?"
-		if strings.Contains(reqURL, "?") {
-			sep = "&"
-		}
-		reqURL += sep + r.requestParams.Encode()
-	}
-
 	var bodyReader io.Reader
 	if body != nil {
 		// Replace variables in body
@@ -503,23 +502,9 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 		bodyReader = bytes.NewReader(replacedBody)
 	}
 
-	req, err := http.NewRequest(method, reqURL, bodyReader)
+	req, err := r.newRequest(context.Background(), method, path, bodyReader)
 	if err != nil {
-		return fmt.Errorf("creating request: %w", err)
-	}
-
-	for k, v := range r.requestHeaders {
-		// Replace variables in header values
-		v = resource.ReplaceVariables(v)
-		// net/http ignores a Host header; the request's Host field is what gets sent.
-		if strings.EqualFold(k, "Host") {
-			req.Host = v
-			continue
-		}
-		req.Header.Set(k, v)
-	}
-	for name, value := range r.requestCookies {
-		req.AddCookie(&http.Cookie{Name: name, Value: resource.ReplaceVariables(value)})
+		return err
 	}
 
 	start := time.Now()
@@ -539,6 +524,43 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 	r.requestParams = make(url.Values)
 
 	return nil
+}
+
+// newRequest builds a request to path with the scenario's headers, cookies and
+// query parameters. Requests and streams share it, so a stream is opened with
+// exactly what a request would have sent.
+func (r *HTTPClient) newRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {
+	// Replace variables in path
+	path = resource.ReplaceVariables(path)
+
+	reqURL := resolveRequestURL(r.baseURL, path)
+	if len(r.requestParams) > 0 {
+		sep := "?"
+		if strings.Contains(reqURL, "?") {
+			sep = "&"
+		}
+		reqURL += sep + r.requestParams.Encode()
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, reqURL, body)
+	if err != nil {
+		return nil, fmt.Errorf("creating request: %w", err)
+	}
+
+	for k, v := range r.requestHeaders {
+		// Replace variables in header values
+		v = resource.ReplaceVariables(v)
+		// net/http ignores a Host header; the request's Host field is what gets sent.
+		if strings.EqualFold(k, "Host") {
+			req.Host = v
+			continue
+		}
+		req.Header.Set(k, v)
+	}
+	for name, value := range r.requestCookies {
+		req.AddCookie(&http.Cookie{Name: name, Value: resource.ReplaceVariables(value)})
+	}
+	return req, nil
 }
 
 func (r *HTTPClient) responseStatusShouldBe(expected int) error {
@@ -865,6 +887,7 @@ func (r *HTTPClient) saveHeaderToVariable(header, varName string) error {
 }
 
 func (r *HTTPClient) Cleanup(ctx context.Context) error {
+	r.closeStream()
 	return nil
 }
 
