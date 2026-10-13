@@ -622,23 +622,12 @@ func generateTomatoConfig(m initModel) string {
 	}
 
 	if m.selected["kafka"] {
+		// The preset: a single-node KRaft broker whose host port tomato picks
+		// and advertises. The hand-written broker this replaced advertised
+		// localhost:9092 on a random host port, so the first run's client was
+		// refused on 9092 before any scenario ran.
 		s.WriteString("  kafka:\n")
-		s.WriteString("    image: confluentinc/cp-kafka:7.5.0\n")
-		s.WriteString("    env:\n")
-		s.WriteString("      KAFKA_NODE_ID: \"1\"\n")
-		s.WriteString("      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT\n")
-		s.WriteString("      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093\n")
-		s.WriteString("      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092\n")
-		s.WriteString("      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093\n")
-		s.WriteString("      KAFKA_PROCESS_ROLES: broker,controller\n")
-		s.WriteString("      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER\n")
-		s.WriteString("      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk\n")
-		s.WriteString("    ports:\n")
-		s.WriteString("      - \"9092/tcp\"\n")
-		s.WriteString("    wait_for:\n")
-		s.WriteString("      type: log\n")
-		s.WriteString("      target: \"Kafka Server started\"\n")
-		s.WriteString("      timeout: 60s\n")
+		s.WriteString("    preset: kafka\n")
 		s.WriteString("\n")
 	}
 
@@ -706,6 +695,12 @@ func generateTomatoConfig(m initModel) string {
 		s.WriteString("    options:\n")
 		s.WriteString("      port: 9999  # point your app at {{.http.url}}\n")
 		s.WriteString("\n")
+		// The example feature needs something to call the stub. Until the
+		// app does, a client stands in for it.
+		s.WriteString("  client:\n")
+		s.WriteString("    type: http-client\n")
+		s.WriteString("    base_url: \"http://localhost:9999\"  # stands in for your app in features/example.feature\n")
+		s.WriteString("\n")
 	}
 
 	// Shell is always useful
@@ -747,8 +742,14 @@ func generateExampleFeatureFile(m initModel) string {
 	s.WriteString("  So that I can ensure it works correctly\n\n")
 
 	if m.selected["postgresql"] {
+		// Nothing creates a schema in a project with no app yet, so the
+		// example creates the table it seeds. The app's migrations replace it.
 		s.WriteString("  Scenario: Database operations\n")
-		s.WriteString("    Given \"db\" table \"users\" has values:\n")
+		s.WriteString("    Given \"db\" executes:\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("      CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, name TEXT, email TEXT)\n")
+		s.WriteString("      \"\"\"\n")
+		s.WriteString("    And \"db\" table \"users\" has values:\n")
 		s.WriteString("      | id | name  | email          |\n")
 		s.WriteString("      | 1  | Alice | alice@test.com |\n")
 		s.WriteString("    Then \"db\" table \"users\" has \"1\" rows\n\n")
@@ -792,7 +793,9 @@ func generateExampleFeatureFile(m initModel) string {
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      [{\"id\": 1}]\n")
 		s.WriteString("      \"\"\"\n")
-		s.WriteString("    Then \"http\" received \"GET\" \"/users\"\n\n")
+		s.WriteString("    When \"client\" sends \"GET\" to \"/users\"\n")
+		s.WriteString("    Then \"client\" response status is \"200\"\n")
+		s.WriteString("    And \"http\" received \"GET\" \"/users\"\n\n")
 	}
 
 	// Always include shell example

@@ -295,6 +295,11 @@ page. How often it runs is not configurable: every resource is reset before
 every scenario. A scenario that needs a starting state builds it in a
 `Background`, which runs after the reset.
 
+The opt-outs v2.3.0 removed, `settings.reset`, a resource's `reset` and
+`reset_strategy: none`, are refused at load with this explanation. A config
+written for an earlier release fails to load rather than having a resource it
+used to leave alone wiped before every scenario.
+
 ## Resources
 
 Define handlers for test steps.

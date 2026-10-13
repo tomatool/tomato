@@ -286,6 +286,9 @@ func Load(path string) (*Config, error) {
 	if err := checkSchemaVersion(data); err != nil {
 		return nil, err
 	}
+	if err := checkRemovedKeys(data); err != nil {
+		return nil, err
+	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
@@ -316,6 +319,7 @@ const SupportedVersion = 2
 const (
 	migrationDocsURL  = "https://tomatool.github.io/tomato/stability/#migrating-from-v1"
 	versioningDocsURL = "https://tomatool.github.io/tomato/stability/#versioning"
+	resettingDocsURL  = "https://tomatool.github.io/tomato/configuration/#resetting-state"
 )
 
 // checkSchemaVersion rejects configs written for another schema before they are
@@ -349,6 +353,58 @@ func checkSchemaVersion(data []byte) error {
 			"tomato v2 needs `version: 2` and resources keyed by name, see %s", migrationDocsURL)
 	}
 
+	return nil
+}
+
+// checkRemovedKeys refuses the reset opt-outs that v2.3.0 removed:
+// `settings.reset`, a resource's `reset`, and `reset_strategy: none`.
+//
+// The loader does not decode strictly, so without this a `reset: false`
+// written for v2.2.1 loaded without a word — and the resource it protected
+// was wiped before every scenario. An upgrade may change what a config
+// means, but not silently.
+func checkRemovedKeys(data []byte) error {
+	// Node values, not pointers: yaml.v3 will not decode a scalar such as
+	// `reset: false` into a *yaml.Node inside a map of structs. A key that
+	// is absent leaves the Node's Kind zero.
+	var probe struct {
+		Settings struct {
+			Reset yaml.Node `yaml:"reset"`
+		} `yaml:"settings"`
+		Resources map[string]struct {
+			Reset   yaml.Node `yaml:"reset"`
+			Options struct {
+				ResetStrategy string `yaml:"reset_strategy"`
+			} `yaml:"options"`
+		} `yaml:"resources"`
+	}
+	if err := yaml.Unmarshal(data, &probe); err != nil {
+		// Not this probe's job: the full decode reports it, with its line.
+		return nil
+	}
+
+	const why = "every resource is reset before every scenario, and since v2.3.0 there is no way " +
+		"to turn that off; a scenario that needs a starting state builds it in a Background. " +
+		"Remove the key, see " + resettingDocsURL
+
+	if probe.Settings.Reset.Kind != 0 {
+		return fmt.Errorf("settings.reset was removed: %s", why)
+	}
+
+	names := make([]string, 0, len(probe.Resources))
+	for name := range probe.Resources {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		r := probe.Resources[name]
+		if r.Reset.Kind != 0 {
+			return fmt.Errorf("resource %q: `reset` was removed: %s", name, why)
+		}
+		if r.Options.ResetStrategy == "none" {
+			return fmt.Errorf("resource %q: `reset_strategy: none` was removed: %s", name, why)
+		}
+	}
 	return nil
 }
 
