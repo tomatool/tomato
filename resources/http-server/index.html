@@ -998,6 +998,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#received-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Received Request
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Received Request">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server-info" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1537,6 +1565,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#received-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Received Request
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Received Request">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#server-info" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1653,6 +1709,36 @@
 </tr>
 </tbody>
 </table>
+<h2 id="received-request">Received Request<a class="headerlink" href="#received-request" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"{resource}" last "POST" "/orders" request json "clientProcessId" saved as "{{process_id}}"</code></td>
+<td>Save a field of the body of the last matching request the stub received, e.g. an id the app generated and later refers to</td>
+</tr>
+<tr>
+<td><code>"{resource}" last "POST" "/orders" request header "Idempotency-Key" saved as "{{key}}"</code></td>
+<td>Save a header of the last matching request the stub received</td>
+</tr>
+<tr>
+<td><code>"{resource}" last "POST" "/orders" request json contains:</code></td>
+<td>Assert the body of the last matching request contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains")</td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
+<p><strong>Assert the body of the last matching request contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains"):</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/orders</span><span class="nf">" request json contains:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"orderSize": "10"}</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
+</code></pre></div></p>
 <h2 id="server-info">Server Info<a class="headerlink" href="#server-info" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
