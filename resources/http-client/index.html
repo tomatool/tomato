@@ -1029,6 +1029,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#event-streams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Streams
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1645,6 +1656,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#event-streams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Event Streams
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1666,7 +1688,7 @@
 
 
 <h1 id="http-client">HTTP Client<a class="headerlink" href="#http-client" title="Permanent link">&para;</a></h1>
-<p>Steps for making HTTP requests and validating responses</p>
+<p>Steps for making HTTP requests, validating responses and reading event streams</p>
 <div class="admonition tip">
 <p class="admonition-title">Multi-line Content</p>
 <p>Steps ending with <code>:</code> accept multi-line content using Gherkin's docstring syntax (<code>"""</code>). See examples below each section.</p>
@@ -1911,6 +1933,65 @@
 <tr>
 <td><code>"api" response header "Location" saved as "{{location}}"</code></td>
 <td>Save response header value to variable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="event-streams">Event Streams<a class="headerlink" href="#event-streams" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"api" opens stream "/events"</code></td>
+<td>Open a Server-Sent Events stream with the scenario's headers, cookies and query params, and fail unless it answers 200 with text/event-stream</td>
+</tr>
+<tr>
+<td><code>"api" opens stream "/events" after event id "{{last_id}}"</code></td>
+<td>Resume a stream: open it with a Last-Event-ID header, as a reconnecting client does</td>
+</tr>
+<tr>
+<td><code>"api" closes stream</code></td>
+<td>Close the stream from the client side</td>
+</tr>
+<tr>
+<td><code>"api" stream skips events "heartbeat"</code></td>
+<td>Leave events of these comma-separated types out of every receive and assertion for the rest of the scenario, e.g. heartbeats sent as events</td>
+</tr>
+<tr>
+<td><code>"api" receives event "order.created" within "5s"</code></td>
+<td>Assert the next event has this type, waiting for it up to the duration</td>
+</tr>
+<tr>
+<td><code>"api" receives event "order.created" within "5s" with json containing:</code></td>
+<td>Assert the next event has this type and its data contains the JSON fields given (extra fields ignored, same matchers as "response json contains")</td>
+</tr>
+<tr>
+<td><code>"api" receives events within "5s":</code></td>
+<td>Assert the next events, in order, from a table with an event column and optional id and data columns</td>
+</tr>
+<tr>
+<td><code>"api" does not receive an event within "2s"</code></td>
+<td>Assert no further event arrives for the duration (comments don't count)</td>
+</tr>
+<tr>
+<td><code>"api" receives a comment within "2s"</code></td>
+<td>Assert a comment line (": ..."), the usual keep-alive, arrives within the duration</td>
+</tr>
+<tr>
+<td><code>"api" stream event ids are consecutive from "1"</code></td>
+<td>Assert the ids of every event received on this stream so far are integers counting up by one from the number given, with no gap or repeat. Events without an id are left out</td>
+</tr>
+<tr>
+<td><code>"api" stream is closed by the server within "5s"</code></td>
+<td>Assert the server ends the stream within the duration</td>
+</tr>
+<tr>
+<td><code>"api" last stream event id saved as "{{last_id}}"</code></td>
+<td>Save the id of the last event a receive step matched, the position a client would resume from</td>
 </tr>
 </tbody>
 </table>

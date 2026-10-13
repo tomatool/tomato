@@ -2523,7 +2523,7 @@ every scenario. A scenario that needs a starting state builds it in a
 <tr>
 <td><code>timeout</code></td>
 <td><code>30s</code></td>
-<td>Per-request timeout</td>
+<td>Per-request timeout. For an event stream it bounds only the wait for the response headers; the stream stays open until the scenario closes it, and each receive step's <code>within</code> bounds its wait</td>
 </tr>
 <tr>
 <td><code>no_redirect</code></td>
