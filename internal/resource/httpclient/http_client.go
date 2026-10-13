@@ -41,6 +41,9 @@ type HTTPClient struct {
 	streamClient *http.Client
 	stream       *eventStream
 	skipEvents   map[string]bool
+
+	// concurrent holds the responses of the last concurrent send (concurrent.go).
+	concurrent []concurrentResponse
 }
 
 func New(name string, cfg config.Resource, cm *container.Manager) (*HTTPClient, error) {
@@ -130,6 +133,7 @@ func (r *HTTPClient) Reset(ctx context.Context) error {
 	r.lastBody = nil
 	r.closeStream()
 	r.skipEvents = make(map[string]bool)
+	r.concurrent = nil
 	return nil
 }
 
@@ -141,7 +145,7 @@ func (r *HTTPClient) RegisterSteps(ctx *godog.ScenarioContext) {
 func (r *HTTPClient) Steps() resource.StepCategory {
 	return resource.StepCategory{
 		Name:        "HTTP Client",
-		Description: "Steps for making HTTP requests, validating responses and reading event streams",
+		Description: "Steps for making HTTP requests, validating responses, reading event streams and sending concurrent requests",
 		Steps: append([]resource.StepDef{
 			// Request Setup
 			{
@@ -412,7 +416,7 @@ func (r *HTTPClient) Steps() resource.StepCategory {
 				Example:     `"api" response header "Location" saved as "{{location}}"`,
 				Handler:     r.saveHeaderToVariable,
 			},
-		}, r.streamSteps()...),
+		}, append(r.streamSteps(), r.concurrentSteps()...)...),
 	}
 }
 
@@ -527,8 +531,8 @@ func (r *HTTPClient) doRequest(method, path string, body []byte) error {
 }
 
 // newRequest builds a request to path with the scenario's headers, cookies and
-// query parameters. Requests and streams share it, so a stream is opened with
-// exactly what a request would have sent.
+// query parameters. Requests, streams and concurrent requests share it, so
+// each sends exactly what a single request would have sent.
 func (r *HTTPClient) newRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {
 	// Replace variables in path
 	path = resource.ReplaceVariables(path)
