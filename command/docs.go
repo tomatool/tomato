@@ -44,6 +44,7 @@ var resourceFileMapping = map[string]string{
 	"WebSocket Client": "websocket-client.md",
 	"WebSocket Server": "websocket-server.md",
 	"AWS":              "aws.md",
+	"Lifecycle":        "lifecycle.md",
 }
 
 func runDocs(ctx *cli.Context) error {
@@ -336,6 +337,7 @@ var resourceTypeMapping = map[string]string{
 	"WebSocket Client": "websocket",
 	"WebSocket Server": "websocket-server",
 	"AWS":              "aws",
+	"Lifecycle":        "lifecycle",
 }
 
 func generateMkDocs(outputDir string, categories []resource.StepCategory) error {

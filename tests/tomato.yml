@@ -23,9 +23,11 @@ containers:
     image: redis:7-alpine
     ports:
       - "6379/tcp"
+    # A log wait, so the lifecycle scenarios exercise the restart of a
+    # container whose log already holds the line from its first start.
     wait_for:
-      type: port
-      target: "6379"
+      type: log
+      target: "Ready to accept connections"
       timeout: 30s
 
   # The kafka preset: a single-node KRaft broker. tomato picks its host port and
@@ -186,6 +188,11 @@ resources:
 
   shell:
     type: shell
+
+  # Stops and starts the app and containers mid-scenario; every scenario
+  # starts with all of them back up.
+  lifecycle:
+    type: lifecycle
 
   ws:
     type: websocket-client

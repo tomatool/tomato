@@ -54,6 +54,7 @@ nav:
     - Redis: configuration/redis.md
     - S3: configuration/s3.md
     - AWS: configuration/aws.md
+    - Lifecycle: configuration/lifecycle.md
   - Step Reference:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
@@ -69,6 +70,7 @@ nav:
     - WebSocket Server: resources/websocket-server.md
     - S3: resources/s3.md
     - AWS: resources/aws.md
+    - Lifecycle: resources/lifecycle.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
     - Adding a Step or Resource: developer-guide/adding-a-resource.md

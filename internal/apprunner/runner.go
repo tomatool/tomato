@@ -64,6 +64,9 @@ type Runner struct {
 	// Environment resources provide to the app (see SetProvidedEnv)
 	providedEnv map[string]string
 	unsetEnv    map[string]bool
+
+	// envOverrides replaces app.env values on a restart (see StartApp).
+	envOverrides map[string]string
 }
 
 // NewRunner creates a new app runner
@@ -224,6 +227,9 @@ func (r *Runner) startCommand(ctx context.Context) error {
 func (r *Runner) startProcess(ctx context.Context) error {
 	// Build environment with mapped host ports (for local process)
 	env := r.buildEnvForCommand()
+	for k, v := range r.envOverrides {
+		env[k] = v
+	}
 
 	// Parse command
 	parts := strings.Fields(r.config.Command)
@@ -231,7 +237,9 @@ func (r *Runner) startProcess(ctx context.Context) error {
 		return fmt.Errorf("empty command")
 	}
 
-	r.cmd = exec.CommandContext(ctx, parts[0], parts[1:]...)
+	// Not CommandContext: the app outlives the context it was started from,
+	// a step's when it is restarted mid-scenario. Stop ends it.
+	r.cmd = exec.Command(parts[0], parts[1:]...)
 
 	// Set working directory
 	if r.config.WorkDir != "" {
@@ -781,6 +789,10 @@ func (r *Runner) Stop() error {
 		r.logFile = nil
 	}
 
+	return r.stopApp()
+}
+
+func (r *Runner) stopApp() error {
 	switch r.mode {
 	case ModeCommand:
 		return r.stopCommand()
@@ -788,6 +800,34 @@ func (r *Runner) Stop() error {
 		return r.stopContainer()
 	}
 	return nil
+}
+
+// StopApp stops the app mid-run, as when it crashes, keeping its log file
+// open for StartApp. Only an app run as a local process can be stopped and
+// started again: a container app comes back on another host port.
+func (r *Runner) StopApp() error {
+	if r.mode != ModeCommand {
+		return fmt.Errorf("stopping and starting the app needs app.command: an app run as a container comes back on another port")
+	}
+	return r.stopCommand()
+}
+
+// StartApp starts the app again after StopApp, with env overrides on top of
+// app.env (nil for the configured environment), and waits until it is ready.
+func (r *Runner) StartApp(ctx context.Context, overrides map[string]string) error {
+	if r.mode != ModeCommand {
+		return fmt.Errorf("stopping and starting the app needs app.command: an app run as a container comes back on another port")
+	}
+	if r.cmd != nil {
+		return fmt.Errorf("the app is already running")
+	}
+	r.envOverrides = overrides
+	return r.startCommand(ctx)
+}
+
+// Running reports whether the app process is up.
+func (r *Runner) Running() bool {
+	return r.mode == ModeCommand && r.cmd != nil
 }
 
 // stopCommand stops the local process

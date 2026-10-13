@@ -36,7 +36,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws
+    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle
     # aliases: postgresql, http-client, grpc-client, websocket-client, minio
     container: container_name
     options: {}
