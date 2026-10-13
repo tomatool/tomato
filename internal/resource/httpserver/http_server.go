@@ -6,9 +6,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -94,12 +97,12 @@ func (r *HTTPServer) Init(ctx context.Context) error {
 }
 
 func (r *HTTPServer) handleRequest(w http.ResponseWriter, req *http.Request) {
-	// Record the call
+	// Record the call. One Read returns whatever has arrived so far, which
+	// can be part of the body; read it to the end (up to 1MB).
 	body := ""
 	if req.Body != nil {
-		buf := make([]byte, 1024*1024) // 1MB max
-		n, _ := req.Body.Read(buf)
-		body = string(buf[:n])
+		b, _ := io.ReadAll(io.LimitReader(req.Body, 1024*1024))
+		body = string(b)
 	}
 
 	r.callsMu.Lock()
@@ -242,6 +245,29 @@ func (r *HTTPServer) Steps() resource.StepCategory {
 				Description: "Asserts total number of requests received",
 				Example:     `"{resource}" received "5" requests`,
 				Handler:     r.receivedTotalRequests,
+			},
+
+			// Received request
+			{
+				Group:       "Received Request",
+				Pattern:     `^"{resource}" last "([^"]*)" "([^"]*)" request json "([^"]*)" saved as "\{\{([^}]+)\}\}"$`,
+				Description: "Save a field of the body of the last matching request the stub received, e.g. an id the app generated and later refers to",
+				Example:     `"{resource}" last "POST" "/orders" request json "clientProcessId" saved as "{{process_id}}"`,
+				Handler:     r.saveLastRequestJSON,
+			},
+			{
+				Group:       "Received Request",
+				Pattern:     `^"{resource}" last "([^"]*)" "([^"]*)" request header "([^"]*)" saved as "\{\{([^}]+)\}\}"$`,
+				Description: "Save a header of the last matching request the stub received",
+				Example:     `"{resource}" last "POST" "/orders" request header "Idempotency-Key" saved as "{{key}}"`,
+				Handler:     r.saveLastRequestHeader,
+			},
+			{
+				Group:       "Received Request",
+				Pattern:     `^"{resource}" last "([^"]*)" "([^"]*)" request json contains:$`,
+				Description: "Assert the body of the last matching request contains these JSON fields (extra fields ignored, same matchers as the http resource's \"response json contains\")",
+				Example:     "\"{resource}\" last \"POST\" \"/orders\" request json contains:\n  \"\"\"\n  {\"orderSize\": \"10\"}\n  \"\"\"",
+				Handler:     r.lastRequestJSONContains,
 			},
 
 			// Server Info
@@ -390,6 +416,77 @@ func (r *HTTPServer) receivedTotalRequests(count int) error {
 
 	if len(r.calls) != count {
 		return fmt.Errorf("expected %d requests, got %d", count, len(r.calls))
+	}
+	return nil
+}
+
+// lastCall returns the last request received for method and path. Path
+// accepts variables, since the app often builds it from an id the scenario saved.
+func (r *HTTPServer) lastCall(method, path string) (*RecordedCall, error) {
+	path = resource.ReplaceVariables(path)
+	r.callsMu.RLock()
+	defer r.callsMu.RUnlock()
+	for i := len(r.calls) - 1; i >= 0; i-- {
+		if c := r.calls[i]; c.Method == method && c.Path == path {
+			return c, nil
+		}
+	}
+	return nil, fmt.Errorf("no %s %s request received (%d requests in total)", method, path, len(r.calls))
+}
+
+func (r *HTTPServer) saveLastRequestJSON(method, path, field, varName string) error {
+	call, err := r.lastCall(method, path)
+	if err != nil {
+		return err
+	}
+	value, err := jsonmatch.Path([]byte(call.Body), field)
+	if err != nil {
+		return fmt.Errorf("%s %s request body: %w\nbody: %s", method, path, err, call.Body)
+	}
+	switch v := value.(type) {
+	case string:
+		resource.SetVariable(varName, v)
+	case nil:
+		return fmt.Errorf("%s %s request body: %q is null", method, path, field)
+	case float64:
+		// Without 'f', a large integer would be saved as 1.7919e+12.
+		resource.SetVariable(varName, strconv.FormatFloat(v, 'f', -1, 64))
+	case map[string]interface{}, []interface{}:
+		b, _ := json.Marshal(v)
+		resource.SetVariable(varName, string(b))
+	default:
+		resource.SetVariable(varName, fmt.Sprintf("%v", v))
+	}
+	return nil
+}
+
+func (r *HTTPServer) saveLastRequestHeader(method, path, header, varName string) error {
+	call, err := r.lastCall(method, path)
+	if err != nil {
+		return err
+	}
+	value := call.Headers.Get(header)
+	if value == "" {
+		return fmt.Errorf("%s %s request has no %s header", method, path, header)
+	}
+	resource.SetVariable(varName, value)
+	return nil
+}
+
+func (r *HTTPServer) lastRequestJSONContains(method, path string, doc *godog.DocString) error {
+	call, err := r.lastCall(method, path)
+	if err != nil {
+		return err
+	}
+	var expected, actual interface{}
+	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+		return fmt.Errorf("invalid expected JSON: %w", err)
+	}
+	if err := json.Unmarshal([]byte(call.Body), &actual); err != nil {
+		return fmt.Errorf("%s %s request body is not JSON: %w\nbody: %s", method, path, err, call.Body)
+	}
+	if err := jsonmatch.Compare(expected, actual, "", true); err != nil {
+		return fmt.Errorf("%s %s request body: %w\nbody: %s", method, path, err, call.Body)
 	}
 	return nil
 }
