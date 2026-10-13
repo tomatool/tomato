@@ -1,0 +1,9 @@
+# Documented breaks on tomato's stable surface, one per line, `kind value` as
+# the compatibility check prints them. Add a line here in the same PR as the change
+# and its CHANGELOG entry; the check fails on any break that is not listed.
+# See https://github.com/tomatool/tomato-compatibility and docs/stability.md.
+
+# v2.3.0 removed the reset opt-outs; the loader refuses them since #204 (CHANGELOG, Changed).
+case settings-reset
+case resource-reset-false
+case reset-strategy-none
