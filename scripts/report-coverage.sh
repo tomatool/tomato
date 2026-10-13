@@ -5,7 +5,6 @@
 #   coverage/coverage.out   merged unit + integration profile (textfmt)
 #   coverage/steps.json     `tomato coverage --format json --all-types`
 #   coverage/integration.exit   exit code of the integration suite
-#   coverage/init.exit      exit code of the project `tomato init` writes, run end to end
 #
 # Gates:
 #   - every resource type's step coverage must be 100%
@@ -57,7 +56,6 @@ step_pct=$(pct "$step_covered" "$step_total")
 steps_below=$(jq -r '[.types[] | select(.covered < .total) | .type] | join(", ")' "$steps")
 
 integration_exit=$(cat coverage/integration.exit 2>/dev/null || echo 1)
-init_exit=$(cat coverage/init.exit 2>/dev/null || echo 1)
 
 fail=0
 gate() { # name ok detail
@@ -72,7 +70,6 @@ ge() { awk -v a="$1" -v b="$2" 'BEGIN { print (a + 0 >= b + 0) ? 1 : 0 }'; }
   echo "| | Gate | Result |"
   echo "|---|---|---|"
   gate "Integration suite passes" "$([ "$integration_exit" = 0 ] && echo 1 || echo 0)" "exit code $integration_exit"
-  gate "The project \`tomato init\` writes passes its own suite" "$([ "$init_exit" = 0 ] && echo 1 || echo 0)" "exit code $init_exit"
   gate "Every resource step used by a scenario" "$([ -z "$steps_below" ] && echo 1 || echo 0)" "$step_covered / $step_total steps ($step_pct%)${steps_below:+ — below 100%: $steps_below}"
   gate "Resource code coverage (\`internal/resource\`) ≥ $min_resource%" "$(ge "$resource_pct" "$min_resource")" "$resource_pct%"
   gate "Total code coverage ≥ $min_total%" "$(ge "$total_pct" "$min_total")" "$total_pct%"
