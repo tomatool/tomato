@@ -234,6 +234,74 @@ containers:
 			wantErr:     true,
 			errContains: "depends on unknown container",
 		},
+		// The reset opt-outs v2.3.0 removed are refused, not ignored: a config
+		// that still carries one would otherwise load unchanged and have its
+		// resource wiped before every scenario.
+		{
+			name: "settings.reset was removed",
+			content: `
+version: 2
+settings:
+  reset:
+    level: scenario
+`,
+			wantErr:     true,
+			errContains: "settings.reset was removed",
+		},
+		{
+			name: "resource reset was removed",
+			content: `
+version: 2
+containers:
+  postgres:
+    image: postgres:15
+resources:
+  db:
+    type: postgres
+    container: postgres
+    reset: false
+`,
+			wantErr:     true,
+			errContains: "resource \"db\": `reset` was removed",
+		},
+		{
+			name: "reset_strategy none was removed",
+			content: `
+version: 2
+containers:
+  minio:
+    image: minio/minio
+resources:
+  files:
+    type: s3
+    container: minio
+    options:
+      reset_strategy: none
+`,
+			wantErr:     true,
+			errContains: "resource \"files\": `reset_strategy: none` was removed",
+		},
+		{
+			name: "other reset strategies still load",
+			content: `
+version: 2
+containers:
+  minio:
+    image: minio/minio
+resources:
+  files:
+    type: s3
+    container: minio
+    options:
+      reset_strategy: purge
+`,
+			wantErr: false,
+			validate: func(t *testing.T, cfg *Config) {
+				if got := cfg.Resources["files"].Options["reset_strategy"]; got != "purge" {
+					t.Errorf("expected reset_strategy purge, got %v", got)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
