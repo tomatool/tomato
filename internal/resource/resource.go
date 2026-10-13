@@ -50,6 +50,15 @@ type AppEnvProvider interface {
 	AppEnv() AppEnv
 }
 
+// ConditionalAppEnvProvider is an AppEnvProvider that provides environment
+// only for some configurations, like a kafka resource with a Glue registry.
+// When ProvidesAppEnv is false the resource is not initialized before the
+// app, and starts with every other resource as usual.
+type ConditionalAppEnvProvider interface {
+	AppEnvProvider
+	ProvidesAppEnv() bool
+}
+
 // SQLExecutor is implemented by handlers that can execute SQL
 type SQLExecutor interface {
 	ExecSQL(ctx context.Context, query string) (int64, error)

@@ -341,6 +341,63 @@ Scenario: Order service emits an OrderCreated event
 - Keys are sent and asserted as strings. Avro keys, schema references and
   Protobuf/JSON Schema subjects are not supported yet.
 
+## AWS Glue Schema Registry
+
+An app that uses the [AWS Glue Schema Registry](https://docs.aws.amazon.com/glue/latest/dg/schema-registry.html)
+writes and reads a different wire format, and resolves schemas by calling Glue
+through the AWS SDK. With `format: glue`, tomato speaks that format and serves
+the Glue API itself, so the app fetches the schema the scenario registered and
+no AWS account is involved:
+
+```yaml
+resources:
+  events:
+    type: kafka
+    container: kafka
+    options:
+      topics: [trade-events]
+      schema_registry:
+        format: glue
+        registry_name: portfolio   # default: default-registry
+        region: eu-central-1       # in the schema ARNs; default us-east-1
+        compression: zlib          # how tomato writes values: none (default) or zlib
+        port: 9994                 # of the Glue endpoint; default: a free port
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `format` | `confluent` | `glue` for the AWS Glue Schema Registry |
+| `registry_name` | `default-registry` | The registry schemas are registered in and looked up from |
+| `region` | `us-east-1` | Region in the schema ARNs the API returns |
+| `compression` | `none` | `zlib` compresses the values tomato publishes. Values the app publishes are read either way |
+| `port` | free port | Port of the Glue endpoint |
+
+**Wire format.** `[0x03][0x00 none | 0x05 zlib][16-byte schema version UUID][Avro binary]`.
+
+**The app is pointed at it.** The resource sets `AWS_ENDPOINT_URL_GLUE` in the
+app's environment, so the AWS SDK sends Glue calls to tomato. Pair it with the
+[aws resource](aws.md) for the credentials those calls are signed with; tomato
+does not verify signatures. The endpoint answers `GetSchemaVersion`,
+`GetSchemaByDefinition`, `CreateSchema`, `RegisterSchemaVersion` and
+`GetSchema`, the operations the AWS Glue SerDe calls. Anything else gets an
+`UnsupportedOperationException` that names it.
+
+**Subjects are schema names.** The steps are the same as for the Confluent
+registry; a topic's schema is named after the topic (the SerDe's default),
+unless `subjects` maps it:
+
+```gherkin
+Given "events" registers schema for subject "trade-events" from file "schemas/trade.avsc"
+When "events" publishes avro to "trade-events" with key "user-1":
+  """
+  {"tradeId": "t-1", "quantity": "10"}
+  """
+```
+
+Registered schemas last for the whole run, as in a real registry: the app
+caches schemas by version id. Registering a definition that is already a
+version of the schema, in any layout, returns that version.
+
 ## Troubleshooting
 
 ### Connection refused

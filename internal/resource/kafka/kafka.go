@@ -32,8 +32,11 @@ type Kafka struct {
 	admin    sarama.ClusterAdmin
 	producer sarama.SyncProducer
 	consumer sarama.Consumer
-	client   sarama.Client   // the consumer's, also used to wait for new topics
-	registry *schemaRegistry // nil unless options.schema_registry is set
+	client   sarama.Client // the consumer's, also used to wait for new topics
+	registry avroRegistry  // nil unless options.schema_registry is set
+	glue     *glueRegistry // set when options.schema_registry.format is glue
+
+	initialized bool
 
 	pendingHeaders []sarama.RecordHeader // applied to the next published message
 
@@ -64,7 +67,14 @@ func New(name string, cfg config.Resource, cm *container.Manager) (*Kafka, error
 
 func (r *Kafka) Name() string { return r.name }
 
+// Init connects to the brokers and sets up the schema registry. With a Glue
+// registry the resource provides the app's environment (AppEnv), so Init runs
+// before the app starts and again with every other resource; the second call
+// does nothing.
 func (r *Kafka) Init(ctx context.Context) error {
+	if r.initialized {
+		return nil
+	}
 	brokers, err := r.getBrokers(ctx)
 	if err != nil {
 		return fmt.Errorf("getting brokers: %w", err)
@@ -99,15 +109,51 @@ func (r *Kafka) Init(ctx context.Context) error {
 	}
 	r.consumer = consumer
 
-	registryURL, err := r.schemaRegistryURL(ctx)
-	if err != nil {
-		return err
-	}
-	if registryURL != "" {
-		r.registry = newSchemaRegistry(registryURL)
+	if r.glueFormat() {
+		opts := r.config.Options["schema_registry"].(map[string]any)
+		name, _ := opts["registry_name"].(string)
+		region, _ := opts["region"].(string)
+		compress := opts["compression"] == "zlib"
+		if c, ok := opts["compression"]; ok && c != "zlib" && c != "none" {
+			return fmt.Errorf("options.schema_registry.compression must be none or zlib, not %v", c)
+		}
+		port, _ := opts["port"].(int)
+		g := newGlueRegistry(name, region, compress)
+		if err := g.start(port); err != nil {
+			return err
+		}
+		r.glue, r.registry = g, g
+	} else {
+		registryURL, err := r.schemaRegistryURL(ctx)
+		if err != nil {
+			return err
+		}
+		if registryURL != "" {
+			r.registry = newSchemaRegistry(registryURL)
+		}
 	}
 
+	r.initialized = true
 	return nil
+}
+
+// glueFormat reports whether options.schema_registry.format is glue: tomato
+// serves an AWS Glue Schema Registry and writes the Glue wire format.
+func (r *Kafka) glueFormat() bool {
+	opts, ok := r.config.Options["schema_registry"].(map[string]any)
+	return ok && opts["format"] == "glue"
+}
+
+// ProvidesAppEnv limits AppEnv to a Glue registry: only then does the app
+// need anything from this resource before it starts.
+func (r *Kafka) ProvidesAppEnv() bool { return r.glueFormat() }
+
+// AppEnv points the app's AWS SDK at tomato's Glue Schema Registry.
+func (r *Kafka) AppEnv() resource.AppEnv {
+	if r.glue == nil {
+		return resource.AppEnv{}
+	}
+	return resource.AppEnv{Set: map[string]string{"AWS_ENDPOINT_URL_GLUE": r.glue.url()}}
 }
 
 // schemaRegistryURL resolves options.schema_registry to a base URL: either
@@ -154,6 +200,10 @@ func (r *Kafka) valueSubject(topic string) string {
 				return s
 			}
 		}
+	}
+	if r.glueFormat() {
+		// The AWS Glue SerDe names a topic's schema after the topic.
+		return topic
 	}
 	return topic + "-value"
 }
@@ -887,6 +937,9 @@ func (r *Kafka) Publish(ctx context.Context, topic string, payload []byte, heade
 func (r *Kafka) Cleanup(ctx context.Context) error {
 	r.stopConsumerGroups()
 	r.stopAllConsumers()
+	if r.glue != nil {
+		r.glue.stop()
+	}
 
 	var errs []error
 	if r.producer != nil {
@@ -925,8 +978,7 @@ func (r *Kafka) registerSchema(subject string, doc *godog.DocString) error {
 	if err := r.requireRegistry(); err != nil {
 		return err
 	}
-	_, err := r.registry.register(context.Background(), subject, doc.Content)
-	return err
+	return r.registry.registerSchema(context.Background(), subject, doc.Content)
 }
 
 func (r *Kafka) registerSchemaFromFile(subject, path string) error {
@@ -937,8 +989,7 @@ func (r *Kafka) registerSchemaFromFile(subject, path string) error {
 	if err != nil {
 		return fmt.Errorf("reading schema file: %w", err)
 	}
-	_, err = r.registry.register(context.Background(), subject, string(schema))
-	return err
+	return r.registry.registerSchema(context.Background(), subject, string(schema))
 }
 
 func (r *Kafka) publishAvro(topic string, doc *godog.DocString) error {

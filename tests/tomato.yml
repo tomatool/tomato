@@ -142,6 +142,24 @@ resources:
         subjects:
           mapped-orders: com.example.Order
 
+  # Same broker, AWS Glue wire format: tomato serves the Glue Schema Registry on
+  # a fixed port and points the app at it with AWS_ENDPOINT_URL_GLUE.
+  glue-events:
+    type: kafka
+    container: kafka
+    options:
+      topics:
+        - glue-orders
+      partitions: 1
+      replication_factor: 1
+      reset_strategy: delete_recreate
+      schema_registry:
+        format: glue
+        registry_name: portfolio
+        region: eu-central-1
+        compression: zlib
+        port: 9994
+
   mq:
     type: rabbitmq
     container: rabbitmq
