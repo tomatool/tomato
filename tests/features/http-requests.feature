@@ -134,3 +134,22 @@ Feature: HTTP requests and responses in depth
       {"id": {{ada_id}}, "name": "Ada"}
       """
     And "api" response body contains "{{ada_id}}"
+
+  Scenario: Concurrent identical creates make one row
+    When "api" sends "5" concurrent "POST" to "/users" with json:
+      """
+      {"name": "Race", "email": "race@test.com"}
+      """
+    Then "api" "1" of the concurrent responses have status "201"
+    And "api" "4" of the concurrent responses have status "500"
+    And "api" "1" of the concurrent responses have json "name" is "Race"
+    And "api" "1" of the concurrent responses contain json:
+      """
+      {"email": "race@test.com", "id": "@number"}
+      """
+    And "db" table "users" has "1" rows
+
+  Scenario: Concurrent requests without a body
+    Given "api" header "X-Custom-Header" is "concurrent"
+    When "api" sends "3" concurrent "GET" to "/echo"
+    Then "api" "3" of the concurrent responses have status "200"

@@ -1,6 +1,6 @@
 # HTTP Client
 
-Steps for making HTTP requests, validating responses and reading event streams
+Steps for making HTTP requests, validating responses, reading event streams and sending concurrent requests
 
 !!! tip "Multi-line Content"
     Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
@@ -122,4 +122,34 @@ Steps for making HTTP requests, validating responses and reading event streams
 | `"api" stream is closed by the server within "5s"` | Assert the server ends the stream within the duration |
 | `"api" last stream event id saved as "{{last_id}}"` | Save the id of the last event a receive step matched, the position a client would resume from |
 
+
+
+## Concurrent Requests
+
+| Step | Description |
+|------|-------------|
+| `"api" sends "2" concurrent "POST" to "/orders"` | Send the same request N times at the same moment, with the scenario's headers, cookies and query params |
+| `"api" sends "2" concurrent "POST" to "/orders" with json:` | Send the same JSON request N times at the same moment |
+| `"api" "2" of the concurrent responses have status "202"` | Assert how many of the concurrent responses have this status |
+| `"api" "1" of the concurrent responses have json "duplicate" is "true"` | Assert how many of the concurrent responses have this value at a JSON path (a missing path counts as not having it) |
+| `"api" "1" of the concurrent responses contain json:` | Assert how many of the concurrent responses contain these JSON fields (same matchers as "response json contains") |
+
+
+### Examples
+
+**Send the same JSON request N times at the same moment:**
+```gherkin
+"api" sends "2" concurrent "POST" to "/orders" with json:
+  """
+  {"clientOrderId": "c-60"}
+  """
+```
+
+**Assert how many of the concurrent responses contain these JSON fields (same matchers as "response json contains"):**
+```gherkin
+"api" "1" of the concurrent responses contain json:
+  """
+  {"duplicate": true}
+  """
+```
 
