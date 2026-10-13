@@ -2098,8 +2098,20 @@
 <td>Assert the ids of every event received on this stream so far are integers counting up by one from the number given, with no gap or repeat. Events without an id are left out</td>
 </tr>
 <tr>
+<td><code>"api" stops reading the stream</code></td>
+<td>Stop reading the stream without closing it, as a stalled client does: what the server sends piles up in the connection's buffers until the server blocks, and a server that protects itself disconnects the slow consumer</td>
+</tr>
+<tr>
+<td><code>"api" resumes reading the stream</code></td>
+<td>Read the stream again: what arrived while paused is delivered in order, then whatever the server did meanwhile (sent more, or closed the stream)</td>
+</tr>
+<tr>
 <td><code>"api" stream is closed by the server within "5s"</code></td>
 <td>Assert the server ends the stream within the duration</td>
+</tr>
+<tr>
+<td><code>"api" stream is disconnected by the server within "5s"</code></td>
+<td>Assert the server ends the stream within the duration, cleanly or by dropping the connection, as a server that disconnects a slow consumer does</td>
 </tr>
 <tr>
 <td><code>"api" last stream event id saved as "{{last_id}}"</code></td>
