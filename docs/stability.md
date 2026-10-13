@@ -1,14 +1,14 @@
 # Stability and versioning
 
-tomato v2 is still under active development: the README says "use v2 at your own
-risk". This page defines what "stable" will mean, so that promise can be kept
-once the [criteria](#dropping-the-at-your-own-risk-warning) below are met, and
-so contributors know today which changes need extra care.
+tomato v2 is the current major version; the `v1` branch no longer receives
+updates. This page defines what "stable" means for v2, so that promise can be
+kept, and so contributors know which changes need extra care.
 
 ## The stable surface
 
-These are the parts of tomato that test suites depend on. Once v2 is declared
-stable, they only change in backwards-compatible ways within v2.
+These are the parts of tomato that test suites depend on. Within v2 they change
+only in backwards-compatible ways, following the [versioning](#versioning) and
+[deprecation](#deprecation-policy) rules below.
 
 | Surface | What is covered |
 |---------|-----------------|
@@ -46,8 +46,8 @@ tomato follows [Semantic Versioning](https://semver.org/) for the stable surface
   `version:` number in `tomato.yml`, so an old binary never misreads a new config:
   tomato rejects any `version` it doesn't support, with a link to this page.
 
-Until the warning is dropped, minor releases may still contain breaking changes.
-Each one is listed under **Changed** or **Removed** in the changelog.
+A breaking change that still lands in a minor release is marked **Breaking** under
+**Changed** or **Removed** in the changelog.
 
 ## Deprecation policy
 
@@ -59,22 +59,18 @@ When part of the stable surface has to go:
    a warning the first time they run in a suite (`deprecated step: use … instead`),
    and the generated step docs label them **Deprecated**.
 3. It is removed no earlier than the next minor release after that, or in the next
-   major release once v2 is stable.
+   major release.
 
 Contributors: mark a step deprecated by setting `Deprecated: "use … instead"` on its
 `StepDef`. The step keeps its handler; tomato wraps it to emit the warning.
 
-## Dropping the "at your own risk" warning
+## The "at your own risk" warning
 
-The README warning goes away when all of these hold:
-
-- [ ] This policy is published (this page) and has been followed for one minor release.
-- [ ] Every item in the stable surface is documented and covered by the integration suite in `tests/features`.
-- [ ] CI runs unit tests as well as integration tests, and both pass on `main`.
-- [ ] Releases carry changelog entries sorted into Added / Changed / Deprecated / Removed / Fixed.
-- [ ] At least two maintainers can review and merge (see [MAINTAINERS.md](https://github.com/tomatool/tomato/blob/main/MAINTAINERS.md)).
-
-Progress on these is tracked in the changelog and the README.
+Until October 2026 the README opened with a warning that v2 was under active
+development and should be used at your own risk. It was removed on 13 October
+2026: v2 is the version tomato ships and the `v1` branch is kept only for
+reference, so the stable surface above is now held to the versioning and
+deprecation rules on this page.
 
 ## Migrating from v1
 
