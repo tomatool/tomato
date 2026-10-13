@@ -1,6 +1,6 @@
 # HTTP Client
 
-Steps for making HTTP requests and validating responses
+Steps for making HTTP requests, validating responses and reading event streams
 
 !!! tip "Multi-line Content"
     Steps ending with `:` accept multi-line content using Gherkin's docstring syntax (`"""`). See examples below each section.
@@ -102,5 +102,24 @@ Steps for making HTTP requests and validating responses
 |------|-------------|
 | `"api" response json "id" saved as "{{user_id}}"` | Save JSON path value to variable for use in subsequent requests |
 | `"api" response header "Location" saved as "{{location}}"` | Save response header value to variable |
+
+
+
+## Event Streams
+
+| Step | Description |
+|------|-------------|
+| `"api" opens stream "/events"` | Open a Server-Sent Events stream with the scenario's headers, cookies and query params, and fail unless it answers 200 with text/event-stream |
+| `"api" opens stream "/events" after event id "{{last_id}}"` | Resume a stream: open it with a Last-Event-ID header, as a reconnecting client does |
+| `"api" closes stream` | Close the stream from the client side |
+| `"api" stream skips events "heartbeat"` | Leave events of these comma-separated types out of every receive and assertion for the rest of the scenario, e.g. heartbeats sent as events |
+| `"api" receives event "order.created" within "5s"` | Assert the next event has this type, waiting for it up to the duration |
+| `"api" receives event "order.created" within "5s" with json containing:` | Assert the next event has this type and its data contains the JSON fields given (extra fields ignored, same matchers as "response json contains") |
+| `"api" receives events within "5s":` | Assert the next events, in order, from a table with an event column and optional id and data columns |
+| `"api" does not receive an event within "2s"` | Assert no further event arrives for the duration (comments don't count) |
+| `"api" receives a comment within "2s"` | Assert a comment line (": ..."), the usual keep-alive, arrives within the duration |
+| `"api" stream event ids are consecutive from "1"` | Assert the ids of every event received on this stream so far are integers counting up by one from the number given, with no gap or repeat. Events without an id are left out |
+| `"api" stream is closed by the server within "5s"` | Assert the server ends the stream within the duration |
+| `"api" last stream event id saved as "{{last_id}}"` | Save the id of the last event a receive step matched, the position a client would resume from |
 
 

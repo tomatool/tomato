@@ -312,7 +312,7 @@ resources:
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `timeout` | `30s` | Per-request timeout |
+| `timeout` | `30s` | Per-request timeout. For an event stream it bounds only the wait for the response headers; the stream stays open until the scenario closes it, and each receive step's `within` bounds its wait |
 | `no_redirect` | `false` | Return the redirect response instead of following it |
 | `port` | `8080` | Container port the base URL is built from. Only with `container` |
 | `scheme` | `http` | Scheme for the base URL built from `container` |

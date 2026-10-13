@@ -87,6 +87,7 @@ func main() {
 	mux.HandleFunc("/echo", echoHandler)
 	mux.HandleFunc("/ws", wsHandler)
 	mux.HandleFunc("/text", textHandler)
+	mux.HandleFunc("/events", eventsHandler)
 	mux.HandleFunc("/empty", emptyHandler)
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/logout", logoutHandler)
@@ -402,6 +403,74 @@ func textHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("X-Tomato", "fresh")
 	fmt.Fprint(w, "Hello from the \"tomato\" test app\nline two")
+}
+
+// eventsHandler is a Server-Sent Events stream of "tick" events with ids
+// counting up from Last-Event-ID + 1 (or 1), sent every 50ms.
+//
+//	count=N           events to send (default 3)
+//	close=true        end the stream after the last event; otherwise keep it
+//	                  open with a ": heartbeat" comment every 100ms
+//	heartbeat=event   send heartbeats as "heartbeat" events without an id instead
+//
+// Each event's data echoes the X-Client request header, so a scenario can
+// check the stream was opened with the scenario's headers.
+func eventsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Accept") != "text/event-stream" {
+		http.Error(w, "want Accept: text/event-stream", http.StatusNotAcceptable)
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	count := 3
+	if c, err := strconv.Atoi(r.URL.Query().Get("count")); err == nil {
+		count = c
+	}
+	first := 1
+	if last, err := strconv.Atoi(r.Header.Get("Last-Event-ID")); err == nil {
+		first = last + 1
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	fmt.Fprint(w, "retry: 1000\n: connected\n\n")
+	flusher.Flush()
+
+	client := r.Header.Get("X-Client")
+	for i := 0; i < count; i++ {
+		seq := first + i
+		data, _ := json.Marshal(map[string]any{"seq": seq, "client": client})
+		fmt.Fprintf(w, "id: %d\nevent: tick\ndata: %s\n\n", seq, data)
+		flusher.Flush()
+		select {
+		case <-r.Context().Done():
+			return
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
+	if r.URL.Query().Get("close") == "true" {
+		return
+	}
+
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case <-ticker.C:
+			if r.URL.Query().Get("heartbeat") == "event" {
+				fmt.Fprint(w, "event: heartbeat\ndata: {}\n\n")
+			} else {
+				fmt.Fprint(w, ": heartbeat\n\n")
+			}
+			flusher.Flush()
+		}
+	}
 }
 
 // emptyHandler answers with no body at all.
