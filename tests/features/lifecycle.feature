@@ -40,6 +40,11 @@ Feature: Stopping and starting the app and its containers
       """
     And "api" response status is "201"
     When "lifecycle" restarts container "postgres"
+    # Postgres opens its port before it accepts queries, so a port wait passes
+    # first. Wait for the database itself, then check the app writes again.
+    And "db" query "SELECT 1 AS up" returns within "30s":
+      | up |
+      | 1  |
     And "api" sends "POST" to "/users" with json:
       """
       {"name": "After", "email": "after@test.com"}

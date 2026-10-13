@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -44,15 +45,63 @@ func (m *Manager) StopContainer(ctx context.Context, name string) error {
 
 // StartContainer starts a stopped container again and waits until its wait
 // strategy passes, as on the first start.
+//
+// A log wait needs care: a container's log keeps what it printed before it
+// was stopped, so the line a log wait looks for is already there and the
+// wait would pass at once, before the restarted service is up. For a log
+// wait, StartContainer waits for one more occurrence than before the start.
 func (m *Manager) StartContainer(ctx context.Context, name string) error {
 	ctr, err := m.Get(name)
 	if err != nil {
 		return err
 	}
+	ws := m.configs[name].WaitFor
+	logWait := ws.Type == "log" && ws.Target != ""
+	before := 0
+	if logWait {
+		if before, err = logOccurrences(ctx, ctr, ws.Target); err != nil {
+			return fmt.Errorf("reading the logs of container %s: %w", name, err)
+		}
+	}
 	if err := ctr.Start(ctx); err != nil {
 		return fmt.Errorf("starting container %s: %w", name, err)
 	}
-	return nil
+	if !logWait {
+		return nil
+	}
+	timeout := ws.Timeout
+	if timeout == 0 {
+		timeout = 60 * time.Second
+	}
+	deadline := time.Now().Add(timeout)
+	for {
+		n, err := logOccurrences(ctx, ctr, ws.Target)
+		if err == nil && n > before {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("container %s: %q did not appear in its log again within %s of starting", name, ws.Target, timeout)
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+// logOccurrences counts how often target appears in a container's log so far.
+func logOccurrences(ctx context.Context, ctr testcontainers.Container, target string) (int, error) {
+	r, err := ctr.Logs(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer r.Close()
+	return countOccurrences(r, target)
+}
+
+func countOccurrences(r io.Reader, target string) (int, error) {
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return 0, err
+	}
+	return strings.Count(string(b), target), nil
 }
 
 // PauseContainer freezes a container's processes: connections stay open and
