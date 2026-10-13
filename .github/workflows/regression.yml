@@ -1,0 +1,31 @@
+name: Regression
+
+# The regression suite in tomatool/tomato-compatibility, run against the
+# latest release: step vocabulary, resource types, CLI flags, Action inputs
+# and a config corpus diffed between the two binaries; then the first run
+# through `tomato init`, a container-free project with its reports, the web
+# UI over its API, and the previous release's own suite replayed on this
+# build. A documented break is listed in compatibility/breaking.txt in the
+# same PR as its CHANGELOG entry; an unlisted one fails the job.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build the candidate
+        run: go build -o "$RUNNER_TEMP/tomato" .
+      - name: Regression against the latest release
+        uses: tomatool/tomato-compatibility@main
+        with:
+          candidate: ${{ runner.temp }}/tomato
+          allow: compatibility/breaking.txt
+          candidate-version: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
