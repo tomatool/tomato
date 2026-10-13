@@ -893,6 +893,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1341,6 +1369,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resources/lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lifecycle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1654,9 +1710,10 @@ container to it:</p>
 <a href="../configuration/scylladb/">ScyllaDB</a> ·
 <a href="../configuration/redis/">Redis</a> ·
 <a href="../configuration/s3/">S3</a> ·
-<a href="../configuration/aws/">AWS</a></p>
+<a href="../configuration/aws/">AWS</a> ·
+<a href="../configuration/lifecycle/">Lifecycle</a></p>
 <h2 id="steps-by-resource">Steps, by resource<a class="headerlink" href="#steps-by-resource" title="Permanent link">&para;</a></h2>
-<p>239 steps across 13 resource types. Every page is generated from the step
+<p>267 steps across 14 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and <code>tomato steps</code> prints the same thing in your terminal.</p>
 <table>
@@ -1670,7 +1727,7 @@ definitions themselves, so it cannot disagree with the binary you are running
 <tbody>
 <tr>
 <td><a href="../resources/http-client/">HTTP Client</a></td>
-<td style="text-align: right;">36</td>
+<td style="text-align: right;">48</td>
 <td>Calling your application and asserting on the response</td>
 </tr>
 <tr>
@@ -1704,14 +1761,14 @@ definitions themselves, so it cannot disagree with the binary you are running
 <td>Calling unary methods via server reflection</td>
 </tr>
 <tr>
+<td><a href="../resources/http-server/">HTTP Server</a></td>
+<td style="text-align: right;">18</td>
+<td>Stubbing the HTTP services your application calls</td>
+</tr>
+<tr>
 <td><a href="../resources/websocket-client/">WebSocket Client</a></td>
 <td style="text-align: right;">17</td>
 <td>Connecting and exchanging messages</td>
-</tr>
-<tr>
-<td><a href="../resources/http-server/">HTTP Server</a></td>
-<td style="text-align: right;">11</td>
-<td>Stubbing the HTTP services your application calls</td>
 </tr>
 <tr>
 <td><a href="../resources/postgres/">PostgreSQL</a></td>
@@ -1722,6 +1779,11 @@ definitions themselves, so it cannot disagree with the binary you are running
 <td><a href="../resources/scylladb/">ScyllaDB</a></td>
 <td style="text-align: right;">9</td>
 <td>Cassandra and ScyllaDB over CQL</td>
+</tr>
+<tr>
+<td><a href="../resources/lifecycle/">Lifecycle</a></td>
+<td style="text-align: right;">9</td>
+<td>Stopping and starting the app and its containers mid-scenario</td>
 </tr>
 <tr>
 <td><a href="../resources/websocket-server/">WebSocket Server</a></td>
