@@ -10,6 +10,7 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 func TestInitAppEnvProviders_InitializesOnlyProvidersAndMergesTheirEnv(t *testing.T) {
@@ -96,4 +97,39 @@ func TestRegistryCleanup_ReleasesResourcesOnce(t *testing.T) {
 	if _, err := http.Get(env.Set["AWS_ENDPOINT_URL_STS"]); err == nil {
 		t.Error("the STS still answers after cleanup")
 	}
+}
+
+// A provider that provides nothing in this configuration (a kafka resource
+// without a Glue registry) is initialized with everything else, not before the
+// app: early, it could reach for containers or an app that are not there yet.
+func TestInitAppEnvProviders_SkipsConditionalProvidersThatProvideNothing(t *testing.T) {
+	registry, err := New(map[string]config.Resource{}, nil)
+	if err != nil {
+		t.Fatalf("NewRegistry: %v", err)
+	}
+	off := &conditionalHandler{provides: false}
+	on := &conditionalHandler{provides: true}
+	registry.handlers["off"] = off
+	registry.handlers["on"] = on
+
+	env, err := registry.InitAppEnvProviders(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if off.inits != 0 {
+		t.Error("a conditional provider that provides nothing was initialized before the app")
+	}
+	if on.inits != 1 || env.Set["CONDITIONAL"] != "yes" {
+		t.Errorf("a conditional provider that provides was skipped: inits %d, env %v", on.inits, env.Set)
+	}
+}
+
+type conditionalHandler struct {
+	countingHandler
+	provides bool
+}
+
+func (h *conditionalHandler) ProvidesAppEnv() bool { return h.provides }
+func (h *conditionalHandler) AppEnv() resource.AppEnv {
+	return resource.AppEnv{Set: map[string]string{"CONDITIONAL": "yes"}}
 }

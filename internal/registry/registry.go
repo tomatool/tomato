@@ -164,6 +164,9 @@ func (r *Registry) InitAppEnvProviders(ctx context.Context) (resource.AppEnv, er
 		if !ok {
 			continue
 		}
+		if c, ok := h.(resource.ConditionalAppEnvProvider); ok && !c.ProvidesAppEnv() {
+			continue
+		}
 		log.Debug().Str("handler", name).Msg("initializing handler before the app")
 		if err := h.Init(ctx); err != nil {
 			return resource.AppEnv{}, fmt.Errorf("initializing %s: %w", name, err)

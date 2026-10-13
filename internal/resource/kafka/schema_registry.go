@@ -16,6 +16,22 @@ import (
 	"github.com/linkedin/goavro/v2"
 )
 
+// avroRegistry is what the Avro steps need from a schema registry: the
+// Confluent Schema Registry (schemaRegistry) or tomato's AWS Glue Schema
+// Registry (glueRegistry), chosen with options.schema_registry.format.
+type avroRegistry interface {
+	ready(ctx context.Context) error
+	reset()
+	registerSchema(ctx context.Context, subject, schema string) error
+	encode(ctx context.Context, subject, jsonText string) ([]byte, error)
+	decode(ctx context.Context, value []byte) (string, error)
+}
+
+var (
+	_ avroRegistry = (*schemaRegistry)(nil)
+	_ avroRegistry = (*glueRegistry)(nil)
+)
+
 // avroMagicByte starts every value in the Confluent wire format:
 // [0x00][4-byte big-endian schema id][Avro binary body].
 const avroMagicByte = 0x00
@@ -76,6 +92,11 @@ func (s *schemaRegistry) register(ctx context.Context, subject, schema string) (
 	s.latest[subject] = resp.ID
 	s.mu.Unlock()
 	return resp.ID, nil
+}
+
+func (s *schemaRegistry) registerSchema(ctx context.Context, subject, schema string) error {
+	_, err := s.register(ctx, subject, schema)
+	return err
 }
 
 // latestID returns the id of the latest schema registered under subject.
