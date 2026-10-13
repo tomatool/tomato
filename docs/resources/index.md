@@ -17,6 +17,7 @@ Tomato supports the following resource types for behavioral testing.
 | [S3](s3.md) | `s3` | Steps for interacting with S3-compatible object storage (MinIO, LocalStack, AWS) |
 | [gRPC](grpc.md) | `grpc` | Steps for calling unary gRPC methods and validating responses |
 | [AWS](aws.md) | `aws` | Steps for the AWS identity (IRSA) tomato gives the application: which roles it assumed at tomato's STS |
+| [Lifecycle](lifecycle.md) | `lifecycle` | Steps for stopping and starting the app and its containers mid-scenario |
 
 
 ## Variables and Dynamic Values

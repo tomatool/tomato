@@ -35,11 +35,12 @@ container to it:
 [ScyllaDB](configuration/scylladb.md) ·
 [Redis](configuration/redis.md) ·
 [S3](configuration/s3.md) ·
-[AWS](configuration/aws.md)
+[AWS](configuration/aws.md) ·
+[Lifecycle](configuration/lifecycle.md)
 
 ## Steps, by resource
 
-239 steps across 13 resource types. Every page is generated from the step
+248 steps across 14 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and `tomato steps` prints the same thing in your terminal.
 
@@ -57,6 +58,7 @@ definitions themselves, so it cannot disagree with the binary you are running
 | [PostgreSQL](resources/postgres.md) | 11 | Seeding tables, running SQL, asserting on rows |
 | [ScyllaDB](resources/scylladb.md) | 9 | Cassandra and ScyllaDB over CQL |
 | [WebSocket Server](resources/websocket-server.md) | 8 | Stubbing a WebSocket your application connects to |
+| [Lifecycle](resources/lifecycle.md) | 9 | Stopping and starting the app and its containers mid-scenario |
 | [AWS](resources/aws.md) | 2 | The IRSA identity tomato hands the application |
 
 [Overview of all resources](resources/index.md) lists them together.

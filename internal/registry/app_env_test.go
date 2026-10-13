@@ -133,3 +133,56 @@ func (h *conditionalHandler) ProvidesAppEnv() bool { return h.provides }
 func (h *conditionalHandler) AppEnv() resource.AppEnv {
 	return resource.AppEnv{Set: map[string]string{"CONDITIONAL": "yes"}}
 }
+
+// The lifecycle resource restarts the containers a scenario stopped before
+// any other resource resets: a postgres reset against a stopped container
+// would fail. And it is handed the app once the app runs.
+func TestRegistry_ResetsFirstAndAppControl(t *testing.T) {
+	registry, err := New(map[string]config.Resource{}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var order []string
+	for _, name := range []string{"a", "b", "c", "d"} {
+		registry.handlers[name] = &orderedHandler{name: name, order: &order}
+	}
+	first := &firstHandler{orderedHandler: orderedHandler{name: "lifecycle", order: &order}}
+	registry.handlers["lifecycle"] = first
+
+	if err := registry.ResetAll(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if order[0] != "lifecycle" || len(order) != 5 {
+		t.Errorf("reset order %v: lifecycle must be first and every handler reset once", order)
+	}
+
+	registry.SetAppControl(fakeAppControl{})
+	if first.app == nil {
+		t.Error("an AppControlled resource was not handed the app")
+	}
+}
+
+type orderedHandler struct {
+	countingHandler
+	name  string
+	order *[]string
+}
+
+func (h *orderedHandler) Reset(context.Context) error {
+	*h.order = append(*h.order, h.name)
+	return nil
+}
+
+type firstHandler struct {
+	orderedHandler
+	app resource.AppControl
+}
+
+func (h *firstHandler) ResetsFirst() bool                     { return true }
+func (h *firstHandler) SetAppControl(app resource.AppControl) { h.app = app }
+
+type fakeAppControl struct{}
+
+func (fakeAppControl) StopApp() error                                    { return nil }
+func (fakeAppControl) StartApp(context.Context, map[string]string) error { return nil }
+func (fakeAppControl) Running() bool                                     { return true }

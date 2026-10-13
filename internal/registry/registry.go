@@ -25,6 +25,7 @@ import (
 	"github.com/tomatool/tomato/internal/resource/httpclient"
 	"github.com/tomatool/tomato/internal/resource/httpserver"
 	"github.com/tomatool/tomato/internal/resource/kafka"
+	"github.com/tomatool/tomato/internal/resource/lifecycle"
 	"github.com/tomatool/tomato/internal/resource/postgres"
 	"github.com/tomatool/tomato/internal/resource/rabbitmq"
 	"github.com/tomatool/tomato/internal/resource/redis"
@@ -102,6 +103,7 @@ var handlerFactories = map[string]handlerFactory{
 	"minio":            factory(s3.New),
 	"shell":            factory(shell.New),
 	"aws":              factory(aws.New),
+	"lifecycle":        factory(lifecycle.New),
 }
 
 // unimplementedTypes are resource types people reach for that tomato does not
@@ -207,14 +209,34 @@ func (r *Registry) ResetAll(ctx context.Context) error {
 
 	// Every resource is reset before every scenario. A suite that wants a
 	// starting state builds it in a Background, which runs after this.
-	for name, h := range r.handlers {
-		log.Debug().Str("handler", name).Msg("resetting handler")
-		if err := h.Reset(ctx); err != nil {
-			return fmt.Errorf("resetting %s: %w", name, err)
+	// Resources that bring back what the others reset (resource.ResetsFirst)
+	// go first.
+	for _, first := range []bool{true, false} {
+		for name, h := range r.handlers {
+			rf, ok := h.(resource.ResetsFirst)
+			if (ok && rf.ResetsFirst()) != first {
+				continue
+			}
+			log.Debug().Str("handler", name).Msg("resetting handler")
+			if err := h.Reset(ctx); err != nil {
+				return fmt.Errorf("resetting %s: %w", name, err)
+			}
 		}
 	}
 
 	return nil
+}
+
+// SetAppControl hands the application under test to the resources that act
+// on it (resource.AppControlled), once it has started.
+func (r *Registry) SetAppControl(app resource.AppControl) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, h := range r.handlers {
+		if c, ok := h.(resource.AppControlled); ok {
+			c.SetAppControl(app)
+		}
+	}
 }
 
 // RegisterSteps registers step definitions from all handlers
@@ -273,6 +295,7 @@ var canonicalTypes = []string{
 	"s3",
 	"grpc",
 	"aws",
+	"lifecycle",
 }
 
 // AllStepCategories returns every resource's step definitions, in a stable

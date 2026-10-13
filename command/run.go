@@ -284,6 +284,9 @@ func runTests(c *cli.Context) (err error) {
 		}
 		fmt.Printf("  %s health check passed\n", checkStyle.Render("✓"))
 
+		// The lifecycle resource stops and starts the app mid-scenario.
+		registry.SetAppControl(appRunner)
+
 		// Register app container with container manager so resources can reference it
 		if appContainer := appRunner.GetContainer(); appContainer != nil {
 			cm.RegisterContainer(cfg.App.GetName(), appContainer)

@@ -59,6 +59,31 @@ type ConditionalAppEnvProvider interface {
 	ProvidesAppEnv() bool
 }
 
+// AppControl is the application under test, for resources that stop and
+// start it mid-scenario.
+type AppControl interface {
+	// StopApp stops the app, as when it crashes.
+	StopApp() error
+	// StartApp starts it again and waits until it is ready, with overrides
+	// on top of app.env (nil for the configured environment).
+	StartApp(ctx context.Context, envOverrides map[string]string) error
+	// Running reports whether the app is up.
+	Running() bool
+}
+
+// AppControlled is implemented by resources that act on the app. The runner
+// hands them the app once it has started.
+type AppControlled interface {
+	SetAppControl(AppControl)
+}
+
+// ResetsFirst is implemented by resources whose Reset brings back what other
+// resources reset: the lifecycle resource restarts the containers a scenario
+// stopped, which the postgres resource then truncates. They reset first.
+type ResetsFirst interface {
+	ResetsFirst() bool
+}
+
 // SQLExecutor is implemented by handlers that can execute SQL
 type SQLExecutor interface {
 	ExecSQL(ctx context.Context, query string) (int64, error)

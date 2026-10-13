@@ -187,6 +187,11 @@ resources:
   shell:
     type: shell
 
+  # Stops and starts the app and containers mid-scenario; every scenario
+  # starts with all of them back up.
+  lifecycle:
+    type: lifecycle
+
   ws:
     type: websocket-client
     url: "ws://localhost:8080/ws"

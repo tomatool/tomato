@@ -179,6 +179,20 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 				port = port + "/tcp"
 			}
 			req.ExposedPorts = append(req.ExposedPorts, port)
+			// Docker gives a dynamic port a new host port every time the
+			// container starts, so a container a scenario stops and starts
+			// again would come back where the app is no longer looking. With
+			// a local Docker, tomato picks the free host port itself and
+			// binds it, and the address survives a restart.
+			if hostPort, ok := pinnableHostPort(); ok {
+				parsedPort, err := mobynetwork.ParsePort(port)
+				if err != nil {
+					return fmt.Errorf("container %s: invalid port %q: %w", name, portSpec, err)
+				}
+				fixedPorts[parsedPort] = []mobynetwork.PortBinding{
+					{HostIP: netip.IPv4Unspecified(), HostPort: hostPort},
+				}
+			}
 		}
 	}
 
