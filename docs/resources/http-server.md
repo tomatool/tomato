@@ -10,10 +10,11 @@ Steps for stubbing HTTP services
 
 | Step | Description |
 |------|-------------|
-| `"{resource}" stub "GET" "/users" returns "200"` | Creates a stub that returns a status code |
+| `"{resource}" stub "GET" "/users" returns "200"` | Creates a stub that returns a status code. Between the path and "returns", `with header "k" "v"`, `with query "k" "v"` and `with body containing "x"` narrow which requests it answers; the most specific stub wins, then the most recent |
 | `"{resource}" stub "GET" "/users" returns "200" with body:` | Creates a stub that returns a status code and body |
-| `"{resource}" stub "GET" "/users" returns "200" with json:` | Creates a stub that returns JSON (auto sets Content-Type) |
+| `"{resource}" stub "POST" "/" with header "X-Amz-Target" "TrentService.Encrypt" returns "200" with json:` | Creates a stub that returns JSON (auto sets Content-Type) |
 | `"{resource}" stub "GET" "/users" returns "200" with headers:` | Creates a stub that returns with custom headers |
+| `"{resource}" stub "POST" "/token" returns in sequence:` | Creates a stub that answers each request with the next row, and repeats the last row once the rows are used up. Columns: status (required), json or body, and delay (e.g. 3s) to answer late, as a slow or timing-out dependency does |
 
 
 ### Examples
@@ -28,9 +29,9 @@ Steps for stubbing HTTP services
 
 **Creates a stub that returns JSON (auto sets Content-Type):**
 ```gherkin
-"{resource}" stub "GET" "/users" returns "200" with json:
+"{resource}" stub "POST" "/" with header "X-Amz-Target" "TrentService.Encrypt" returns "200" with json:
   """
-  [{"id": 1}]
+  {"KeyId": "test"}
   """
 ```
 
@@ -41,6 +42,23 @@ Steps for stubbing HTTP services
   | X-Custom     | value            |
 ```
 
+**Creates a stub that answers each request with the next row, and repeats the last row once the rows are used up. Columns: status (required), json or body, and delay (e.g. 3s) to answer late, as a slow or timing-out dependency does:**
+```gherkin
+"{resource}" stub "POST" "/token" returns in sequence:
+  | status | json                         | delay |
+  | 200    | {"pending": true}            | 5s    |
+  | 200    | {"token": "t"}               |       |
+```
+
+
+## Availability
+
+| Step | Description |
+|------|-------------|
+| `"{resource}" refuses connections` | Close the server's port, so the app's connections are refused as when the service is down. Requests already in flight finish |
+| `"{resource}" accepts connections` | Open the port again on the same address, with the stubs kept. Every scenario starts accepting |
+
+
 
 ## Verification
 
@@ -48,6 +66,7 @@ Steps for stubbing HTTP services
 |------|-------------|
 | `"{resource}" received "GET" "/users"` | Asserts a request was received |
 | `"{resource}" received "GET" "/users" "2" times` | Asserts a request was received N times |
+| `"{resource}" received "POST" "/" with header "X-Amz-Target" "TrentService.Encrypt"` | Asserts a request was received with this exact header value, e.g. which operation of a one-path API was called |
 | `"{resource}" did not receive "DELETE" "/users"` | Asserts a request was not received |
 | `"{resource}" received request with header "Authorization" containing "Bearer"` | Asserts any request was received with header containing value |
 | `"{resource}" received request with body containing "name"` | Asserts any request was received with body containing value |
