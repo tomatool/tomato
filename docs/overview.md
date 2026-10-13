@@ -40,13 +40,13 @@ container to it:
 
 ## Steps, by resource
 
-272 steps across 14 resource types. Every page is generated from the step
+275 steps across 14 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and `tomato steps` prints the same thing in your terminal.
 
 | Resource | Steps | For |
 |----------|------:|-----|
-| [HTTP Client](resources/http-client.md) | 53 | Calling your application and asserting on the response |
+| [HTTP Client](resources/http-client.md) | 56 | Calling your application and asserting on the response |
 | [Kafka](resources/kafka.md) | 29 | Producing, consuming and asserting on topics |
 | [S3](resources/s3.md) | 27 | Object storage: MinIO, LocalStack or a real bucket |
 | [Redis](resources/redis.md) | 25 | Keys, TTLs, counters and hashes |
