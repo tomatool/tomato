@@ -119,3 +119,18 @@ Feature: HTTP requests and responses in depth
     When "api" sends "GET" to "/users/{{grace_id}}"
     Then "api" response status is "200"
     And "api" response json "name" is "Grace"
+
+  Scenario: Assert a response against a saved value
+    When "api" sends "POST" to "/users" with json:
+      """
+      {"name": "Ada", "email": "ada@test.com"}
+      """
+    Then "api" response status is "201"
+    And "api" response json "id" saved as "{{ada_id}}"
+    When "api" sends "GET" to "/users/{{ada_id}}"
+    Then "api" response json "id" is "{{ada_id}}"
+    And "api" response json contains:
+      """
+      {"id": {{ada_id}}, "name": "Ada"}
+      """
+    And "api" response body contains "{{ada_id}}"

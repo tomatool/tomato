@@ -289,3 +289,70 @@ func TestResolveRequestURL(t *testing.T) {
 		}
 	}
 }
+
+// Every response assertion compares against the value a saved variable holds,
+// not the literal "{{name}}" text, as request steps already do.
+func TestHTTPClient_AssertionsUseVariables(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Order", "o-7")
+		io.WriteString(w, `{"id":"o-7","receivedAt":"2026-10-13T09:31:03Z"}`)
+	}))
+	defer server.Close()
+
+	client, err := New("api", config.Resource{BaseURL: server.URL}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.Init(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.sendRequest("GET", "/"); err != nil {
+		t.Fatal(err)
+	}
+
+	resource.SetVariable("order_id", "o-7")
+	resource.SetVariable("received_at", "2026-10-13T09:31:03Z")
+	resource.SetVariable("other", "o-8")
+	doc := func(s string) *godog.DocString { return &godog.DocString{Content: s} }
+
+	pass := map[string]func() error{
+		"response json is":         func() error { return client.responseJSONPathShouldBe("receivedAt", "{{received_at}}") },
+		"response header is":       func() error { return client.responseHeaderShouldBe("X-Order", "{{order_id}}") },
+		"response header contains": func() error { return client.responseHeaderShouldContain("X-Order", "{{order_id}}") },
+		"response body is": func() error {
+			return client.responseBodyShouldBe(doc(`{"id":"{{order_id}}","receivedAt":"{{received_at}}"}`))
+		},
+		"response body contains":     func() error { return client.responseBodyShouldContain("{{order_id}}") },
+		"response body contains doc": func() error { return client.responseBodyShouldContainDoc(doc(`"id":"{{order_id}}"`)) },
+		"response body not contain":  func() error { return client.responseBodyShouldNotContain("{{other}}") },
+		"response json matches": func() error {
+			return client.responseJSONShouldMatch(doc(`{"id":"{{order_id}}","receivedAt":"@string"}`))
+		},
+		"response json contains": func() error { return client.responseJSONShouldContain(doc(`{"id":"{{order_id}}"}`)) },
+	}
+	for name, step := range pass {
+		if err := step(); err != nil {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+
+	// And a different saved value fails, so the variable is what was compared.
+	fail := map[string]func() error{
+		"response json is":          func() error { return client.responseJSONPathShouldBe("id", "{{other}}") },
+		"response header is":        func() error { return client.responseHeaderShouldBe("X-Order", "{{other}}") },
+		"response body contains":    func() error { return client.responseBodyShouldContain("{{other}}") },
+		"response body not contain": func() error { return client.responseBodyShouldNotContain("{{order_id}}") },
+		"response json contains":    func() error { return client.responseJSONShouldContain(doc(`{"id":"{{other}}"}`)) },
+	}
+	for name, step := range fail {
+		if err := step(); err == nil {
+			t.Errorf("%s: should fail against a different saved value", name)
+		}
+	}
+
+	// An unknown variable stays literal, so suites without variables are unaffected.
+	if err := client.responseBodyShouldNotContain("{{never_saved}}"); err != nil {
+		t.Errorf("unknown variable: %v", err)
+	}
+}
