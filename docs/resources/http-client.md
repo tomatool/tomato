@@ -119,7 +119,10 @@ Steps for making HTTP requests, validating responses and reading event streams
 | `"api" does not receive an event within "2s"` | Assert no further event arrives for the duration (comments don't count) |
 | `"api" receives a comment within "2s"` | Assert a comment line (": ..."), the usual keep-alive, arrives within the duration |
 | `"api" stream event ids are consecutive from "1"` | Assert the ids of every event received on this stream so far are integers counting up by one from the number given, with no gap or repeat. Events without an id are left out |
+| `"api" stops reading the stream` | Stop reading the stream without closing it, as a stalled client does: what the server sends piles up in the connection's buffers until the server blocks, and a server that protects itself disconnects the slow consumer |
+| `"api" resumes reading the stream` | Read the stream again: what arrived while paused is delivered in order, then whatever the server did meanwhile (sent more, or closed the stream) |
 | `"api" stream is closed by the server within "5s"` | Assert the server ends the stream within the duration |
+| `"api" stream is disconnected by the server within "5s"` | Assert the server ends the stream within the duration, cleanly or by dropping the connection, as a server that disconnects a slow consumer does |
 | `"api" last stream event id saved as "{{last_id}}"` | Save the id of the last event a receive step matched, the position a client would resume from |
 
 

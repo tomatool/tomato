@@ -489,6 +489,7 @@ func TestStream_InvalidDurations(t *testing.T) {
 		"does not receive":     func() error { return c.noEventWithin("soon") },
 		"receives a comment":   func() error { return c.receiveComment("soon") },
 		"closed by the server": func() error { return c.closedByServerWithin("soon") },
+		"disconnected":         func() error { return c.disconnectedByServerWithin("soon") },
 	} {
 		if err := step(); err == nil || !strings.Contains(err.Error(), "invalid duration") {
 			t.Errorf("%s: want an invalid duration error, got %v", name, err)
@@ -655,5 +656,112 @@ func TestStream_EventIDsConsecutiveNeedsAnID(t *testing.T) {
 	err := c.eventIDsConsecutive(1)
 	if err == nil || !strings.Contains(err.Error(), "no event with an id") {
 		t.Fatalf("an empty stream must not pass as gapless, got %v", err)
+	}
+}
+
+// slowConsumerServer streams large events as fast as it can and disconnects
+// a client whose connection stops draining: a write that cannot complete
+// within 300ms ends the stream, as a server protecting itself does.
+func slowConsumerServer(t *testing.T) *httptest.Server {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		rc := http.NewResponseController(w)
+		payload := strings.Repeat("x", 16*1024)
+		for i := 1; ; i++ {
+			rc.SetWriteDeadline(time.Now().Add(300 * time.Millisecond))
+			if _, err := fmt.Fprintf(w, "id: %d\nevent: tick\ndata: {\"p\":%q}\n\n", i, payload); err != nil {
+				return // slow consumer: disconnect
+			}
+			if err := rc.Flush(); err != nil {
+				return
+			}
+		}
+	}))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
+func TestStream_PausedReaderIsDisconnectedAndResumesWithoutLoss(t *testing.T) {
+	srv := slowConsumerServer(t)
+	c := newStreamTestClient(t, srv.URL)
+	if err := c.openStream("/events"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.receiveEvent("tick", "2s"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.pauseStream(); err != nil {
+		t.Fatal(err)
+	}
+	// While paused nothing is read, so the buffers fill and the server's
+	// write deadline passes.
+	time.Sleep(1500 * time.Millisecond)
+	if err := c.closedByServerWithin("10ms"); err == nil {
+		t.Fatal("a paused reader cannot have seen the close yet")
+	}
+	if err := c.resumeStream(); err != nil {
+		t.Fatal(err)
+	}
+	// What arrived before the disconnect is delivered, then the end. The
+	// server dropped the connection mid-write, so it is a disconnect, not a
+	// clean close.
+	if err := c.disconnectedByServerWithin("10s"); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.closedByServerWithin("10ms"); err == nil || !strings.Contains(err.Error(), "failed instead of being closed") {
+		t.Fatalf("a dropped connection is not a clean close: %v", err)
+	}
+	if err := c.eventIDsConsecutive(1); err != nil {
+		t.Fatalf("the events delivered must have no gap: %v", err)
+	}
+	if n := len(c.stream.events); n < 2 {
+		t.Fatalf("want the buffered events delivered after resuming, got %d", n)
+	}
+}
+
+func TestStream_DisconnectedByServer(t *testing.T) {
+	srv := newSSEServer(t)
+	c := newStreamTestClient(t, srv.URL)
+	if err := c.disconnectedByServerWithin("10ms"); err == nil || !strings.Contains(err.Error(), "no stream is open") {
+		t.Errorf("no stream: %v", err)
+	}
+	c.openStream("/events")
+	if err := c.disconnectedByServerWithin("soon"); err == nil || !strings.Contains(err.Error(), "invalid duration") {
+		t.Errorf("bad duration: %v", err)
+	}
+	if err := c.disconnectedByServerWithin("50ms"); err == nil || !strings.Contains(err.Error(), "still open") {
+		t.Errorf("open stream: %v", err)
+	}
+	close(srv.frames) // a clean close counts too
+	if err := c.disconnectedByServerWithin("2s"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestStream_PauseErrors(t *testing.T) {
+	srv := newSSEServer(t)
+	c := newStreamTestClient(t, srv.URL)
+	if err := c.pauseStream(); err == nil || !strings.Contains(err.Error(), "no stream is open") {
+		t.Errorf("pause without a stream: %v", err)
+	}
+	if err := c.resumeStream(); err == nil || !strings.Contains(err.Error(), "no stream is open") {
+		t.Errorf("resume without a stream: %v", err)
+	}
+	c.openStream("/events")
+	if err := c.resumeStream(); err == nil || !strings.Contains(err.Error(), "not paused") {
+		t.Errorf("resume a running stream: %v", err)
+	}
+	c.pauseStream()
+	if err := c.pauseStream(); err == nil || !strings.Contains(err.Error(), "already paused") {
+		t.Errorf("pause twice: %v", err)
+	}
+
+	// Closing a paused stream must not hang on the blocked reader.
+	done := make(chan struct{})
+	go func() { c.closeStreamStep(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		t.Fatal("closing a paused stream hung")
 	}
 }
