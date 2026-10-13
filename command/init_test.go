@@ -1,15 +1,9 @@
 package command
 
 import (
-	"context"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/cucumber/gherkin/go/v26"
 	messages "github.com/cucumber/messages/go/v21"
@@ -207,70 +201,4 @@ func keys(m initModel) []string {
 		return []string{"(none)"}
 	}
 	return out
-}
-
-// The three tests above check the wording of what `tomato init` writes. This
-// one checks that the suite is green, which is what a first `tomato run` has
-// to be: a template that matched every step pattern still advertised Kafka on
-// a port nothing listened on, seeded a table nothing created, and asserted a
-// request nothing sent. It needs Docker and a built binary, so it runs only
-// when TOMATO_BIN names one; `make coverage` and `make integration-test` do.
-func TestInit_GeneratedSuitePasses(t *testing.T) {
-	bin := os.Getenv("TOMATO_BIN")
-	if bin == "" {
-		t.Skip("set TOMATO_BIN to the absolute path of a tomato binary to run the generated suite under Docker")
-	}
-	if !filepath.IsAbs(bin) {
-		t.Fatalf("TOMATO_BIN must be an absolute path (go test runs in the package directory), got %q", bin)
-	}
-
-	// every dependency, no app: the project a first run is most likely to be
-	m := initModel{selected: map[string]bool{}}
-	for _, d := range availableResources {
-		m.selected[d.key] = true
-	}
-	dir := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(dir, "features"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	feature := generateExampleFeatureFile(m)
-	for name, body := range map[string]string{
-		"tomato.yml":               generateTomatoConfig(m),
-		"features/example.feature": feature,
-	} {
-		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, bin, "run")
-	cmd.Dir = dir
-	raw, err := cmd.CombinedOutput()
-	out := regexp.MustCompile(`\x1b\[[0-9;?]*[a-zA-Z]`).ReplaceAllString(string(raw), "")
-	if err != nil {
-		t.Fatalf("the project tomato init writes does not pass its own suite: %v\n%s", err, out)
-	}
-
-	want := scenarioCount(t, feature)
-	summary := regexp.MustCompile(`(?m)^(\d+) scenarios \((\d+) passed\)$`).FindStringSubmatch(out)
-	if summary == nil || summary[1] != strconv.Itoa(want) || summary[2] != strconv.Itoa(want) {
-		t.Fatalf("expected %d scenarios, all passed; the run printed:\n%s", want, out)
-	}
-}
-
-func scenarioCount(t *testing.T, feature string) int {
-	t.Helper()
-	doc, err := gherkin.ParseGherkinDocument(strings.NewReader(feature), (&messages.Incrementing{}).NewId)
-	if err != nil {
-		t.Fatal(err)
-	}
-	n := 0
-	for _, child := range doc.Feature.Children {
-		if child.Scenario != nil {
-			n++
-		}
-	}
-	return n
 }

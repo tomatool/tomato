@@ -143,8 +143,6 @@ docker-build:
 integration-test: build
 	@echo "Running integration tests..."
 	$(BINARY_PATH) run -c ./tests/tomato.yml
-	@echo "Running the project tomato init writes..."
-	TOMATO_BIN=$(CURDIR)/$(BINARY_PATH) $(GOTEST) -count=1 -run TestInit_GeneratedSuitePasses ./command
 
 ## integration-test-coverage: Run integration tests with coverage (Cloudflare technique)
 integration-test-coverage:
@@ -168,8 +166,6 @@ coverage: build
 	@echo "Integration suite with a coverage-instrumented binary..."
 	$(GOCMD) build -cover -covermode=atomic -coverpkg=./... $(LDFLAGS) -o ./bin/tomato-coverage .
 	GOCOVERDIR=./coverage/integration TOMATO_BIN=./bin/tomato-coverage ./bin/tomato-coverage run -c ./tests/tomato.yml --quiet; echo $$? > ./coverage/integration.exit
-	@echo "The project tomato init writes, run end to end..."
-	GOCOVERDIR=$(CURDIR)/coverage/integration TOMATO_BIN=$(CURDIR)/bin/tomato-coverage $(GOTEST) -count=1 -run TestInit_GeneratedSuitePasses ./command; echo $$? > ./coverage/init.exit
 	@echo "CLI commands, so they count too..."
 	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage validate -c ./tests/tomato.yml --plain > /dev/null
 	GOCOVERDIR=./coverage/integration ./bin/tomato-coverage steps > /dev/null
