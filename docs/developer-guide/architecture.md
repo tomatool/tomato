@@ -19,7 +19,7 @@ is which, and which of them CI actually checks.
 | Path | What it is | Checked by CI |
 |------|------------|---------------|
 | `main.go`, `command/`, `internal/` | The Go program. `main.go` is the entry point, `command/` is one file per CLI command, `internal/` is everything else | `make test`, `make coverage` |
-| `ui/` | The web UI `tomato ui` serves: a React app built by Vite with pnpm. `pnpm build` writes the bundle into `command/ui_assets/dist`, which the binary embeds, so the bundle is committed too | `make ui-check` fails on a stale bundle |
+| `ui/` | The web UI `tomato ui` serves: a React app built by Vite with pnpm. `pnpm build` writes the bundle into `command/ui_assets/dist`, which the binary embeds, so the bundle is committed too | `make ui-test` runs its unit tests; `make ui-check` fails on a stale bundle |
 | `tests/` | tomato's integration suite: tomato testing itself against real containers. `tests/tomato.yml` plus `tests/features/*.feature` | `make coverage`; every step of every resource must be used by a scenario |
 | `docs/` | The documentation site, built with `mkdocs.yml`. `docs/resources/` and `docs/index.md` are **generated** — the docs workflow overwrites them with `tomato docs` and `README.md` before deploying, so edit the generator or the README, never those files | regenerated and deployed, not checked for drift |
 | `action.yml`, `install.sh` | The two shipped deliverables besides the binary: the GitHub Action and the install script | no — neither is exercised by a workflow |

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSocket } from './hooks/useSocket'
 import { useLocalEnum, useLocalNumber } from './hooks/useLocalState'
 import { flowModel } from './lib/flow'
-import { stepKey, BACKGROUND_KEY } from './lib/steps.jsx'
+import { BACKGROUND_KEY } from './lib/steps.jsx'
+import { RUN_EVENTS, backgroundScenario, emptyRun, failedBackgroundSteps, reduceRun } from './lib/run.js'
 import { TopBar } from './components/TopBar.jsx'
 import { Tree } from './components/Tree.jsx'
 import { ScenarioCard, BackgroundCard } from './components/ScenarioCard.jsx'
@@ -18,8 +19,6 @@ import { SourcePath } from './components/SourcePath.jsx'
 const SIDE_MIN = 240
 const SIDE_DEFAULT = 340
 const CONSOLE_MIN = 80
-
-const emptyRun = () => ({ scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {} })
 
 // Dark is the default: it is what the design system is built around, and what
 // :root carries, so the attribute only ever has to name the exception.
@@ -76,6 +75,9 @@ export function App() {
 
   // ——— server messages ———
   const onMessage = useCallback((m) => {
+    // Scenario and step status go through one reducer, keyed the way the
+    // runner reports them (lib/run.js); the rest is the page's own state.
+    if (RUN_EVENTS.has(m.type)) setRunState((p) => reduceRun(p, m))
     switch (m.type) {
       case 'init':
       case 'update': {
@@ -101,39 +103,7 @@ export function App() {
       case 'run_started':
         runStartedAt.current = Date.now()
         setRunning(true)
-        setRunState(emptyRun())
         setLines([])
-        break
-      case 'scenario_running':
-        setRunState((p) => ({ ...p, scStatus: { ...p.scStatus, [m.scenario]: 'running' } }))
-        break
-      case 'scenario_passed':
-      case 'scenario_failed': {
-        const status = m.type === 'scenario_passed' ? 'passed' : 'failed'
-        setRunState((p) => ({
-          ...p,
-          scStatus: { ...p.scStatus, [m.scenario]: status },
-          scDur: m.durationMs == null ? p.scDur : { ...p.scDur, [m.scenario]: m.durationMs },
-        }))
-        break
-      }
-      case 'step_started':
-        if (m.scenario != null && m.stepIndex != null) {
-          setRunState((p) => ({
-            ...p, stepStatus: { ...p.stepStatus, [stepKey(m.scenario, m.stepIndex)]: 'running' },
-          }))
-        }
-        break
-      case 'step_finished':
-        if (m.scenario != null && m.stepIndex != null) {
-          const k = stepKey(m.scenario, m.stepIndex)
-          setRunState((p) => ({
-            ...p,
-            stepStatus: { ...p.stepStatus, [k]: m.status ?? '' },
-            stepDur: m.durationMs == null ? p.stepDur : { ...p.stepDur, [k]: m.durationMs },
-            stepError: m.output ? { ...p.stepError, [k]: m.output } : p.stepError,
-          }))
-        }
         break
       case 'run_output':
         setLines((p) => {
@@ -144,15 +114,6 @@ export function App() {
       case 'run_finished':
       case 'run_error':
         setRunning(false)
-        // Anything still queued or running never reported; clear it rather
-        // than leave a spinner behind.
-        setRunState((p) => {
-          const scStatus = { ...p.scStatus }
-          for (const [k, v] of Object.entries(scStatus)) {
-            if (v === 'queued' || v === 'running') delete scStatus[k]
-          }
-          return { ...p, scStatus }
-        })
         break
       case 'runs_update':
         setRuns(m.runs ?? [])
@@ -215,7 +176,7 @@ export function App() {
   const feature = features.find((f) => f.filePath === selectedFile) ?? null
   const shown = feature ? visibleScenarios(feature) : []
   const scenario = shown[selectedScenario] ?? shown[0] ?? null
-  const model = useMemo(() => flowModel(scenario, runState), [scenario, runState])
+  const model = useMemo(() => flowModel(scenario, runState, feature?.background), [scenario, runState, feature?.background])
 
   // The pointer is not over anything in a view you just switched away from,
   // so a hover left highlighted there would be a lie.
@@ -516,10 +477,16 @@ export function App() {
             </div>
 
             {feature.background?.length > 0 && (() => {
-              const isCollapsed = collapsed[BACKGROUND_KEY] ?? true
+              // The card shows the Background as it ran for the scenario
+              // running or last run, and opens itself when that run failed
+              // in it: the failed step would otherwise be behind a fold.
+              const bgFor = backgroundScenario(feature, runState)
+              const bgFailed = failedBackgroundSteps(feature.background, bgFor, runState).length > 0
+              const isCollapsed = collapsed[BACKGROUND_KEY] ?? !bgFailed
               return (
                 <BackgroundCard
                   steps={feature.background}
+                  scenarioName={bgFor}
                   collapsed={isCollapsed}
                   onToggle={() => toggleCard(BACKGROUND_KEY, isCollapsed)}
                   runState={runState}
@@ -548,6 +515,7 @@ export function App() {
                   onTag={(name) => setFilter((f) => (f.toLowerCase() === `@${name.toLowerCase()}` ? '' : `@${name}`))}
                   filter={filter}
                   runState={runState}
+                  background={feature.background}
                 />
               )
             })}

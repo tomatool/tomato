@@ -37,8 +37,7 @@ export function tokenizeStep(text) {
   return out
 }
 
-// Keys for per-step run state. Step text repeats across scenarios, so the
-// position is what identifies a step.
-export const stepKey = (scenario, i) => `${scenario}\u0000${i}`
-
+// The feature's Background card has no scenario name to be remembered by;
+// this is its key in the collapsed map. Its run state is keyed on the
+// scenario that ran it (lib/run.js).
 export const BACKGROUND_KEY = 'background::feature'

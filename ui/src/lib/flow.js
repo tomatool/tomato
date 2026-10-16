@@ -1,11 +1,12 @@
-import { stepKey } from './steps.jsx'
+import { pickleIndex, stepKey } from './run.js'
 import { stepKind } from './kind'
 
 // What a scenario does, lane by lane: one message per step, numbered in step
 // order. This is derived from the feature file and tomato.yml — tomato does
 // not record the bytes it sent, so a message carries the step and its payload
-// rather than a captured request.
-export function flowModel(scenario, runState) {
+// rather than a captured request. Run state is keyed on the pickle index,
+// where the feature's Background comes first (lib/run.js).
+export function flowModel(scenario, runState, background) {
   if (!scenario) return null
   const { stepStatus = {}, stepDur = {}, stepError = {} } = runState
 
@@ -18,7 +19,7 @@ export function flowModel(scenario, runState) {
   }
 
   const msgs = (scenario.steps ?? []).map((step, i) => {
-    const k = stepKey(scenario.name, i)
+    const k = stepKey(scenario.name, pickleIndex(background, i))
     const lane = step.resource != null ? laneOf[step.resource] : null
     const words = String(step.text).replace(/"[^"]*"/g, ' ').trim().split(/\s+/)
     const verb = words[0] || 'step'
