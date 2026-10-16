@@ -26,6 +26,7 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 			"postgres": {Image: "postgres:15-alpine", Ports: []string{"5432/tcp"}},
 			"redis":    {Image: "redis:7-alpine"},
 			"kafka":    {Preset: "kafka"},
+			"chrome":   {Preset: "chromium"},
 		},
 		Resources: map[string]config.Resource{
 			"db":            {Type: "postgres", Container: "postgres"},
@@ -38,6 +39,7 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 			"wsmock":        {Type: "websocket-server", Options: map[string]any{"port": 9997}},
 			"wsmock-client": {Type: "websocket-client", URL: "ws://localhost:9997/"},
 			"shell":         {Type: "shell"},
+			"alice":         {Type: "browser", Container: "chrome", Options: map[string]any{"base_url": "http://localhost:8080"}},
 		},
 	}
 	got := topology(cfg)
@@ -58,7 +60,7 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 		names = append(names, c.Name)
 		images[c.Name] = c.Image
 	}
-	if want := []string{"kafka", "postgres", "redis"}; !reflect.DeepEqual(names, want) {
+	if want := []string{"chrome", "kafka", "postgres", "redis"}; !reflect.DeepEqual(names, want) {
 		t.Errorf("containers = %v, want %v", names, want)
 	}
 	if images["kafka"] != "preset: kafka" || images["postgres"] != "postgres:15-alpine" {
@@ -80,6 +82,9 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 		"wsmock":        {Name: "wsmock", Type: "websocket-server", Role: "mock", Port: 9997},
 		"wsmock-client": {Name: "wsmock-client", Type: "websocket-client", Role: "client", Target: "wsmock", Address: "localhost:9997"},
 		"shell":         {Name: "shell", Type: "shell", Role: "host"},
+		// A person using the app's UI: a client of the app, whose base_url
+		// sits among its options, run in the chromium container.
+		"alice": {Name: "alice", Type: "browser", Role: "client", Container: "chrome", Target: "app", Address: "localhost:8080"},
 	}
 	for name, w := range want {
 		if g, ok := res[name]; !ok || !reflect.DeepEqual(g, w) {

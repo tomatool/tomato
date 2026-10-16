@@ -3,7 +3,7 @@ import { iconId } from '../lib/icons'
 
 // Roles when the server sent no topology (an invalid config): derived from
 // the step types the flow model saw, the way the server would classify them.
-const CLIENT_TYPES = new Set(['http', 'http-client', 'grpc', 'grpc-client', 'websocket', 'websocket-client'])
+const CLIENT_TYPES = new Set(['http', 'http-client', 'grpc', 'grpc-client', 'websocket', 'websocket-client', 'browser'])
 const MOCK_TYPES = new Set(['http-server', 'websocket-server', 'aws'])
 const roleOf = (type) => (CLIENT_TYPES.has(type) ? 'client' : MOCK_TYPES.has(type) ? 'mock' : type === 'shell' ? 'host' : 'service')
 
@@ -266,7 +266,7 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
     const r = byName.get(m.resource)
     if (!r) continue
     touched.add(r.name)
-    if (r.container) touched.add(`c:${r.container}`)
+    if (r.container && r.role !== 'client') touched.add(`c:${r.container}`)
     if (r.role === 'client') touched.add(r.target || `x:${r.address}`)
     if (r.role === 'mock') touched.add('app')
   }
@@ -278,9 +278,15 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
   const clients = resources.filter((r) => r.role === 'client' && drawn(r.name))
   const externals = app ? [] : [...new Set(clients.filter((r) => !r.target && r.address).map((r) => r.address))]
 
+  // A container that only runs clients (the chromium a browser drives) is
+  // part of tomato's side of the picture, not a service of the app's.
+  const clientOnly = new Set(containers.map((c) => c.name).filter((name) => {
+    const users = resources.filter((r) => r.container === name)
+    return users.length > 0 && users.every((r) => r.role === 'client')
+  }))
   const groups = []
   const byContainer = new Map()
-  for (const c of containers) {
+  for (const c of containers.filter((c) => !clientOnly.has(c.name))) {
     const g = { kind: 'container', key: `c:${c.name}`, title: c.name, sub: c.image, icon: 'container', rows: [] }
     byContainer.set(c.name, g); groups.push(g)
   }
@@ -303,7 +309,7 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
 
   const notInvolved = nothingTouched ? [] : [
     ...resources.filter((r) => !isUsed(r.name)).map((r) => r.name),
-    ...containers.filter((c) => !isUsed(`c:${c.name}`)).map((c) => `${c.name} (container)`),
+    ...containers.filter((c) => !clientOnly.has(c.name) && !isUsed(`c:${c.name}`)).map((c) => `${c.name} (container)`),
   ]
 
   // Columns when the pane has room for them — with tighter gaps when it

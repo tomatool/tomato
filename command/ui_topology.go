@@ -65,11 +65,13 @@ type TopoResourceJSON struct {
 }
 
 // clientTypes are resource types tomato calls something through, rather than
-// a dependency of the app.
+// a dependency of the app. A browser is one too: the person using the app's
+// UI, in a container that is only there to run it.
 var clientTypes = map[string]bool{
 	"http": true, "http-client": true,
 	"grpc": true, "grpc-client": true,
 	"websocket": true, "websocket-client": true,
+	"browser": true,
 }
 
 // mockTypes are resource types tomato serves itself: the app calls them,
@@ -156,9 +158,16 @@ func topology(cfg *config.Config) TopologyJSON {
 	return t
 }
 
+// clientURLs are the addresses a client resource may be configured with: the
+// browser keeps its base_url among its options.
+func clientURLs(res config.Resource) []string {
+	opt, _ := res.Options["base_url"].(string)
+	return []string{res.BaseURL, opt, res.URL}
+}
+
 // clientAddress is what a client resource is configured to call, or "".
 func clientAddress(res config.Resource) string {
-	for _, raw := range []string{res.BaseURL, res.URL} {
+	for _, raw := range clientURLs(res) {
 		if raw == "" {
 			continue
 		}
@@ -172,7 +181,7 @@ func clientAddress(res config.Resource) string {
 
 // clientPort is the port a client resource calls, or "" when it has none.
 func clientPort(res config.Resource) string {
-	for _, raw := range []string{res.BaseURL, res.URL} {
+	for _, raw := range clientURLs(res) {
 		if raw == "" {
 			continue
 		}
