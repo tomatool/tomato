@@ -1222,6 +1222,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pdf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PDF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1713,6 +1741,34 @@
     
   
     Browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resources/pdf/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PDF
   
 
     
@@ -2291,7 +2347,7 @@
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="nt">resources</span><span class="p">:</span><span class="w">              </span><span class="c1"># Resource/handler definitions</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle|browser</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle|browser|pdf</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">    </span><span class="c1"># aliases: postgresql, http-client, grpc-client, websocket-client, minio</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">container_name</span>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
@@ -2515,6 +2571,10 @@ ports and wait strategy; anything the entry sets itself (an <code>env</code> key
 <tr>
 <td><code>chromium</code></td>
 <td>A headless Chromium for <code>browser</code> resources. Pages it opens on <code>localhost</code> reach the app on your machine, through a tunnel to each port the suite uses there. See <a href="browser/#the-chromium-preset">Browser</a>.</td>
+</tr>
+<tr>
+<td><code>verapdf</code></td>
+<td>A veraPDF validation service for the <code>pdf</code> resource's <code>conforms to</code> step: PDF/UA and PDF/A, with the rules a document breaks in the failure. See <a href="pdf/#the-verapdf-preset">PDF</a>.</td>
 </tr>
 <tr>
 <td><code>kafka</code></td>
