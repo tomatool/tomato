@@ -126,6 +126,15 @@ func (m *Manager) SetRunContext(ctx *runlog.RunContext) {
 	}
 }
 
+// RunDir is the directory of the run's logs, or "" before the run has one.
+// Resources keep what a run leaves behind, such as screenshots, beside them.
+func (m *Manager) RunDir() string {
+	if m == nil || m.runCtx == nil {
+		return ""
+	}
+	return m.runCtx.Dir
+}
+
 // RegisterContainer adds an externally managed container to the manager
 // This allows resources to reference containers started by apprunner
 func (m *Manager) RegisterContainer(name string, container testcontainers.Container) {

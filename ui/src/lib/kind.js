@@ -21,6 +21,7 @@ const GROUPS = {
   'Database': 'check', 'Exit Code': 'check', 'Output': 'check', 'Files': 'check', 'Receiving': 'check',
   'Bucket Assertions': 'check', 'Object Assertions': 'check', 'Service Discovery': 'check', 'Identity': 'check',
   'Variable Capture': 'capture', 'Capture': 'capture', 'Server Info': 'capture',
+  'Navigation': 'probe', 'Using the Page': 'probe', 'What the Page Shows': 'check',
 }
 
 // The first word of a definition's description, for the mixed groups.

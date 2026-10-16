@@ -124,6 +124,14 @@ type Container struct {
 	// Files are copied into the container after it is created and before it
 	// starts. Presets fill them in; tomato.yml cannot set them.
 	Files []ContainerFile `yaml:"-"`
+	// Entrypoint replaces the image's entrypoint; command becomes its
+	// arguments. Presets fill it in; tomato.yml cannot set it.
+	Entrypoint []string `yaml:"-"`
+	// HostAccessPorts are ports on the host the container reaches as
+	// host.testcontainers.internal:<port>, through a tunnel that works with
+	// any Docker, local or remote. Presets fill them in; tomato.yml cannot
+	// set them.
+	HostAccessPorts []int `yaml:"-"`
 }
 
 // ContainerFile is a file tomato puts into a container before it starts.

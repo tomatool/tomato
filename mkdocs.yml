@@ -55,6 +55,7 @@ nav:
     - S3: configuration/s3.md
     - AWS: configuration/aws.md
     - Lifecycle: configuration/lifecycle.md
+    - Browser: configuration/browser.md
   - Step Reference:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
@@ -71,6 +72,7 @@ nav:
     - S3: resources/s3.md
     - AWS: resources/aws.md
     - Lifecycle: resources/lifecycle.md
+    - Browser: resources/browser.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
     - Adding a Step or Resource: developer-guide/adding-a-resource.md

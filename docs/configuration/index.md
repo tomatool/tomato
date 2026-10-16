@@ -36,7 +36,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle
+    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle|browser
     # aliases: postgresql, http-client, grpc-client, websocket-client, minio
     container: container_name
     options: {}
@@ -216,6 +216,7 @@ containers:
 
 | Preset | What it runs |
 |--------|--------------|
+| `chromium` | A headless Chromium for `browser` resources. Pages it opens on `localhost` reach the app on your machine, through a tunnel to each port the suite uses there. See [Browser](browser.md#the-chromium-preset). |
 | `kafka` | A single-node KRaft broker, reachable from the host and from other containers. With `auth: aws_msk_iam`, a second listener speaks SASL `AWS_MSK_IAM` like MSK's IAM port. See [Kafka](kafka.md#preset). |
 
 ### Resources tomato does not manage

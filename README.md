@@ -22,7 +22,7 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 - **Built-in Container Orchestration** - Automatically manage test containers with Testcontainers
 - **Clean State Testing** - Every resource is reset before every scenario for reliable, isolated tests
 - **BDD/Gherkin Support** - Write tests in plain English using Cucumber syntax
-- **Multiple Resource Types** - HTTP client (with Server-Sent Events) and server, gRPC, PostgreSQL, ScyllaDB/Cassandra, Redis, Kafka, RabbitMQ, S3, WebSocket client and server, Shell
+- **Multiple Resource Types** - HTTP client (with Server-Sent Events) and server, gRPC, PostgreSQL, ScyllaDB/Cassandra, Redis, Kafka, RabbitMQ, S3, WebSocket client and server, Shell, and a browser that uses the web UI in a real Chromium
 - **Presets** - `preset: kafka` instead of a page of listener config, with MSK-style `AWS_MSK_IAM` authentication on the stock apache/kafka image
 - **AWS identity** - an `aws` resource gives the app IRSA against an STS tomato serves
 - **Avro + Schema Registry** - Publish and assert Kafka Avro messages as plain JSON
