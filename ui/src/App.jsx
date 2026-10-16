@@ -353,6 +353,7 @@ export function App() {
       <TopBar
         theme={theme}
         onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        tomato={config?.tomato}
         crumb={crumb}
         live={socket === 'online' ? '' : socket}
         liveText={socket === 'online'

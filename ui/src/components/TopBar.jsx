@@ -1,12 +1,14 @@
 import { fmtDur } from '../lib/format'
+import { describeVersion } from '../lib/version'
 
 const THEME_LABEL = { dark: 'Switch to the light theme', light: 'Switch to the dark theme' }
 
 export function TopBar({
-  theme, onToggleTheme,
+  theme, onToggleTheme, tomato,
   crumb, live, liveText, scenarios, scStatus, scDur, running,
   onRunAll, onRunFailed, onStop,
 }) {
+  const version = describeVersion(tomato)
   let passed = 0; let failed = 0; let undef = 0; let reported = 0
   for (const s of scenarios) {
     const st = scStatus[s.name]
@@ -20,6 +22,11 @@ export function TopBar({
   return (
     <header className="topbar">
       <span className="brand"><i className="brand-mark" />tomato</span>
+      {version && (
+        <span className="brand-version" title={version.title} data-dev={version.dev || undefined}>
+          {version.label}
+        </span>
+      )}
       <button
         className="btn btn--ghost btn--icon"
         type="button"

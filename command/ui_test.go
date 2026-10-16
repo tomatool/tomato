@@ -1,6 +1,9 @@
 package command
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,6 +11,7 @@ import (
 	"time"
 
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/version"
 )
 
 func TestAnsiToHTMLEmitsClassesNotColours(t *testing.T) {
@@ -196,5 +200,41 @@ func TestAppJSONDescribesReadyCheck(t *testing.T) {
 	}
 	if len(a.Env) != 2 || a.Env[0].Key != "A" {
 		t.Errorf("env not sorted: %+v", a.Env)
+	}
+}
+
+// The page says which tomato it is looking at, so a report from the UI can
+// name a version. The field is set even when the config does not load,
+// because that is exactly when someone asks "which build is this?".
+func TestHandleConfigReportsTheTomatoVersion(t *testing.T) {
+	dir := t.TempDir()
+	for name, body := range map[string]string{
+		"valid":  "version: 2\nresources:\n  shell:\n    type: shell\n",
+		"broken": "version: 2\nresources: [not, a, map]\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(dir, name+".yml")
+			if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			s := &UIServer{configPath: path}
+			rec := httptest.NewRecorder()
+			s.handleConfig(rec, httptest.NewRequest(http.MethodGet, "/api/config", nil))
+
+			var out ConfigJSON
+			if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {
+				t.Fatalf("response is not JSON: %v\n%s", err, rec.Body.String())
+			}
+			if out.Tomato == nil {
+				t.Fatalf("no tomato field in %s", rec.Body.String())
+			}
+			if out.Tomato.Version != version.Version || out.Tomato.Commit != version.Commit || out.Tomato.Built != version.BuildDate {
+				t.Errorf("tomato = %+v, want version %q commit %q built %q",
+					*out.Tomato, version.Version, version.Commit, version.BuildDate)
+			}
+			if (name == "valid") != out.Valid {
+				t.Errorf("valid = %v for the %s config", out.Valid, name)
+			}
+		})
 	}
 }
