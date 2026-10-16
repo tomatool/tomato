@@ -1885,7 +1885,7 @@ is which, and which of them CI actually checks.</p>
 <tr>
 <td><code>ui/</code></td>
 <td>The web UI <code>tomato ui</code> serves: a React app built by Vite with pnpm. <code>pnpm build</code> writes the bundle into <code>command/ui_assets/dist</code>, which the binary embeds, so the bundle is committed too</td>
-<td><code>make ui-check</code> fails on a stale bundle</td>
+<td><code>make ui-test</code> runs its unit tests; <code>make ui-check</code> fails on a stale bundle</td>
 </tr>
 <tr>
 <td><code>tests/</code></td>
