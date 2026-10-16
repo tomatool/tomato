@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Master template</title>
+<style>
+  body { font-family: sans-serif; margin: 2rem; }
+  #editor { border: 1px solid #999; padding: .5rem 1rem; min-height: 4rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .switch span { display: inline-block; padding: .2rem .6rem; border: 1px solid #999; border-radius: 1rem; cursor: pointer; }
+  .backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .3); display: flex; align-items: center; justify-content: center; }
+  .backdrop[hidden] { display: none; }
+  [role=dialog] { background: #fff; padding: 1rem 2rem; }
+  .notice { color: #a60; }
+</style>
+</head>
+<body>
+<h1>Master template</h1>
+<p id="welcome"></p>
+<nav><a href="/ui/history">History</a></nav>
+
+<p>
+  <label for="search">Search</label>
+  <input id="search" type="search">
+  <span id="search-result"></span>
+</p>
+
+<h2>7 Zinsen</h2>
+<div id="editor" contenteditable="true" aria-label="Document"></div>
+<p><span id="save-status"></span></p>
+
+<p>
+  <button id="apply" type="button" disabled>Apply</button>
+  <button id="publish" type="button">Publish</button>
+</p>
+<p id="apply-result"></p>
+<ul id="notices"></ul>
+
+<p>
+  <label for="comment">Comment</label>
+  <textarea id="comment"></textarea>
+</p>
+
+<p>
+  <label class="switch"><input id="remember" class="sr-only" type="checkbox"><span>Remember me</span></label>
+</p>
+
+<p id="locale"></p>
+<p id="viewport"></p>
+
+<div class="backdrop" id="backdrop" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">Apply change to countries</h2>
+    <fieldset>
+      <legend>Countries</legend>
+      <label><input type="radio" name="scope" value="all" checked> All countries</label>
+      <label><input type="radio" name="scope" value="selected"> Selected countries</label>
+      <div id="country-list" hidden>
+        <label><input type="checkbox" name="country" value="AT"> Austria</label>
+        <label><input type="checkbox" name="country" value="NL"> Netherlands</label>
+        <label><input type="checkbox" name="country" value="DE" checked> Germany</label>
+      </div>
+    </fieldset>
+    <p>
+      <label for="effective">Effective from</label>
+      <select id="effective">
+        <option value="now">Immediately</option>
+        <option value="next-quarter">Next quarter</option>
+      </select>
+    </p>
+    <button id="confirm" type="button">Confirm</button>
+    <button id="cancel" type="button">Cancel</button>
+  </div>
+</div>
+
+<script>
+const ACCEPT_LANGUAGE = "{{ACCEPT_LANGUAGE}}";
+const COUNTRY_NAMES = { AT: 'Austria', NL: 'Netherlands', DE: 'Germany' };
+const editor = document.getElementById('editor');
+const applyButton = document.getElementById('apply');
+const status = document.getElementById('save-status');
+
+document.getElementById('locale').textContent =
+  'Language: ' + navigator.language + ', number: ' + new Intl.NumberFormat().format(1234.5) +
+  ', server heard: ' + ACCEPT_LANGUAGE;
+document.getElementById('viewport').textContent = 'Viewport: ' + window.innerWidth + 'x' + window.innerHeight;
+
+// One continuous document; the clause each paragraph belongs to is kept in
+// an attribute, never shown.
+let rendered = '';
+let editing = false;
+const changed = new Set();
+
+function render(clauses) {
+  editor.innerHTML = '';
+  for (const c of clauses) {
+    const p = document.createElement('p');
+    p.dataset.clause = c.clause_id;
+    p.textContent = c.clause_id + ' ' + c.body;
+    editor.appendChild(p);
+  }
+}
+
+function read() {
+  return Array.from(editor.querySelectorAll('p[data-clause]')).map((p) => ({
+    clause_id: p.dataset.clause,
+    body: p.textContent.replace(/ /g, ' ').replace(new RegExp('^\\s*' + p.dataset.clause.replace('.', '\\.') + '\\s*'), ''),
+  }));
+}
+
+async function poll() {
+  try {
+    const res = await fetch('/ui/api/document');
+    const text = await res.text();
+    if (text !== rendered && !editing && document.activeElement !== editor) {
+      rendered = text;
+      render(JSON.parse(text).clauses);
+    }
+  } finally {
+    setTimeout(poll, 150);
+  }
+}
+poll();
+
+// Typing runs are undone together, as editors do.
+const undo = [];
+let typingRun = null;
+editor.addEventListener('beforeinput', () => {
+  if (!typingRun) undo.push(editor.innerHTML);
+  clearTimeout(typingRun);
+  typingRun = setTimeout(() => { typingRun = null; }, 1000);
+});
+
+let saveTimer = null;
+editor.addEventListener('input', () => {
+  editing = true;
+  const before = JSON.parse(rendered || '{"clauses":[]}').clauses;
+  for (const c of read()) {
+    const old = before.find((b) => b.clause_id === c.clause_id);
+    if (!old || old.body !== c.body) changed.add(c.clause_id);
+  }
+  applyButton.disabled = changed.size === 0;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, 100);
+});
+
+async function save() {
+  status.textContent = 'Saving…';
+  const res = await fetch('/ui/api/document', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clauses: read() }),
+  });
+  rendered = await res.text();
+  editing = false;
+  status.textContent = 'Saved';
+}
+
+editor.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && undo.length > 0) {
+    e.preventDefault();
+    editor.innerHTML = undo.pop();
+    editor.dispatchEvent(new Event('input'));
+  }
+});
+
+// Search on Enter.
+document.getElementById('search').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const q = e.target.value.trim();
+  const n = q ? editor.innerText.split(q).length - 1 : 0;
+  document.getElementById('search-result').textContent = n + ' matches for ' + q;
+});
+
+// Publishing takes a moment.
+document.getElementById('publish').addEventListener('click', () => {
+  const result = document.getElementById('apply-result');
+  result.textContent = 'Publishing…';
+  setTimeout(() => { result.textContent = 'Published'; }, 1500);
+});
+
+// Remembered in this browser only.
+const remember = document.getElementById('remember');
+if (localStorage.getItem('remember')) {
+  remember.checked = true;
+  document.getElementById('welcome').textContent = 'Welcome back';
+}
+remember.addEventListener('change', () => {
+  if (remember.checked) localStorage.setItem('remember', 'yes');
+  else localStorage.removeItem('remember');
+});
+
+// Applying a master change to countries.
+const backdrop = document.getElementById('backdrop');
+const countryList = document.getElementById('country-list');
+applyButton.addEventListener('click', () => { backdrop.hidden = false; });
+document.getElementById('cancel').addEventListener('click', () => { backdrop.hidden = true; });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') backdrop.hidden = true; });
+for (const radio of document.querySelectorAll('input[name=scope]')) {
+  radio.addEventListener('change', () => {
+    countryList.hidden = document.querySelector('input[name=scope]:checked').value !== 'selected';
+  });
+}
+
+document.getElementById('confirm').addEventListener('click', async () => {
+  const scope = document.querySelector('input[name=scope]:checked').value;
+  const countries = scope === 'all' ? Object.keys(COUNTRY_NAMES) :
+    Array.from(document.querySelectorAll('input[name=country]:checked')).map((c) => c.value);
+  const res = await fetch('/ui/api/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      clauses: Array.from(changed),
+      countries,
+      effective: document.getElementById('effective').value,
+    }),
+  });
+  const out = await res.json();
+  backdrop.hidden = true;
+  changed.clear();
+  applyButton.disabled = true;
+  document.getElementById('apply-result').textContent =
+    'Change applied to ' + out.applied.length + (out.applied.length === 1 ? ' country' : ' countries') +
+    ', effective ' + (out.effective === 'next-quarter' ? 'next quarter' : 'immediately');
+  const notices = document.getElementById('notices');
+  notices.innerHTML = '';
+  for (const s of out.skipped) {
+    const li = document.createElement('li');
+    li.className = 'notice';
+    li.textContent = COUNTRY_NAMES[s.country] + ' has its own version of ' + s.clause_id + ', so it was not changed';
+    notices.appendChild(li);
+  }
+});
+</script>
+</body>
+</html>

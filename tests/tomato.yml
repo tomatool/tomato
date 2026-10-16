@@ -90,6 +90,12 @@ containers:
       target: "9042"
       timeout: 120s
 
+  # Headless Chromium for the browser resources. Pages it opens on localhost
+  # reach the app on this machine, through a tunnel to the app's port and to
+  # every localhost port the resources below name.
+  chrome:
+    preset: chromium
+
 app:
   # Default: run as local process
   command: go run ./tests/app
@@ -226,6 +232,23 @@ resources:
       role_arn: arn:aws:iam::000000000000:role/tomato-tests
       ambient_identity: true
       port: 9996
+
+  # Two people using the app's web UI, each in their own browser context.
+  alice:
+    type: browser
+    container: chrome
+    options:
+      base_url: http://localhost:8080
+      viewport: 1440x900
+      locale: de-DE
+      screenshots: .tomato/screenshots
+
+  bob:
+    type: browser
+    container: chrome
+    options:
+      base_url: http://127.0.0.1:8080
+      timeout: 3s
 
   # Calls the aws resource's STS directly.
   sts:

@@ -3,9 +3,11 @@ package config
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -84,8 +86,12 @@ func (c *Config) expandPresets() error {
 			if err := c.expandKafkaPreset(name, &cont); err != nil {
 				return fmt.Errorf("container %q: %w", name, err)
 			}
+		case PresetChromium:
+			if err := c.expandChromiumPreset(&cont); err != nil {
+				return fmt.Errorf("container %q: %w", name, err)
+			}
 		default:
-			return fmt.Errorf("container %q: unknown preset %q (available: %s)", name, cont.Preset, PresetKafka)
+			return fmt.Errorf("container %q: unknown preset %q (available: %s, %s)", name, cont.Preset, PresetChromium, PresetKafka)
 		}
 		c.Containers[name] = cont
 	}
@@ -173,6 +179,159 @@ func (c *Config) expandKafkaPreset(name string, cont *Container) error {
 		cont.WaitFor = WaitStrategy{Type: "log", Target: "Kafka Server started", Timeout: 2 * time.Minute}
 	}
 	return nil
+}
+
+// PresetChromium is a headless Chromium for browser resources, serving the
+// DevTools protocol on ChromiumDevToolsPort. Pages it opens on localhost reach
+// the host tomato runs on, where the app runs.
+const PresetChromium = "chromium"
+
+// ChromiumImage is what the chromium preset runs unless the entry sets image or
+// build. The preset's entrypoint relies on its layout, so an override has to be
+// a chromedp/headless-shell image too.
+const ChromiumImage = "chromedp/headless-shell:156.0.8078.36"
+
+// ChromiumDevToolsPort is where the chromium preset serves the DevTools
+// protocol. headless-shell only listens on loopback, so socat forwards this
+// port to chromiumInternalPort.
+const (
+	ChromiumDevToolsPort = "9222"
+	chromiumInternalPort = "9223"
+)
+
+// chromiumHostAlias is the name testcontainers gives the host inside a
+// container with host access ports.
+const chromiumHostAlias = "host.testcontainers.internal"
+
+func (c *Config) expandChromiumPreset(cont *Container) error {
+	if cont.Auth != "" {
+		return fmt.Errorf("the chromium preset has no auth (auth: %s)", cont.Auth)
+	}
+	if cont.Image == "" && cont.Build == nil {
+		cont.Image = ChromiumImage
+	}
+
+	flags := []string{
+		"--no-sandbox",
+		"--use-gl=angle",
+		"--use-angle=swiftshader",
+		// Docker gives a container 64MB of /dev/shm, which a large page
+		// exhausts; Chromium then crashes the tab.
+		"--disable-dev-shm-usage",
+		"--remote-debugging-address=0.0.0.0",
+		"--remote-debugging-port=" + chromiumInternalPort,
+	}
+
+	// The app runs on the host, and inside the container localhost is the
+	// container. Rather than rewrite every URL to another host name, which
+	// changes the page's origin (cookies, CORS, the redirects the app builds,
+	// and the secure context only localhost gets over plain http), Chromium
+	// resolves the name localhost to the host, through a tunnel to each port
+	// the suite uses there.
+	ports := c.hostPortsForBrowsers()
+	if len(ports) > 0 {
+		cont.HostAccessPorts = append(ports, cont.HostAccessPorts...)
+		flags = append(flags, "--host-resolver-rules=MAP localhost "+chromiumHostAlias)
+	}
+
+	quoted := make([]string, len(flags))
+	for i, f := range flags {
+		quoted[i] = "'" + f + "'"
+	}
+	// headless-shell's own run.sh splits its arguments on spaces, which the
+	// resolver rule has; this script passes them through intact. Whatever
+	// the entry sets as command is added to Chromium's flags.
+	script := "socat TCP4-LISTEN:" + ChromiumDevToolsPort + ",fork,reuseaddr TCP4:127.0.0.1:" + chromiumInternalPort + " &\n" +
+		"exec /headless-shell/headless-shell " + strings.Join(quoted, " ") + ` "$@"`
+	cont.Entrypoint = []string{"bash", "-c", script, "chromium"}
+
+	devtools := ChromiumDevToolsPort + "/tcp"
+	if !containsPort(cont.Ports, ChromiumDevToolsPort) {
+		cont.Ports = append([]string{devtools}, cont.Ports...)
+	}
+	if cont.WaitFor.Type == "" {
+		cont.WaitFor = WaitStrategy{Type: "http", Path: "/json/version", Target: devtools, Timeout: time.Minute}
+	}
+	return nil
+}
+
+// containsPort reports whether ports already publish the container port.
+func containsPort(ports []string, port string) bool {
+	for _, p := range ports {
+		if i := strings.LastIndex(p, ":"); i >= 0 {
+			p = p[i+1:]
+		}
+		if strings.TrimSuffix(p, "/tcp") == port {
+			return true
+		}
+	}
+	return false
+}
+
+// hostPortsForBrowsers lists the ports on this machine a page might load from:
+// the app's, and every localhost port the suite's resources name — a browser's
+// base_url, the API an http resource calls, the mocks tomato serves. A port
+// nothing listens on costs nothing; one missing from here is a page that does
+// not load.
+func (c *Config) hostPortsForBrowsers() []int {
+	seen := map[int]bool{}
+	add := func(p int) {
+		if p > 0 && p < 65536 {
+			seen[p] = true
+		}
+	}
+	if c.App.IsConfigured() {
+		add(c.App.Port)
+	}
+	for _, res := range c.Resources {
+		switch res.Type {
+		case "browser", "http", "http-client", "websocket", "websocket-client":
+			for _, raw := range []string{res.BaseURL, res.URL, optionString(res.Options, "base_url")} {
+				add(loopbackPort(raw))
+			}
+		case "http-server", "websocket-server":
+			if p, err := strconv.Atoi(fmt.Sprint(res.Options["port"])); err == nil {
+				add(p)
+			}
+		}
+	}
+	ports := make([]int, 0, len(seen))
+	for p := range seen {
+		ports = append(ports, p)
+	}
+	sort.Ints(ports)
+	return ports
+}
+
+func optionString(options map[string]any, key string) string {
+	s, _ := options[key].(string)
+	return s
+}
+
+// loopbackPort is the port of a URL on this machine, or 0 for any other URL.
+func loopbackPort(raw string) int {
+	if raw == "" {
+		return 0
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		return 0
+	}
+	host := u.Hostname()
+	if ip := net.ParseIP(host); host != "localhost" && (ip == nil || !(ip.IsLoopback() || ip.IsUnspecified())) {
+		return 0
+	}
+	if p := u.Port(); p != "" {
+		n, _ := strconv.Atoi(p)
+		return n
+	}
+	switch u.Scheme {
+	case "https", "wss":
+		return 443
+	case "http", "ws":
+		return 80
+	}
+	return 0
 }
 
 // awsRoleSessionKeys lists the access key ids of the role sessions the config's

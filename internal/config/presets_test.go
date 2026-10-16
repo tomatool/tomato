@@ -175,6 +175,136 @@ containers:
 	}
 }
 
+func TestChromiumPreset_TunnelsTheHostPortsTheSuiteUses(t *testing.T) {
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  chrome:
+    preset: chromium
+app:
+  command: ./server
+  port: 8080
+resources:
+  alice:
+    type: browser
+    container: chrome
+    options:
+      base_url: http://127.0.0.1:3000
+  api:
+    type: http
+    base_url: http://localhost:8080
+  ws:
+    type: websocket
+    url: ws://localhost:7000/ws
+  pm:
+    type: http-server
+    options:
+      port: 9999
+  wsmock:
+    type: websocket-server
+    options:
+      port: 9997
+  elsewhere:
+    type: http
+    base_url: https://api.example.com
+  secure:
+    type: browser
+    container: chrome
+    base_url: https://localhost
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	c := cfg.Containers["chrome"]
+
+	if c.Image != ChromiumImage {
+		t.Errorf("image %q, want %s", c.Image, ChromiumImage)
+	}
+	if fmt.Sprint(c.HostAccessPorts) != "[443 3000 7000 8080 9997 9999]" {
+		t.Errorf("host access ports %v", c.HostAccessPorts)
+	}
+	if len(c.Ports) != 1 || c.Ports[0] != "9222/tcp" {
+		t.Errorf("ports %v, want [9222/tcp]", c.Ports)
+	}
+	if c.WaitFor.Type != "http" || c.WaitFor.Path != "/json/version" || c.WaitFor.Target != "9222/tcp" {
+		t.Errorf("wait_for %+v", c.WaitFor)
+	}
+	if len(c.Entrypoint) != 4 || c.Entrypoint[0] != "bash" || c.Entrypoint[1] != "-c" {
+		t.Fatalf("entrypoint %q", c.Entrypoint)
+	}
+	script := c.Entrypoint[2]
+	for _, want := range []string{
+		"socat TCP4-LISTEN:9222,fork,reuseaddr TCP4:127.0.0.1:9223 &",
+		"exec /headless-shell/headless-shell ",
+		"'--remote-debugging-port=9223'",
+		"'--host-resolver-rules=MAP localhost host.testcontainers.internal'",
+		`"$@"`,
+	} {
+		if !strings.Contains(script, want) {
+			t.Errorf("entrypoint script lacks %q:\n%s", want, script)
+		}
+	}
+}
+
+func TestChromiumPreset_WithNothingOnTheHost(t *testing.T) {
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  chrome:
+    preset: chromium
+    image: chromedp/headless-shell:latest
+    command: ["--force-prefers-reduced-motion"]
+    ports: ["19222:9222"]
+    wait_for:
+      type: port
+      target: "9222"
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	c := cfg.Containers["chrome"]
+	if c.Image != "chromedp/headless-shell:latest" {
+		t.Errorf("image %q: the entry's own image wins", c.Image)
+	}
+	if len(c.HostAccessPorts) != 0 {
+		t.Errorf("host access ports %v with nothing on the host", c.HostAccessPorts)
+	}
+	if strings.Contains(c.Entrypoint[2], "host-resolver-rules") {
+		t.Errorf("localhost is mapped with no tunnel to map it to: %s", c.Entrypoint[2])
+	}
+	if fmt.Sprint(c.Ports) != "[19222:9222]" {
+		t.Errorf("ports %v: the entry already publishes 9222", c.Ports)
+	}
+	if c.WaitFor.Type != "port" {
+		t.Errorf("wait_for %+v: the entry's own wins", c.WaitFor)
+	}
+	if fmt.Sprint(c.Command) != "[--force-prefers-reduced-motion]" {
+		t.Errorf("command %v: it becomes Chromium's flags", c.Command)
+	}
+}
+
+func TestLoopbackPort(t *testing.T) {
+	for in, want := range map[string]int{
+		"":                       0,
+		"http://localhost:8080":  8080,
+		"http://127.0.0.1:3000/": 3000,
+		"http://0.0.0.0:3001":    3001,
+		"http://[::1]:3002":      3002,
+		"ws://localhost/ws":      80,
+		"wss://localhost":        443,
+		"https://localhost":      443,
+		"ftp://localhost":        0,
+		"http://app:8080":        0,
+		"http://10.0.0.1:8080":   0,
+		"/relative":              0,
+		"http://localhost:x":     0,
+	} {
+		if got := loopbackPort(in); got != want {
+			t.Errorf("loopbackPort(%q) = %d, want %d", in, got, want)
+		}
+	}
+}
+
 func TestPresets_Errors(t *testing.T) {
 	stubPorts(t)
 	for name, tc := range map[string]struct{ content, want string }{
@@ -191,6 +321,13 @@ containers:
     preset: kafka
     auth: scram
 `, `unknown kafka auth "scram"`},
+		"chromium has no auth": {`
+version: 2
+containers:
+  x:
+    preset: chromium
+    auth: aws_msk_iam
+`, "the chromium preset has no auth"},
 		"auth without preset": {`
 version: 2
 containers:

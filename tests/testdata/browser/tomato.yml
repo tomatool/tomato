@@ -1,0 +1,19 @@
+# Fixture for tests/features/browser.feature: a browser scenario that fails,
+# so the integration suite can check the screenshot it leaves behind.
+version: 2
+
+containers:
+  chrome:
+    preset: chromium
+
+resources:
+  page:
+    type: browser
+    container: chrome
+    options:
+      screenshots: .tomato/browser-fixture
+      timeout: 1s
+
+features:
+  paths:
+    - ./tests/testdata/browser/features

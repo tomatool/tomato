@@ -9,7 +9,7 @@ const ALIAS = {
   cassandra: 'scylladb', scylladb: 'scylladb',
   minio: 's3', s3: 's3',
   redis: 'redis', kafka: 'kafka', rabbitmq: 'rabbitmq',
-  shell: 'shell', aws: 'aws',
+  shell: 'shell', aws: 'aws', browser: 'browser',
 }
 
 export const iconId = (type) => ALIAS[String(type || '').toLowerCase()] || 'app'

@@ -36,11 +36,12 @@ container to it:
 [Redis](configuration/redis.md) ·
 [S3](configuration/s3.md) ·
 [AWS](configuration/aws.md) ·
-[Lifecycle](configuration/lifecycle.md)
+[Lifecycle](configuration/lifecycle.md) ·
+[Browser](configuration/browser.md)
 
 ## Steps, by resource
 
-275 steps across 14 resource types. Every page is generated from the step
+293 steps across 15 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and `tomato steps` prints the same thing in your terminal.
 
@@ -54,6 +55,7 @@ definitions themselves, so it cannot disagree with the binary you are running
 | [Shell](resources/shell.md) | 22 | Running commands and asserting on their output |
 | [gRPC](resources/grpc.md) | 19 | Calling unary methods via server reflection |
 | [HTTP Server](resources/http-server.md) | 18 | Stubbing the HTTP services your application calls |
+| [Browser](resources/browser.md) | 18 | Using the web UI in a real Chromium and asserting on what it shows |
 | [WebSocket Client](resources/websocket-client.md) | 17 | Connecting and exchanging messages |
 | [PostgreSQL](resources/postgres.md) | 11 | Seeding tables, running SQL, asserting on rows |
 | [ScyllaDB](resources/scylladb.md) | 9 | Cassandra and ScyllaDB over CQL |

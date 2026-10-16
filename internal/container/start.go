@@ -108,6 +108,7 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 
 	req := testcontainers.ContainerRequest{
 		Image:      cfg.Image,
+		Entrypoint: cfg.Entrypoint,
 		Cmd:        cfg.Command,
 		Env:        resolvedEnv,
 		WaitingFor: m.buildWaitStrategy(cfg.WaitFor),
@@ -139,6 +140,12 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	// Files the config puts into the container before it starts, such as the
 	// kafka preset's AWS_MSK_IAM plugin.
 	req.Files = containerFiles(cfg.Files)
+
+	// Host ports the container reaches as host.testcontainers.internal, such
+	// as the app's for the chromium preset. testcontainers tunnels them over
+	// SSH, which works where host.docker.internal does not resolve to the
+	// host: Docker on Linux, Colima, Lima, a remote daemon.
+	req.HostAccessPorts = cfg.HostAccessPorts
 
 	// Follow the container's output from the moment it starts, so a container
 	// that fails its wait strategy still leaves its logs behind.

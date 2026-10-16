@@ -20,6 +20,7 @@ import (
 	"github.com/tomatool/tomato/internal/container"
 	"github.com/tomatool/tomato/internal/resource"
 	"github.com/tomatool/tomato/internal/resource/aws"
+	"github.com/tomatool/tomato/internal/resource/browser"
 	"github.com/tomatool/tomato/internal/resource/cassandra"
 	"github.com/tomatool/tomato/internal/resource/grpcclient"
 	"github.com/tomatool/tomato/internal/resource/httpclient"
@@ -104,6 +105,7 @@ var handlerFactories = map[string]handlerFactory{
 	"shell":            factory(shell.New),
 	"aws":              factory(aws.New),
 	"lifecycle":        factory(lifecycle.New),
+	"browser":          factory(browser.New),
 }
 
 // unimplementedTypes are resource types people reach for that tomato does not
@@ -296,6 +298,7 @@ var canonicalTypes = []string{
 	"grpc",
 	"aws",
 	"lifecycle",
+	"browser",
 }
 
 // AllStepCategories returns every resource's step definitions, in a stable
@@ -332,6 +335,7 @@ func ContainerBasedTypes() []string {
 		"scylladb", "cassandra",
 		"redis", "rabbitmq", "kafka",
 		"s3", "minio",
+		"browser",
 	}
 }
 

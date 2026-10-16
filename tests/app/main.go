@@ -76,6 +76,9 @@ func main() {
 	if err := initDB(); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
+	if err := initUIDB(); err != nil {
+		log.Fatalf("Failed to initialize the UI's tables: %v", err)
+	}
 
 	// Setup routes
 	mux := http.NewServeMux()
@@ -92,6 +95,7 @@ func main() {
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/profile", profileHandler)
+	registerUI(mux)
 
 	startGRPC()
 
