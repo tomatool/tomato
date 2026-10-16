@@ -1,7 +1,7 @@
 import { Fragment } from 'react'
 import { StepRow } from './StepRow.jsx'
 import { fmtDur, plural } from '../lib/format'
-import { BACKGROUND_KEY } from '../lib/steps.jsx'
+import { backgroundStatus, failedBackgroundSteps, pickleIndex } from '../lib/run.js'
 import { stepKind } from '../lib/kind'
 
 function Head({ collapsed, onToggle, children }) {
@@ -22,21 +22,36 @@ function Head({ collapsed, onToggle, children }) {
   )
 }
 
-// Background is a feature-level field, not a scenario: no name, no status of
-// its own, and it never appears in counts or the run bar.
-export function BackgroundCard({ steps, collapsed, onToggle, runState }) {
+// Background is a feature-level field, not a scenario: no name of its own,
+// and it never appears in counts or the run bar. It runs once per scenario,
+// though, and its status is reported under the scenario that ran it, so the
+// rows show one scenario's run — `scenarioName`, the one running or the last
+// that did (lib/run.js) — and the head says whose.
+export function BackgroundCard({ steps, collapsed, onToggle, runState, scenarioName }) {
+  const status = backgroundStatus(steps, scenarioName, runState)
   return (
-    <div className="scenario" data-kind="background" data-collapsed={collapsed ? 'true' : undefined}>
+    <div
+      className="scenario"
+      data-kind="background"
+      data-status={status || undefined}
+      data-collapsed={collapsed ? 'true' : undefined}
+    >
       <Head collapsed={collapsed} onToggle={onToggle}>
+        <i className="pip" data-status={status} />
         <span className="scenario-kw">Background</span>
         <span className="scenario-name" style={{ color: 'var(--fg-2)', fontWeight: 400 }}>
           {plural(steps.length, 'step')} · runs before each scenario
         </span>
+        {scenarioName && (
+          <span className="scenario-for" title={`What the Background did when “${scenarioName}” ran`}>
+            as run for “{scenarioName}”
+          </span>
+        )}
       </Head>
       {!collapsed && (
         <div className="steps">
           {steps.map((s, i) => (
-            <StepRow key={i} step={s} scenarioName={BACKGROUND_KEY} index={i} runState={runState} background />
+            <StepRow key={i} step={s} scenarioName={scenarioName} index={i} runState={runState} background />
           ))}
         </div>
       )}
@@ -45,10 +60,14 @@ export function BackgroundCard({ steps, collapsed, onToggle, runState }) {
 }
 
 export function ScenarioCard({
-  scenario, index, current, collapsed, onToggle, onRun, onTag, filter, runState,
+  scenario, index, current, collapsed, onToggle, onRun, onTag, filter, runState, background,
 }) {
   const status = runState.scStatus[scenario.name] ?? ''
   const dur = runState.scDur[scenario.name]
+  // A Background step that stopped this scenario is shown in its card too:
+  // the Background card shows one scenario's run at a time, and the one that
+  // failed in it is not always the one it shows.
+  const failedBg = failedBackgroundSteps(background, scenario.name, runState)
   const examples = (scenario.examples ?? [])
     .reduce((n, ex) => n + Math.max(0, (ex.rows ?? []).length - 1), 0)
 
@@ -97,6 +116,15 @@ export function ScenarioCard({
             </div>
           )}
           <div className="steps">
+            {failedBg.length > 0 && (
+              <>
+                <div className="steps-note">in the Background, before this scenario’s first step</div>
+                {failedBg.map((r) => (
+                  <StepRow key={`bg${r.index}`} step={r.step} scenarioName={scenario.name} index={r.index} runState={runState} background />
+                ))}
+                <div className="steps-rule" role="separator" aria-label="the Background failed above, so the scenario's own steps below did not run" />
+              </>
+            )}
             {(() => {
               // A rule between the preparation and the probe — or the first
               // check when the scenario has no probe of its own. A capture
@@ -107,7 +135,7 @@ export function ScenarioCard({
               return steps.map((s, i) => (
                 <Fragment key={i}>
                   {i === firstLive && i > 0 && <div className="steps-rule" role="separator" aria-label="preparation above, probe and checks below" />}
-                  <StepRow step={s} scenarioName={scenario.name} index={i} runState={runState} />
+                  <StepRow step={s} scenarioName={scenario.name} index={pickleIndex(background, i)} runState={runState} />
                 </Fragment>
               ))
             })()}

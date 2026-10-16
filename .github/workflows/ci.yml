@@ -38,6 +38,9 @@ jobs:
       - name: Build
         run: go build -v ./...
 
+      - name: Web UI unit tests
+        run: make ui-test
+
       - name: Web UI bundle matches its sources
         # tomato embeds the committed command/ui_assets/dist so `go build`
         # works without Node. Rebuild it from ui/ and fail when it differs.

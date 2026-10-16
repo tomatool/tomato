@@ -1,4 +1,5 @@
-import { tokenizeStep, stepKey } from '../lib/steps.jsx'
+import { tokenizeStep } from '../lib/steps.jsx'
+import { stepRun } from '../lib/run.js'
 import { stepKind, KIND_LABEL } from '../lib/kind'
 import { fmtDur } from '../lib/format'
 
@@ -16,14 +17,11 @@ function DataTable({ rows }) {
   )
 }
 
+// `index` is the step's position in the pickle, which is how the runner
+// reports it: a scenario's own step sits after the Background (lib/run.js).
 export function StepRow({ step, scenarioName, index, runState, background }) {
-  const k = stepKey(scenarioName, index)
   const kind = stepKind(step, { background })
-  // `unmatched` is known from parsing alone, so a step with no definition
-  // reads as undefined before the suite has ever run.
-  const status = runState.stepStatus[k] ?? (step.unmatched ? 'undefined' : '')
-  const dur = runState.stepDur[k]
-  const error = runState.stepError[k]
+  const { status, dur, error } = stepRun(runState, scenarioName, index, step)
   const isAnd = /^(and|but)$/i.test(String(step.keyword).trim())
 
   return (

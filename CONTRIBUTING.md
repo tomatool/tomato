@@ -55,6 +55,7 @@ something.
 ```bash
 make ui        # build the bundle
 make ui-dev    # Vite dev server, proxied at a `tomato ui` on :7788
+make ui-test   # unit tests (vitest) for the logic under ui/src/lib
 make ui-check  # fail if the committed bundle is stale
 ```
 

@@ -16,7 +16,8 @@ ui/
     │                   Flow, Topology, Runs, Transport, Peek, Console
     ├── hooks/          useSocket (the /ws feed), useLocalNumber / useLocalEnum
     │                   (remembered pane sizes and theme)
-    ├── lib/            step tokenising, ANSI → nodes, flow model, formatting, icons
+    ├── lib/            run state keyed on the pickle index, step tokenising,
+    │                   ANSI → nodes, flow model, formatting, icons
     └── fonts/          Geist and Geist Mono, vendored so the UI works offline
 ```
 
@@ -36,6 +37,7 @@ with `//go:embed all:ui_assets/dist`.
 make build     # rebuilds the bundle first when anything under ui/ is newer
 make ui        # force a bundle rebuild
 make ui-dev    # Vite dev server with HMR
+make ui-test   # unit tests: vitest over the *.test.js files under src/
 make ui-check  # fail if the committed bundle is stale
 ```
 

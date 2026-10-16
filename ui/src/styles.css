@@ -309,6 +309,8 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .scenario-kw{font:500 var(--fs-11) var(--font-mono);color:var(--fg-3);white-space:nowrap}
 .scenario-name{flex:1;min-width:0;font-weight:500;color:var(--fg-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scenario-time{font:var(--fs-11) var(--font-mono);color:var(--fg-3);white-space:nowrap}
+/* Whose run the Background card is showing. */
+.scenario-for{max-width:40%;font:var(--fs-11) var(--font-mono);color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .scenario-actions{display:flex;gap:var(--s-2);opacity:0;transition:opacity var(--dur)}
 .scenario:hover .scenario-actions,.scenario:focus-within .scenario-actions{opacity:1}
 .scenario-tags{display:flex;gap:var(--s-2);flex-wrap:wrap;padding:var(--s-4) var(--s-5) 0}
@@ -343,6 +345,8 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .kind[data-kind="capture"]{border-style:dashed}
 .step[data-kind="setup"] .step-text{color:var(--fg-2)}
 .steps-rule{height:0;margin:var(--s-3) var(--s-4) var(--s-3) 96px;border-top:1px dashed var(--line-strong)}
+/* A Background step shown inside the scenario it stopped; the note sits on the text column like the rule. */
+.steps-note{margin:var(--s-2) var(--s-4) var(--s-2) 96px;font:var(--fs-11)/1.4 var(--font-ui);color:var(--fg-3)}
 
 /* docstring + data table */
 .docstring{position:relative;margin:0;padding:var(--s-4) var(--s-5);border:1px solid var(--line);border-radius:var(--r-2);background:var(--bg-0);font:var(--fs-12)/1.55 var(--font-mono);color:var(--fg-1);white-space:pre;overflow:auto}

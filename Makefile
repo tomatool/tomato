@@ -1,4 +1,4 @@
-.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all kafka-plugin ui ui-dev ui-check
+.PHONY: build test lint clean install run help integration-test integration-test-coverage coverage coverage-all kafka-plugin ui ui-dev ui-check ui-test
 
 # Build variables
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -54,6 +54,10 @@ $(UI_BUNDLE): $(UI_SOURCES)
 ## ui-dev: Vite dev server against a `tomato ui` already running on :7788
 ui-dev:
 	@cd ui && pnpm install && pnpm dev
+
+## ui-test: Run the web UI's unit tests (vitest, the *.test.js files under ui/src)
+ui-test:
+	@cd ui && pnpm install --frozen-lockfile && pnpm test
 
 ## ui-check: Fail when the committed bundle is stale against ui/
 # `git diff` alone would miss a brand-new asset, which is exactly what a hashed
