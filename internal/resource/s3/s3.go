@@ -586,6 +586,15 @@ func (r *S3) getObject(ctx context.Context, path string) ([]byte, error) {
 	return body, nil
 }
 
+// ReadObject returns an object's bytes for another resource, like the pdf
+// resource reading a generated document (resource.ObjectReader).
+func (r *S3) ReadObject(ctx context.Context, path string) ([]byte, error) {
+	if r.client == nil {
+		return nil, fmt.Errorf("s3 resource %q is not initialized", r.name)
+	}
+	return r.getObject(ctx, path)
+}
+
 func (r *S3) put(ctx context.Context, path string, body []byte, contentType string) error {
 	return r.putWithMetadata(ctx, path, body, contentType, nil)
 }

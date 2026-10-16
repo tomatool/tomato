@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/resource"
 	"github.com/tomatool/tomato/internal/resource/grpcclient"
 )
 
@@ -144,5 +145,41 @@ func TestCanonicalTypesAreBuildableAndUnique(t *testing.T) {
 	}
 	if got, want := len(canonicalTypes), len(AllStepCategories()); got != want {
 		t.Errorf("canonicalTypes has %d entries but only %d produced a step category", got, want)
+	}
+}
+
+// TestPDFIsRegisteredAndWired: the pdf resource reads other resources' state
+// through the lookup the registry hands it, so a config with an http client
+// lets it ask that client for its last response.
+func TestPDFIsRegisteredAndWired(t *testing.T) {
+	if !slices.Contains(ValidResourceTypes(), "pdf") {
+		t.Fatal(`"pdf" must be a valid resource type`)
+	}
+	r, err := New(map[string]config.Resource{
+		"pdf": {Type: "pdf"},
+		"api": {Type: "http-client", BaseURL: "http://localhost:1"},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h, err := r.Get("pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var reads func(string) error
+	for _, s := range h.(resource.StepProvider).Steps().Steps {
+		if strings.Contains(s.Pattern, "response body") {
+			reads = s.Handler.(func(string) error)
+		}
+	}
+	if reads == nil {
+		t.Fatal("no response body step")
+	}
+	err = reads("api")
+	if err == nil || !strings.Contains(err.Error(), "no response yet") {
+		t.Errorf("the pdf resource should reach the http client and find no response, got %v", err)
+	}
+	if err := reads("nobody"); err == nil || !strings.Contains(err.Error(), `no resource named "nobody"`) {
+		t.Errorf("unknown resource: %v", err)
 	}
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/tomatool/tomato/internal/resource/httpserver"
 	"github.com/tomatool/tomato/internal/resource/kafka"
 	"github.com/tomatool/tomato/internal/resource/lifecycle"
+	"github.com/tomatool/tomato/internal/resource/pdf"
 	"github.com/tomatool/tomato/internal/resource/postgres"
 	"github.com/tomatool/tomato/internal/resource/rabbitmq"
 	"github.com/tomatool/tomato/internal/resource/redis"
@@ -58,7 +59,21 @@ func New(configs map[string]config.Resource, cm *container.Manager) (*Registry, 
 		r.handlers[name] = h
 	}
 
+	// Resources that read another resource's state (the pdf resource reading
+	// an s3 object) get a lookup once every handler exists.
+	for _, h := range r.handlers {
+		if aware, ok := h.(resource.HandlerLookupAware); ok {
+			aware.SetHandlerLookup(r.lookup)
+		}
+	}
+
 	return r, nil
+}
+
+// lookup is the resource.HandlerLookup handed to HandlerLookupAware resources.
+func (r *Registry) lookup(name string) (resource.Handler, bool) {
+	h, err := r.Get(name)
+	return h, err == nil
 }
 
 // handlerFactory builds one resource handler.
@@ -106,6 +121,7 @@ var handlerFactories = map[string]handlerFactory{
 	"aws":              factory(aws.New),
 	"lifecycle":        factory(lifecycle.New),
 	"browser":          factory(browser.New),
+	"pdf":              factory(pdf.New),
 }
 
 // unimplementedTypes are resource types people reach for that tomato does not
@@ -299,6 +315,7 @@ var canonicalTypes = []string{
 	"aws",
 	"lifecycle",
 	"browser",
+	"pdf",
 }
 
 // AllStepCategories returns every resource's step definitions, in a stable

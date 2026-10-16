@@ -638,6 +638,16 @@ func (r *HTTPClient) responseHeaderShouldExist(header string) error {
 	return nil
 }
 
+// LastResponseBody returns the body of the last response for another
+// resource, like the pdf resource reading a generated document
+// (resource.ResponseBodyProvider).
+func (r *HTTPClient) LastResponseBody() ([]byte, error) {
+	if r.lastResponse == nil {
+		return nil, fmt.Errorf("%q has no response yet: send a request first", r.name)
+	}
+	return r.lastBody, nil
+}
+
 func (r *HTTPClient) responseBodyShouldBe(doc *godog.DocString) error {
 	if r.lastResponse == nil {
 		return fmt.Errorf("no response received")

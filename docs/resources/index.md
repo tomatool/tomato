@@ -19,6 +19,7 @@ Tomato supports the following resource types for behavioral testing.
 | [AWS](aws.md) | `aws` | Steps for the AWS identity (IRSA) tomato gives the application: which roles it assumed at tomato's STS |
 | [Lifecycle](lifecycle.md) | `lifecycle` | Steps for stopping and starting the app and its containers mid-scenario |
 | [Browser](browser.md) | `browser` | Steps for using a web UI in a real Chromium, the way a person does: by what the page shows |
+| [PDF](pdf.md) | `pdf` | Steps for asserting on what the PDF documents your application generates contain: pages, text, metadata, outline and accessibility |
 
 
 ## Variables and Dynamic Values

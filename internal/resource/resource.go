@@ -84,6 +84,32 @@ type ResetsFirst interface {
 	ResetsFirst() bool
 }
 
+// ObjectReader is implemented by resources that keep objects under a key,
+// like the s3 resource. The path is what that resource's own steps take:
+// "bucket/key" for s3.
+type ObjectReader interface {
+	ReadObject(ctx context.Context, path string) ([]byte, error)
+}
+
+// ResponseBodyProvider is implemented by resources that keep the last
+// response they received, like the http client. It fails when no request was
+// sent yet.
+type ResponseBodyProvider interface {
+	LastResponseBody() ([]byte, error)
+}
+
+// HandlerLookup finds a configured resource by its name in tomato.yml.
+type HandlerLookup func(name string) (Handler, bool)
+
+// HandlerLookupAware is implemented by resources that read another resource's
+// state, like the pdf resource reading an s3 object or an http response body.
+// The registry hands them a lookup once every handler is built. A resource
+// still imports nothing from another resource: it asks for a name and
+// type-asserts the small interfaces above.
+type HandlerLookupAware interface {
+	SetHandlerLookup(HandlerLookup)
+}
+
 // SQLExecutor is implemented by handlers that can execute SQL
 type SQLExecutor interface {
 	ExecSQL(ctx context.Context, query string) (int64, error)

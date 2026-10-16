@@ -90,8 +90,12 @@ func (c *Config) expandPresets() error {
 			if err := c.expandChromiumPreset(&cont); err != nil {
 				return fmt.Errorf("container %q: %w", name, err)
 			}
+		case PresetVeraPDF:
+			if err := expandVeraPDFPreset(&cont); err != nil {
+				return fmt.Errorf("container %q: %w", name, err)
+			}
 		default:
-			return fmt.Errorf("container %q: unknown preset %q (available: %s, %s)", name, cont.Preset, PresetChromium, PresetKafka)
+			return fmt.Errorf("container %q: unknown preset %q (available: %s, %s, %s)", name, cont.Preset, PresetChromium, PresetKafka, PresetVeraPDF)
 		}
 		c.Containers[name] = cont
 	}
@@ -251,6 +255,38 @@ func (c *Config) expandChromiumPreset(cont *Container) error {
 	}
 	if cont.WaitFor.Type == "" {
 		cont.WaitFor = WaitStrategy{Type: "http", Path: "/json/version", Target: devtools, Timeout: time.Minute}
+	}
+	return nil
+}
+
+// PresetVeraPDF is a veraPDF validation service, for the pdf resource's
+// conformance step: POST a document to /api/validate/{profile} on
+// VeraPDFPort and get the rule violations back.
+const PresetVeraPDF = "verapdf"
+
+// VeraPDFImage is what the verapdf preset runs unless the entry sets image or
+// build: the veraPDF consortium's REST image, pinned. It is published for
+// amd64 only; on an arm64 machine Docker runs it under emulation, which works
+// and is slower.
+const VeraPDFImage = "verapdf/rest:v1.30.3"
+
+// VeraPDFPort is where the service answers inside the container.
+const VeraPDFPort = "8080"
+
+func expandVeraPDFPreset(cont *Container) error {
+	if cont.Auth != "" {
+		return fmt.Errorf("the verapdf preset has no auth (auth: %s)", cont.Auth)
+	}
+	if cont.Image == "" && cont.Build == nil {
+		cont.Image = VeraPDFImage
+	}
+	port := VeraPDFPort + "/tcp"
+	if !containsPort(cont.Ports, VeraPDFPort) {
+		cont.Ports = append([]string{port}, cont.Ports...)
+	}
+	if cont.WaitFor.Type == "" {
+		// The JVM takes a while to come up, longer under emulation.
+		cont.WaitFor = WaitStrategy{Type: "http", Path: "/api/info", Target: port, Timeout: 3 * time.Minute}
 	}
 	return nil
 }
