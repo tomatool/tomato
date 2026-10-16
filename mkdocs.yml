@@ -56,6 +56,7 @@ nav:
     - AWS: configuration/aws.md
     - Lifecycle: configuration/lifecycle.md
     - Browser: configuration/browser.md
+    - PDF: configuration/pdf.md
   - Step Reference:
     - Overview: resources/index.md
     - HTTP Client: resources/http-client.md
@@ -73,6 +74,7 @@ nav:
     - AWS: resources/aws.md
     - Lifecycle: resources/lifecycle.md
     - Browser: resources/browser.md
+    - PDF: resources/pdf.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
     - Adding a Step or Resource: developer-guide/adding-a-resource.md

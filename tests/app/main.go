@@ -21,6 +21,7 @@ import (
 	"github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"github.com/tomatool/tomato/internal/pdffixture"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -95,6 +96,10 @@ func main() {
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/profile", profileHandler)
+	// Generated documents, for the pdf resource: a contract and its
+	// accessible (tagged, PDF/UA-1) version.
+	mux.HandleFunc("/documents/contract.pdf", documentHandler(pdffixture.Contract))
+	mux.HandleFunc("/documents/accessible.pdf", documentHandler(pdffixture.Accessible))
 	registerUI(mux)
 
 	startGRPC()
@@ -400,6 +405,20 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(response)
+}
+
+// documentHandler serves a generated PDF, as an app that renders contracts
+// would.
+func documentHandler(generate func() []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Type", "application/pdf")
+		w.Header().Set("Content-Disposition", `inline; filename="`+strings.TrimPrefix(r.URL.Path, "/documents/")+`"`)
+		w.Write(generate())
+	}
 }
 
 // textHandler returns a fixed plain-text body.

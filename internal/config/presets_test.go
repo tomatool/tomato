@@ -305,6 +305,57 @@ func TestLoopbackPort(t *testing.T) {
 	}
 }
 
+func TestVeraPDFPreset(t *testing.T) {
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  verapdf:
+    preset: verapdf
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	v := cfg.Containers["verapdf"]
+	if v.Image != VeraPDFImage || v.Build != nil {
+		t.Errorf("image %q, build %+v; want %s", v.Image, v.Build, VeraPDFImage)
+	}
+	if len(v.Ports) != 1 || v.Ports[0] != VeraPDFPort+"/tcp" {
+		t.Errorf("ports %v, want [%s/tcp]", v.Ports, VeraPDFPort)
+	}
+	if v.WaitFor.Type != "http" || v.WaitFor.Path != "/api/info" || v.WaitFor.Target != VeraPDFPort+"/tcp" || v.WaitFor.Timeout <= 0 {
+		t.Errorf("wait_for %+v", v.WaitFor)
+	}
+}
+
+func TestVeraPDFPreset_EntryOverridesWin(t *testing.T) {
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  verapdf:
+    preset: verapdf
+    image: ghcr.io/example/verapdf-rest:test
+    ports:
+      - "18080:8080"
+    wait_for:
+      type: port
+      target: "8080"
+      timeout: 10s
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	v := cfg.Containers["verapdf"]
+	if v.Image != "ghcr.io/example/verapdf-rest:test" {
+		t.Errorf("image %q", v.Image)
+	}
+	if len(v.Ports) != 1 || v.Ports[0] != "18080:8080" {
+		t.Errorf("a published port already covering 8080 is kept as is: %v", v.Ports)
+	}
+	if v.WaitFor.Type != "port" {
+		t.Errorf("wait_for %+v", v.WaitFor)
+	}
+}
+
 func TestPresets_Errors(t *testing.T) {
 	stubPorts(t)
 	for name, tc := range map[string]struct{ content, want string }{
@@ -321,6 +372,13 @@ containers:
     preset: kafka
     auth: scram
 `, `unknown kafka auth "scram"`},
+		"verapdf has no auth": {`
+version: 2
+containers:
+  x:
+    preset: verapdf
+    auth: aws_msk_iam
+`, "the verapdf preset has no auth"},
 		"chromium has no auth": {`
 version: 2
 containers:

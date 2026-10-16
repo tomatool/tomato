@@ -96,6 +96,10 @@ containers:
   chrome:
     preset: chromium
 
+  # veraPDF, for the pdf resource's conformance step.
+  verapdf:
+    preset: verapdf
+
 app:
   # Default: run as local process
   command: go run ./tests/app
@@ -254,6 +258,13 @@ resources:
   sts:
     type: http-client
     base_url: "http://localhost:9996"
+
+  # The PDFs the app generates: read from an s3 object, an http response body
+  # or a file, and asserted on. The validator checks PDF/UA and PDF/A.
+  pdf:
+    type: pdf
+    options:
+      validator: verapdf
 
 features:
   paths:

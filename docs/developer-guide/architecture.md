@@ -41,6 +41,7 @@ is which, and which of them CI actually checks.
 | `internal/runner` | godog wiring, hooks, tag filtering, reset between scenarios |
 | `internal/formatter` | Console, JUnit and Cucumber report output |
 | `internal/presets` | Files copied into preset containers (the MSK IAM jar) |
+| `internal/pdffixture` | The PDF documents the pdf resource's tests assert on, generated deterministically: the test app serves them and `tests/testdata/pdf` holds committed copies |
 | `internal/runlog` | Per-run log directory under `.tomato/runs/` |
 
 ### Why one package per resource
