@@ -134,15 +134,6 @@ var optionValidators = map[string]func(map[string]any) error{
 	"postgresql": postgres.ValidateOptions,
 }
 
-// ValidateOptions reports what is wrong with a resource's options, as far as
-// can be told from the config alone.
-func ValidateOptions(cfg config.Resource) error {
-	if validate, ok := optionValidators[cfg.Type]; ok {
-		return validate(cfg.Options)
-	}
-	return nil
-}
-
 // unimplementedTypes are resource types people reach for that tomato does not
 // support yet, each with what to use instead. They used to be registered as
 // no-op stubs, so a config naming them validated, ran, and silently tested
@@ -355,9 +346,17 @@ func AllStepCategories() []resource.StepCategory {
 	return categories
 }
 
-// ValidateOptions checks a resource's options without connecting to
-// anything, for resources that can (resource.OptionsValidator). Others pass.
+// ValidateOptions reports what is wrong with a resource's options, as far as
+// can be told from the config alone: first the type's static check in
+// optionValidators, then, for a resource that implements
+// resource.OptionsValidator, the check its throwaway handler makes. Nothing
+// connects and no container is started. Types with neither pass.
 func ValidateOptions(name string, cfg config.Resource) error {
+	if validate, ok := optionValidators[cfg.Type]; ok {
+		if err := validate(cfg.Options); err != nil {
+			return err
+		}
+	}
 	build, ok := handlerFactories[cfg.Type]
 	if !ok {
 		return nil

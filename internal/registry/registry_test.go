@@ -188,17 +188,17 @@ func TestValidateOptions(t *testing.T) {
 	bad := map[string]any{"schemas": "plato"}
 	for _, typ := range []string{"postgres", "postgresql"} {
 		cfg := config.Resource{Type: typ, Options: bad}
-		if err := ValidateOptions(cfg); err == nil {
+		if err := ValidateOptions("db", cfg); err == nil {
 			t.Errorf("ValidateOptions accepted %s schemas given as a string", typ)
 		}
 		if _, err := New(map[string]config.Resource{"db": cfg}, nil); err == nil {
 			t.Errorf("New built a %s resource whose options ValidateOptions refuses", typ)
 		}
 	}
-	if err := ValidateOptions(config.Resource{Type: "postgres", Options: map[string]any{"schemas": []any{"plato"}}}); err != nil {
+	if err := ValidateOptions("db", config.Resource{Type: "postgres", Options: map[string]any{"schemas": []any{"plato"}}}); err != nil {
 		t.Errorf("ValidateOptions(valid schemas) = %v", err)
 	}
-	if err := ValidateOptions(config.Resource{Type: "redis", Options: bad}); err != nil {
+	if err := ValidateOptions("db", config.Resource{Type: "redis", Options: bad}); err != nil {
 		t.Errorf("ValidateOptions checked a type without a validator: %v", err)
 	}
 }
