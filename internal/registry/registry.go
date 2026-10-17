@@ -124,6 +124,23 @@ var handlerFactories = map[string]handlerFactory{
 	"pdf":              factory(pdf.New),
 }
 
+// optionValidators check a resource type's options without connecting to
+// anything. Its constructor runs the same check, so `tomato validate` and the
+// start of a run refuse the same configs.
+var optionValidators = map[string]func(map[string]any) error{
+	"postgres":   postgres.ValidateOptions,
+	"postgresql": postgres.ValidateOptions,
+}
+
+// ValidateOptions reports what is wrong with a resource's options, as far as
+// can be told from the config alone.
+func ValidateOptions(cfg config.Resource) error {
+	if validate, ok := optionValidators[cfg.Type]; ok {
+		return validate(cfg.Options)
+	}
+	return nil
+}
+
 // unimplementedTypes are resource types people reach for that tomato does not
 // support yet, each with what to use instead. They used to be registered as
 // no-op stubs, so a config naming them validated, ran, and silently tested

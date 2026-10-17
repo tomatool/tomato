@@ -7,13 +7,14 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/cucumber/godog"
 	messages "github.com/cucumber/messages/go/v21"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
 	"github.com/tomatool/tomato/internal/resource"
@@ -27,7 +28,37 @@ type Postgres struct {
 }
 
 func New(name string, cfg config.Resource, cm *container.Manager) (*Postgres, error) {
+	if err := ValidateOptions(cfg.Options); err != nil {
+		return nil, err
+	}
 	return &Postgres{name: name, config: cfg, container: cm}, nil
+}
+
+// ValidateOptions checks the options that can be checked without a database,
+// so `tomato validate` and the start of a run refuse the same mistakes.
+// Whether a schema exists can only be known at reset time; Reset checks that.
+func ValidateOptions(options map[string]any) error {
+	raw, ok := options["schemas"]
+	if !ok {
+		return nil
+	}
+	list, ok := raw.([]any)
+	if !ok {
+		return fmt.Errorf("options.schemas must be a list of schema names, like `schemas: [app, audit]`, not %v", raw)
+	}
+	if len(list) == 0 {
+		return fmt.Errorf("options.schemas is empty: list the schemas to reset, or remove it to reset the public schema")
+	}
+	for i, item := range list {
+		name, ok := item.(string)
+		if !ok || strings.TrimSpace(name) == "" {
+			return fmt.Errorf("options.schemas[%d] must be a schema name, not %v (quote it if YAML reads it as something else)", i, item)
+		}
+		if _, err := path.Match(name, ""); err != nil {
+			return fmt.Errorf("options.schemas[%d] %q is not a valid pattern: %w", i, name, err)
+		}
+	}
+	return nil
 }
 
 func (r *Postgres) Name() string { return r.name }
@@ -80,14 +111,36 @@ func (r *Postgres) Reset(ctx context.Context) error {
 	return err
 }
 
+// getTablesToReset returns every table Reset truncates, quoted where it came
+// from the catalog:
+//
+//   - neither `schemas` nor `tables`: every table in public;
+//   - `tables` only: exactly those, as written;
+//   - `schemas`: every table in those schemas, found now so tables a migration
+//     added are included, plus whatever `tables` lists.
+//
+// Tables found in the catalog skip the migration-history tables and `exclude`;
+// a table listed in `tables` is truncated because it was asked for.
 func (r *Postgres) getTablesToReset(ctx context.Context) ([]string, error) {
-	// If specific tables are configured, use those
-	if configuredTables := r.getConfiguredTables(); len(configuredTables) > 0 {
-		return configuredTables, nil
+	configured := optionStrings(r.config.Options, "tables")
+	patterns := optionStrings(r.config.Options, "schemas")
+
+	var schemas []string
+	switch {
+	case len(patterns) > 0:
+		var err error
+		if schemas, err = r.resolveSchemas(ctx, patterns); err != nil {
+			return nil, err
+		}
+	case len(configured) > 0:
+		return configured, nil
+	default:
+		schemas = []string{"public"}
 	}
 
-	// Otherwise, get all tables from public schema
-	rows, err := r.db.QueryContext(ctx, "SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+	rows, err := r.db.QueryContext(ctx,
+		"SELECT schemaname, tablename FROM pg_tables WHERE schemaname = ANY($1) ORDER BY schemaname, tablename",
+		pq.Array(schemas))
 	if err != nil {
 		return nil, fmt.Errorf("listing tables: %w", err)
 	}
@@ -95,28 +148,83 @@ func (r *Postgres) getTablesToReset(ctx context.Context) ([]string, error) {
 
 	var tables []string
 	for rows.Next() {
-		var table string
-		if err := rows.Scan(&table); err != nil {
+		var schema, table string
+		if err := rows.Scan(&schema, &table); err != nil {
 			return nil, err
 		}
-		if !r.isExcluded(table) {
-			tables = append(tables, table)
+		if !r.isExcluded(schema, table) {
+			tables = append(tables, pq.QuoteIdentifier(schema)+"."+pq.QuoteIdentifier(table))
 		}
 	}
-	return tables, nil
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("listing tables: %w", err)
+	}
+	return append(tables, configured...), nil
 }
 
-func (r *Postgres) getConfiguredTables() []string {
-	if tables, ok := r.config.Options["tables"].([]interface{}); ok {
-		result := make([]string, 0, len(tables))
-		for _, t := range tables {
-			if s, ok := t.(string); ok {
-				result = append(result, s)
+// resolveSchemas turns the `schemas` option into the schemas that exist now.
+func (r *Postgres) resolveSchemas(ctx context.Context, patterns []string) ([]string, error) {
+	rows, err := r.db.QueryContext(ctx,
+		`SELECT nspname FROM pg_namespace WHERE nspname NOT LIKE 'pg\_%' AND nspname <> 'information_schema'`)
+	if err != nil {
+		return nil, fmt.Errorf("listing schemas: %w", err)
+	}
+	defer rows.Close()
+	var existing []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		existing = append(existing, name)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("listing schemas: %w", err)
+	}
+	return matchSchemas(patterns, existing)
+}
+
+// matchSchemas picks the schemas the `schemas` option names out of those that
+// exist. A name must exist: a typo would otherwise reset nothing and let state
+// leak between scenarios without a word. A pattern (`plugin_*`) may match none,
+// since the schemas it stands for come and go.
+func matchSchemas(patterns, existing []string) ([]string, error) {
+	var matched, missing []string
+	for _, p := range patterns {
+		if !strings.ContainsAny(p, "*?[") {
+			if slices.Contains(existing, p) {
+				matched = append(matched, p)
+			} else {
+				missing = append(missing, p)
+			}
+			continue
+		}
+		for _, name := range existing {
+			if ok, _ := path.Match(p, name); ok {
+				matched = append(matched, name)
 			}
 		}
-		return result
 	}
-	return nil
+	if len(missing) > 0 {
+		return nil, fmt.Errorf(
+			"the database has no schema %s, which options.schemas names: create it before the first scenario "+
+				"(in the app's migrations at startup, or a before_all hook), or remove it from schemas",
+			strings.Join(missing, ", "))
+	}
+	slices.Sort(matched)
+	return slices.Compact(matched), nil
+}
+
+// optionStrings reads a list-of-strings option.
+func optionStrings(options map[string]any, key string) []string {
+	list, _ := options[key].([]any)
+	out := make([]string, 0, len(list))
+	for _, item := range list {
+		if s, ok := item.(string); ok {
+			out = append(out, s)
+		}
+	}
+	return out
 }
 
 // defaultResetExclusions are the bookkeeping tables of common migration tools.
@@ -130,17 +238,15 @@ var defaultResetExclusions = []string{
 	"databasechangeloglock", // Liquibase
 }
 
-func (r *Postgres) isExcluded(table string) bool {
-	excludeList := slices.Clone(defaultResetExclusions)
-	if exclude, ok := r.config.Options["exclude"].([]interface{}); ok {
-		for _, e := range exclude {
-			if s, ok := e.(string); ok {
-				excludeList = append(excludeList, s)
-			}
-		}
+// isExcluded reports whether reset leaves a table alone: a migration tool's
+// history table in any schema, or an `exclude` entry naming the table bare or
+// schema-qualified.
+func (r *Postgres) isExcluded(schema, table string) bool {
+	if slices.Contains(defaultResetExclusions, table) {
+		return true
 	}
-	for _, e := range excludeList {
-		if e == table {
+	for _, e := range optionStrings(r.config.Options, "exclude") {
+		if e == table || e == schema+"."+table {
 			return true
 		}
 	}
