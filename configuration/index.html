@@ -2513,6 +2513,10 @@ feed CI test reports and test-management tools.</p>
 passed on the command line (the GitHub Action passes <code>--format tomato</code> for PR
 comments), it replaces the console format but file outputs from <code>output</code> are
 still written.</p>
+<p>In the <code>tomato</code> format, a <code>step_end</code> event carries <code>screenshots</code> when the step
+left images behind, as a list of <code>{"resource": "alice", "path": "…/after-apply.png"}</code>:
+the <a href="browser/">browser resource</a>'s <code>saves screenshot</code>, and the page when a
+step failed. <code>tomato ui</code> reads it to put the picture on the step.</p>
 <h2 id="app-configuration">App configuration<a class="headerlink" href="#app-configuration" title="Permanent link">&para;</a></h2>
 <p>Configure your application under test to run with test containers.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">app</span><span class="p">:</span>
