@@ -315,13 +315,13 @@ func (v *Validator) validateResources() {
 			continue
 		}
 
-		if err := registry.ValidateOptions(res); err != nil {
+		if err := registry.ValidateOptions(name, res); err != nil {
 			v.results = append(v.results, ValidationResult{
 				Category:   "Resources",
 				Item:       name,
 				Status:     "error",
 				Message:    err.Error(),
-				Suggestion: "Fix the option in the config; `tomato run` refuses it too",
+				Suggestion: fmt.Sprintf("Fix the option in the config; see the %s configuration page, and note `tomato run` refuses it too", res.Type),
 			})
 			continue
 		}
