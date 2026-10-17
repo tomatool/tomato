@@ -27,7 +27,7 @@ function Head({ collapsed, onToggle, children }) {
 // though, and its status is reported under the scenario that ran it, so the
 // rows show one scenario's run — `scenarioName`, the one running or the last
 // that did (lib/run.js) — and the head says whose.
-export function BackgroundCard({ steps, collapsed, onToggle, runState, scenarioName }) {
+export function BackgroundCard({ steps, collapsed, onToggle, runState, scenarioName, onScreenshot }) {
   const status = backgroundStatus(steps, scenarioName, runState)
   return (
     <div
@@ -51,7 +51,7 @@ export function BackgroundCard({ steps, collapsed, onToggle, runState, scenarioN
       {!collapsed && (
         <div className="steps">
           {steps.map((s, i) => (
-            <StepRow key={i} step={s} scenarioName={scenarioName} index={i} runState={runState} background />
+            <StepRow key={i} step={s} scenarioName={scenarioName} index={i} runState={runState} background onScreenshot={onScreenshot} />
           ))}
         </div>
       )}
@@ -60,7 +60,7 @@ export function BackgroundCard({ steps, collapsed, onToggle, runState, scenarioN
 }
 
 export function ScenarioCard({
-  scenario, index, current, collapsed, onToggle, onRun, onTag, filter, runState, background,
+  scenario, index, current, collapsed, onToggle, onRun, onTag, filter, runState, background, onScreenshot,
 }) {
   const status = runState.scStatus[scenario.name] ?? ''
   const dur = runState.scDur[scenario.name]
@@ -120,7 +120,7 @@ export function ScenarioCard({
               <>
                 <div className="steps-note">in the Background, before this scenario’s first step</div>
                 {failedBg.map((r) => (
-                  <StepRow key={`bg${r.index}`} step={r.step} scenarioName={scenario.name} index={r.index} runState={runState} background />
+                  <StepRow key={`bg${r.index}`} step={r.step} scenarioName={scenario.name} index={r.index} runState={runState} background onScreenshot={onScreenshot} />
                 ))}
                 <div className="steps-rule" role="separator" aria-label="the Background failed above, so the scenario's own steps below did not run" />
               </>
@@ -135,7 +135,7 @@ export function ScenarioCard({
               return steps.map((s, i) => (
                 <Fragment key={i}>
                   {i === firstLive && i > 0 && <div className="steps-rule" role="separator" aria-label="preparation above, probe and checks below" />}
-                  <StepRow step={s} scenarioName={scenario.name} index={pickleIndex(background, i)} runState={runState} />
+                  <StepRow step={s} scenarioName={scenario.name} index={pickleIndex(background, i)} runState={runState} onScreenshot={onScreenshot} />
                 </Fragment>
               ))
             })()}

@@ -289,3 +289,23 @@ func TestStepsAreDocumented(t *testing.T) {
 		}
 	}
 }
+
+func TestScreenshotDirRulesAreExported(t *testing.T) {
+	// `tomato ui` lists the directories the suite's browsers write to by the
+	// same rules New applies, so the two cannot drift apart.
+	if got := ScreenshotsOption(config.Resource{Options: map[string]any{"screenshots": "reports/shots"}}); got != "reports/shots" {
+		t.Errorf("ScreenshotsOption = %q", got)
+	}
+	if got := ScreenshotsOption(config.Resource{Options: map[string]any{"screenshots": 7}}); got != "" {
+		t.Errorf("ScreenshotsOption of a non-string = %q, want the default", got)
+	}
+	if got := ScreenshotsOption(config.Resource{}); got != "" {
+		t.Errorf("ScreenshotsOption without options = %q", got)
+	}
+	if got := RunScreenshotDir(filepath.Join(".tomato", "runs", "x")); got != filepath.Join(".tomato", "runs", "x", "screenshots") {
+		t.Errorf("RunScreenshotDir = %q", got)
+	}
+	if DefaultScreenshotDir != filepath.Join(".tomato", "screenshots") {
+		t.Errorf("DefaultScreenshotDir = %q", DefaultScreenshotDir)
+	}
+}

@@ -85,6 +85,11 @@ passed on the command line (the GitHub Action passes `--format tomato` for PR
 comments), it replaces the console format but file outputs from `output` are
 still written.
 
+In the `tomato` format, a `step_end` event carries `screenshots` when the step
+left images behind, as a list of `{"resource": "alice", "path": "…/after-apply.png"}`:
+the [browser resource](browser.md)'s `saves screenshot`, and the page when a
+step failed. `tomato ui` reads it to put the picture on the step.
+
 ## App configuration
 
 Configure your application under test to run with test containers.

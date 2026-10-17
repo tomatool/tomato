@@ -13,11 +13,13 @@ ui/
     ├── App.jsx         state, layout, keyboard, pane dragging
     ├── styles.css      the "Modernist" design system: tokens + components
     ├── components/     TopBar, Tree, ScenarioCard, StepRow, ConfigView,
-    │                   Flow, Topology, Runs, Transport, Peek, Console
+    │                   Flow, Topology, Runs, Screenshots, Lightbox,
+    │                   Transport, Peek, Console
     ├── hooks/          useSocket (the /ws feed), useLocalNumber / useLocalEnum
     │                   (remembered pane sizes and theme)
     ├── lib/            run state keyed on the pickle index, step tokenising,
-    │                   ANSI → nodes, flow model, formatting, icons
+    │                   ANSI → nodes, flow model, the screenshots a step took,
+    │                   formatting, icons
     └── fonts/          Geist and Geist Mono, vendored so the UI works offline
 ```
 

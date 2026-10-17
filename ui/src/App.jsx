@@ -4,6 +4,7 @@ import { useLocalEnum, useLocalNumber } from './hooks/useLocalState'
 import { flowModel } from './lib/flow'
 import { BACKGROUND_KEY } from './lib/steps.jsx'
 import { RUN_EVENTS, backgroundScenario, emptyRun, failedBackgroundSteps, reduceRun } from './lib/run.js'
+import { newestFirst, samePath, screenshotURL, shotName } from './lib/screenshots.js'
 import { TopBar } from './components/TopBar.jsx'
 import { Tree } from './components/Tree.jsx'
 import { ScenarioCard, BackgroundCard } from './components/ScenarioCard.jsx'
@@ -11,6 +12,8 @@ import { ConfigView } from './components/ConfigView.jsx'
 import { Flow } from './components/Flow.jsx'
 import { Topology } from './components/Topology.jsx'
 import { Runs } from './components/Runs.jsx'
+import { Screenshots } from './components/Screenshots.jsx'
+import { Lightbox } from './components/Lightbox.jsx'
 import { Transport } from './components/Transport.jsx'
 import { Console } from './components/Console.jsx'
 import { Peek } from './components/Peek.jsx'
@@ -24,10 +27,15 @@ const CONSOLE_MIN = 80
 // :root carries, so the attribute only ever has to name the exception.
 const THEMES = ['dark', 'light']
 
+// The inspector's tabs. Flow and Topology look at the selected scenario and
+// share the transport; Runs and Screenshots are lists of what is on disk.
+const SIDE_TABS = { flow: 'Flow', topology: 'Topology', runs: 'Runs', shots: 'Screenshots' }
+
 export function App() {
   // server data
   const [features, setFeatures] = useState([])
   const [runs, setRuns] = useState([])
+  const [shots, setShots] = useState([])
   const [topo, setTopo] = useState(null)
   const [config, setConfig] = useState(null)
   const [changed, setChanged] = useState(() => new Set())
@@ -58,6 +66,8 @@ export function App() {
   const [cursor, setCursor] = useState(-1)
   const [playing, setPlaying] = useState(false)
   const playTimer = useRef(null)
+  // The screenshot open at full size, by path; null when none is.
+  const [lightbox, setLightbox] = useState(null)
 
   const [theme, setTheme] = useLocalEnum('theme', THEMES, 'dark')
   useEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
@@ -83,6 +93,7 @@ export function App() {
       case 'update': {
         setFeatures(m.features ?? [])
         if (m.runs) setRuns(m.runs)
+        if (m.screenshots) setShots(m.screenshots)
         if (m.topology) setTopo(m.topology)
         if (m.changedFiles?.length) {
           setChanged((prev) => new Set([...prev, ...m.changedFiles]))
@@ -117,6 +128,9 @@ export function App() {
         break
       case 'runs_update':
         setRuns(m.runs ?? [])
+        break
+      case 'screenshots_update':
+        setShots(m.screenshots ?? [])
         break
       case 'run_created':
         setRunId(m.runId)
@@ -173,6 +187,14 @@ export function App() {
     return any && all ? 'passed' : ''
   }, [runState.scStatus])
 
+  const sortedShots = useMemo(() => newestFirst(shots), [shots])
+  // The list may still be catching up with a step that just took a picture,
+  // so a path it lacks yet is shown on its own rather than not at all.
+  const lbIndex = lightbox ? sortedShots.findIndex((s) => samePath(s.path, lightbox.path)) : -1
+  const lbShots = !lightbox ? [] : lbIndex >= 0 ? sortedShots
+    : [{ name: shotName(lightbox.path), path: lightbox.path, url: screenshotURL(lightbox.path) }]
+  const flowTab = sideTab === 'flow' || sideTab === 'topology'
+
   const feature = features.find((f) => f.filePath === selectedFile) ?? null
   const shown = feature ? visibleScenarios(feature) : []
   const scenario = shown[selectedScenario] ?? shown[0] ?? null
@@ -200,6 +222,23 @@ export function App() {
     if (names.length === 1) runScenario(names[0])
     else if (names.length) runAll()
   }, [runState.scStatus, runAll, runScenario])
+
+  const openShot = useCallback((path) => setLightbox({ path }), [])
+  const closeShot = useCallback(() => setLightbox(null), [])
+  const moveShot = useCallback((d) => {
+    setLightbox((cur) => {
+      if (!cur) return cur
+      const i = sortedShots.findIndex((s) => samePath(s.path, cur.path))
+      const next = sortedShots[i + d]
+      return next ? { path: next.path } : cur
+    })
+  }, [sortedShots])
+  // The tab re-reads the list when opened: a run made outside the UI into a
+  // directory nothing watches shows up then.
+  const showShots = useCallback(() => {
+    setSideTab('shots')
+    fetch('/api/screenshots').then((r) => r.json()).then((list) => { if (Array.isArray(list)) setShots(list) }).catch(() => {})
+  }, [])
 
   const toggleCard = useCallback((key, isCollapsed) => {
     setCollapsed((p) => ({ ...p, [key]: !isCollapsed }))
@@ -280,6 +319,13 @@ export function App() {
       const t = e.target
       const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)
 
+      // A screenshot open at full size takes the keyboard: Esc closes it and
+      // the arrows step through the list, nothing reaches the page beneath.
+      if (lightbox) {
+        if (e.key === 'Escape') { e.preventDefault(); closeShot() } else if (e.key === 'ArrowLeft') { e.preventDefault(); moveShot(-1) } else if (e.key === 'ArrowRight') { e.preventDefault(); moveShot(1) }
+        return
+      }
+
       if (e.key === 'Escape') {
         if (typing) t.blur()
         if (pinned != null) setPinned(null)
@@ -299,15 +345,15 @@ export function App() {
         case ']': setSideOpen((v) => !v); break
         case '\\': toggleCenter(); break
         case '-': setConsoleOpen(consoleOpen === 'open' ? 'closed' : 'open'); break
-        case 'ArrowRight': if (sideTab !== 'runs') { e.preventDefault(); seek(cursor + 1) } break
-        case 'ArrowLeft': if (sideTab !== 'runs') { e.preventDefault(); seek(cursor - 1) } break
-        case ' ': if (sideTab !== 'runs') { e.preventDefault(); togglePlay() } break
+        case 'ArrowRight': if (flowTab) { e.preventDefault(); seek(cursor + 1) } break
+        case 'ArrowLeft': if (flowTab) { e.preventDefault(); seek(cursor - 1) } break
+        case ' ': if (flowTab) { e.preventDefault(); togglePlay() } break
         default: break
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, sideTab, cursor, seek, togglePlay, pinned, toggleCenter, consoleOpen, setConsoleOpen])
+  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, flowTab, cursor, seek, togglePlay, pinned, toggleCenter, consoleOpen, setConsoleOpen, lightbox, closeShot, moveShot])
 
   // ——— pane dragging ———
   const [resizing, setResizing] = useState(null)
@@ -491,6 +537,7 @@ export function App() {
                   collapsed={isCollapsed}
                   onToggle={() => toggleCard(BACKGROUND_KEY, isCollapsed)}
                   runState={runState}
+                  onScreenshot={openShot}
                 />
               )
             })()}
@@ -517,6 +564,7 @@ export function App() {
                   filter={filter}
                   runState={runState}
                   background={feature.background}
+                  onScreenshot={openShot}
                 />
               )
             })}
@@ -539,13 +587,13 @@ export function App() {
           <button className="btn btn--ghost btn--sm btn--icon" type="button" title="Show inspector  ]" onClick={() => setSideOpen(true)}>
             <i className="ico-chev" data-dir="left" />
           </button>
-          {['flow', 'topology', 'runs'].map((t) => (
+          {Object.entries(SIDE_TABS).map(([t, label]) => (
             <button
               className="rail-tab" type="button" key={t}
               aria-selected={sideTab === t ? 'true' : undefined}
-              onClick={() => { setSideTab(t); setSideOpen(true) }}
+              onClick={() => { if (t === 'shots') showShots(); else setSideTab(t); setSideOpen(true) }}
             >
-              {t[0].toUpperCase() + t.slice(1)}
+              {label}
             </button>
           ))}
         </div>
@@ -559,6 +607,9 @@ export function App() {
           </button>
           <button className="tab" type="button" role="tab" aria-selected={sideTab === 'runs' ? 'true' : undefined} onClick={() => setSideTab('runs')}>
             Runs <span className="count">{runs.length}</span>
+          </button>
+          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'shots' ? 'true' : undefined} onClick={showShots}>
+            {SIDE_TABS.shots} <span className="count">{shots.length}</span>
           </button>
           <span style={{ flex: 1 }} />
           <button
@@ -574,7 +625,7 @@ export function App() {
           </button>
         </div>
 
-        {sideTab !== 'runs' && model && (
+        {flowTab && model && (
           <Transport
             msgs={model.msgs} cursor={cursor} playing={playing}
             onSeek={seek} onPlay={togglePlay} onReplay={() => play(-1)}
@@ -584,6 +635,8 @@ export function App() {
         <div className="pane-body">
           {sideTab === 'runs' ? (
             <Runs runs={runs} openRun={openRun} onOpenRun={setOpenRun} onOpenLog={openLog} />
+          ) : sideTab === 'shots' ? (
+            <Screenshots shots={sortedShots} runState={runState} onOpen={openShot} />
           ) : !model ? (
             <div className="empty">
               <h3>No scenario selected</h3>
@@ -602,7 +655,7 @@ export function App() {
           )}
         </div>
 
-        {sideTab !== 'runs' && model && (() => {
+        {flowTab && model && (() => {
           // A pin wins over the pointer — that is what pinning is for. With
           // neither, the dock follows the transport.
           const shownMsg = pinned != null ? model.msgs[pinned]
@@ -649,6 +702,13 @@ export function App() {
           setResizing({ kind: 'console', at: e.clientY, start: consoleHeight })
         }}
       />
+
+      {lightbox && (
+        <Lightbox
+          shots={lbShots} index={Math.max(0, lbIndex)} runState={runState}
+          onClose={closeShot} onMove={moveShot}
+        />
+      )}
     </div>
   )
 }

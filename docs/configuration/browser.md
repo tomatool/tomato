@@ -160,6 +160,18 @@ It is attached to the failed step in the `cucumber` report too. To keep one
 from a passing scenario, `"alice" saves screenshot "after-apply"` writes
 `after-apply.png`.
 
+### Previewing them in `tomato ui`
+
+The inspector's **Screenshots** tab lists every screenshot the suite's
+browsers have written — each resource's `screenshots` directory, and the
+default places when the option is not set — newest first, with a thumbnail,
+when it was taken and its size. A click opens it at full size; `esc` closes
+it and the arrow keys step through the list. A step that saved a screenshot,
+or failed while a page was open, shows the picture on its own row, so the
+page a failure left behind is one click from the red step. The list follows
+the run: it refreshes as each step's picture lands, when the run ends, and
+when a screenshots directory changes.
+
 ## Dialogs
 
 `alert()`, `confirm()` and `prompt()` block a page until someone answers. The
