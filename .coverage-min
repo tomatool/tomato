@@ -2,4 +2,4 @@
 # Unit + integration coverage, merged. Kept ~0.5 below measured: timing-dependent
 # branches move coverage by ~0.1% between runs. Raise these when coverage goes up.
 resource=84.4
-total=77.1
+total=77.6
