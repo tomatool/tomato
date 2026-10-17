@@ -36,6 +36,7 @@ jobs:
         run: |
           # Get latest stable tag (exclude RCs)
           LATEST_STABLE=$(git tag -l 'v*' | grep -v '\-rc\.' | sort -V | tail -n1)
+          PREVIOUS_STABLE="$LATEST_STABLE"
 
           if [[ -z "$LATEST_STABLE" ]]; then
             # No stable tags exist, start from v0.0.0
@@ -96,6 +97,9 @@ jobs:
 
             RELEASE_VERSION="$NEXT_VERSION"
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            # The release notes of a stable release cover everything since the
+            # previous stable one, not since the last RC.
+            echo "previous_tag=$PREVIOUS_STABLE" >> "$GITHUB_OUTPUT"
           fi
 
           echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
@@ -130,6 +134,12 @@ jobs:
         with:
           version: 10
 
+      # GoReleaser takes the version from the tags on HEAD, highest first by
+      # git's version sort, which puts v2.4.0-rc.3 above v2.4.0. Promoting an
+      # RC tags the commit the RC is on, so without these it released the RC
+      # again (and failed re-uploading its assets) instead of the stable
+      # version. An empty GORELEASER_PREVIOUS_TAG (an RC) leaves GoReleaser
+      # to pick the previous tag itself.
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -137,6 +147,8 @@ jobs:
           version: latest
           args: release --clean
         env:
+          GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.version }}
+          GORELEASER_PREVIOUS_TAG: ${{ steps.version.outputs.previous_tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
