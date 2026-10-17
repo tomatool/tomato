@@ -16,7 +16,7 @@
         <link rel="prev" href="../http-server/">
       
       
-        <link rel="next" href="../kafka/">
+        <link rel="next" href="../grpc-server/">
       
       
         
@@ -754,6 +754,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grpc-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gRPC Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../kafka/" class="md-nav__link">
         
   
@@ -1154,6 +1182,34 @@
     
   
     gRPC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/grpc-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gRPC Server
   
 
     
@@ -1812,7 +1868,9 @@
 
 
 <h1 id="grpc-configuration">gRPC configuration<a class="headerlink" href="#grpc-configuration" title="Permanent link">&para;</a></h1>
-<p>The <code>grpc</code> resource calls unary gRPC methods and asserts on what comes back.</p>
+<p>The <code>grpc</code> resource calls unary gRPC methods and asserts on what comes back.
+To stand in for a gRPC service your application calls, use
+<a href="../grpc-server/">gRPC Server</a> instead.</p>
 <p>Methods are resolved through <strong>server reflection</strong>, so you name a method the
 way you would say it out loud — <code>helloworld.Greeter/SayHello</code> — and no
 <code>.proto</code> file or generated stub has to live next to your tests. The server
@@ -1925,8 +1983,8 @@ test:</p>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">And </span><span class="nf">"</span><span class="s">grpc</span><span class="nf">" response status is "</span><span class="s">INVALID_ARGUMENT</span><span class="nf">"</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">And </span><span class="nf">"</span><span class="s">grpc</span><span class="nf">" response error contains "</span><span class="s">name is required</span><span class="nf">"</span>
 </code></pre></div>
-<p>Status names are matched case-insensitively, so <code>INVALID_ARGUMENT</code> and
-<code>InvalidArgument</code> both work.</p>
+<p>Status names are matched ignoring case and underscores, so <code>INVALID_ARGUMENT</code>,
+<code>InvalidArgument</code> and the number <code>3</code> all work.</p>
 <p>Only a problem with the call itself — an unknown method, or a request that is
 not valid for the schema — fails the step. Those errors are specific: an
 unknown method lists the methods that do exist, and an invalid request names

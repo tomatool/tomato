@@ -619,6 +619,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../configuration/grpc-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gRPC Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../configuration/kafka/" class="md-nav__link">
         
   
@@ -1019,6 +1047,34 @@
     
   
     gRPC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../resources/grpc-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    gRPC Server
   
 
     
@@ -2008,6 +2064,10 @@ is which, and which of them CI actually checks.</p>
 <td>Builds resources from config and is the only package that knows the full set</td>
 </tr>
 <tr>
+<td><code>internal/grpcschema</code></td>
+<td>Naming and resolving gRPC methods against file descriptors, and status code names, shared by the grpc client and grpc-server</td>
+</tr>
+<tr>
 <td><code>internal/jsonmatch</code></td>
 <td>Dotted-path lookup and tomato's <code>@</code> matchers, shared by every resource that asserts on JSON</td>
 </tr>
@@ -2026,6 +2086,10 @@ is which, and which of them CI actually checks.</p>
 <tr>
 <td><code>internal/pdffixture</code></td>
 <td>The PDF documents the pdf resource's tests assert on, generated deterministically: the test app serves them and <code>tests/testdata/pdf</code> holds committed copies</td>
+</tr>
+<tr>
+<td><code>internal/grpcfixture</code></td>
+<td>The gRPC service the grpc-server resource's tests stub, as a descriptor: the test app calls it and <code>tests/testdata/grpc</code> holds the committed descriptor set and a <code>.proto</code> rendering</td>
 </tr>
 <tr>
 <td><code>internal/runlog</code></td>
