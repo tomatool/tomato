@@ -4,7 +4,7 @@ import { iconId } from '../lib/icons'
 // Roles when the server sent no topology (an invalid config): derived from
 // the step types the flow model saw, the way the server would classify them.
 const CLIENT_TYPES = new Set(['http', 'http-client', 'grpc', 'grpc-client', 'websocket', 'websocket-client', 'browser'])
-const MOCK_TYPES = new Set(['http-server', 'websocket-server', 'aws'])
+const MOCK_TYPES = new Set(['http-server', 'grpc-server', 'websocket-server', 'aws'])
 const roleOf = (type) => (CLIENT_TYPES.has(type) ? 'client' : MOCK_TYPES.has(type) ? 'mock' : type === 'shell' ? 'host' : 'service')
 
 // Geometry in CSS pixels. The drawing is laid out at this size rather than

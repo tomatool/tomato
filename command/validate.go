@@ -340,6 +340,17 @@ func (v *Validator) validateResources() {
 			})
 		}
 
+		if err := registry.ValidateOptions(name, res); err != nil {
+			v.results = append(v.results, ValidationResult{
+				Category:   "Resources",
+				Item:       name,
+				Status:     "error",
+				Message:    err.Error(),
+				Suggestion: fmt.Sprintf("See the %s configuration page for its options", res.Type),
+			})
+			continue
+		}
+
 		v.results = append(v.results, ValidationResult{
 			Category: "Resources",
 			Item:     name,

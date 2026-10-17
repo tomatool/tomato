@@ -2,7 +2,7 @@
 // sprite itself is inlined in index.html so <use href="#ri-…"> resolves.
 const ALIAS = {
   'http-client': 'http', http: 'http', 'http-server': 'http-server',
-  'grpc-client': 'grpc', grpc: 'grpc',
+  'grpc-client': 'grpc', grpc: 'grpc', 'grpc-server': 'grpc',
   'websocket-client': 'websocket', websocket: 'websocket',
   'websocket-server': 'websocket-server',
   postgresql: 'postgres', postgres: 'postgres',

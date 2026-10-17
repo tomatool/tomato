@@ -307,6 +307,10 @@ func (r *Runner) buildEnvForCommand() map[string]string {
 			return match
 		})
 
+		// Then a grpc-server's address, host and port (e.g., {{.users.address}}),
+		// before {{.x.host}} is taken for a container's.
+		resolved = r.resolveGRPCServers(resolved, "localhost")
+
 		// Then resolve container templates (e.g., {{.postgres.host}})
 		resolved = containerPattern.ReplaceAllStringFunc(resolved, func(match string) string {
 			matches := containerPattern.FindStringSubmatch(match)
@@ -656,6 +660,10 @@ func (r *Runner) buildEnvForDocker() map[string]string {
 			return match
 		})
 
+		// Then a grpc-server's address, host and port, reached on the host
+		// like an http-server.
+		resolved = r.resolveGRPCServers(resolved, "host.docker.internal")
+
 		// Then resolve container templates (e.g., {{.postgres.host}})
 		resolved = containerPattern.ReplaceAllStringFunc(resolved, func(match string) string {
 			matches := containerPattern.FindStringSubmatch(match)
@@ -689,6 +697,35 @@ func (r *Runner) buildEnvForDocker() map[string]string {
 	}
 
 	return env
+}
+
+// grpcServerPattern matches {{.name.address}}, {{.name.host}} and
+// {{.name.port}}, which a grpc-server resource answers: a gRPC dial target is
+// host:port, not a URL.
+var grpcServerPattern = regexp.MustCompile(`\{\{\s*\.([\w-]+)\.(address|host|port)\s*\}\}`)
+
+// resolveGRPCServers replaces the templates naming a grpc-server resource
+// with a fixed port. Others are left for the container templates.
+func (r *Runner) resolveGRPCServers(value, host string) string {
+	return grpcServerPattern.ReplaceAllStringFunc(value, func(match string) string {
+		m := grpcServerPattern.FindStringSubmatch(match)
+		res, ok := r.resources[m[1]]
+		if !ok || res.Type != "grpc-server" {
+			return match
+		}
+		port, _ := res.Options["port"].(int)
+		if port == 0 {
+			log.Warn().Str("resource", m[1]).Msg("grpc-server resource has no port configured, cannot resolve its address")
+			return match
+		}
+		switch m[2] {
+		case "host":
+			return host
+		case "port":
+			return strconv.Itoa(port)
+		}
+		return fmt.Sprintf("%s:%d", host, port)
+	})
 }
 
 // getResourceURLForDocker returns the URL for a resource accessible from Docker container
