@@ -724,7 +724,7 @@ func (r *GRPCServer) stubReturnsStatus(target, conds, code, message string) erro
 	if err := stubbable(md); err != nil {
 		return err
 	}
-	c, err := parseCode(code)
+	c, err := grpcschema.ParseCode(code)
 	if err != nil {
 		return err
 	}
@@ -799,7 +799,7 @@ func (r *GRPCServer) row(md protoreflect.MethodDescriptor, cell func(int, string
 	var rep reply
 	code := codes.OK
 	if s := cell(i, "status"); s != "" {
-		c, err := parseCode(s)
+		c, err := grpcschema.ParseCode(s)
 		if err != nil {
 			return rep, fmt.Errorf("row %d: %w", i, err)
 		}
@@ -814,7 +814,7 @@ func (r *GRPCServer) row(md protoreflect.MethodDescriptor, cell func(int, string
 	}
 	if code != codes.OK {
 		if cell(i, "json") != "" {
-			return rep, fmt.Errorf("row %d: a %s row sends no message; leave json empty", i, code2name(code))
+			return rep, fmt.Errorf("row %d: a %s row sends no message; leave json empty", i, grpcschema.CodeName(code))
 		}
 		rep.code = code
 		rep.message = resource.ReplaceVariables(cell(i, "message"))
@@ -865,39 +865,6 @@ func (r *GRPCServer) stubStreams(target, conds string, table *godog.Table) error
 	}
 	r.addStub(md, conds, stream)
 	return nil
-}
-
-// codeNames are the gRPC status codes as the spec writes them.
-var codeNames = map[codes.Code]string{
-	codes.OK: "OK", codes.Canceled: "CANCELLED", codes.Unknown: "UNKNOWN",
-	codes.InvalidArgument: "INVALID_ARGUMENT", codes.DeadlineExceeded: "DEADLINE_EXCEEDED",
-	codes.NotFound: "NOT_FOUND", codes.AlreadyExists: "ALREADY_EXISTS",
-	codes.PermissionDenied: "PERMISSION_DENIED", codes.ResourceExhausted: "RESOURCE_EXHAUSTED",
-	codes.FailedPrecondition: "FAILED_PRECONDITION", codes.Aborted: "ABORTED",
-	codes.OutOfRange: "OUT_OF_RANGE", codes.Unimplemented: "UNIMPLEMENTED", codes.Internal: "INTERNAL",
-	codes.Unavailable: "UNAVAILABLE", codes.DataLoss: "DATA_LOSS", codes.Unauthenticated: "UNAUTHENTICATED",
-}
-
-func code2name(c codes.Code) string { return codeNames[c] }
-
-// parseCode reads a status code by name, as the spec writes it (NOT_FOUND)
-// or as grpc-go prints it (NotFound), or by number.
-func parseCode(s string) (codes.Code, error) {
-	norm := func(v string) string { return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(v), "_", "")) }
-	want := norm(s)
-	for c, name := range codeNames {
-		if want == norm(name) || want == norm(c.String()) {
-			return c, nil
-		}
-	}
-	if n, err := strconv.Atoi(strings.TrimSpace(s)); err == nil && n >= 0 && n <= 16 {
-		return codes.Code(n), nil
-	}
-	names := make([]string, 0, len(codeNames))
-	for c := codes.OK; c <= codes.Unauthenticated; c++ {
-		names = append(names, codeNames[c])
-	}
-	return 0, fmt.Errorf("unknown status %q: use one of %s", s, strings.Join(names, ", "))
 }
 
 // --- availability ---

@@ -18,7 +18,7 @@ only in backwards-compatible ways, following the [versioning](#versioning) and
 | CLI | Commands `init`, `run`, `validate`, `steps`, `coverage`, `version`, `update`, their flags, and exit codes (0 pass, non-zero fail) |
 | Report formats | The console formats and the `junit` and `cucumber` file outputs described under [Reports](configuration/index.md#reports) |
 | GitHub Action | Inputs of `tomatool/tomato@v2`: `version`, `config`, `features`, `tags`, `scenario`, `verbose`, `quiet`, `skip-validate`, `comment` |
-| Template variables | `{{.container.host}}`, `{{.container.port.N}}` and `{{.resource.url}}` in `app.env` |
+| Template variables | `{{.container.host}}`, `{{.container.port.N}}` and `{{.resource.url}}` in `app.env`; `{{.resource.address}}`, `{{.resource.host}}` and `{{.resource.port}}` for a `grpc-server` |
 
 ## Not covered
 

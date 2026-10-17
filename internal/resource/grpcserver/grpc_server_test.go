@@ -277,21 +277,6 @@ func TestStubReturnsStatus(t *testing.T) {
 	wantErr(t, srv.stubReturnsStatus(importUser, "", "INTERNAL", ""), "client-streaming")
 }
 
-func TestParseCode(t *testing.T) {
-	for in, want := range map[string]codes.Code{
-		"NOT_FOUND": codes.NotFound, "NotFound": codes.NotFound, "not_found": codes.NotFound,
-		"CANCELLED": codes.Canceled, "Canceled": codes.Canceled, "14": codes.Unavailable, " ok ": codes.OK,
-	} {
-		got, err := parseCode(in)
-		if err != nil || got != want {
-			t.Errorf("parseCode(%q) = %v, %v; want %v", in, got, err, want)
-		}
-	}
-	if _, err := parseCode("17"); err == nil {
-		t.Error("17 is not a code")
-	}
-}
-
 func TestSequenceRepeatsTheLastRow(t *testing.T) {
 	srv := startServer(t)
 	c := dial(t, srv)

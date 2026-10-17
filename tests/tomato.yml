@@ -116,6 +116,8 @@ app:
   env:
     DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test?sslmode=disable"
     REDIS_URL: "redis://{{.redis.host}}:{{.redis.port.6379}}"
+    # The user directory's gRPC dependency, which the users resource stubs.
+    USERS_ADDR: "{{.users.address}}"
 
 resources:
   db:
@@ -216,6 +218,19 @@ resources:
   wsmock-client:
     type: websocket-client
     url: "ws://localhost:9997/"
+
+  # The gRPC service the app's user directory calls, stubbed from its
+  # descriptor set (go test ./internal/grpcfixture -update regenerates it).
+  users:
+    type: grpc-server
+    options:
+      port: 9995
+      descriptor_set: tests/testdata/grpc/users.binpb
+
+  # Calls that stub directly, through the reflection it serves.
+  users-grpc:
+    type: grpc
+    address: "localhost:9995"
 
   mock:
     type: http-server

@@ -170,6 +170,17 @@ func TestGRPC_StatusIsRecordedNotRaised(t *testing.T) {
 	if err := h.callShouldFail(); err != nil {
 		t.Fatalf("callShouldFail: %v", err)
 	}
+	for _, name := range []string{"NOT_FOUND", "not_found", "5"} {
+		if err := h.responseStatusShouldBe(name); err != nil {
+			t.Errorf("responseStatusShouldBe(%q): %v", name, err)
+		}
+	}
+	if err := h.responseStatusShouldBe("OK"); err == nil || !strings.Contains(err.Error(), "expected status OK, got NOT_FOUND") {
+		t.Errorf("a wrong status: %v", err)
+	}
+	if err := h.responseStatusShouldBe("NOPE"); err == nil {
+		t.Error("an unknown status name must fail")
+	}
 	if err := h.responseStatusShouldBe("NotFound"); err != nil {
 		t.Fatalf("status name matching should be case-insensitive: %v", err)
 	}

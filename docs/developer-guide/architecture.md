@@ -37,11 +37,13 @@ is which, and which of them CI actually checks.
 | `internal/resource` | The contract every resource implements: `Handler`, step definitions, the variable store |
 | `internal/resource/<name>` | One package per resource type, with its step definitions and nothing else's |
 | `internal/registry` | Builds resources from config and is the only package that knows the full set |
+| `internal/grpcschema` | Naming and resolving gRPC methods against file descriptors, and status code names, shared by the grpc client and grpc-server |
 | `internal/jsonmatch` | Dotted-path lookup and tomato's `@` matchers, shared by every resource that asserts on JSON |
 | `internal/runner` | godog wiring, hooks, tag filtering, reset between scenarios |
 | `internal/formatter` | Console, JUnit and Cucumber report output |
 | `internal/presets` | Files copied into preset containers (the MSK IAM jar) |
 | `internal/pdffixture` | The PDF documents the pdf resource's tests assert on, generated deterministically: the test app serves them and `tests/testdata/pdf` holds committed copies |
+| `internal/grpcfixture` | The gRPC service the grpc-server resource's tests stub, as a descriptor: the test app calls it and `tests/testdata/grpc` holds the committed descriptor set and a `.proto` rendering |
 | `internal/runlog` | Per-run log directory under `.tomato/runs/` |
 
 ### Why one package per resource

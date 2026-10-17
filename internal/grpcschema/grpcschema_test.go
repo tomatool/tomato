@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
@@ -150,5 +151,20 @@ func TestSplitMethod(t *testing.T) {
 		if svc != tc.service || m != tc.method {
 			t.Errorf("SplitMethod(%q) = %q, %q; want %q, %q", tc.in, svc, m, tc.service, tc.method)
 		}
+	}
+}
+
+func TestParseCode(t *testing.T) {
+	for in, want := range map[string]codes.Code{
+		"NOT_FOUND": codes.NotFound, "NotFound": codes.NotFound, "not_found": codes.NotFound,
+		"CANCELLED": codes.Canceled, "Canceled": codes.Canceled, "14": codes.Unavailable, " ok ": codes.OK,
+	} {
+		got, err := ParseCode(in)
+		if err != nil || got != want {
+			t.Errorf("ParseCode(%q) = %v, %v; want %v", in, got, err, want)
+		}
+	}
+	if _, err := ParseCode("17"); err == nil {
+		t.Error("17 is not a code")
 	}
 }
