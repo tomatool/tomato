@@ -17,6 +17,7 @@ import (
 	"github.com/chromedp/chromedp"
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // These tests drive a local Chrome, started once for the package; each test
@@ -529,21 +530,33 @@ func TestScreenshots(t *testing.T) {
 	if entries, _ := os.ReadDir(r.screenshots); len(entries) != 0 {
 		t.Fatalf("a screenshot without a page: %v", entries)
 	}
+	if got := resource.TakeScreenshots("The order is cancelled"); got != nil {
+		t.Fatalf("a screenshot recorded without a page: %v", got)
+	}
 
 	must(t, r.open("/"))
 	must(t, r.saveScreenshot("after-apply"))
 	assertPNG(t, filepath.Join(r.screenshots, "after-apply.png"))
+	// Each one is recorded for the step that took it, which is how the
+	// `tomato` formatter reports it on that step's end.
+	got := resource.TakeScreenshots("The order is cancelled")
+	if len(got) != 1 || got[0].Resource != "alice" || got[0].Path != filepath.Join(r.screenshots, "after-apply.png") {
+		t.Errorf("recorded %v", got)
+	}
 
 	// Passing steps leave nothing; the first failure leaves one, attached
 	// to the report; later failures in the scenario do not add more.
 	_, err = r.afterStep(ctx, nil, godog.StepPassed, nil)
 	must(t, err)
-	got, err := r.afterStep(ctx, nil, godog.StepFailed, fmt.Errorf("boom"))
+	actx, err := r.afterStep(ctx, nil, godog.StepFailed, fmt.Errorf("boom"))
 	must(t, err)
 	failed := filepath.Join(r.screenshots, "failed-The-order-is-cancelled-alice.png")
 	assertPNG(t, failed)
-	if a := godog.Attachments(got); len(a) != 1 || a[0].MediaType != "image/png" || len(a[0].Body) == 0 {
+	if a := godog.Attachments(actx); len(a) != 1 || a[0].MediaType != "image/png" || len(a[0].Body) == 0 {
 		t.Errorf("attachments = %d", len(a))
+	}
+	if got := resource.TakeScreenshots("The order is cancelled"); len(got) != 1 || got[0].Path != failed {
+		t.Errorf("the failure recorded %v", got)
 	}
 	must(t, os.Remove(failed))
 	_, err = r.afterStep(ctx, nil, godog.StepFailed, fmt.Errorf("again"))
@@ -558,6 +571,9 @@ func TestScreenshots(t *testing.T) {
 	_, err = r.afterStep(ctx, nil, godog.StepFailed, fmt.Errorf("boom"))
 	must(t, err)
 	assertPNG(t, filepath.Join(r.screenshots, "failed-Next-alice.png"))
+	if got := resource.TakeScreenshots("Next"); len(got) != 1 || got[0].Path != filepath.Join(r.screenshots, "failed-Next-alice.png") {
+		t.Errorf("the next scenario's failure recorded %v", got)
+	}
 
 	// A directory that cannot be created fails the step that asked for it.
 	blocker := filepath.Join(t.TempDir(), "file")

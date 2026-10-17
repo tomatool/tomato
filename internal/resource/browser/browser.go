@@ -112,9 +112,7 @@ func New(name string, cfg config.Resource, cm *container.Manager) (*Browser, err
 	if v, ok := cfg.Options["locale"].(string); ok {
 		r.locale = v
 	}
-	if v, ok := cfg.Options["screenshots"].(string); ok {
-		r.screenshots = v
-	}
+	r.screenshots = ScreenshotsOption(cfg)
 
 	if v, ok := cfg.Options["timeout"]; ok {
 		d, err := time.ParseDuration(fmt.Sprint(v))
@@ -398,7 +396,33 @@ func (r *Browser) capture(name string) ([]byte, string, error) {
 	if err := os.WriteFile(path, png, 0o644); err != nil {
 		return nil, "", fmt.Errorf("writing %s: %w", path, err)
 	}
+	// Reported on the step that took it by the `tomato` formatter, which is
+	// how `tomato ui` puts the picture on the step without guessing from the
+	// file name.
+	resource.RecordScreenshot(r.scenario, resource.Screenshot{Resource: r.name, Path: path})
 	return png, path, nil
+}
+
+// DefaultScreenshotDir is where screenshots go when the screenshots option is
+// not set and there is no run to keep them beside: in a test, or for anything
+// reading them back without a run of its own.
+var DefaultScreenshotDir = filepath.Join(".tomato", "screenshots")
+
+// RunScreenshotDir is where a run keeps its screenshots when the screenshots
+// option is not set: beside its logs under .tomato/runs, which CI keeps.
+func RunScreenshotDir(runDir string) string {
+	return filepath.Join(runDir, "screenshots")
+}
+
+// ScreenshotsOption is the screenshots option of a browser resource's
+// configuration, or "" when it uses the defaults. `tomato ui` lists the
+// directories the suite's browsers write to by reading it the same way New
+// does.
+func ScreenshotsOption(cfg config.Resource) string {
+	if v, ok := cfg.Options["screenshots"].(string); ok {
+		return v
+	}
+	return ""
 }
 
 // screenshotDir is the screenshots option, or the run's directory under
@@ -409,10 +433,10 @@ func (r *Browser) screenshotDir() string {
 	}
 	if r.container != nil {
 		if dir := r.container.RunDir(); dir != "" {
-			return filepath.Join(dir, "screenshots")
+			return RunScreenshotDir(dir)
 		}
 	}
-	return filepath.Join(".tomato", "screenshots")
+	return DefaultScreenshotDir
 }
 
 var unsafeFileChars = regexp.MustCompile(`[^A-Za-z0-9._-]+`)

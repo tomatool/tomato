@@ -75,6 +75,7 @@
   --scroll-thumb:var(--bg-3);
 
   --shadow-pop:0 8px 24px oklch(0 0 0 / 0.45),0 0 0 1px var(--line-strong);
+  --scrim:oklch(0 0 0 / 0.66);
   --dur:120ms;
 }
 
@@ -129,6 +130,7 @@
   --scroll-thumb:oklch(0.845 0.006 70);
 
   --shadow-pop:0 8px 24px oklch(0.30 0.010 70 / 0.16),0 0 0 1px var(--line-strong);
+  --scrim:oklch(0.30 0.010 70 / 0.50);
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -600,6 +602,46 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .cfg-res{display:inline-flex;align-items:center;gap:var(--s-3)}
 .yaml{white-space:pre;overflow-x:auto}
 .y-k{color:var(--fg-2)}.y-s{color:var(--arg)}.y-n{color:var(--then)}.y-b{color:var(--when)}.y-c{color:var(--fg-3);font-style:italic}
+
+/* — screenshots: what the browser resources left behind — */
+.ico-shot{position:relative;width:11px;height:9px;border:1.5px solid currentColor;border-radius:2px;flex:none}
+.ico-shot::after{content:"";position:absolute;left:1.5px;top:1.5px;width:2.5px;height:2.5px;border-radius:50%;background:currentColor}
+.shots{display:flex;flex-direction:column}
+.shot{display:grid;grid-template-columns:72px minmax(0,1fr);column-gap:var(--s-4);align-items:center;width:100%;padding:var(--s-4) var(--s-5);border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.shot:hover{background:var(--bg-2)}
+.shot:focus-visible{outline:2px solid var(--fg-0);outline-offset:-2px}
+.shot-thumb{display:block;width:72px;height:45px;object-fit:cover;object-position:top;border:1px solid var(--line-strong);border-radius:var(--r-1);background:var(--bg-0)}
+.shot-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.shot-name{font:500 var(--fs-12) var(--font-mono);color:var(--fg-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shot-meta{font:var(--fs-11) var(--font-mono);color:var(--fg-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Which step of this run took it; the pip carries the step's status. */
+.shot-for{display:flex;align-items:center;gap:var(--s-3);min-width:0;font:var(--fs-11) var(--font-ui);color:var(--fg-2)}
+.shot-for-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shot-for-res{font-family:var(--font-mono);color:var(--fg-3);flex:none}
+.shot-for[data-status="failed"] .shot-for-text{color:var(--fail-ink)}
+/* The picture a step took, on its row: a thumbnail that opens full size. */
+.shot-chips{display:flex;flex-wrap:wrap;gap:var(--s-3)}
+.shot-chip{display:inline-flex;flex-direction:column;gap:var(--s-2);padding:var(--s-2);border:1px solid var(--line-strong);border-radius:var(--r-2);background:var(--bg-1);color:var(--fg-1);font:var(--fs-11)/1 var(--font-mono);cursor:pointer;transition:border-color var(--dur)}
+.shot-chip:hover{border-color:var(--fg-2);color:var(--fg-0)}
+.shot-chip:focus-visible{outline:2px solid var(--fg-0);outline-offset:1px}
+.shot-chip-img{display:block;width:128px;height:80px;object-fit:cover;object-position:top;border-radius:var(--r-1);background:var(--bg-0)}
+.shot-chip-label{display:inline-flex;align-items:center;gap:var(--s-3);padding:0 var(--s-2)}
+.callout .shot-chips{margin-top:var(--s-2)}
+/* Full size, over the page. Esc closes it; the arrows step through the list. */
+.lightbox{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:var(--s-6);background:var(--scrim);animation:peek-in var(--dur) ease-out}
+.lightbox-frame{display:flex;flex-direction:column;max-width:min(96vw,1600px);max-height:94vh;border-radius:var(--r-3);background:var(--bg-1);box-shadow:var(--shadow-pop);overflow:hidden}
+.lightbox-head,.lightbox-foot{display:flex;align-items:center;gap:var(--s-4);padding:var(--s-3) var(--s-4) var(--s-3) var(--s-5);flex:none;min-width:0}
+.lightbox-head{border-bottom:1px solid var(--line)}
+.lightbox-foot{border-top:1px solid var(--line);font:var(--fs-11) var(--font-mono);color:var(--fg-2);flex-wrap:wrap}
+.lightbox-name{font:500 var(--fs-12) var(--font-mono);color:var(--fg-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lightbox-pos{font:var(--fs-11) var(--font-mono);color:var(--fg-3);white-space:nowrap}
+.lightbox-body{min-height:0;overflow:auto;display:grid;place-items:center;background:var(--bg-0)}
+.lightbox-img{display:block;max-width:100%;max-height:calc(94vh - 92px);object-fit:contain}
+.lightbox-for{display:inline-flex;align-items:center;gap:var(--s-3);min-width:0;color:var(--fg-1)}
+.lightbox-for>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lightbox-for[data-status="failed"]>span:first-of-type{color:var(--fail-ink)}
+.lightbox-foot .srcpath{margin-left:auto;max-width:50%}
+@media (prefers-reduced-motion:reduce){.lightbox{animation:none}}
 
 /* — collapsible side panes: [ toggles features, ] toggles inspector — */
 /* No transition on grid-template-columns: when the track list comes from a

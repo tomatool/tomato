@@ -9,6 +9,8 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/formatters"
 	messages "github.com/cucumber/messages/go/v21"
+
+	"github.com/tomatool/tomato/internal/resource"
 )
 
 // Event types for structured output
@@ -38,6 +40,12 @@ type Event struct {
 	StepIndex *int `json:"stepIndex,omitempty"`
 	// DurationMs is how long the step or scenario took.
 	DurationMs *int64 `json:"durationMs,omitempty"`
+
+	// Screenshots are the images a step left behind, on its step_end: what
+	// the browser resource wrote for `saves screenshot`, and the page when
+	// the step failed. The web UI opens them from the step, so it never has
+	// to guess which file a step produced from the file's name.
+	Screenshots []resource.Screenshot `json:"screenshots,omitempty"`
 
 	// Summary fields
 	Total   int `json:"total,omitempty"`
@@ -130,17 +138,21 @@ func (f *TomatoFormatter) stepElapsed() *int64 {
 	return msp(d)
 }
 
-// stepEnd emits one step_end with the position and duration filled in.
+// stepEnd emits one step_end with the position, duration and the screenshots
+// the step left behind filled in. A failed step's screenshot is taken in an
+// after-step hook, which godog runs before it reports the step, so it is
+// recorded by the time this runs.
 func (f *TomatoFormatter) stepEnd(pickle *messages.Pickle, step *messages.PickleStep, status, errMsg string) {
 	f.emit(Event{
-		Type:       EventStepEnd,
-		Feature:    f.currentFeature,
-		Scenario:   pickle.Name,
-		Step:       step.Text,
-		Status:     status,
-		Error:      errMsg,
-		StepIndex:  f.stepIdx(pickle, step),
-		DurationMs: f.stepElapsed(),
+		Type:        EventStepEnd,
+		Feature:     f.currentFeature,
+		Scenario:    pickle.Name,
+		Step:        step.Text,
+		Status:      status,
+		Error:       errMsg,
+		StepIndex:   f.stepIdx(pickle, step),
+		DurationMs:  f.stepElapsed(),
+		Screenshots: resource.TakeScreenshots(pickle.Name),
 	})
 }
 

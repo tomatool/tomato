@@ -11,11 +11,19 @@
 // at all (#212).
 
 export const stepKey = (scenario, i) => `${scenario}\u0000${i}`
+// splitKey reads a stepKey back: [scenario, index].
+export function splitKey(k) {
+  const i = String(k).lastIndexOf('\u0000')
+  return [String(k).slice(0, i), Number(String(k).slice(i + 1))]
+}
 
 // scOrder is the scenarios of this run in the order they started, so the
 // feature's Background card can show the run that is happening or just did.
+// stepShots are the screenshots a step took, [{resource, path}] under its key:
+// what the runner recorded on the step's end, so a picture is matched to its
+// step by path and never guessed from the file's name (lib/screenshots.js).
 export const emptyRun = () => ({
-  scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, scOrder: [],
+  scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, stepShots: {}, scOrder: [],
 })
 
 // The /ws message types that change the run state. Everything else — the
@@ -58,6 +66,7 @@ export function reduceRun(state, m) {
         stepStatus: { ...state.stepStatus, [k]: m.status ?? '' },
         stepDur: m.durationMs == null ? state.stepDur : { ...state.stepDur, [k]: m.durationMs },
         stepError: m.output ? { ...state.stepError, [k]: m.output } : state.stepError,
+        stepShots: m.stepScreenshots?.length ? { ...state.stepShots, [k]: m.stepScreenshots } : state.stepShots,
       }
     }
     case 'run_finished':
@@ -85,12 +94,13 @@ export const pickleIndex = (background, i) => (background?.length ?? 0) + i
 // reads as undefined before the suite has ever run.
 export function stepRun(runState, scenario, index, step) {
   const fallback = step?.unmatched ? 'undefined' : ''
-  if (scenario == null || index == null) return { status: fallback, dur: undefined, error: undefined }
+  if (scenario == null || index == null) return { status: fallback, dur: undefined, error: undefined, screenshots: undefined }
   const k = stepKey(scenario, index)
   return {
     status: runState.stepStatus[k] ?? fallback,
     dur: runState.stepDur[k],
     error: runState.stepError[k],
+    screenshots: runState.stepShots?.[k],
   }
 }
 

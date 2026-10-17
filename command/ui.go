@@ -26,6 +26,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/resource"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/version"
 	"github.com/urfave/cli/v2"
@@ -147,6 +148,10 @@ type WSMessage struct {
 	// Debug logs fields
 	Runs  []runlog.RunInfo `json:"runs,omitempty"`
 	RunID string           `json:"runId,omitempty"`
+	// Screenshots is the whole list, on init and screenshots_update;
+	// StepScreenshots are the ones a step just took, on its step_finished.
+	Screenshots     []ScreenshotJSON      `json:"screenshots,omitempty"`
+	StepScreenshots []resource.Screenshot `json:"stepScreenshots,omitempty"`
 }
 
 // TomatoEvent represents a structured event from the tomato formatter
@@ -164,6 +169,8 @@ type TomatoEvent struct {
 	Passed     int    `json:"passed,omitempty"`
 	Failed     int    `json:"failed,omitempty"`
 	Skipped    int    `json:"skipped,omitempty"`
+	// Screenshots are the images a step left behind, on its step_end.
+	Screenshots []resource.Screenshot `json:"screenshots,omitempty"`
 }
 
 func runWebUI(c *cli.Context) error {
@@ -205,6 +212,9 @@ func runWebUI(c *cli.Context) error {
 			fmt.Printf("Warning: couldn't watch %s: %v\n", path, err)
 		}
 	}
+	// And where the browser resources put their screenshots, so a run made
+	// outside the UI shows its pictures too.
+	server.watchScreenshotDirs()
 
 	// Start watching for changes
 	go server.watchLoop()
@@ -224,6 +234,8 @@ func runWebUI(c *cli.Context) error {
 	mux.HandleFunc("/api/run", server.handleRun)
 	mux.HandleFunc("/api/stop", server.handleStop)
 	mux.HandleFunc("/api/runs/", server.handleRunLog)
+	mux.HandleFunc(screenshotsAPI, server.handleScreenshots)
+	mux.HandleFunc(screenshotsAPI+"/", server.handleScreenshots)
 	mux.HandleFunc("/ws", server.handleWebSocket)
 
 	// Find available port
@@ -275,6 +287,20 @@ func (s *UIServer) watchLoop() {
 	var debounceMux sync.Mutex
 	changedFiles := make(map[string]bool)
 
+	// Screenshots have their own, longer debounce: a failing scenario with two
+	// people on the page writes two files close together, and one list is
+	// enough for both.
+	var shotsTimer *time.Timer
+	var shotsMux sync.Mutex
+	triggerScreenshots := func() {
+		shotsMux.Lock()
+		defer shotsMux.Unlock()
+		if shotsTimer != nil {
+			shotsTimer.Stop()
+		}
+		shotsTimer = time.AfterFunc(300*time.Millisecond, s.broadcastScreenshotsUpdate)
+	}
+
 	triggerUpdate := func(filePath string) {
 		debounceMux.Lock()
 		defer debounceMux.Unlock()
@@ -315,6 +341,13 @@ func (s *UIServer) watchLoop() {
 			if strings.HasSuffix(event.Name, ".feature") {
 				if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename) != 0 {
 					triggerUpdate(event.Name)
+				}
+			}
+
+			// A screenshot written, replaced or removed in a watched directory.
+			if isPNG(event.Name) {
+				if event.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Remove|fsnotify.Rename) != 0 {
+					triggerScreenshots()
 				}
 			}
 
@@ -720,6 +753,8 @@ func (s *UIServer) runTests(scenarioFilter string) {
 
 	// Broadcast run started
 	s.broadcastRunStatus("run_started", "", "", "")
+	// A screenshots directory that did not exist at startup may by now.
+	s.watchScreenshotDirs()
 
 	// Build command with quiet flag and tomato format for structured events
 	args := []string{"run", "-c", s.configPath, "--quiet", "--format", "tomato"}
@@ -856,13 +891,19 @@ func (s *UIServer) runTests(scenarioFilter string) {
 
 			case "step_end":
 				s.broadcast(WSMessage{
-					Type:       "step_finished",
-					Scenario:   event.Scenario,
-					Status:     event.Status,
-					Output:     event.Error,
-					StepIndex:  event.StepIndex,
-					DurationMs: event.DurationMs,
+					Type:            "step_finished",
+					Scenario:        event.Scenario,
+					Status:          event.Status,
+					Output:          event.Error,
+					StepIndex:       event.StepIndex,
+					DurationMs:      event.DurationMs,
+					StepScreenshots: event.Screenshots,
 				})
+				// The step's picture is on disk by now; the list follows the
+				// step so the gallery fills in as the run goes.
+				if len(event.Screenshots) > 0 {
+					s.broadcastScreenshotsUpdate()
+				}
 
 			case "summary":
 				// Summary is handled by run_finished
@@ -889,6 +930,7 @@ func (s *UIServer) runTests(scenarioFilter string) {
 
 	// Broadcast updated runs list after run completes
 	s.broadcastRunsUpdate()
+	s.broadcastScreenshotsUpdate()
 }
 
 // stripAnsi removes ANSI escape codes from a string
@@ -1088,7 +1130,7 @@ func (s *UIServer) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Send initial data
 	features := s.loadFeatures()
 	runs, _ := runlog.ListRuns()
-	msg := WSMessage{Type: "init", Features: features, Runs: runs, Topology: s.loadTopology()}
+	msg := WSMessage{Type: "init", Features: features, Runs: runs, Topology: s.loadTopology(), Screenshots: s.listScreenshots()}
 	data, _ := json.Marshal(msg)
 	connMu.Lock()
 	conn.WriteMessage(websocket.TextMessage, data)
