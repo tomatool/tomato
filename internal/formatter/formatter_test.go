@@ -3,11 +3,14 @@ package formatter
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
 	messages "github.com/cucumber/messages/go/v21"
 
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -108,3 +111,66 @@ func TestStepEndOmitsScreenshotsOfAnotherScenario(t *testing.T) {
 type errAssertion string
 
 func (e errAssertion) Error() string { return string(e) }
+
+// failStep runs one scenario whose only step fails with err and returns the
+// step_end event the formatter emitted.
+func failStep(t *testing.T, err error) (Event, string) {
+	t.Helper()
+	var out bytes.Buffer
+	f := TomatoFormatterFunc("suite", &out).(*TomatoFormatter)
+	step := &messages.PickleStep{Id: "s1", Text: `"shell" stdout is:`}
+	pickle := &messages.Pickle{Name: "Fails", Steps: []*messages.PickleStep{step}}
+	f.Pickle(pickle)
+	f.Defined(pickle, step, nil)
+	f.Failed(pickle, step, nil, err)
+
+	for _, line := range strings.Split(out.String(), "\n") {
+		data, ok := strings.CutPrefix(line, "TOMATO_EVENT:")
+		if !ok {
+			continue
+		}
+		var ev Event
+		if err := json.Unmarshal([]byte(data), &ev); err != nil {
+			t.Fatalf("bad event %q: %v", data, err)
+		}
+		if ev.Type == EventStepEnd {
+			return ev, data
+		}
+	}
+	t.Fatalf("no step_end in %q", out.String())
+	return Event{}, ""
+}
+
+func TestStepEndCarriesTheMismatch(t *testing.T) {
+	m := &jsonmatch.Mismatch{What: "stdout", Expected: `{"a":1}`, Actual: `{"a":2}`, Mode: jsonmatch.ModeText, NoColon: true}
+	ev, raw := failStep(t, fmt.Errorf("step: %w", m))
+
+	if ev.Error != "step: "+m.Error() {
+		t.Errorf("error = %q, want the wrapped text unchanged", ev.Error)
+	}
+	want := Mismatch{What: "stdout", Expected: `{"a":1}`, Actual: `{"a":2}`, Mode: "text"}
+	if ev.Mismatch == nil || *ev.Mismatch != want {
+		t.Fatalf("mismatch = %+v, want %+v", ev.Mismatch, want)
+	}
+	for _, key := range []string{`"mismatch":{`, `"what":"stdout"`, `"mode":"text"`} {
+		if !strings.Contains(raw, key) {
+			t.Errorf("event %s lacks %s", raw, key)
+		}
+	}
+}
+
+func TestStepEndOmitsMismatchOtherwise(t *testing.T) {
+	big := strings.Repeat("x", maxMismatchBytes)
+	for name, err := range map[string]error{
+		"plain error": errors.New("stdout does not contain \"hello\""),
+		"too big":     &jsonmatch.Mismatch{What: "body", Expected: big, Actual: "y", Mode: jsonmatch.ModeText},
+	} {
+		ev, raw := failStep(t, err)
+		if ev.Mismatch != nil || strings.Contains(raw, `"mismatch"`) {
+			t.Errorf("%s: event carries a mismatch: %s", name, raw)
+		}
+		if ev.Error != err.Error() {
+			t.Errorf("%s: error = %q", name, ev.Error)
+		}
+	}
+}

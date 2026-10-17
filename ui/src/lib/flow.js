@@ -8,7 +8,7 @@ import { stepKind } from './kind'
 // where the feature's Background comes first (lib/run.js).
 export function flowModel(scenario, runState, background) {
   if (!scenario) return null
-  const { stepStatus = {}, stepDur = {}, stepError = {} } = runState
+  const { stepStatus = {}, stepDur = {}, stepError = {}, stepMismatch = {} } = runState
 
   const lanes = [{ name: 'tomato', type: 'runner', icon: 'tomato', runner: true }]
   const laneOf = {}
@@ -45,6 +45,7 @@ export function flowModel(scenario, runState, background) {
         || (step.table?.length ? step.table.map((r) => `| ${r.join(' | ')} |`).join('\n') : ''),
       dur: stepDur[k],
       err: stepError[k],
+      mismatch: stepMismatch[k],
     }
   })
 

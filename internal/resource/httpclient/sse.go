@@ -454,7 +454,7 @@ func matchEventJSON(e sseEvent, expectedJSON string) error {
 	if err := json.Unmarshal([]byte(e.Data), &actual); err != nil {
 		return fmt.Errorf("event %s: data is not JSON: %w", e.describe(), err)
 	}
-	if err := jsonmatch.Compare(expected, actual, "", true); err != nil {
+	if err := jsonmatch.CompareDocs("event data", expected, actual, strings.TrimSpace(expectedJSON), strings.TrimSpace(e.Data), true); err != nil {
 		return fmt.Errorf("event %s: %w", e.describe(), err)
 	}
 	return nil

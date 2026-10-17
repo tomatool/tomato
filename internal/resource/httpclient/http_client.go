@@ -655,7 +655,7 @@ func (r *HTTPClient) responseBodyShouldBe(doc *godog.DocString) error {
 	expected := strings.TrimSpace(resource.ReplaceVariables(doc.Content))
 	actual := strings.TrimSpace(string(r.lastBody))
 	if actual != expected {
-		return fmt.Errorf("body mismatch:\nexpected: %s\nactual: %s", expected, actual)
+		return &jsonmatch.Mismatch{What: "body", Expected: expected, Actual: actual, Mode: jsonmatch.ModeText}
 	}
 	return nil
 }
@@ -819,15 +819,16 @@ func (r *HTTPClient) responseJSONShouldMatch(doc *godog.DocString) error {
 		return fmt.Errorf("no response received")
 	}
 
+	expectedText := resource.ReplaceVariables(doc.Content)
 	var expected, actual interface{}
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("invalid expected JSON: %w", err)
 	}
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
 		return fmt.Errorf("invalid response JSON: %w", err)
 	}
 
-	return jsonmatch.Compare(expected, actual, "", false)
+	return jsonmatch.CompareDocs("response JSON", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(string(r.lastBody)), false)
 }
 
 func (r *HTTPClient) responseJSONShouldContain(doc *godog.DocString) error {
@@ -835,15 +836,16 @@ func (r *HTTPClient) responseJSONShouldContain(doc *godog.DocString) error {
 		return fmt.Errorf("no response received")
 	}
 
+	expectedText := resource.ReplaceVariables(doc.Content)
 	var expected, actual interface{}
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("invalid expected JSON: %w", err)
 	}
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
 		return fmt.Errorf("invalid response JSON: %w", err)
 	}
 
-	return jsonmatch.Compare(expected, actual, "", true)
+	return jsonmatch.CompareDocs("response JSON", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(string(r.lastBody)), true)
 }
 
 // getJSONPath reads a dotted path out of the last response body. The

@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -750,7 +751,7 @@ func (r *RabbitMQ) shouldReceiveMessage(queue, timeout string, doc *godog.DocStr
 	actual := strings.TrimSpace(string(msg.Body))
 
 	if actual != expected {
-		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)
+		return &jsonmatch.Mismatch{What: "message", Expected: expected, Actual: actual, Mode: jsonmatch.ModeText}
 	}
 
 	return nil

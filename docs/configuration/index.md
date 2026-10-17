@@ -85,6 +85,36 @@ passed on the command line (the GitHub Action passes `--format tomato` for PR
 comments), it replaces the console format but file outputs from `output` are
 still written.
 
+#### The `tomato` event format
+
+`tomato` writes one `TOMATO_EVENT:` line per event, followed by a JSON object
+with a `type`: `feature_start`, `scenario_start`, `step_start`, `step_end`,
+`scenario_end`, `feature_end` and `summary`. A `step_end` has the step's
+`status`, `stepIndex`, `durationMs` and, when it failed, its `error` text.
+
+When a step failed because a value it compared did not match (`stdout is:`,
+`response body is:`, `response json contains:`, a Kafka, RabbitMQ or WebSocket
+message), its `step_end` also has a `mismatch` object with both sides, which
+`tomato ui` draws as a diff:
+
+```json
+{"type": "step_end", "status": "failed", "error": "at status: expected created, got pending",
+ "mismatch": {"what": "response JSON", "mode": "subset",
+              "expected": "{\"status\": \"created\"}",
+              "actual": "{\"id\": 1, \"status\": \"pending\"}"}}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `what` | What was compared, such as `stdout`, `body`, `message` or `response JSON` |
+| `expected` | The expected value as text, after variables are replaced |
+| `actual` | The actual value as text |
+| `mode` | `text`: compared as text. `json`: compared as JSON, every key on both sides. `subset`: compared as JSON, keys only `actual` has are allowed |
+
+`error` is the same text with or without `mismatch`. The field is left out when
+`expected` and `actual` together are over 256 KB. The event format is not part
+of the [stable surface](../stability.md).
+
 In the `tomato` format, a `step_end` event carries `screenshots` when the step
 left images behind, as a list of `{"resource": "alice", "path": "…/after-apply.png"}`:
 the [browser resource](browser.md)'s `saves screenshot`, and the page when a

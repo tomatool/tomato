@@ -227,3 +227,16 @@ describe('the run itself', () => {
     expect(reduceRun(run, { type: 'run_finished' })).toBe(run)
   })
 })
+
+describe('a failed comparison', () => {
+  it('keeps the mismatch the runner sent with the step', () => {
+    const mismatch = { what: 'stdout', expected: 'a', actual: 'b', mode: 'text' }
+    const step = { keyword: 'Then ', text: '"shell" stdout is:' }
+    const run = feed([
+      { type: 'run_started' }, started('S'),
+      { ...done('S', 0, 'failed', 3, 'stdout mismatch\nexpected: a\nactual: b'), mismatch },
+    ])
+    expect(stepRun(run, 'S', 0, step)).toMatchObject({ status: 'failed', mismatch })
+    expect(stepRun(feed([{ type: 'run_started' }, done('S', 0, 'failed', 1, 'boom')]), 'S', 0, step).mismatch).toBeUndefined()
+  })
+})

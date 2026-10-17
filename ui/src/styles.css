@@ -370,6 +370,58 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .callout[data-status="undefined"]{background:var(--warn-bg);color:var(--warn-ink)}
 .callout-title{font-weight:600}
 .callout-body{color:var(--fg-1);white-space:pre-wrap}
+
+/* A failed comparison (components/Mismatch.jsx): what is wrong on one line,
+   then expected and actual side by side. A changed line is told apart by its
+   sign (− expected, + actual, · allowed extra, ≈ accepted) as well as its
+   colour. The box is a size container: narrower than 560px, the two sides
+   stack, which is what the inspector usually gets. */
+.mm{container:mm / inline-size;display:flex;flex-direction:column;gap:var(--s-3);min-width:0}
+.mm-summary{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--s-2) var(--s-4);color:var(--fg-0)}
+.mm-badge{flex:none;display:inline-flex;align-items:center;gap:var(--s-2);height:18px;padding:0 var(--s-3);border:1px solid var(--fail-edge);border-radius:var(--r-1);font:600 var(--fs-11)/1 var(--font-ui);color:var(--fail-ink)}
+.mm-badge::before{content:"\2715"}
+.mm-what{min-width:0;overflow-wrap:anywhere}
+.mm-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);font:var(--fs-11)/1.4 var(--font-ui);color:var(--fg-2)}
+.mm-note{font:var(--fs-11)/1.4 var(--font-ui);color:var(--fg-2)}
+.mm-diff{border:1px solid var(--line);border-radius:var(--r-2);background:var(--bg-0);max-height:420px;overflow:auto;font:var(--fs-12)/1.55 var(--font-mono)}
+.mm-diff--full{max-height:none}
+.mm-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.mm-head{position:sticky;top:0;z-index:1;background:var(--bg-2);border-bottom:1px solid var(--line)}
+.mm-head .mm-cell{display:flex;align-items:center;justify-content:space-between;padding:2px var(--s-2) 2px var(--s-4)}
+.mm-side{font:500 var(--fs-11)/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+.mm-cell{display:grid;grid-template-columns:4ch 2ch minmax(0,1fr);min-width:0;color:var(--fg-1)}
+.mm-cell--left .mm-n--r,.mm-cell--right .mm-n--l{display:none}
+.mm-cell--right{border-left:1px solid var(--line)}
+.mm-cell[data-empty]{background:var(--bg-1)}
+.mm-n{padding-right:var(--s-2);text-align:right;color:var(--fg-3);user-select:none}
+.mm-sign{text-align:center;user-select:none}
+.mm-text{padding-right:var(--s-3);white-space:pre-wrap;overflow-wrap:anywhere}
+.mm-cell[data-mark="err"]{background:var(--fail-bg);color:var(--fg-0)}
+.mm-cell[data-mark="err"] .mm-sign{font-weight:600;color:var(--fail-ink)}
+.mm-hl{border-radius:2px;background:var(--fail-line);color:inherit}
+.mm-cell[data-mark="extra"]{color:var(--fg-3)}
+.mm-cell[data-mark="ok"]{color:var(--fg-2)}
+.mm-cell[data-mark="ok"] .mm-sign,.mm-cell[data-mark="extra"] .mm-sign{color:var(--fg-3)}
+.mm-fold{display:block;width:100%;padding:1px var(--s-4);border:0;border-block:1px dashed var(--line);background:var(--bg-1);font:var(--fs-11)/1.6 var(--font-ui);color:var(--fg-2);text-align:center;cursor:pointer}
+.mm-fold::before{content:"\22EF  "}
+.mm-fold:hover{background:var(--bg-2);color:var(--fg-0)}
+.mm-plain{display:flex;flex-direction:column;gap:var(--s-2)}
+.mm-plain-head{display:flex;align-items:center;justify-content:space-between}
+.mm-pre{max-height:240px;white-space:pre-wrap;overflow-wrap:anywhere}
+.mm-raw summary{cursor:pointer;font:var(--fs-11)/1.6 var(--font-ui);color:var(--fg-2)}
+.mm-raw .mm-pre{margin:var(--s-2) 0 0;overflow:auto;color:var(--fg-1)}
+.mm .btn[data-copied="true"]{color:var(--pass)}
+@container mm (max-width:560px){
+  .mm-row{grid-template-columns:minmax(0,1fr)}
+  .mm-cell--right{border-left:0}
+  .mm-row[data-same] .mm-cell--right,.mm-row .mm-cell[data-empty]{display:none}
+  .mm-head .mm-cell--right{border-top:1px solid var(--line)}
+  .mm-row:not(.mm-head) .mm-cell{grid-template-columns:4ch 4ch 2ch minmax(0,1fr)}
+  .mm-cell--left .mm-n--r,.mm-cell--right .mm-n--l{display:block}
+}
+.peek-diff{padding:0 var(--s-5) var(--s-4)}
+.peek-diff .mm-diff{max-height:280px;font-size:var(--fs-11)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .diff{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:var(--s-4);margin:0;padding:var(--s-3) 0;background:var(--bg-0);border-radius:var(--r-1);font:var(--fs-12)/1.6 var(--font-mono);white-space:pre}
 .diff>span{padding:0 var(--s-4)}
 .diff .d-gutter{color:var(--fg-3);text-align:right;user-select:none}

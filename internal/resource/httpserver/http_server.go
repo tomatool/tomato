@@ -700,14 +700,15 @@ func (r *HTTPServer) lastRequestJSONContains(method, path string, doc *godog.Doc
 	if err != nil {
 		return err
 	}
+	expectedText := resource.ReplaceVariables(doc.Content)
 	var expected, actual interface{}
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("invalid expected JSON: %w", err)
 	}
 	if err := json.Unmarshal([]byte(call.Body), &actual); err != nil {
 		return fmt.Errorf("%s %s request body is not JSON: %w\nbody: %s", method, path, err, call.Body)
 	}
-	if err := jsonmatch.Compare(expected, actual, "", true); err != nil {
+	if err := jsonmatch.CompareDocs("request body", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(call.Body), true); err != nil {
 		return fmt.Errorf("%s %s request body: %w\nbody: %s", method, path, err, call.Body)
 	}
 	return nil

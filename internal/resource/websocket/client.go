@@ -19,6 +19,7 @@ import (
 	gorilla "github.com/gorilla/websocket"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -419,7 +420,7 @@ func (r *WebSocketClient) shouldReceiveMessage(timeout string, doc *godog.DocStr
 	expected := strings.TrimSpace(doc.Content)
 	actual := strings.TrimSpace(string(message))
 	if actual != expected {
-		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)
+		return &jsonmatch.Mismatch{What: "message", Expected: expected, Actual: actual, Mode: jsonmatch.ModeText}
 	}
 
 	return nil
@@ -477,7 +478,7 @@ func (r *WebSocketClient) shouldReceiveJSONMatching(timeout string, doc *godog.D
 	expectedJSON, _ := json.Marshal(expected)
 	actualJSON, _ := json.Marshal(actual)
 	if string(expectedJSON) != string(actualJSON) {
-		return fmt.Errorf("JSON mismatch:\nexpected: %s\nactual: %s", string(expectedJSON), string(actualJSON))
+		return &jsonmatch.Mismatch{What: "JSON", Expected: string(expectedJSON), Actual: string(actualJSON), Mode: jsonmatch.ModeJSON}
 	}
 
 	return nil
@@ -574,7 +575,7 @@ func (r *WebSocketClient) lastMessageShouldBe(doc *godog.DocString) error {
 	expected := strings.TrimSpace(doc.Content)
 	actual := strings.TrimSpace(string(lastMsg))
 	if actual != expected {
-		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)
+		return &jsonmatch.Mismatch{What: "message", Expected: expected, Actual: actual, Mode: jsonmatch.ModeText}
 	}
 
 	return nil
@@ -616,7 +617,7 @@ func (r *WebSocketClient) lastMessageShouldBeJSONMatching(doc *godog.DocString) 
 	expectedJSON, _ := json.Marshal(expected)
 	actualJSON, _ := json.Marshal(actual)
 	if string(expectedJSON) != string(actualJSON) {
-		return fmt.Errorf("JSON mismatch:\nexpected: %s\nactual: %s", string(expectedJSON), string(actualJSON))
+		return &jsonmatch.Mismatch{What: "JSON", Expected: string(expectedJSON), Actual: string(actualJSON), Mode: jsonmatch.ModeJSON}
 	}
 
 	return nil

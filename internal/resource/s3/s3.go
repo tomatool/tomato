@@ -907,15 +907,16 @@ func (r *S3) objectContentShouldMatch(path string, doc *godog.DocString) error {
 		return err
 	}
 
+	expectedText := resource.ReplaceVariables(doc.Content)
 	var expected interface{}
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("parsing expected JSON: %w", err)
 	}
 	var actual interface{}
 	if err := json.Unmarshal(body, &actual); err != nil {
 		return fmt.Errorf("object %q is not valid JSON: %w", path, err)
 	}
-	return jsonmatch.Compare(expected, actual, "", true)
+	return jsonmatch.CompareDocs("object", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(string(body)), true)
 }
 
 func (r *S3) objectSizeShouldBe(path string, expected int64) error {
