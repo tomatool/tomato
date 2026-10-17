@@ -27,6 +27,7 @@ import (
 
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/runlog"
+	"github.com/tomatool/tomato/internal/version"
 	"github.com/urfave/cli/v2"
 )
 
@@ -362,6 +363,21 @@ type ConfigJSON struct {
 	Hooks      *HooksJSON        `json:"hooks,omitempty"`
 	Features   *FeaturesJSON     `json:"features,omitempty"`
 	HookCount  int               `json:"hookCount"`
+
+	// Tomato is the binary serving the UI, so a page can say which version
+	// it is looking at; it is set whether or not the config loads.
+	Tomato *TomatoJSON `json:"tomato,omitempty"`
+}
+
+// TomatoJSON is the version the binary was built as.
+type TomatoJSON struct {
+	Version string `json:"version"`
+	Commit  string `json:"commit"`
+	Built   string `json:"built"`
+}
+
+func tomatoJSON() *TomatoJSON {
+	return &TomatoJSON{Version: version.Version, Commit: version.Commit, Built: version.BuildDate}
 }
 
 type SettingsJSON struct {
@@ -422,6 +438,7 @@ func (s *UIServer) handleConfig(w http.ResponseWriter, r *http.Request) {
 		Path:     s.configPath,
 		AbsPath:  absolutePath(s.configPath),
 		Watching: strings.Join(s.featurePaths, ", "),
+		Tomato:   tomatoJSON(),
 	}
 
 	if raw, err := os.ReadFile(s.configPath); err == nil {

@@ -154,6 +154,8 @@ code,pre,.mono{font-family:var(--font-mono);font-size:var(--fs-12)}
 .brand{display:inline-flex;align-items:center;gap:var(--s-4);font-family:var(--font-mono);font-weight:600;font-size:var(--fs-13);color:var(--fg-0)}
 .brand-mark{position:relative;width:14px;height:14px;border-radius:50%;background:var(--brand);flex:none}
 .brand-mark::before{content:"";position:absolute;left:4px;top:-2px;width:6px;height:4px;background:var(--brand-stem);border-radius:2px 2px 0 0}
+.brand-version{font:var(--fs-11)/1 var(--font-mono);color:var(--fg-2);white-space:nowrap;cursor:default}
+.brand-version[data-dev]{font-style:italic}
 
 /* — buttons — */
 .btn{display:inline-flex;align-items:center;gap:var(--s-3);height:var(--h-ctl);padding:0 var(--s-5);border:1px solid var(--line-strong);border-radius:var(--r-2);background:var(--bg-2);color:var(--fg-0);font:500 var(--fs-12)/1 var(--font-ui);cursor:pointer;white-space:nowrap;transition:background var(--dur),border-color var(--dur)}
