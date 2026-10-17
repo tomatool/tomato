@@ -13,6 +13,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/grpcschema"
 	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 	"google.golang.org/grpc"
@@ -370,7 +371,7 @@ func (r *GRPC) invoke(target string, body []byte) error {
 	if r.conn == nil {
 		return fmt.Errorf("resource %q is not initialised", r.name)
 	}
-	service, method, err := splitMethod(resource.ReplaceVariables(target))
+	service, method, err := grpcschema.SplitMethod(resource.ReplaceVariables(target))
 	if err != nil {
 		return err
 	}

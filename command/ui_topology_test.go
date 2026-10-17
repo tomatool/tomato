@@ -19,6 +19,7 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 				"DATABASE_URL": "postgres://u:p@{{.postgres.host}}:{{.postgres.port.5432}}/db",
 				"CACHE":        "{{ .redis.host }}:{{ .redis.port.6379 }}",
 				"UPSTREAM":     "{{.mock.url}}",
+				"USERS_ADDR":   "{{.users.address}}",
 				"UNKNOWN":      "{{.nothing.host}}",
 			},
 		},
@@ -38,6 +39,8 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 			"mock-client":   {Type: "http-client", BaseURL: "http://localhost:9999"},
 			"wsmock":        {Type: "websocket-server", Options: map[string]any{"port": 9997}},
 			"wsmock-client": {Type: "websocket-client", URL: "ws://localhost:9997/"},
+			"users":         {Type: "grpc-server", Options: map[string]any{"port": 9995, "descriptor_set": "users.binpb"}},
+			"users-client":  {Type: "grpc", Address: "localhost:9995"},
 			"shell":         {Type: "shell"},
 			"alice":         {Type: "browser", Container: "chrome", Options: map[string]any{"base_url": "http://localhost:8080"}},
 		},
@@ -50,7 +53,7 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 	if got.App.Mode != "command" || got.App.Port != 8080 || got.App.Name != "app" {
 		t.Errorf("app = %+v", *got.App)
 	}
-	if want := []string{"mock", "postgres", "redis"}; !reflect.DeepEqual(got.App.Uses, want) {
+	if want := []string{"mock", "postgres", "redis", "users"}; !reflect.DeepEqual(got.App.Uses, want) {
 		t.Errorf("app.uses = %v, want %v (templates naming containers or resources, nothing else)", got.App.Uses, want)
 	}
 
@@ -81,7 +84,10 @@ func TestTopologyDescribesTheWiring(t *testing.T) {
 		"mock-client":   {Name: "mock-client", Type: "http-client", Role: "client", Target: "mock", Address: "localhost:9999"},
 		"wsmock":        {Name: "wsmock", Type: "websocket-server", Role: "mock", Port: 9997},
 		"wsmock-client": {Name: "wsmock-client", Type: "websocket-client", Role: "client", Target: "wsmock", Address: "localhost:9997"},
-		"shell":         {Name: "shell", Type: "shell", Role: "host"},
+		// A gRPC dependency tomato stubs: the app calls it, like an http-server.
+		"users":        {Name: "users", Type: "grpc-server", Role: "mock", Port: 9995},
+		"users-client": {Name: "users-client", Type: "grpc", Role: "client", Target: "users", Address: "localhost:9995"},
+		"shell":        {Name: "shell", Type: "shell", Role: "host"},
 		// A person using the app's UI: a client of the app, whose base_url
 		// sits among its options, run in the chromium container.
 		"alice": {Name: "alice", Type: "browser", Role: "client", Container: "chrome", Target: "app", Address: "localhost:8080"},

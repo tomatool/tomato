@@ -23,6 +23,7 @@ import (
 	"github.com/tomatool/tomato/internal/resource/browser"
 	"github.com/tomatool/tomato/internal/resource/cassandra"
 	"github.com/tomatool/tomato/internal/resource/grpcclient"
+	"github.com/tomatool/tomato/internal/resource/grpcserver"
 	"github.com/tomatool/tomato/internal/resource/httpclient"
 	"github.com/tomatool/tomato/internal/resource/httpserver"
 	"github.com/tomatool/tomato/internal/resource/kafka"
@@ -112,6 +113,7 @@ var handlerFactories = map[string]handlerFactory{
 	"http-server":      factory(httpserver.New),
 	"grpc":             factory(grpcclient.New),
 	"grpc-client":      factory(grpcclient.New),
+	"grpc-server":      factory(grpcserver.New),
 	"websocket":        factory(websocket.NewClient),
 	"websocket-client": factory(websocket.NewClient),
 	"websocket-server": factory(websocket.NewServer),
@@ -329,6 +331,7 @@ var canonicalTypes = []string{
 	"websocket-server",
 	"s3",
 	"grpc",
+	"grpc-server",
 	"aws",
 	"lifecycle",
 	"browser",
@@ -350,6 +353,23 @@ func AllStepCategories() []resource.StepCategory {
 		}
 	}
 	return categories
+}
+
+// ValidateOptions checks a resource's options without connecting to
+// anything, for resources that can (resource.OptionsValidator). Others pass.
+func ValidateOptions(name string, cfg config.Resource) error {
+	build, ok := handlerFactories[cfg.Type]
+	if !ok {
+		return nil
+	}
+	h, err := build(name, cfg, nil)
+	if err != nil {
+		return err
+	}
+	if v, ok := h.(resource.OptionsValidator); ok {
+		return v.ValidateOptions()
+	}
+	return nil
 }
 
 // ValidResourceTypes returns all valid resource type names

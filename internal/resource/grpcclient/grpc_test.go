@@ -348,39 +348,6 @@ func TestGRPC_ResolveTargetRequiresAddressOrContainer(t *testing.T) {
 	}
 }
 
-func TestSplitMethod(t *testing.T) {
-	cases := []struct {
-		in              string
-		service, method string
-		wantErr         bool
-	}{
-		{in: "pkg.Service/Method", service: "pkg.Service", method: "Method"},
-		{in: "/pkg.Service/Method", service: "pkg.Service", method: "Method"},
-		{in: "  pkg.Service/Method  ", service: "pkg.Service", method: "Method"},
-		{in: "grpc.health.v1.Health/Check", service: "grpc.health.v1.Health", method: "Check"},
-		{in: "no-slash", wantErr: true},
-		{in: "trailing/", wantErr: true},
-		{in: "/leading-only", wantErr: true},
-		{in: "", wantErr: true},
-	}
-	for _, tc := range cases {
-		svc, m, err := splitMethod(tc.in)
-		if tc.wantErr {
-			if err == nil {
-				t.Errorf("splitMethod(%q): want an error", tc.in)
-			}
-			continue
-		}
-		if err != nil {
-			t.Errorf("splitMethod(%q): %v", tc.in, err)
-			continue
-		}
-		if svc != tc.service || m != tc.method {
-			t.Errorf("splitMethod(%q) = %q, %q; want %q, %q", tc.in, svc, m, tc.service, tc.method)
-		}
-	}
-}
-
 func TestGRPC_StepsAreWellFormed(t *testing.T) {
 	h, err := New("grpc", resource.DummyConfig(), nil)
 	if err != nil {

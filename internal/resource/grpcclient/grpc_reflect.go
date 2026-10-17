@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/tomatool/tomato/internal/grpcschema"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	v1 "google.golang.org/grpc/reflection/grpc_reflection_v1"
@@ -98,7 +99,7 @@ func (c *reflectClient) findMethod(ctx context.Context, service, method string) 
 	md := sd.Methods().ByName(protoreflect.Name(method))
 	if md == nil {
 		return nil, fmt.Errorf("service %q has no method %q (has: %s)",
-			service, method, strings.Join(methodNames(sd), ", "))
+			service, method, strings.Join(grpcschema.MethodNames(sd), ", "))
 	}
 	return md, nil
 }
@@ -224,26 +225,6 @@ func (c *reflectClient) listServices(ctx context.Context) ([]string, error) {
 	}
 	sort.Strings(services)
 	return services, nil
-}
-
-func methodNames(sd protoreflect.ServiceDescriptor) []string {
-	out := make([]string, 0, sd.Methods().Len())
-	for i := range sd.Methods().Len() {
-		out = append(out, string(sd.Methods().Get(i).Name()))
-	}
-	return out
-}
-
-// splitMethod splits "package.Service/Method" into its two halves. The
-// leading slash grpc uses internally is accepted too, since that is what
-// people copy out of logs.
-func splitMethod(target string) (service, method string, err error) {
-	t := strings.TrimPrefix(strings.TrimSpace(target), "/")
-	idx := strings.LastIndex(t, "/")
-	if idx <= 0 || idx == len(t)-1 {
-		return "", "", fmt.Errorf("method %q must be in the form \"package.Service/Method\"", target)
-	}
-	return t[:idx], t[idx+1:], nil
 }
 
 // --- v1 ---

@@ -320,11 +320,18 @@ func TestBuildEnvForCommand(t *testing.T) {
 		"OTHER":       "{{.api.url}}",
 		"MISSING":     "{{.nope.url}}",
 		"PLAIN":       "value",
+		"USERS_ADDR":  "{{.users.address}}",
+		"USERS_HOST":  "{{ .users.host }}",
+		"USERS_PORT":  "{{.users.port}}",
+		"USERS_URL":   "dns:///{{.users.host}}:{{.users.port}}",
+		"NOPORT_ADDR": "{{.users-noport.address}}",
 	}}, cm)
 	r.SetResources(map[string]config.Resource{
-		"mock":        {Type: "http-server", Options: map[string]any{"port": 9999}},
-		"mock-noport": {Type: "http-server", Options: map[string]any{}},
-		"api":         {Type: "http"},
+		"mock":         {Type: "http-server", Options: map[string]any{"port": 9999}},
+		"mock-noport":  {Type: "http-server", Options: map[string]any{}},
+		"api":          {Type: "http"},
+		"users":        {Type: "grpc-server", Options: map[string]any{"port": 9995}},
+		"users-noport": {Type: "grpc-server"},
 	})
 
 	env := r.buildEnvForCommand()
@@ -341,6 +348,11 @@ func TestBuildEnvForCommand(t *testing.T) {
 		"OTHER":       "{{.api.url}}",
 		"MISSING":     "{{.nope.url}}",
 		"PLAIN":       "value",
+		"USERS_ADDR":  "localhost:9995",
+		"USERS_HOST":  "localhost",
+		"USERS_PORT":  "9995",
+		"USERS_URL":   "dns:///localhost:9995",
+		"NOPORT_ADDR": "{{.users-noport.address}}",
 	}
 	for k, v := range want {
 		if env[k] != v {
@@ -359,11 +371,15 @@ func TestBuildEnvForDocker(t *testing.T) {
 		"MOCK_NOPORT": "{{.mock-noport.url}}",
 		"OTHER":       "{{.api.url}}",
 		"MISSING":     "{{.nope.url}}",
+		"USERS_ADDR":  "{{.users.address}}",
+		"USERS_HOST":  "{{.users.host}}",
+		"USERS_PORT":  "{{.users.port}}",
 	}}, nil)
 	r.SetResources(map[string]config.Resource{
 		"mock":        {Type: "http-server", Options: map[string]any{"port": 9999}},
 		"mock-noport": {Type: "http-server"},
 		"api":         {Type: "http"},
+		"users":       {Type: "grpc-server", Options: map[string]any{"port": 9995}},
 	})
 
 	env := r.buildEnvForDocker()
@@ -376,6 +392,9 @@ func TestBuildEnvForDocker(t *testing.T) {
 		"MOCK_NOPORT": "{{.mock-noport.url}}",
 		"OTHER":       "{{.api.url}}",
 		"MISSING":     "{{.nope.url}}",
+		"USERS_ADDR":  "host.docker.internal:9995",
+		"USERS_HOST":  "host.docker.internal",
+		"USERS_PORT":  "9995",
 	}
 	for k, v := range want {
 		if env[k] != v {

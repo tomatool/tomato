@@ -77,7 +77,7 @@ var clientTypes = map[string]bool{
 // mockTypes are resource types tomato serves itself: the app calls them,
 // tomato only observes the traffic arriving.
 var mockTypes = map[string]bool{
-	"http-server": true, "websocket-server": true, "aws": true,
+	"http-server": true, "grpc-server": true, "websocket-server": true, "aws": true,
 }
 
 // templateRef matches the {{.name.…}} references app.env values use.
