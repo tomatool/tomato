@@ -315,6 +315,17 @@ func (v *Validator) validateResources() {
 			continue
 		}
 
+		if err := registry.ValidateOptions(res); err != nil {
+			v.results = append(v.results, ValidationResult{
+				Category:   "Resources",
+				Item:       name,
+				Status:     "error",
+				Message:    err.Error(),
+				Suggestion: "Fix the option in the config; `tomato run` refuses it too",
+			})
+			continue
+		}
+
 		// A stateful resource tomato did not start is a real system that
 		// tomato wipes before every scenario. Say so on every validate, even
 		// once it has been acknowledged — it is the kind of thing that should

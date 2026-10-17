@@ -126,6 +126,20 @@ resources:
       user: test
       password: test
 
+  # Resets by schema: every table in billing and in any plugin_* schema, found
+  # when it resets, so a schema a scenario creates is covered from the next
+  # one on; plus audit.events. billing.fx_rates is reference data.
+  ledger:
+    type: postgres
+    container: postgres
+    database: test
+    options:
+      user: test
+      password: test
+      schemas: [billing, "plugin_*"]
+      tables: [audit.events]
+      exclude: [billing.fx_rates]
+
   scylla:
     type: scylladb
     container: scylla

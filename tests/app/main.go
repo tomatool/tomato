@@ -80,6 +80,9 @@ func main() {
 	if err := initUIDB(); err != nil {
 		log.Fatalf("Failed to initialize the UI's tables: %v", err)
 	}
+	if err := initSchemas(); err != nil {
+		log.Fatalf("Failed to initialize the billing and audit schemas: %v", err)
+	}
 
 	// Setup routes
 	mux := http.NewServeMux()
@@ -171,6 +174,34 @@ func initDB() error {
 			name VARCHAR(255) NOT NULL,
 			email VARCHAR(255) UNIQUE NOT NULL,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	return err
+}
+
+// initSchemas creates tables outside public, as an app with a schema per
+// module does in its migrations, for the "ledger" resource that resets by
+// schema. fx_rates is reference data the migration seeds, and
+// schema_migrations is the migration tool's history.
+func initSchemas() error {
+	_, err := db.Exec(`
+		CREATE SCHEMA IF NOT EXISTS billing;
+		CREATE TABLE IF NOT EXISTS billing.invoices (
+			id BIGSERIAL PRIMARY KEY,
+			amount INT NOT NULL
+		);
+		CREATE TABLE IF NOT EXISTS billing.fx_rates (
+			currency TEXT PRIMARY KEY,
+			rate NUMERIC NOT NULL
+		);
+		INSERT INTO billing.fx_rates VALUES ('EUR', 1) ON CONFLICT DO NOTHING;
+		CREATE TABLE IF NOT EXISTS billing.schema_migrations (version BIGINT PRIMARY KEY);
+		INSERT INTO billing.schema_migrations VALUES (1) ON CONFLICT DO NOTHING;
+
+		CREATE SCHEMA IF NOT EXISTS audit;
+		CREATE TABLE IF NOT EXISTS audit.events (
+			id BIGSERIAL PRIMARY KEY,
+			kind TEXT NOT NULL
 		)
 	`)
 	return err
