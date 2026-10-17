@@ -21,6 +21,26 @@ func TestContainerSourceNamesWhatRuns(t *testing.T) {
 	}
 }
 
+// A resource that can check its options does so in validate: a grpc-server
+// without its descriptor set is an error there, not when the run starts.
+func TestValidateReportsResourceOptions(t *testing.T) {
+	v := &Validator{config: &config.Config{Resources: map[string]config.Resource{
+		"users": {Type: "grpc-server", Options: map[string]any{"port": 9995}},
+		"api":   {Type: "http-client", BaseURL: "http://localhost:8080"},
+	}}}
+	v.validateResources()
+	got := map[string]ValidationResult{}
+	for _, r := range v.results {
+		got[r.Item] = r
+	}
+	if r := got["users"]; r.Status != "error" || !strings.Contains(r.Message, "descriptor_set is required") {
+		t.Errorf("users = %+v, want an error naming descriptor_set", r)
+	}
+	if r := got["api"]; r.Status != "ok" {
+		t.Errorf("api = %+v, want ok", r)
+	}
+}
+
 func TestValidateResourcesChecksOptions(t *testing.T) {
 	v := &Validator{config: &config.Config{
 		Containers: map[string]config.Container{"postgres": {Image: "postgres:16"}},

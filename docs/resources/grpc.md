@@ -29,7 +29,7 @@ Steps for calling unary gRPC methods and validating responses
 
 | Step | Description |
 |------|-------------|
-| `"grpc" response status is "OK"` | Assert the gRPC status code by name (OK, NOT_FOUND, INVALID_ARGUMENT, ...) |
+| `"grpc" response status is "OK"` | Assert the gRPC status code by name (OK, NOT_FOUND, INVALID_ARGUMENT, ...; NotFound and the number work too) |
 | `"grpc" call succeeds` | Assert the call returned OK |
 | `"grpc" call fails` | Assert the call returned any non-OK status |
 | `"grpc" response error contains "not found"` | Assert the status message contains a substring |

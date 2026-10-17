@@ -30,6 +30,7 @@ container to it:
 
 [HTTP Server](configuration/http-server.md) ·
 [gRPC](configuration/grpc.md) ·
+[gRPC Server](configuration/grpc-server.md) ·
 [Kafka](configuration/kafka.md) ·
 [RabbitMQ](configuration/rabbitmq.md) ·
 [ScyllaDB](configuration/scylladb.md) ·
@@ -42,7 +43,7 @@ container to it:
 
 ## Steps, by resource
 
-306 steps across 16 resource types. Every page is generated from the step
+322 steps across 17 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and `tomato steps` prints the same thing in your terminal.
 
@@ -58,6 +59,7 @@ definitions themselves, so it cannot disagree with the binary you are running
 | [HTTP Server](resources/http-server.md) | 18 | Stubbing the HTTP services your application calls |
 | [Browser](resources/browser.md) | 18 | Using the web UI in a real Chromium and asserting on what it shows |
 | [WebSocket Client](resources/websocket-client.md) | 17 | Connecting and exchanging messages |
+| [gRPC Server](resources/grpc-server.md) | 16 | Stubbing the gRPC services your application calls |
 | [PDF](resources/pdf.md) | 13 | What is inside the PDFs your application generates: pages, text, metadata, outline and accessibility |
 | [PostgreSQL](resources/postgres.md) | 11 | Seeding tables, running SQL, asserting on rows |
 | [ScyllaDB](resources/scylladb.md) | 9 | Cassandra and ScyllaDB over CQL |

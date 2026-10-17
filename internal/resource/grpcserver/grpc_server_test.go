@@ -277,21 +277,6 @@ func TestStubReturnsStatus(t *testing.T) {
 	wantErr(t, srv.stubReturnsStatus(importUser, "", "INTERNAL", ""), "client-streaming")
 }
 
-func TestParseCode(t *testing.T) {
-	for in, want := range map[string]codes.Code{
-		"NOT_FOUND": codes.NotFound, "NotFound": codes.NotFound, "not_found": codes.NotFound,
-		"CANCELLED": codes.Canceled, "Canceled": codes.Canceled, "14": codes.Unavailable, " ok ": codes.OK,
-	} {
-		got, err := parseCode(in)
-		if err != nil || got != want {
-			t.Errorf("parseCode(%q) = %v, %v; want %v", in, got, err, want)
-		}
-	}
-	if _, err := parseCode("17"); err == nil {
-		t.Error("17 is not a code")
-	}
-}
-
 func TestSequenceRepeatsTheLastRow(t *testing.T) {
 	srv := startServer(t)
 	c := dial(t, srv)
@@ -523,16 +508,17 @@ func TestOptions(t *testing.T) {
 		srv, _ := New("users", config.Resource{Type: "grpc-server", Options: opts}, nil)
 		return srv
 	}
-	wantErr(t, newSrv(nil).ValidateOptions(), "needs options.descriptor_set", "buf build")
-	wantErr(t, newSrv(map[string]any{"descriptor_set": "missing.binpb"}).ValidateOptions(), "missing.binpb")
-	wantErr(t, newSrv(map[string]any{"descriptor_set": []any{path, 3}}).ValidateOptions(), "must be file paths")
-	wantErr(t, newSrv(map[string]any{"descriptor_set": path, "port": "9995"}).ValidateOptions(), "port number")
+	wantErr(t, ValidateOptions(nil), "options.descriptor_set is required", "buf build")
+	wantErr(t, newSrv(nil).Init(context.Background()), `resource "users": options.descriptor_set is required`)
+	wantErr(t, ValidateOptions(map[string]any{"descriptor_set": "missing.binpb"}), "missing.binpb")
+	wantErr(t, ValidateOptions(map[string]any{"descriptor_set": []any{path, 3}}), "must be file paths")
+	wantErr(t, ValidateOptions(map[string]any{"descriptor_set": path, "port": "9995"}), "port number")
 	wantErr(t, newSrv(map[string]any{"descriptor_set": path, "port": 70000}).Init(context.Background()), "port number")
-	must(t, newSrv(map[string]any{"descriptor_set": []any{path}, "port": 0}).ValidateOptions())
+	must(t, ValidateOptions(map[string]any{"descriptor_set": []any{path}, "port": 0}))
 
 	notASet := filepath.Join(t.TempDir(), "users.proto")
 	must(t, os.WriteFile(notASet, []byte("syntax = \"proto3\";\n"), 0o644))
-	wantErr(t, newSrv(map[string]any{"descriptor_set": notASet}).ValidateOptions(), "FileDescriptorSet")
+	wantErr(t, ValidateOptions(map[string]any{"descriptor_set": notASet}), "FileDescriptorSet")
 
 	// A set with no services has nothing to serve.
 	noServices := filepath.Join(t.TempDir(), "empty.binpb")
@@ -540,7 +526,7 @@ func TestOptions(t *testing.T) {
 		Name: proto.String("empty.proto"), Package: proto.String("empty"), Syntax: proto.String("proto3"),
 	}}})
 	must(t, os.WriteFile(noServices, b, 0o644))
-	wantErr(t, newSrv(map[string]any{"descriptor_set": noServices}).ValidateOptions(), "declares no services")
+	wantErr(t, ValidateOptions(map[string]any{"descriptor_set": noServices}), "declares no services")
 }
 
 func TestFixedPortAndInitTwice(t *testing.T) {

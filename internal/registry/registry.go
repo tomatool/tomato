@@ -132,6 +132,8 @@ var handlerFactories = map[string]handlerFactory{
 var optionValidators = map[string]func(map[string]any) error{
 	"postgres":   postgres.ValidateOptions,
 	"postgresql": postgres.ValidateOptions,
+	// Loads the descriptor set, so a missing or broken one fails here.
+	"grpc-server": grpcserver.ValidateOptions,
 }
 
 // unimplementedTypes are resource types people reach for that tomato does not

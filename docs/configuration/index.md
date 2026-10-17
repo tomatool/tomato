@@ -36,7 +36,7 @@ containers:             # Container definitions
 
 resources:              # Resource/handler definitions
   name:
-    type: http|http-server|grpc|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle|browser|pdf
+    type: http|http-server|grpc|grpc-server|postgres|scylladb|cassandra|redis|kafka|rabbitmq|s3|websocket|websocket-server|shell|aws|lifecycle|browser|pdf
     # aliases: postgresql, http-client, grpc-client, websocket-client, minio
     container: container_name
     options: {}
@@ -489,6 +489,23 @@ resources:
 
 The server must register the gRPC reflection service. See
 [gRPC Configuration](grpc.md).
+
+### gRPC server
+
+```yaml
+resources:
+  users:
+    type: grpc-server
+    options:
+      port: 9995                              # fixed, so app.env can name it
+      descriptor_set: proto/users.binpb       # buf build -o proto/users.binpb
+
+app:
+  env:
+    USERS_ADDR: "{{.users.address}}"          # localhost:9995
+```
+
+Stubs the gRPC services the app calls. See [gRPC Server](grpc-server.md).
 
 ### S3
 

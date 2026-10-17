@@ -1,6 +1,8 @@
 # gRPC configuration
 
 The `grpc` resource calls unary gRPC methods and asserts on what comes back.
+To stand in for a gRPC service your application calls, use
+[gRPC Server](grpc-server.md) instead.
 
 Methods are resolved through **server reflection**, so you name a method the
 way you would say it out loud — `helloworld.Greeter/SayHello` — and no
@@ -110,8 +112,8 @@ And "grpc" response status is "INVALID_ARGUMENT"
 And "grpc" response error contains "name is required"
 ```
 
-Status names are matched case-insensitively, so `INVALID_ARGUMENT` and
-`InvalidArgument` both work.
+Status names are matched ignoring case and underscores, so `INVALID_ARGUMENT`,
+`InvalidArgument` and the number `3` all work.
 
 Only a problem with the call itself — an unknown method, or a request that is
 not valid for the schema — fails the step. Those errors are specific: an

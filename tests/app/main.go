@@ -104,6 +104,7 @@ func main() {
 	mux.HandleFunc("/documents/contract.pdf", documentHandler(pdffixture.Contract))
 	mux.HandleFunc("/documents/accessible.pdf", documentHandler(pdffixture.Accessible))
 	registerUI(mux)
+	registerDirectory(mux)
 
 	startGRPC()
 

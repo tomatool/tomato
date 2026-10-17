@@ -147,30 +147,31 @@ func (r *GRPCServer) Name() string { return r.name }
 // {{.<name>.address}}.
 func (r *GRPCServer) AppEnv() resource.AppEnv { return resource.AppEnv{} }
 
-// ValidateOptions checks what Init will need, for `tomato validate`.
-func (r *GRPCServer) ValidateOptions() error {
-	if _, err := r.portOption(); err != nil {
+// ValidateOptions checks what Init will need, loading the descriptor set,
+// so `tomato validate` refuses what a run would.
+func ValidateOptions(options map[string]any) error {
+	if _, err := portOption(options); err != nil {
 		return err
 	}
-	_, err := r.loadSchema()
+	_, err := loadSchema(options)
 	return err
 }
 
-func (r *GRPCServer) portOption() (int, error) {
-	raw, ok := r.config.Options["port"]
+func portOption(options map[string]any) (int, error) {
+	raw, ok := options["port"]
 	if !ok || raw == nil {
 		return 0, nil
 	}
 	p, ok := raw.(int)
 	if !ok || p < 0 || p > 65535 {
-		return 0, fmt.Errorf("resource %q: options.port must be a port number, got %v", r.name, raw)
+		return 0, fmt.Errorf("options.port must be a port number, got %v", raw)
 	}
 	return p, nil
 }
 
 // descriptorSets reads options.descriptor_set, one path or a list of them.
-func (r *GRPCServer) descriptorSets() ([]string, error) {
-	switch v := r.config.Options["descriptor_set"].(type) {
+func descriptorSets(options map[string]any) ([]string, error) {
+	switch v := options["descriptor_set"].(type) {
 	case string:
 		if strings.TrimSpace(v) != "" {
 			return []string{v}, nil
@@ -180,7 +181,7 @@ func (r *GRPCServer) descriptorSets() ([]string, error) {
 		for _, p := range v {
 			s, ok := p.(string)
 			if !ok || strings.TrimSpace(s) == "" {
-				return nil, fmt.Errorf("resource %q: options.descriptor_set entries must be file paths, got %v", r.name, p)
+				return nil, fmt.Errorf("options.descriptor_set entries must be file paths, got %v", p)
 			}
 			out = append(out, s)
 		}
@@ -192,21 +193,21 @@ func (r *GRPCServer) descriptorSets() ([]string, error) {
 			return v, nil
 		}
 	}
-	return nil, fmt.Errorf("resource %q needs options.descriptor_set: the services it serves, as a "+
-		"FileDescriptorSet (`buf build -o api.binpb`, or `protoc --include_imports --descriptor_set_out=api.binpb`)", r.name)
+	return nil, fmt.Errorf("options.descriptor_set is required: the services to serve, as a " +
+		"FileDescriptorSet (`buf build -o api.binpb`, or `protoc --include_imports --descriptor_set_out=api.binpb`)")
 }
 
-func (r *GRPCServer) loadSchema() (*grpcschema.Schema, error) {
-	paths, err := r.descriptorSets()
+func loadSchema(options map[string]any) (*grpcschema.Schema, error) {
+	paths, err := descriptorSets(options)
 	if err != nil {
 		return nil, err
 	}
 	schema, err := grpcschema.LoadDescriptorSets(paths...)
 	if err != nil {
-		return nil, fmt.Errorf("resource %q: %w", r.name, err)
+		return nil, err
 	}
 	if len(schema.Services()) == 0 {
-		return nil, fmt.Errorf("resource %q: %s declares no services", r.name, strings.Join(paths, ", "))
+		return nil, fmt.Errorf("%s declares no services", strings.Join(paths, ", "))
 	}
 	return schema, nil
 }
@@ -219,13 +220,13 @@ func (r *GRPCServer) Init(ctx context.Context) error {
 	if r.server != nil {
 		return nil
 	}
-	port, err := r.portOption()
+	port, err := portOption(r.config.Options)
 	if err != nil {
-		return err
+		return fmt.Errorf("resource %q: %w", r.name, err)
 	}
-	schema, err := r.loadSchema()
+	schema, err := loadSchema(r.config.Options)
 	if err != nil {
-		return err
+		return fmt.Errorf("resource %q: %w", r.name, err)
 	}
 	r.schema = schema
 	return r.listen(port)
@@ -724,7 +725,7 @@ func (r *GRPCServer) stubReturnsStatus(target, conds, code, message string) erro
 	if err := stubbable(md); err != nil {
 		return err
 	}
-	c, err := parseCode(code)
+	c, err := grpcschema.ParseCode(code)
 	if err != nil {
 		return err
 	}
@@ -799,7 +800,7 @@ func (r *GRPCServer) row(md protoreflect.MethodDescriptor, cell func(int, string
 	var rep reply
 	code := codes.OK
 	if s := cell(i, "status"); s != "" {
-		c, err := parseCode(s)
+		c, err := grpcschema.ParseCode(s)
 		if err != nil {
 			return rep, fmt.Errorf("row %d: %w", i, err)
 		}
@@ -814,7 +815,7 @@ func (r *GRPCServer) row(md protoreflect.MethodDescriptor, cell func(int, string
 	}
 	if code != codes.OK {
 		if cell(i, "json") != "" {
-			return rep, fmt.Errorf("row %d: a %s row sends no message; leave json empty", i, code2name(code))
+			return rep, fmt.Errorf("row %d: a %s row sends no message; leave json empty", i, grpcschema.CodeName(code))
 		}
 		rep.code = code
 		rep.message = resource.ReplaceVariables(cell(i, "message"))
@@ -865,39 +866,6 @@ func (r *GRPCServer) stubStreams(target, conds string, table *godog.Table) error
 	}
 	r.addStub(md, conds, stream)
 	return nil
-}
-
-// codeNames are the gRPC status codes as the spec writes them.
-var codeNames = map[codes.Code]string{
-	codes.OK: "OK", codes.Canceled: "CANCELLED", codes.Unknown: "UNKNOWN",
-	codes.InvalidArgument: "INVALID_ARGUMENT", codes.DeadlineExceeded: "DEADLINE_EXCEEDED",
-	codes.NotFound: "NOT_FOUND", codes.AlreadyExists: "ALREADY_EXISTS",
-	codes.PermissionDenied: "PERMISSION_DENIED", codes.ResourceExhausted: "RESOURCE_EXHAUSTED",
-	codes.FailedPrecondition: "FAILED_PRECONDITION", codes.Aborted: "ABORTED",
-	codes.OutOfRange: "OUT_OF_RANGE", codes.Unimplemented: "UNIMPLEMENTED", codes.Internal: "INTERNAL",
-	codes.Unavailable: "UNAVAILABLE", codes.DataLoss: "DATA_LOSS", codes.Unauthenticated: "UNAUTHENTICATED",
-}
-
-func code2name(c codes.Code) string { return codeNames[c] }
-
-// parseCode reads a status code by name, as the spec writes it (NOT_FOUND)
-// or as grpc-go prints it (NotFound), or by number.
-func parseCode(s string) (codes.Code, error) {
-	norm := func(v string) string { return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(v), "_", "")) }
-	want := norm(s)
-	for c, name := range codeNames {
-		if want == norm(name) || want == norm(c.String()) {
-			return c, nil
-		}
-	}
-	if n, err := strconv.Atoi(strings.TrimSpace(s)); err == nil && n >= 0 && n <= 16 {
-		return codes.Code(n), nil
-	}
-	names := make([]string, 0, len(codeNames))
-	for c := codes.OK; c <= codes.Unauthenticated; c++ {
-		names = append(names, codeNames[c])
-	}
-	return 0, fmt.Errorf("unknown status %q: use one of %s", s, strings.Join(names, ", "))
 }
 
 // --- availability ---

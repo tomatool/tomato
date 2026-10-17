@@ -214,7 +214,7 @@ func (r *GRPC) Steps() resource.StepCategory {
 			{
 				Group:       "Response Status",
 				Pattern:     `^"{resource}" response status is "([^"]*)"$`,
-				Description: "Assert the gRPC status code by name (OK, NOT_FOUND, INVALID_ARGUMENT, ...)",
+				Description: "Assert the gRPC status code by name (OK, NOT_FOUND, INVALID_ARGUMENT, ...; NotFound and the number work too)",
 				Example:     `"grpc" response status is "OK"`,
 				Handler:     r.responseStatusShouldBe,
 			},
@@ -435,10 +435,16 @@ func (r *GRPC) responseStatusShouldBe(expected string) error {
 	if r.lastStatus == nil {
 		return errNoGRPCResponse
 	}
-	want := strings.ToUpper(strings.TrimSpace(expected))
-	got := r.lastStatus.Code().String()
-	if !strings.EqualFold(got, want) {
-		return fmt.Errorf("expected status %s, got %s: %s", want, got, r.lastStatus.Message())
+	// The spec's NOT_FOUND, grpc-go's NotFound and the number all name the
+	// same code. Comparing against grpc-go's spelling alone made
+	// "NOT_FOUND", the name the docs use, never match.
+	want, err := grpcschema.ParseCode(expected)
+	if err != nil {
+		return err
+	}
+	if got := r.lastStatus.Code(); got != want {
+		return fmt.Errorf("expected status %s, got %s: %s",
+			grpcschema.CodeName(want), grpcschema.CodeName(got), r.lastStatus.Message())
 	}
 	return nil
 }

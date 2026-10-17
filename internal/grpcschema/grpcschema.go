@@ -13,8 +13,10 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -221,4 +223,43 @@ func (s *Schema) FindMethod(target string) (protoreflect.MethodDescriptor, error
 // MethodName is the "package.Service/Method" form of a method.
 func MethodName(md protoreflect.MethodDescriptor) string {
 	return string(md.Parent().FullName()) + "/" + string(md.Name())
+}
+
+// codeNames are the gRPC status codes as the spec writes them.
+var codeNames = map[codes.Code]string{
+	codes.OK: "OK", codes.Canceled: "CANCELLED", codes.Unknown: "UNKNOWN",
+	codes.InvalidArgument: "INVALID_ARGUMENT", codes.DeadlineExceeded: "DEADLINE_EXCEEDED",
+	codes.NotFound: "NOT_FOUND", codes.AlreadyExists: "ALREADY_EXISTS",
+	codes.PermissionDenied: "PERMISSION_DENIED", codes.ResourceExhausted: "RESOURCE_EXHAUSTED",
+	codes.FailedPrecondition: "FAILED_PRECONDITION", codes.Aborted: "ABORTED",
+	codes.OutOfRange: "OUT_OF_RANGE", codes.Unimplemented: "UNIMPLEMENTED", codes.Internal: "INTERNAL",
+	codes.Unavailable: "UNAVAILABLE", codes.DataLoss: "DATA_LOSS", codes.Unauthenticated: "UNAUTHENTICATED",
+}
+
+// CodeName is a status code as the gRPC spec writes it: NOT_FOUND.
+func CodeName(c codes.Code) string {
+	if name, ok := codeNames[c]; ok {
+		return name
+	}
+	return c.String()
+}
+
+// ParseCode reads a status code by name, as the spec writes it (NOT_FOUND)
+// or as grpc-go prints it (NotFound), or by number.
+func ParseCode(s string) (codes.Code, error) {
+	norm := func(v string) string { return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(v), "_", "")) }
+	want := norm(s)
+	for c, name := range codeNames {
+		if want == norm(name) || want == norm(c.String()) {
+			return c, nil
+		}
+	}
+	if n, err := strconv.Atoi(strings.TrimSpace(s)); err == nil && n >= 0 && n <= 16 {
+		return codes.Code(n), nil
+	}
+	names := make([]string, 0, len(codeNames))
+	for c := codes.OK; c <= codes.Unauthenticated; c++ {
+		names = append(names, codeNames[c])
+	}
+	return 0, fmt.Errorf("unknown status %q: use one of %s", s, strings.Join(names, ", "))
 }
