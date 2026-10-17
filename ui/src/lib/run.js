@@ -23,7 +23,7 @@ export function splitKey(k) {
 // what the runner recorded on the step's end, so a picture is matched to its
 // step by path and never guessed from the file's name (lib/screenshots.js).
 export const emptyRun = () => ({
-  scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, stepShots: {}, scOrder: [],
+  scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, stepShots: {}, stepMismatch: {}, scOrder: [],
 })
 
 // The /ws message types that change the run state. Everything else — the
@@ -67,6 +67,9 @@ export function reduceRun(state, m) {
         stepDur: m.durationMs == null ? state.stepDur : { ...state.stepDur, [k]: m.durationMs },
         stepError: m.output ? { ...state.stepError, [k]: m.output } : state.stepError,
         stepShots: m.stepScreenshots?.length ? { ...state.stepShots, [k]: m.stepScreenshots } : state.stepShots,
+        // Both sides of a failed comparison, when the runner sent them
+        // (internal/formatter); components/Mismatch.jsx draws the diff.
+        stepMismatch: m.mismatch ? { ...state.stepMismatch, [k]: m.mismatch } : state.stepMismatch,
       }
     }
     case 'run_finished':
@@ -94,13 +97,14 @@ export const pickleIndex = (background, i) => (background?.length ?? 0) + i
 // reads as undefined before the suite has ever run.
 export function stepRun(runState, scenario, index, step) {
   const fallback = step?.unmatched ? 'undefined' : ''
-  if (scenario == null || index == null) return { status: fallback, dur: undefined, error: undefined, screenshots: undefined }
+  if (scenario == null || index == null) return { status: fallback, dur: undefined, error: undefined, screenshots: undefined, mismatch: undefined }
   const k = stepKey(scenario, index)
   return {
     status: runState.stepStatus[k] ?? fallback,
     dur: runState.stepDur[k],
     error: runState.stepError[k],
     screenshots: runState.stepShots?.[k],
+    mismatch: runState.stepMismatch?.[k],
   }
 }
 

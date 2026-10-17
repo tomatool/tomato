@@ -238,3 +238,26 @@ func TestHandleConfigReportsTheTomatoVersion(t *testing.T) {
 		})
 	}
 }
+
+// A step_end's mismatch reaches the browser as the runner sent it, and a
+// step_end without one adds nothing to the message.
+func TestStepFinishedRelaysTheMismatch(t *testing.T) {
+	line := `{"type":"step_end","scenario":"S","status":"failed","error":"stdout mismatch\nexpected: a\nactual: b","stepIndex":2,"mismatch":{"what":"stdout","expected":"a","actual":"b","mode":"text"}}`
+	var ev TomatoEvent
+	if err := json.Unmarshal([]byte(line), &ev); err != nil {
+		t.Fatal(err)
+	}
+	out, err := json.Marshal(stepFinished(ev))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `"mismatch":{"what":"stdout","expected":"a","actual":"b","mode":"text"}`; !strings.Contains(string(out), want) {
+		t.Errorf("message %s lacks %s", out, want)
+	}
+
+	ev.Mismatch = nil
+	out, _ = json.Marshal(stepFinished(ev))
+	if strings.Contains(string(out), "mismatch\":") {
+		t.Errorf("message without a mismatch carries one: %s", out)
+	}
+}

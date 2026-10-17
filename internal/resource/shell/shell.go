@@ -14,6 +14,7 @@ import (
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -403,7 +404,7 @@ func (r *Shell) stdoutShouldBe(doc *godog.DocString) error {
 	expected := strings.TrimSpace(doc.Content)
 	actual := strings.TrimSpace(r.lastStdout)
 	if actual != expected {
-		return fmt.Errorf("stdout mismatch\nexpected: %s\nactual: %s", expected, actual)
+		return &jsonmatch.Mismatch{What: "stdout", Expected: expected, Actual: actual, Mode: jsonmatch.ModeText, NoColon: true}
 	}
 	return nil
 }

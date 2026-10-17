@@ -3,6 +3,7 @@ import { stepRun } from '../lib/run.js'
 import { stepKind, KIND_LABEL } from '../lib/kind'
 import { fmtDur } from '../lib/format'
 import { screenshotURL } from '../lib/screenshots.js'
+import { FailureBody } from './Mismatch.jsx'
 
 function DataTable({ rows }) {
   const [head, ...body] = rows
@@ -41,7 +42,7 @@ function StepShots({ shots, onOpen }) {
 // `onScreenshot` opens one of the step's screenshots at full size.
 export function StepRow({ step, scenarioName, index, runState, background, onScreenshot }) {
   const kind = stepKind(step, { background })
-  const { status, dur, error, screenshots } = stepRun(runState, scenarioName, index, step)
+  const { status, dur, error, mismatch, screenshots } = stepRun(runState, scenarioName, index, step)
   const isAnd = /^(and|but)$/i.test(String(step.keyword).trim())
   const failedWithError = status === 'failed' && error
 
@@ -83,7 +84,7 @@ export function StepRow({ step, scenarioName, index, runState, background, onScr
       {failedWithError && (
         <div className="step-attach callout" data-status="failed">
           <span className="callout-title">step failed</span>
-          <div className="callout-body">{error}</div>
+          <FailureBody error={error} mismatch={mismatch} />
           <StepShots shots={screenshots} onOpen={onScreenshot} />
         </div>
       )}

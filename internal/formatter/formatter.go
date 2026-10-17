@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/cucumber/godog/formatters"
 	messages "github.com/cucumber/messages/go/v21"
 
+	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -40,6 +42,10 @@ type Event struct {
 	StepIndex *int `json:"stepIndex,omitempty"`
 	// DurationMs is how long the step or scenario took.
 	DurationMs *int64 `json:"durationMs,omitempty"`
+	// Mismatch is both sides of a failed comparison, on a step_end whose
+	// error is (or wraps) a jsonmatch.Mismatch, so the web UI can draw a
+	// diff instead of parsing Error back apart.
+	Mismatch *Mismatch `json:"mismatch,omitempty"`
 
 	// Screenshots are the images a step left behind, on its step_end: what
 	// the browser resource wrote for `saves screenshot`, and the page when
@@ -52,6 +58,31 @@ type Event struct {
 	Passed  int `json:"passed,omitempty"`
 	Failed  int `json:"failed,omitempty"`
 	Skipped int `json:"skipped,omitempty"`
+}
+
+// Mismatch is the step_end event's "mismatch" object.
+type Mismatch struct {
+	What     string `json:"what"`
+	Expected string `json:"expected"`
+	Actual   string `json:"actual"`
+	// Mode is "text", "json" or "subset" (jsonmatch.Mode).
+	Mode string `json:"mode"`
+}
+
+// maxMismatchBytes bounds the expected and actual values a step_end carries.
+// The error text already holds both, and `tomato ui` reads events a line at
+// a time with a 1 MiB limit; above this the UI falls back to the error text,
+// which it shows as plain text at that size anyway.
+const maxMismatchBytes = 256 << 10
+
+// mismatchOf returns the event's mismatch object for err, or nil when err is
+// not a comparison or its values are too big to repeat.
+func mismatchOf(err error) *Mismatch {
+	var m *jsonmatch.Mismatch
+	if !errors.As(err, &m) || len(m.Expected)+len(m.Actual) > maxMismatchBytes {
+		return nil
+	}
+	return &Mismatch{What: m.What, Expected: m.Expected, Actual: m.Actual, Mode: string(m.Mode)}
 }
 
 // TomatoFormatter outputs structured JSON events for UI parsing
@@ -142,7 +173,7 @@ func (f *TomatoFormatter) stepElapsed() *int64 {
 // the step left behind filled in. A failed step's screenshot is taken in an
 // after-step hook, which godog runs before it reports the step, so it is
 // recorded by the time this runs.
-func (f *TomatoFormatter) stepEnd(pickle *messages.Pickle, step *messages.PickleStep, status, errMsg string) {
+func (f *TomatoFormatter) stepEnd(pickle *messages.Pickle, step *messages.PickleStep, status, errMsg string, mm *Mismatch) {
 	f.emit(Event{
 		Type:        EventStepEnd,
 		Feature:     f.currentFeature,
@@ -153,6 +184,7 @@ func (f *TomatoFormatter) stepEnd(pickle *messages.Pickle, step *messages.Pickle
 		StepIndex:   f.stepIdx(pickle, step),
 		DurationMs:  f.stepElapsed(),
 		Screenshots: resource.TakeScreenshots(pickle.Name),
+		Mismatch:    mm,
 	})
 }
 
@@ -252,7 +284,7 @@ func (f *TomatoFormatter) Defined(pickle *messages.Pickle, step *messages.Pickle
 // Passed is called when a step passes
 func (f *TomatoFormatter) Passed(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	f.stepsPassed++
-	f.stepEnd(pickle, step, "passed", "")
+	f.stepEnd(pickle, step, "passed", "", nil)
 }
 
 // Failed is called when a step fails
@@ -266,13 +298,13 @@ func (f *TomatoFormatter) Failed(pickle *messages.Pickle, step *messages.PickleS
 		f.currentScenarioErr = errMsg
 	}
 
-	f.stepEnd(pickle, step, "failed", errMsg)
+	f.stepEnd(pickle, step, "failed", errMsg, mismatchOf(err))
 }
 
 // Skipped is called when a step is skipped
 func (f *TomatoFormatter) Skipped(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	f.stepsSkipped++
-	f.stepEnd(pickle, step, "skipped", "")
+	f.stepEnd(pickle, step, "skipped", "", nil)
 }
 
 // Undefined is called when a step has no matching definition
@@ -281,13 +313,13 @@ func (f *TomatoFormatter) Undefined(pickle *messages.Pickle, step *messages.Pick
 	f.scenarioHadFailure = true
 	f.currentScenarioErr = fmt.Sprintf("step undefined: %s", step.Text)
 
-	f.stepEnd(pickle, step, "undefined", "step undefined")
+	f.stepEnd(pickle, step, "undefined", "step undefined", nil)
 }
 
 // Pending is called when a step is pending
 func (f *TomatoFormatter) Pending(pickle *messages.Pickle, step *messages.PickleStep, def *formatters.StepDefinition) {
 	f.stepsSkipped++
-	f.stepEnd(pickle, step, "pending", "")
+	f.stepEnd(pickle, step, "pending", "", nil)
 }
 
 // Ambiguous is called when a step matches multiple definitions
@@ -301,7 +333,7 @@ func (f *TomatoFormatter) Ambiguous(pickle *messages.Pickle, step *messages.Pick
 		f.currentScenarioErr = errMsg
 	}
 
-	f.stepEnd(pickle, step, "ambiguous", errMsg)
+	f.stepEnd(pickle, step, "ambiguous", errMsg, nil)
 }
 
 // Summary is called after all tests complete

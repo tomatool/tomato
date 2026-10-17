@@ -145,6 +145,9 @@ type WSMessage struct {
 	Output     string `json:"output,omitempty"`
 	StepIndex  *int   `json:"stepIndex,omitempty"`
 	DurationMs *int64 `json:"durationMs,omitempty"`
+	// Mismatch is a failed comparison's both sides, relayed as the runner
+	// sent it on step_end (internal/formatter), for the step's diff.
+	Mismatch json.RawMessage `json:"mismatch,omitempty"`
 	// Debug logs fields
 	Runs  []runlog.RunInfo `json:"runs,omitempty"`
 	RunID string           `json:"runId,omitempty"`
@@ -156,19 +159,20 @@ type WSMessage struct {
 
 // TomatoEvent represents a structured event from the tomato formatter
 type TomatoEvent struct {
-	Type       string `json:"type"`
-	Feature    string `json:"feature,omitempty"`
-	Scenario   string `json:"scenario,omitempty"`
-	Step       string `json:"step,omitempty"`
-	Status     string `json:"status,omitempty"`
-	Error      string `json:"error,omitempty"`
-	File       string `json:"file,omitempty"`
-	StepIndex  *int   `json:"stepIndex,omitempty"`
-	DurationMs *int64 `json:"durationMs,omitempty"`
-	Total      int    `json:"total,omitempty"`
-	Passed     int    `json:"passed,omitempty"`
-	Failed     int    `json:"failed,omitempty"`
-	Skipped    int    `json:"skipped,omitempty"`
+	Type       string          `json:"type"`
+	Feature    string          `json:"feature,omitempty"`
+	Scenario   string          `json:"scenario,omitempty"`
+	Step       string          `json:"step,omitempty"`
+	Status     string          `json:"status,omitempty"`
+	Error      string          `json:"error,omitempty"`
+	File       string          `json:"file,omitempty"`
+	StepIndex  *int            `json:"stepIndex,omitempty"`
+	DurationMs *int64          `json:"durationMs,omitempty"`
+	Mismatch   json.RawMessage `json:"mismatch,omitempty"`
+	Total      int             `json:"total,omitempty"`
+	Passed     int             `json:"passed,omitempty"`
+	Failed     int             `json:"failed,omitempty"`
+	Skipped    int             `json:"skipped,omitempty"`
 	// Screenshots are the images a step left behind, on its step_end.
 	Screenshots []resource.Screenshot `json:"screenshots,omitempty"`
 }
@@ -890,15 +894,7 @@ func (s *UIServer) runTests(scenarioFilter string) {
 				})
 
 			case "step_end":
-				s.broadcast(WSMessage{
-					Type:            "step_finished",
-					Scenario:        event.Scenario,
-					Status:          event.Status,
-					Output:          event.Error,
-					StepIndex:       event.StepIndex,
-					DurationMs:      event.DurationMs,
-					StepScreenshots: event.Screenshots,
-				})
+				s.broadcast(stepFinished(event))
 				// The step's picture is on disk by now; the list follows the
 				// step so the gallery fills in as the run goes.
 				if len(event.Screenshots) > 0 {
@@ -931,6 +927,21 @@ func (s *UIServer) runTests(scenarioFilter string) {
 	// Broadcast updated runs list after run completes
 	s.broadcastRunsUpdate()
 	s.broadcastScreenshotsUpdate()
+}
+
+// stepFinished is the /ws message for a step_end event: its status, timing,
+// error text and, for a failed comparison, both sides of it.
+func stepFinished(event TomatoEvent) WSMessage {
+	return WSMessage{
+		Type:            "step_finished",
+		Scenario:        event.Scenario,
+		Status:          event.Status,
+		Output:          event.Error,
+		StepIndex:       event.StepIndex,
+		DurationMs:      event.DurationMs,
+		Mismatch:        event.Mismatch,
+		StepScreenshots: event.Screenshots,
+	}
 }
 
 // stripAnsi removes ANSI escape codes from a string

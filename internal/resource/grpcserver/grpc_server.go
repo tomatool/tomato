@@ -1095,14 +1095,15 @@ func (r *GRPCServer) lastRequestJSONContains(target string, doc *godog.DocString
 	if err != nil {
 		return err
 	}
+	expectedText := resource.ReplaceVariables(doc.Content)
 	var expected, actual any
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("invalid expected JSON: %w", err)
 	}
 	if err := json.Unmarshal(c.request, &actual); err != nil {
 		return fmt.Errorf("%s request is not JSON: %w", name, err)
 	}
-	if err := jsonmatch.Compare(expected, actual, "", true); err != nil {
+	if err := jsonmatch.CompareDocs("request", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(string(c.request)), true); err != nil {
 		return fmt.Errorf("%s request: %w\nrequest: %s", name, err, c.request)
 	}
 	return nil

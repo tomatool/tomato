@@ -1,8 +1,11 @@
 import { fmtDur } from '../lib/format'
+import { MismatchView, useMismatch } from './Mismatch.jsx'
 
 // The exact thing a step did, as far as tomato knows it: the step and its
 // payload, not bytes captured on the wire.
 export function Peek({ msg }) {
+  const failed = msg?.status === 'failed'
+  const mm = useMismatch(failed ? msg.err : null, failed ? msg.mismatch : null)
   if (!msg) return null
   return (
     <div className="peek" data-status={msg.status || undefined}>
@@ -24,8 +27,9 @@ export function Peek({ msg }) {
       {msg.body && <pre className="docstring peek-body">{msg.body}</pre>}
       <div className="peek-foot">
         <i className="pip" data-status={msg.status} />
-        <span>{msg.err || (msg.status ? msg.status : 'not run yet')}</span>
+        <span>{mm ? 'step failed' : msg.err || (msg.status ? msg.status : 'not run yet')}</span>
       </div>
+      {mm && <div className="peek-diff"><MismatchView a={mm} error={msg.err} /></div>}
     </div>
   )
 }

@@ -539,28 +539,30 @@ func (r *GRPC) responseJSONShouldMatch(body *godog.DocString) error {
 	if err := r.haveBody(); err != nil {
 		return err
 	}
+	expectedText := resource.ReplaceVariables(body.Content)
 	var expected, actual any
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(body.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("expected JSON is invalid: %w", err)
 	}
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
 		return fmt.Errorf("response is not valid JSON: %w", err)
 	}
-	return jsonmatch.Compare(expected, actual, "", false)
+	return jsonmatch.CompareDocs("response JSON", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(string(r.lastBody)), false)
 }
 
 func (r *GRPC) responseJSONShouldContain(body *godog.DocString) error {
 	if err := r.haveBody(); err != nil {
 		return err
 	}
+	expectedText := resource.ReplaceVariables(body.Content)
 	var expected, actual any
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(body.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("expected JSON is invalid: %w", err)
 	}
 	if err := json.Unmarshal(r.lastBody, &actual); err != nil {
 		return fmt.Errorf("response is not valid JSON: %w", err)
 	}
-	return jsonmatch.Compare(expected, actual, "", true)
+	return jsonmatch.CompareDocs("response JSON", expected, actual, strings.TrimSpace(expectedText), strings.TrimSpace(string(r.lastBody)), true)
 }
 
 // --- discovery assertions ---

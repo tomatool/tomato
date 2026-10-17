@@ -761,7 +761,7 @@ func (r *Kafka) shouldReceiveMessage(topic, timeout string, doc *godog.DocString
 	actual := strings.TrimSpace(string(msg.Value))
 
 	if actual != expected {
-		return fmt.Errorf("message mismatch:\nexpected: %s\nactual: %s", expected, actual)
+		return &jsonmatch.Mismatch{What: "message", Expected: expected, Actual: actual, Mode: jsonmatch.ModeText}
 	}
 
 	return nil
@@ -1085,15 +1085,17 @@ func (r *Kafka) compareLastAvro(doc *godog.DocString, partial bool) error {
 		return fmt.Errorf("no message received")
 	}
 
+	expectedText := resource.ReplaceVariables(doc.Content)
 	var expected any
-	if err := json.Unmarshal([]byte(resource.ReplaceVariables(doc.Content)), &expected); err != nil {
+	if err := json.Unmarshal([]byte(expectedText), &expected); err != nil {
 		return fmt.Errorf("expected JSON is invalid: %w", err)
 	}
 	actual, err := r.decodeAvroJSON(context.Background(), lastMsg)
 	if err != nil {
 		return err
 	}
-	return jsonmatch.Compare(expected, actual, "", partial)
+	actualText, _ := json.Marshal(actual)
+	return jsonmatch.CompareDocs("message", expected, actual, strings.TrimSpace(expectedText), string(actualText), partial)
 }
 
 // decodeAvroJSON decodes a wire-format Avro message value into generic JSON.
