@@ -152,8 +152,11 @@ func TestOpenAndSee(t *testing.T) {
 		"/": `<h1>7 Zinsen</h1><p hidden>clause_id</p><input value="typed by someone"><input type="password" value="secret">
 			<div id="later"></div><div id="soon">Saving…</div>
 			<script>
-				setTimeout(() => { document.getElementById('later').textContent = 'Neuer Satz.' }, 300);
-				setTimeout(() => { document.getElementById('soon').remove() }, 300);
+				// Long enough that the "not yet" assertions below cannot lose
+				// the race on a slow runner, short enough to stay well inside
+				// the 3s waits that follow.
+				setTimeout(() => { document.getElementById('later').textContent = 'Neuer Satz.' }, 1500);
+				setTimeout(() => { document.getElementById('soon').remove() }, 1500);
 			</script>`,
 	})
 	r := person(t, srv, nil)
