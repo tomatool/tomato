@@ -315,6 +315,17 @@ func (v *Validator) validateResources() {
 			continue
 		}
 
+		if err := registry.ValidateOptions(res); err != nil {
+			v.results = append(v.results, ValidationResult{
+				Category:   "Resources",
+				Item:       name,
+				Status:     "error",
+				Message:    err.Error(),
+				Suggestion: "Fix the option in the config; `tomato run` refuses it too",
+			})
+			continue
+		}
+
 		// A stateful resource tomato did not start is a real system that
 		// tomato wipes before every scenario. Say so on every validate, even
 		// once it has been acknowledged — it is the kind of thing that should
@@ -338,17 +349,6 @@ func (v *Validator) validateResources() {
 				Message:    fmt.Sprintf("%s resource without container reference", res.Type),
 				Suggestion: "Add 'container: <name>' to connect to a container, or provide connection details",
 			})
-		}
-
-		if err := registry.ValidateOptions(name, res); err != nil {
-			v.results = append(v.results, ValidationResult{
-				Category:   "Resources",
-				Item:       name,
-				Status:     "error",
-				Message:    err.Error(),
-				Suggestion: fmt.Sprintf("See the %s configuration page for its options", res.Type),
-			})
-			continue
 		}
 
 		v.results = append(v.results, ValidationResult{

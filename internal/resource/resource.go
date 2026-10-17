@@ -59,14 +59,6 @@ type ConditionalAppEnvProvider interface {
 	ProvidesAppEnv() bool
 }
 
-// OptionsValidator is implemented by resources that can check their options
-// without connecting to anything, like the grpc-server resource loading its
-// descriptor set. `tomato validate` reports what it returns, so a broken
-// option fails there instead of when the run starts.
-type OptionsValidator interface {
-	ValidateOptions() error
-}
-
 // AppControl is the application under test, for resources that stop and
 // start it mid-scenario.
 type AppControl interface {

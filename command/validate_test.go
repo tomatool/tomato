@@ -33,10 +33,26 @@ func TestValidateReportsResourceOptions(t *testing.T) {
 	for _, r := range v.results {
 		got[r.Item] = r
 	}
-	if r := got["users"]; r.Status != "error" || !strings.Contains(r.Message, "descriptor_set") {
+	if r := got["users"]; r.Status != "error" || !strings.Contains(r.Message, "descriptor_set is required") {
 		t.Errorf("users = %+v, want an error naming descriptor_set", r)
 	}
 	if r := got["api"]; r.Status != "ok" {
 		t.Errorf("api = %+v, want ok", r)
 	}
+}
+
+func TestValidateResourcesChecksOptions(t *testing.T) {
+	v := &Validator{config: &config.Config{
+		Containers: map[string]config.Container{"postgres": {Image: "postgres:16"}},
+		Resources: map[string]config.Resource{
+			"db": {Type: "postgres", Container: "postgres", Options: map[string]any{"schemas": "plato"}},
+		},
+	}}
+	v.validateResources()
+	for _, r := range v.results {
+		if r.Item == "db" && r.Status == "error" && strings.Contains(r.Message, "options.schemas") {
+			return
+		}
+	}
+	t.Fatalf("validate did not flag schemas given as a string: %+v", v.results)
 }
