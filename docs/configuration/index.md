@@ -339,11 +339,14 @@ resources:
     options:
       user: test
       password: test
-      # Only truncate these tables during reset (if not set, truncates ALL public tables)
+      # Reset every table in these schemas (if neither this nor tables is set,
+      # every table in public)
+      schemas:
+        - app
+        - "plugin_*"       # any schema whose name matches
+      # Reset these tables too
       tables:
-        - users
-        - orders
-        - products
+        - public.outbox
       # Never truncate these tables (added to the defaults below)
       exclude:
         - countries        # reference data seeded by a migration
@@ -355,11 +358,26 @@ By default, PostgreSQL resources truncate **all tables** in the public schema be
 
 | Option | Description |
 |--------|-------------|
-| `tables` | If set, only these tables are truncated (instead of all) |
-| `exclude` | Extra tables to never truncate, on top of the defaults |
+| `schemas` | Truncate every table in these schemas instead of public. A name containing `*` is a pattern |
+| `tables` | Tables to truncate. Alone, only these are truncated; with `schemas`, these are truncated as well |
+| `exclude` | Extra tables to never truncate, on top of the defaults: `table` in any schema, or `schema.table` |
 
-Unless `tables` is set, migration history tables are never truncated, so
-migration tools still see their migrations as applied:
+`schemas` is for an app that keeps its tables in more than one schema, a schema
+per module or per plugin, so the suite doesn't have to list every table and
+keep that list in step with the migrations. The tables are looked up in the
+catalog at every reset, so a table or a schema a migration adds is reset
+without a change to `tomato.yml`.
+
+A schema named in `schemas` has to exist when the first scenario starts, which
+it does when the app creates it in its migrations at startup; otherwise the
+reset fails and says which schema is missing, rather than leaving its tables to
+leak state between scenarios. A pattern such as `plugin_*` may match no schema
+at all, since the schemas it stands for come and go: one a scenario creates is
+reset from the next scenario on. Quote a pattern in YAML.
+
+Migration history tables are never truncated when the tables are found from
+a schema, in whichever schema they are, so migration tools still see their
+migrations as applied:
 
 | Tool | Tables |
 |------|--------|
@@ -372,9 +390,13 @@ Reference data that migrations insert (countries, roles, permissions) is
 truncated like any other table. Add those tables to `exclude` so scenarios
 don't have to re-seed them.
 
-`tables` and `exclude` are mutually exclusive: when `tables` is set, exactly
-those tables are truncated and both `exclude` and the migration-table list
-above are ignored.
+A table listed in `tables` is always truncated, even when `exclude` or the
+list above names it. So when `tables` is set without `schemas`, exactly those
+tables are truncated, and both `exclude` and the migration-table list are
+ignored.
+
+All the tables are truncated in one `TRUNCATE ... RESTART IDENTITY CASCADE`
+statement, so a generated id starts again from 1 in every scenario.
 
 The `container` field automatically provides the connection details - tomato resolves the container's host and port at runtime.
 
