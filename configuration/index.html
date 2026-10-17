@@ -2738,14 +2738,17 @@ here, and are cleared between scenarios.</p>
 <a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
 <a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">      </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
 <a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">      </span><span class="c1"># Only truncate these tables during reset (if not set, truncates ALL public tables)</span>
-<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">      </span><span class="nt">tables</span><span class="p">:</span>
-<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">users</span>
-<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">orders</span>
-<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">products</span>
-<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">      </span><span class="c1"># Never truncate these tables (added to the defaults below)</span>
-<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">      </span><span class="nt">exclude</span><span class="p">:</span>
-<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">countries</span><span class="w">        </span><span class="c1"># reference data seeded by a migration</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">      </span><span class="c1"># Reset every table in these schemas (if neither this nor tables is set,</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">      </span><span class="c1"># every table in public)</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">      </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"plugin_*"</span><span class="w">       </span><span class="c1"># any schema whose name matches</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">      </span><span class="c1"># Reset these tables too</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">      </span><span class="nt">tables</span><span class="p">:</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">public.outbox</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">      </span><span class="c1"># Never truncate these tables (added to the defaults below)</span>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">      </span><span class="nt">exclude</span><span class="p">:</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">countries</span><span class="w">        </span><span class="c1"># reference data seeded by a migration</span>
 </code></pre></div>
 <h4 id="reset-behavior">Reset behavior<a class="headerlink" href="#reset-behavior" title="Permanent link">&para;</a></h4>
 <p>By default, PostgreSQL resources truncate <strong>all tables</strong> in the public schema before each scenario. You can control this behavior:</p>
@@ -2758,17 +2761,33 @@ here, and are cleared between scenarios.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>schemas</code></td>
+<td>Truncate every table in these schemas instead of public. A name containing <code>*</code> is a pattern</td>
+</tr>
+<tr>
 <td><code>tables</code></td>
-<td>If set, only these tables are truncated (instead of all)</td>
+<td>Tables to truncate. Alone, only these are truncated; with <code>schemas</code>, these are truncated as well</td>
 </tr>
 <tr>
 <td><code>exclude</code></td>
-<td>Extra tables to never truncate, on top of the defaults</td>
+<td>Extra tables to never truncate, on top of the defaults: <code>table</code> in any schema, or <code>schema.table</code></td>
 </tr>
 </tbody>
 </table>
-<p>Unless <code>tables</code> is set, migration history tables are never truncated, so
-migration tools still see their migrations as applied:</p>
+<p><code>schemas</code> is for an app that keeps its tables in more than one schema, a schema
+per module or per plugin, so the suite doesn't have to list every table and
+keep that list in step with the migrations. The tables are looked up in the
+catalog at every reset, so a table or a schema a migration adds is reset
+without a change to <code>tomato.yml</code>.</p>
+<p>A schema named in <code>schemas</code> has to exist when the first scenario starts, which
+it does when the app creates it in its migrations at startup; otherwise the
+reset fails and says which schema is missing, rather than leaving its tables to
+leak state between scenarios. A pattern such as <code>plugin_*</code> may match no schema
+at all, since the schemas it stands for come and go: one a scenario creates is
+reset from the next scenario on. Quote a pattern in YAML.</p>
+<p>Migration history tables are never truncated when the tables are found from
+a schema, in whichever schema they are, so migration tools still see their
+migrations as applied:</p>
 <table>
 <thead>
 <tr>
@@ -2798,9 +2817,12 @@ migration tools still see their migrations as applied:</p>
 <p>Reference data that migrations insert (countries, roles, permissions) is
 truncated like any other table. Add those tables to <code>exclude</code> so scenarios
 don't have to re-seed them.</p>
-<p><code>tables</code> and <code>exclude</code> are mutually exclusive: when <code>tables</code> is set, exactly
-those tables are truncated and both <code>exclude</code> and the migration-table list
-above are ignored.</p>
+<p>A table listed in <code>tables</code> is always truncated, even when <code>exclude</code> or the
+list above names it. So when <code>tables</code> is set without <code>schemas</code>, exactly those
+tables are truncated, and both <code>exclude</code> and the migration-table list are
+ignored.</p>
+<p>All the tables are truncated in one <code>TRUNCATE ... RESTART IDENTITY CASCADE</code>
+statement, so a generated id starts again from 1 in every scenario.</p>
 <p>The <code>container</code> field automatically provides the connection details - tomato resolves the container's host and port at runtime.</p>
 <h3 id="scylladb-cassandra">ScyllaDB / Cassandra<a class="headerlink" href="#scylladb-cassandra" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">resources</span><span class="p">:</span>
