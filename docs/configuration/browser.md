@@ -19,14 +19,14 @@ app:
   port: 8080
 
 resources:
-  alice:
+  alice-browser:
     type: browser
     container: chrome
     options:
       base_url: http://localhost:8080
       viewport: 1440x900
       locale: de-DE
-  bob:
+  bob-browser:
     type: browser
     container: chrome
     options:
@@ -35,10 +35,10 @@ resources:
 
 ```gherkin
 Scenario: Two editors see each other's changes
-  Given "alice" opens "/master"
-  And "bob" opens "/master"
-  When "alice" types " Neuer Satz." at the end of "7.2"
-  Then "bob" sees "Neuer Satz." within "3s"
+  Given "alice-browser" opens "/master"
+  And "bob-browser" opens "/master"
+  When "alice-browser" types " Neuer Satz." at the end of "7.2"
+  Then "bob-browser" sees "Neuer Satz." within "3s"
 ```
 
 Each resource is its own browser context — its own cookies, local and session
@@ -58,7 +58,7 @@ people. Collaboration needs no special syntax.
 
 ## How a step finds what it names
 
-`"alice" clicks "Apply"` does not take a CSS selector. tomato asks Chromium's
+`"alice-browser" clicks "Apply"` does not take a CSS selector. tomato asks Chromium's
 accessibility tree for elements whose **accessible name** is `Apply` — the
 text of a button or link, the `<label>` of a field, `aria-label`,
 `aria-labelledby`, a placeholder — the same name a screen reader announces.
@@ -157,7 +157,7 @@ INF screenshot of the page when the step failed path=.tomato/runs/…/screenshot
 ```
 
 It is attached to the failed step in the `cucumber` report too. To keep one
-from a passing scenario, `"alice" saves screenshot "after-apply"` writes
+from a passing scenario, `"alice-browser" saves screenshot "after-apply"` writes
 `after-apply.png`.
 
 ### Previewing them in `tomato ui`

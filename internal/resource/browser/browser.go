@@ -353,7 +353,7 @@ func (r *Browser) beforeScenario(ctx context.Context, sc *godog.Scenario) (conte
 }
 
 // afterStep saves what the page showed when a step of the scenario failed,
-// whichever resource the step belonged to: a red "db" assertion is easier to
+// whichever resource the step belonged to: a red "app-db" assertion is easier to
 // read beside the page that led to it. One screenshot per scenario, of the
 // first failure.
 func (r *Browser) afterStep(ctx context.Context, _ *godog.Step, status godog.StepResultStatus, _ error) (context.Context, error) {

@@ -143,14 +143,14 @@ func (p *PDF) Steps() resource.StepCategory {
 				Group:       "Reading",
 				Pattern:     `^"{resource}" reads "([^"]*)" object "([^"]*)"$`,
 				Description: "Read a PDF from an object of an s3 resource, as \"bucket/key\"",
-				Example:     `"{resource}" reads "files" object "cas/CA_Version_No._07.07_AT-de.pdf"`,
+				Example:     `"{resource}" reads "uploads-storage" object "cas/CA_Version_No._07.07_AT-de.pdf"`,
 				Handler:     p.readsObject,
 			},
 			{
 				Group:       "Reading",
 				Pattern:     `^"{resource}" reads "([^"]*)" response body$`,
 				Description: "Read a PDF from the body of the last response an http resource received",
-				Example:     `"{resource}" reads "api" response body`,
+				Example:     `"{resource}" reads "app-client" response body`,
 				Handler:     p.readsResponseBody,
 			},
 			{

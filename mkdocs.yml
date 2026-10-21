@@ -36,13 +36,16 @@ theme:
 extra_css:
   - stylesheets/tomato.css
 
+extra_javascript:
+  - javascripts/split-flow.js
+
 nav:
   - Home: index.md
   - Documentation Map: overview.md
   - Guide:
     - Getting Started: getting-started/index.md
     - Writing a Suite: guide/philosophy.md
-    - Step Coverage: getting-started/coverage.md
+    - Test Coverage: getting-started/coverage.md
     - GitHub Action: getting-started/github-action.md
   - Configuration:
     - Reference: configuration/index.md

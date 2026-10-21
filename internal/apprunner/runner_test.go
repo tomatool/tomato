@@ -149,9 +149,9 @@ func TestSetShowLogsAndResources(t *testing.T) {
 	if r.showLogs {
 		t.Error("SetShowLogs(false) should disable log display")
 	}
-	res := map[string]config.Resource{"mock": {Type: "http-server"}}
+	res := map[string]config.Resource{"payments-stub": {Type: "http-server"}}
 	r.SetResources(res)
-	if _, ok := r.resources["mock"]; !ok {
+	if _, ok := r.resources["payments-stub"]; !ok {
 		t.Error("SetResources should store the resources")
 	}
 }
@@ -315,23 +315,23 @@ func TestBuildEnvForCommand(t *testing.T) {
 		"NO_PORT":     "{{.postgres.port}}",
 		"UNMAPPED":    "{{.postgres.port.6379}}",
 		"UNKNOWN":     "{{.redis.port.6379}}",
-		"MOCK":        "{{.mock.url}}/v1",
-		"MOCK_NOPORT": "{{.mock-noport.url}}",
-		"OTHER":       "{{.api.url}}",
+		"MOCK":        "{{.payments-stub.url}}/v1",
+		"MOCK_NOPORT": "{{.refunds-stub.url}}",
+		"OTHER":       "{{.app-client.url}}",
 		"MISSING":     "{{.nope.url}}",
 		"PLAIN":       "value",
-		"USERS_ADDR":  "{{.users.address}}",
-		"USERS_HOST":  "{{ .users.host }}",
-		"USERS_PORT":  "{{.users.port}}",
-		"USERS_URL":   "dns:///{{.users.host}}:{{.users.port}}",
-		"NOPORT_ADDR": "{{.users-noport.address}}",
+		"USERS_ADDR":  "{{.users-stub.address}}",
+		"USERS_HOST":  "{{ .users-stub.host }}",
+		"USERS_PORT":  "{{.users-stub.port}}",
+		"USERS_URL":   "dns:///{{.users-stub.host}}:{{.users-stub.port}}",
+		"NOPORT_ADDR": "{{.accounts-stub.address}}",
 	}}, cm)
 	r.SetResources(map[string]config.Resource{
-		"mock":         {Type: "http-server", Options: map[string]any{"port": 9999}},
-		"mock-noport":  {Type: "http-server", Options: map[string]any{}},
-		"api":          {Type: "http"},
-		"users":        {Type: "grpc-server", Options: map[string]any{"port": 9995}},
-		"users-noport": {Type: "grpc-server"},
+		"payments-stub": {Type: "http-server", Options: map[string]any{"port": 9999}},
+		"refunds-stub":  {Type: "http-server", Options: map[string]any{}},
+		"app-client":    {Type: "http"},
+		"users-stub":    {Type: "grpc-server", Options: map[string]any{"port": 9995}},
+		"accounts-stub": {Type: "grpc-server"},
 	})
 
 	env := r.buildEnvForCommand()
@@ -344,15 +344,15 @@ func TestBuildEnvForCommand(t *testing.T) {
 		"UNMAPPED":    "{{.postgres.port.6379}}",
 		"UNKNOWN":     "{{.redis.port.6379}}",
 		"MOCK":        "http://localhost:9999/v1",
-		"MOCK_NOPORT": "{{.mock-noport.url}}",
-		"OTHER":       "{{.api.url}}",
+		"MOCK_NOPORT": "{{.refunds-stub.url}}",
+		"OTHER":       "{{.app-client.url}}",
 		"MISSING":     "{{.nope.url}}",
 		"PLAIN":       "value",
 		"USERS_ADDR":  "localhost:9995",
 		"USERS_HOST":  "localhost",
 		"USERS_PORT":  "9995",
 		"USERS_URL":   "dns:///localhost:9995",
-		"NOPORT_ADDR": "{{.users-noport.address}}",
+		"NOPORT_ADDR": "{{.accounts-stub.address}}",
 	}
 	for k, v := range want {
 		if env[k] != v {
@@ -367,19 +367,19 @@ func TestBuildEnvForDocker(t *testing.T) {
 		"DB_PORT":     "{{.postgres.port.5432}}",
 		"DB_PORT_TCP": "{{.postgres.port.5432/tcp}}",
 		"NO_PORT":     "{{.postgres.port}}",
-		"MOCK":        "{{.mock.url}}",
-		"MOCK_NOPORT": "{{.mock-noport.url}}",
-		"OTHER":       "{{.api.url}}",
+		"MOCK":        "{{.payments-stub.url}}",
+		"MOCK_NOPORT": "{{.refunds-stub.url}}",
+		"OTHER":       "{{.app-client.url}}",
 		"MISSING":     "{{.nope.url}}",
-		"USERS_ADDR":  "{{.users.address}}",
-		"USERS_HOST":  "{{.users.host}}",
-		"USERS_PORT":  "{{.users.port}}",
+		"USERS_ADDR":  "{{.users-stub.address}}",
+		"USERS_HOST":  "{{.users-stub.host}}",
+		"USERS_PORT":  "{{.users-stub.port}}",
 	}}, nil)
 	r.SetResources(map[string]config.Resource{
-		"mock":        {Type: "http-server", Options: map[string]any{"port": 9999}},
-		"mock-noport": {Type: "http-server"},
-		"api":         {Type: "http"},
-		"users":       {Type: "grpc-server", Options: map[string]any{"port": 9995}},
+		"payments-stub": {Type: "http-server", Options: map[string]any{"port": 9999}},
+		"refunds-stub":  {Type: "http-server"},
+		"app-client":    {Type: "http"},
+		"users-stub":    {Type: "grpc-server", Options: map[string]any{"port": 9995}},
 	})
 
 	env := r.buildEnvForDocker()
@@ -389,8 +389,8 @@ func TestBuildEnvForDocker(t *testing.T) {
 		"DB_PORT_TCP": "5432",
 		"NO_PORT":     "{{.postgres.port}}",
 		"MOCK":        "http://host.docker.internal:9999",
-		"MOCK_NOPORT": "{{.mock-noport.url}}",
-		"OTHER":       "{{.api.url}}",
+		"MOCK_NOPORT": "{{.refunds-stub.url}}",
+		"OTHER":       "{{.app-client.url}}",
 		"MISSING":     "{{.nope.url}}",
 		"USERS_ADDR":  "host.docker.internal:9995",
 		"USERS_HOST":  "host.docker.internal",

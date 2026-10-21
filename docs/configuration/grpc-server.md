@@ -31,7 +31,7 @@ it did not fit.
 
 ```yaml
 resources:
-  users:
+  users-stub:
     type: grpc-server
     options:
       port: 9995
@@ -59,9 +59,9 @@ dependencies while it starts finds it listening.
 app:
   command: go run ./cmd/server
   env:
-    USERS_ADDR: "{{.users.address}}"    # localhost:9995
-    USERS_HOST: "{{.users.host}}"       # localhost
-    USERS_PORT: "{{.users.port}}"       # 9995
+    USERS_ADDR: "{{.users-stub.address}}"    # localhost:9995
+    USERS_HOST: "{{.users-stub.host}}"       # localhost
+    USERS_PORT: "{{.users-stub.port}}"       # 9995
 ```
 
 A gRPC target is `host:port`, not a URL, so the address is the usual one to
@@ -72,12 +72,12 @@ Templates need a fixed `port`; without one they are left as they are.
 
 ```gherkin
 Scenario: The page shows the user's name
-  Given "users" stub "users.v1.UserService/GetUser" returns json:
+  Given "users-stub" stub "users.v1.UserService/GetUser" returns json:
     """
     {"id": "42", "name": "Alice", "role": "ROLE_ADMIN"}
     """
-  When "api" sends "GET" to "/profile/42"
-  Then "api" response json "name" is "Alice"
+  When "app-client" sends "GET" to "/profile/42"
+  Then "app-client" response json "name" is "Alice"
 ```
 
 The docstring is the response message in protojson: field names in
@@ -87,7 +87,7 @@ lowerCamelCase (or as in the `.proto`), enums by name, `Timestamp` as an RFC
 A failure is a status, with an optional message:
 
 ```gherkin
-Given "users" stub "users.v1.UserService/GetUser" returns status "NOT_FOUND" with message "no user 42"
+Given "users-stub" stub "users.v1.UserService/GetUser" returns status "NOT_FOUND" with message "no user 42"
 ```
 
 Status names follow the gRPC spec (`NOT_FOUND`, `PERMISSION_DENIED`,
@@ -103,11 +103,11 @@ Between the method and `returns`, conditions narrow the calls a stub answers:
   value takes the same `@` matchers: `"@startswith:secret-"`, `"@gt:10"`.
 
 ```gherkin
-Given "users" stub "users.v1.UserService/GetUser" returns json:
+Given "users-stub" stub "users.v1.UserService/GetUser" returns json:
   """
   {"id": "1", "name": "Bob"}
   """
-And "users" stub "users.v1.UserService/GetUser" with request json "id" "404" returns status "NOT_FOUND"
+And "users-stub" stub "users.v1.UserService/GetUser" with request json "id" "404" returns status "NOT_FOUND"
 ```
 
 The most specific stub wins, then the most recent, so a scenario can override
@@ -121,7 +121,7 @@ last one. A row is a message (`json`) or a failure (`status`, `message`), and
 `delay` answers late:
 
 ```gherkin
-Given "users" stub "users.v1.UserService/GetUser" returns in sequence:
+Given "users-stub" stub "users.v1.UserService/GetUser" returns in sequence:
   | status      | message    | json                          | delay |
   | UNAVAILABLE | warming up |                               |       |
   | OK          |            | {"id": "42", "name": "Slow"}  | 3s    |
@@ -137,7 +137,7 @@ gets `DEADLINE_EXCEEDED` after one second, and the stub stops waiting.
 ends the stream. A last row with a `status` ends it with that status instead:
 
 ```gherkin
-Given "users" stub "users.v1.UserService/WatchUsers" streams:
+Given "users-stub" stub "users.v1.UserService/WatchUsers" streams:
   | json                         | delay | status      | message          |
   | {"id": "1", "name": "Alice"} |       |             |                  |
   | {"id": "2", "name": "Bob"}   | 50ms  |             |                  |
@@ -149,13 +149,13 @@ Given "users" stub "users.v1.UserService/WatchUsers" streams:
 ## Asserting on what the app sent
 
 ```gherkin
-Then "users" received "users.v1.UserService/GetUser"
-And "users" received "users.v1.UserService/GetUser" "2" times
-And "users" did not receive "users.v1.UserService/DeleteUser"
-And "users" received "3" calls
-And "users" received "users.v1.UserService/GetUser" with metadata "authorization" "Bearer {{token}}"
-And "users" last "users.v1.UserService/GetUser" request metadata "authorization" is "Bearer {{token}}"
-And "users" last "users.v1.UserService/ListUsers" request json contains:
+Then "users-stub" received "users.v1.UserService/GetUser"
+And "users-stub" received "users.v1.UserService/GetUser" "2" times
+And "users-stub" did not receive "users.v1.UserService/DeleteUser"
+And "users-stub" received "3" calls
+And "users-stub" received "users.v1.UserService/GetUser" with metadata "authorization" "Bearer {{token}}"
+And "users-stub" last "users.v1.UserService/GetUser" request metadata "authorization" is "Bearer {{token}}"
+And "users-stub" last "users.v1.UserService/ListUsers" request json contains:
   """
   {"pageSize": 50}
   """
@@ -166,8 +166,8 @@ client's responses, so a field that is `0`, `""` or `false` is there to
 assert on. A value the app generated can be kept for later steps:
 
 ```gherkin
-And "users" last "users.v1.UserService/GetUser" request json "id" saved as "{{user_id}}"
-And "users" last "users.v1.UserService/GetUser" request metadata "x-request-id" saved as "{{request_id}}"
+And "users-stub" last "users.v1.UserService/GetUser" request json "id" saved as "{{user_id}}"
+And "users-stub" last "users.v1.UserService/GetUser" request metadata "x-request-id" saved as "{{request_id}}"
 ```
 
 Metadata keys are case-insensitive, as gRPC sends them in lower case.
@@ -175,10 +175,10 @@ Metadata keys are case-insensitive, as gRPC sends them in lower case.
 ## The service is down
 
 ```gherkin
-Given "users" refuses connections
-When "api" sends "GET" to "/profile/42"
-Then "api" response status is "503"
-When "users" accepts connections
+Given "users-stub" refuses connections
+When "app-client" sends "GET" to "/profile/42"
+Then "app-client" response status is "503"
+When "users-stub" accepts connections
 ```
 
 `refuses connections` closes the port and the connections the app already
@@ -204,13 +204,13 @@ app:
     type: http
     path: /health
   env:
-    USERS_ADDR: "{{.users.address}}"
+    USERS_ADDR: "{{.users-stub.address}}"
 
 resources:
-  api:
+  app-client:
     type: http-client
     base_url: http://localhost:8080
-  users:
+  users-stub:
     type: grpc-server
     options:
       port: 9995
@@ -221,14 +221,14 @@ resources:
 Feature: Profile page
 
   Scenario: The user's token reaches the user service
-    Given "users" stub "users.v1.UserService/GetUser" with metadata "authorization" "Bearer alice" returns json:
+    Given "users-stub" stub "users.v1.UserService/GetUser" with metadata "authorization" "Bearer alice" returns json:
       """
       {"id": "42", "name": "Alice"}
       """
-    And "api" header "Authorization" is "Bearer alice"
-    When "api" sends "GET" to "/profile/42"
-    Then "api" response status is "200"
-    And "users" last "users.v1.UserService/GetUser" request json contains:
+    And "app-client" header "Authorization" is "Bearer alice"
+    When "app-client" sends "GET" to "/profile/42"
+    Then "app-client" response status is "200"
+    And "users-stub" last "users.v1.UserService/GetUser" request json contains:
       """
       {"id": "42"}
       """

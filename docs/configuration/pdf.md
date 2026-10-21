@@ -28,16 +28,16 @@ app:
   port: 8080
 
 resources:
-  files:
+  agreements-storage:
     type: s3
     container: minio
     options:
       buckets:
         - cas
-  api:
+  app-client:
     type: http-client
     base_url: http://localhost:8080
-  pdf:
+  agreement-pdf:
     type: pdf
     options:
       validator: verapdf   # optional: the container that checks PDF/UA and PDF/A
@@ -45,25 +45,25 @@ resources:
 
 ```gherkin
 Scenario: A deselected clause keeps its number in the country PDF
-  When "api" sends "POST" to "/versions/AT/pdf"
-  Then "files" object "cas/CA_Version_No._07.07_AT-de.pdf" should exist within "30s"
-  When "pdf" reads "files" object "cas/CA_Version_No._07.07_AT-de.pdf"
-  Then "pdf" text contains "9 Kryptowerte"
-  And "pdf" text contains "Absichtlich frei gelassen"
-  And "pdf" text contains "Version 07.07"
-  And "pdf" text does not contain "{{"
+  When "app-client" sends "POST" to "/versions/AT/pdf"
+  Then "agreements-storage" object "cas/CA_Version_No._07.07_AT-de.pdf" should exist within "30s"
+  When "agreement-pdf" reads "agreements-storage" object "cas/CA_Version_No._07.07_AT-de.pdf"
+  Then "agreement-pdf" text contains "9 Kryptowerte"
+  And "agreement-pdf" text contains "Absichtlich frei gelassen"
+  And "agreement-pdf" text contains "Version 07.07"
+  And "agreement-pdf" text does not contain "{{"
 
 Scenario: A bilingual version is sequential, not columns
-  When "pdf" reads "files" object "cas/CA_Version_No._07.07_LU-fr-en.pdf"
-  Then "pdf" text "Conditions générales" appears before "General Terms and Conditions"
+  When "agreement-pdf" reads "agreements-storage" object "cas/CA_Version_No._07.07_LU-fr-en.pdf"
+  Then "agreement-pdf" text "Conditions générales" appears before "General Terms and Conditions"
 
 Scenario: The generated PDF is accessible
-  When "api" sends "GET" to "/versions/AT/pdf"
-  And "pdf" reads "api" response body
-  Then "pdf" is tagged
-  And "pdf" language is "de-AT"
-  And "pdf" metadata "Title" is "Kundenvereinbarung"
-  And "pdf" conforms to "PDF/UA-1"
+  When "app-client" sends "GET" to "/versions/AT/pdf"
+  And "agreement-pdf" reads "app-client" response body
+  Then "agreement-pdf" is tagged
+  And "agreement-pdf" language is "de-AT"
+  And "agreement-pdf" metadata "Title" is "Kundenvereinbarung"
+  And "agreement-pdf" conforms to "PDF/UA-1"
 ```
 
 ## Options
@@ -80,12 +80,12 @@ loaded.
 
 | Step | Reads |
 |------|-------|
-| `"pdf" reads file "out/ca.pdf"` | A file, relative to the directory tomato runs in, as `shell` and the `s3` upload steps resolve paths. |
-| `"pdf" reads "files" object "cas/x.pdf"` | An object of the `s3` resource named `files`, as `bucket/key`, the same form that resource's own steps take. |
-| `"pdf" reads "api" response body` | The body of the last response the `http` resource named `api` received. Send the request first. |
+| `"agreement-pdf" reads file "out/ca.pdf"` | A file, relative to the directory tomato runs in, as `shell` and the `s3` upload steps resolve paths. |
+| `"agreement-pdf" reads "agreements-storage" object "cas/x.pdf"` | An object of the `s3` resource named `agreements-storage`, as `bucket/key`, the same form that resource's own steps take. |
+| `"agreement-pdf" reads "app-client" response body` | The body of the last response the `http` resource named `app-client` received. Send the request first. |
 
 The resource named in a step has to be of the right type: naming a `redis`
-resource in `reads "cache" object` fails with what it is. A document that
+resource in `reads "app-cache" object` fails with what it is. A document that
 does not parse fails the reading step with pdfcpu's reason, and the previous
 document stays loaded.
 
@@ -151,7 +151,7 @@ check every rule of the standard, and fails with the rules the document
 breaks:
 
 ```
-the document from "api" response body does not conform to PDF/UA-1: 3 rules failed (PDF/UA-1 validation profile)
+the document from "app-client" response body does not conform to PDF/UA-1: 3 rules failed (PDF/UA-1 validation profile)
   7.1-3 (22 checks): Content shall be marked as Artifact or tagged as real content
       at root/document/pages[0]/contentStream[0]/content[0]/contentItem[0]
   7.21.4.1-1 (2 checks): The font programs for all fonts used for rendering within a conforming file shall be embedded within that file

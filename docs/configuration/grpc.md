@@ -35,7 +35,7 @@ unchanged.
 
 ```yaml
 resources:
-  grpc:
+  greeter-client:
     type: grpc
     address: "localhost:9090"
 ```
@@ -55,7 +55,7 @@ containers:
       target: "9090"
 
 resources:
-  grpc:
+  greeter-client:
     type: grpc
     container: myservice
     options:
@@ -77,12 +77,12 @@ resources:
 Request and response messages are JSON, converted with `protojson`:
 
 ```gherkin
-When "grpc" calls "helloworld.Greeter/SayHello" with:
+When "greeter-client" calls "helloworld.Greeter/SayHello" with:
   """
   {"name": "tomato"}
   """
-Then "grpc" call succeeds
-And "grpc" response json "message" is "Hello tomato"
+Then "greeter-client" call succeeds
+And "greeter-client" response json "message" is "Hello tomato"
 ```
 
 Because the response is rendered as JSON, **every JSON assertion tomato
@@ -103,13 +103,13 @@ you assert on it, because "this request is rejected" is a normal thing to
 test:
 
 ```gherkin
-When "grpc" calls "helloworld.Greeter/SayHello" with:
+When "greeter-client" calls "helloworld.Greeter/SayHello" with:
   """
   {"name": ""}
   """
-Then "grpc" call fails
-And "grpc" response status is "INVALID_ARGUMENT"
-And "grpc" response error contains "name is required"
+Then "greeter-client" call fails
+And "greeter-client" response status is "INVALID_ARGUMENT"
+And "greeter-client" response error contains "name is required"
 ```
 
 Status names are matched ignoring case and underscores, so `INVALID_ARGUMENT`,
@@ -123,8 +123,8 @@ the message type it failed to parse into.
 ## Metadata
 
 ```gherkin
-Given "grpc" metadata "authorization" is "Bearer {{token}}"
-And "grpc" metadata are:
+Given "greeter-client" metadata "authorization" is "Bearer {{token}}"
+And "greeter-client" metadata are:
   | key          | value   |
   | x-request-id | abc-123 |
 ```

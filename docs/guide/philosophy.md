@@ -17,15 +17,15 @@ Not this:
 Feature: Orders
 
   Scenario: Order lifecycle
-    When "api" sends "POST" to "/orders" with json:
+    When "orders-client" sends "POST" to "/orders" with json:
       """
       {"sku": "TMT-01", "qty": 2}
       """
-    Then "api" response status is "201"
-    When "api" sends "GET" to "/orders/1"
-    Then "api" response status is "200"
-    When "api" sends "DELETE" to "/orders/1"
-    Then "api" response status is "204"
+    Then "orders-client" response status is "201"
+    When "orders-client" sends "GET" to "/orders/1"
+    Then "orders-client" response status is "200"
+    When "orders-client" sends "DELETE" to "/orders/1"
+    Then "orders-client" response status is "204"
 ```
 
 This:
@@ -34,26 +34,26 @@ This:
 Feature: Orders
 
   Scenario: Placing an order returns it
-    When "api" sends "POST" to "/orders" with json:
+    When "orders-client" sends "POST" to "/orders" with json:
       """
       {"sku": "TMT-01", "qty": 2}
       """
-    Then "api" response status is "201"
+    Then "orders-client" response status is "201"
 
   Scenario: A placed order can be read back
-    Given "db" table "orders" has values:
+    Given "orders-db" table "orders" has values:
       | id | sku    | qty |
       | 1  | TMT-01 | 2   |
-    When "api" sends "GET" to "/orders/1"
-    Then "api" response status is "200"
+    When "orders-client" sends "GET" to "/orders/1"
+    Then "orders-client" response status is "200"
 
   Scenario: Deleting an order removes it
-    Given "db" table "orders" has values:
+    Given "orders-db" table "orders" has values:
       | id | sku    | qty |
       | 1  | TMT-01 | 2   |
-    When "api" sends "DELETE" to "/orders/1"
-    Then "api" response status is "204"
-    And "db" table "orders" is empty
+    When "orders-client" sends "DELETE" to "/orders/1"
+    Then "orders-client" response status is "204"
+    And "orders-db" table "orders" is empty
 ```
 
 The second version is longer and tells you more. Each scenario sets up what it
@@ -81,11 +81,11 @@ A response-only scenario:
 Feature: Checkout
 
   Scenario: Placing an order
-    When "api" sends "POST" to "/orders" with json:
+    When "orders-client" sends "POST" to "/orders" with json:
       """
       {"sku": "TMT-01", "qty": 2, "email": "ada@example.com"}
       """
-    Then "api" response status is "201"
+    Then "orders-client" response status is "201"
 ```
 
 That passes if the handler returns `201` and does nothing else.
@@ -96,15 +96,15 @@ The same behaviour, asserted through its effects:
 Feature: Checkout
 
   Scenario: A placed order reaches every dependency
-    Given "events" consumes from "order.created"
-    When "api" sends "POST" to "/orders" with json:
+    Given "orders-events" consumes from "order.created"
+    When "orders-client" sends "POST" to "/orders" with json:
       """
       {"sku": "TMT-01", "qty": 2, "email": "ada@example.com"}
       """
-    Then "api" response status is "201"
-    And "db" table "orders" has "1" rows
-    And "events" receives from "order.created" within "10s"
-    And "files" object "receipts/1.pdf" should exist within "10s"
+    Then "orders-client" response status is "201"
+    And "orders-db" table "orders" has "1" rows
+    And "orders-events" receives from "order.created" within "10s"
+    And "receipts-storage" object "receipts/1.pdf" should exist within "10s"
 ```
 
 Four assertions, four different systems, one behaviour. If the order lands in
@@ -128,20 +128,86 @@ If a scenario needs a starting state, it declares it:
 Feature: Reading an order
 
   Background:
-    Given "db" table "orders" has values:
+    Given "orders-db" table "orders" has values:
       | id | sku    | status  |
       | 1  | TMT-01 | shipped |
 
   Scenario: An existing order is returned
-    When "api" sends "GET" to "/orders/1"
-    Then "api" response status is "200"
-    And "api" response json "status" is "shipped"
+    When "orders-client" sends "GET" to "/orders/1"
+    Then "orders-client" response status is "200"
+    And "orders-client" response json "status" is "shipped"
 ```
 
 A corollary worth knowing: **do not assert on generated identifiers you did not
 set**. Sequences, UUIDs and timestamps are not part of the reset contract in
 every store, and a scenario asserting `id` is `1` is asserting the order it
 happens to run in. Seed the id, or assert on something you control.
+
+## Naming resources
+
+A step is read far more often than the `tomato.yml` behind it, usually by
+someone looking at a failure. Its first word is the resource name, so that
+name has to say what is being talked to without opening the config.
+
+Not this:
+
+```gherkin
+Feature: Checkout
+
+  Scenario: A paid order is stored
+    Given "mock" stub "POST" "/v1/charges" returns "201"
+    When "api" sends "POST" to "/orders"
+    Then "db" table "orders" has "1" rows
+    And "mock" received "POST" "/v1/charges"
+```
+
+Which API? A mock of what? Whose database? In a suite with two services and
+three dependencies, every one of those is a guess.
+
+This:
+
+```gherkin
+Feature: Checkout
+
+  Scenario: A paid order is stored
+    Given "stripe-stub" stub "POST" "/v1/charges" returns "201"
+    When "orders-client" sends "POST" to "/orders"
+    Then "orders-db" table "orders" has "1" rows
+    And "stripe-stub" received "POST" "/v1/charges"
+```
+
+The rule is `<name>-<role>`, lower-case and hyphenated. `<name>` is the
+service, dependency, owner or person; `<role>` comes from the resource type:
+
+| Resource types | Role suffix | Name is | Examples |
+|---|---|---|---|
+| `http-client`, `grpc`, `websocket-client` | `-client` | the service it calls, usually the app under test | `orders-client`, `catalog-client` |
+| two clients of one service over different protocols | `-<protocol>-client` | | `orders-http-client`, `orders-grpc-client` |
+| `http-server`, `grpc-server`, `websocket-server` | `-stub` | the dependency it stands in for | `stripe-stub`, `catalog-stub`, `prices-stub` |
+| `postgres`, `scylladb` | `-db` | the owner of the data | `orders-db` |
+| `redis` | `-cache` (`-db` when it is the primary store) | the owner | `sessions-cache` |
+| `kafka` | `-events` | the owner or stream | `orders-events` |
+| `rabbitmq` | `-queue` | the owner or stream | `payments-queue` |
+| `s3` | `-storage` | the owner | `invoices-storage` |
+| `browser` | `-browser` | the person using it | `alice-browser`, `shopper-browser` |
+| `shell` | `-cli` when it runs one tool, else plain `shell` | the tool | `todo-cli`, `shell` |
+| `pdf` | `-pdf` | the document | `invoice-pdf` |
+| `aws`, `lifecycle` | none: there is one of each | | `aws`, `lifecycle` |
+
+A few consequences:
+
+- **Never a bare type or a generic word.** Not `api`, `http`, `client`, `db`,
+  `mock`, `server` or `grpc`: each of them fits every resource of its kind,
+  so it tells the reader nothing.
+- **The app under test's client is named after the app**: `orders-client`.
+  Examples with no particular app, like the ones in this documentation's step
+  reference, use `app-client`.
+- **Containers keep naming the software.** Entries under `containers:` —
+  `postgres`, `kafka`, `minio`, `chrome` — are infrastructure, not roles; only
+  entries under `resources:` follow this rule.
+- **Templates follow the name**: `{{.stripe-stub.url}}`,
+  `{{.catalog-stub.address}}`. A rename covers `tomato.yml`, every feature
+  file, and any prose that mentions the resource.
 
 ## A suite is configuration, not code
 

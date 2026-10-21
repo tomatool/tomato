@@ -153,11 +153,11 @@ func TestConnectsToPrefersTheExplicitTarget(t *testing.T) {
 
 func TestHookListDescribesEachHook(t *testing.T) {
 	got := hookList([]config.Hook{
-		{SQLFile: "./schema.sql", Resource: "db"},
+		{SQLFile: "./schema.sql", Resource: "app-db"},
 		{Shell: "./cleanup.sh"},
 		{}, // nothing set: skipped rather than rendered as a blank row
 	})
-	want := []string{"sql_file ./schema.sql on db", "shell ./cleanup.sh"}
+	want := []string{"sql_file ./schema.sql on app-db", "shell ./cleanup.sh"}
 	if len(got) != len(want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}

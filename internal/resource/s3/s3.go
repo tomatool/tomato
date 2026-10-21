@@ -241,21 +241,21 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Bucket Setup",
 				Pattern:     `^"{resource}" bucket "([^"]*)" exists$`,
 				Description: "Create a bucket if it does not already exist",
-				Example:     `"files" bucket "uploads" exists`,
+				Example:     `"uploads-storage" bucket "uploads" exists`,
 				Handler:     r.bucketExists,
 			},
 			{
 				Group:       "Bucket Setup",
 				Pattern:     `^"{resource}" bucket "([^"]*)" is empty$`,
 				Description: "Delete every object in a bucket",
-				Example:     `"files" bucket "uploads" is empty`,
+				Example:     `"uploads-storage" bucket "uploads" is empty`,
 				Handler:     r.emptyBucket,
 			},
 			{
 				Group:       "Bucket Setup",
 				Pattern:     `^"{resource}" bucket "([^"]*)" is deleted$`,
 				Description: "Delete a bucket and everything in it",
-				Example:     `"files" bucket "uploads" is deleted`,
+				Example:     `"uploads-storage" bucket "uploads" is deleted`,
 				Handler:     r.deleteBucket,
 			},
 
@@ -264,14 +264,14 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Object Setup",
 				Pattern:     `^"{resource}" object "([^"]*)" is "([^"]*)"$`,
 				Description: "Write an object with inline content (path is bucket/key)",
-				Example:     `"files" object "uploads/hello.txt" is "hello world"`,
+				Example:     `"uploads-storage" object "uploads/hello.txt" is "hello world"`,
 				Handler:     r.putObject,
 			},
 			{
 				Group:       "Object Setup",
 				Pattern:     `^"{resource}" object "([^"]*)" is:$`,
 				Description: "Write an object with multiline content (docstring)",
-				Example: `"files" object "uploads/user.json" is:
+				Example: `"uploads-storage" object "uploads/user.json" is:
   """
   {"id": 1, "name": "John"}
   """`,
@@ -281,7 +281,7 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Object Setup",
 				Pattern:     `^"{resource}" object "([^"]*)" is "([^"]*)" with content type "([^"]*)"$`,
 				Description: "Write an object with an explicit content type",
-				Example:     `"files" object "uploads/a.csv" is "id,name" with content type "text/csv"`,
+				Example:     `"uploads-storage" object "uploads/a.csv" is "id,name" with content type "text/csv"`,
 				Handler:     r.putObjectWithContentType,
 			},
 			{
@@ -295,21 +295,21 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Object Setup",
 				Pattern:     `^"{resource}" object "([^"]*)" is file "([^"]*)"$`,
 				Description: "Upload a local file as an object",
-				Example:     `"files" object "uploads/logo.png" is file "testdata/logo.png"`,
+				Example:     `"uploads-storage" object "uploads/logo.png" is file "testdata/logo.png"`,
 				Handler:     r.putObjectFromFile,
 			},
 			{
 				Group:       "Object Setup",
 				Pattern:     `^"{resource}" object "([^"]*)" is deleted$`,
 				Description: "Delete a single object",
-				Example:     `"files" object "uploads/hello.txt" is deleted`,
+				Example:     `"uploads-storage" object "uploads/hello.txt" is deleted`,
 				Handler:     r.deleteObject,
 			},
 			{
 				Group:       "Object Setup",
 				Pattern:     `^"{resource}" objects:$`,
 				Description: "Seed multiple objects from a table with path and content columns",
-				Example: `"files" objects:
+				Example: `"uploads-storage" objects:
   | path                | content     |
   | uploads/a.txt       | first       |
   | uploads/b.txt       | second      |`,
@@ -321,42 +321,42 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Bucket Assertions",
 				Pattern:     `^"{resource}" bucket "([^"]*)" should exist$`,
 				Description: "Assert a bucket exists",
-				Example:     `"files" bucket "uploads" should exist`,
+				Example:     `"uploads-storage" bucket "uploads" should exist`,
 				Handler:     r.bucketShouldExist,
 			},
 			{
 				Group:       "Bucket Assertions",
 				Pattern:     `^"{resource}" bucket "([^"]*)" should not exist$`,
 				Description: "Assert a bucket does not exist",
-				Example:     `"files" bucket "temp" should not exist`,
+				Example:     `"uploads-storage" bucket "temp" should not exist`,
 				Handler:     r.bucketShouldNotExist,
 			},
 			{
 				Group:       "Bucket Assertions",
 				Pattern:     `^"{resource}" bucket "([^"]*)" should have "(\d+)" objects$`,
 				Description: "Assert the object count in a bucket",
-				Example:     `"files" bucket "uploads" should have "3" objects`,
+				Example:     `"uploads-storage" bucket "uploads" should have "3" objects`,
 				Handler:     r.bucketShouldHaveCount,
 			},
 			{
 				Group:       "Bucket Assertions",
 				Pattern:     `^"{resource}" bucket "([^"]*)" should be empty$`,
 				Description: "Assert a bucket holds no objects",
-				Example:     `"files" bucket "uploads" should be empty`,
+				Example:     `"uploads-storage" bucket "uploads" should be empty`,
 				Handler:     r.bucketShouldBeEmpty,
 			},
 			{
 				Group:       "Bucket Assertions",
 				Pattern:     `^"{resource}" bucket "([^"]*)" should have "(\d+)" objects with prefix "([^"]*)"$`,
 				Description: "Assert the object count under a key prefix",
-				Example:     `"files" bucket "uploads" should have "2" objects with prefix "2026/"`,
+				Example:     `"uploads-storage" bucket "uploads" should have "2" objects with prefix "2026/"`,
 				Handler:     r.bucketShouldHaveCountWithPrefix,
 			},
 			{
 				Group:       "Bucket Assertions",
 				Pattern:     `^"{resource}" bucket "([^"]*)" should have "(\d+)" objects within "([^"]*)"$`,
 				Description: "Wait for a bucket to reach an object count (async writes)",
-				Example:     `"files" bucket "uploads" should have "1" objects within "10s"`,
+				Example:     `"uploads-storage" bucket "uploads" should have "1" objects within "10s"`,
 				Handler:     r.bucketShouldHaveCountWithin,
 			},
 
@@ -365,35 +365,35 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" should exist$`,
 				Description: "Assert an object exists",
-				Example:     `"files" object "uploads/hello.txt" should exist`,
+				Example:     `"uploads-storage" object "uploads/hello.txt" should exist`,
 				Handler:     r.objectShouldExist,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" should not exist$`,
 				Description: "Assert an object does not exist",
-				Example:     `"files" object "uploads/gone.txt" should not exist`,
+				Example:     `"uploads-storage" object "uploads/gone.txt" should not exist`,
 				Handler:     r.objectShouldNotExist,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" should exist within "([^"]*)"$`,
 				Description: "Wait for an object to appear (async writes)",
-				Example:     `"files" object "uploads/report.pdf" should exist within "10s"`,
+				Example:     `"uploads-storage" object "uploads/report.pdf" should exist within "10s"`,
 				Handler:     r.objectShouldExistWithin,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" content should be "([^"]*)"$`,
 				Description: "Assert exact object content",
-				Example:     `"files" object "uploads/hello.txt" content should be "hello world"`,
+				Example:     `"uploads-storage" object "uploads/hello.txt" content should be "hello world"`,
 				Handler:     r.objectContentShouldBe,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" content should be:$`,
 				Description: "Assert exact object content (docstring)",
-				Example: `"files" object "uploads/hello.txt" content should be:
+				Example: `"uploads-storage" object "uploads/hello.txt" content should be:
   """
   hello world
   """`,
@@ -403,14 +403,14 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" content should contain "([^"]*)"$`,
 				Description: "Assert object content contains a substring",
-				Example:     `"files" object "uploads/log.txt" content should contain "ERROR"`,
+				Example:     `"uploads-storage" object "uploads/log.txt" content should contain "ERROR"`,
 				Handler:     r.objectContentShouldContain,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" content should match:$`,
 				Description: "Assert object JSON content matches (partial, supports @matchers)",
-				Example: `"files" object "uploads/user.json" content should match:
+				Example: `"uploads-storage" object "uploads/user.json" content should match:
   """
   {"id": "@number", "name": "John"}
   """`,
@@ -420,21 +420,21 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" size should be "(\d+)" bytes$`,
 				Description: "Assert object size in bytes",
-				Example:     `"files" object "uploads/hello.txt" size should be "11" bytes`,
+				Example:     `"uploads-storage" object "uploads/hello.txt" size should be "11" bytes`,
 				Handler:     r.objectSizeShouldBe,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" content type should be "([^"]*)"$`,
 				Description: "Assert object content type",
-				Example:     `"files" object "uploads/a.csv" content type should be "text/csv"`,
+				Example:     `"uploads-storage" object "uploads/a.csv" content type should be "text/csv"`,
 				Handler:     r.objectContentTypeShouldBe,
 			},
 			{
 				Group:       "Object Assertions",
 				Pattern:     `^"{resource}" object "([^"]*)" metadata "([^"]*)" should be "([^"]*)"$`,
 				Description: "Assert a user metadata value on an object",
-				Example:     `"files" object "uploads/a.csv" metadata "owner" should be "billing"`,
+				Example:     `"uploads-storage" object "uploads/a.csv" metadata "owner" should be "billing"`,
 				Handler:     r.objectMetadataShouldBe,
 			},
 
@@ -443,7 +443,7 @@ func (r *S3) Steps() resource.StepCategory {
 				Group:       "Capture",
 				Pattern:     `^"{resource}" object "([^"]*)" content is captured as "([^"]*)"$`,
 				Description: "Store object content in a variable for later steps",
-				Example:     `"files" object "uploads/id.txt" content is captured as "user_id"`,
+				Example:     `"uploads-storage" object "uploads/id.txt" content is captured as "user_id"`,
 				Handler:     r.captureObjectContent,
 			},
 		},

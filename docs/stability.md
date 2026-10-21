@@ -80,7 +80,7 @@ receives updates. v2 is a rewrite, not an upgrade in place:
 | v1 | v2 |
 |----|----|
 | No `version` field | `version: 2` at the top of `tomato.yml` |
-| `resources:` is a list of `{name, type, options}` | `resources:` is a map keyed by name: `api: {type: http, …}` |
+| `resources:` is a list of `{name, type, options}` | `resources:` is a map keyed by name: `app-client: {type: http, …}` |
 | Types such as `httpclient`, `http/client`, `queue` + `driver: rabbitmq`, `mysql`, `nsq`, `wiremock` | Types such as `http`, `http-server`, `rabbitmq`, `postgres`; MySQL, NSQ and Wiremock have no v2 equivalent yet (see `tomato validate` for the list) |
 | Connection strings (`datasource`) supplied by you, services started by you (e.g. docker-compose) | `containers:` started by tomato; resources point at them with `container:` |
 | v1 step wording | v2 step wording: run `tomato steps` |

@@ -19,7 +19,7 @@ func TestRunLog_RecordsWhyTheRunFailed(t *testing.T) {
 	dir := t.TempDir()
 	mustWrite(t, filepath.Join(dir, "tomato.yml"), `version: 2
 resources:
-  db:
+  app-db:
     type: mysql
 features:
   paths: ["./features"]

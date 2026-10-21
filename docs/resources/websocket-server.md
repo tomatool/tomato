@@ -10,16 +10,16 @@ Steps for stubbing WebSocket services
 
 | Step | Description |
 |------|-------------|
-| `"{resource}" on connect sends:` | Sends a message when a client connects |
-| `"{resource}" on message "ping" replies:` | Replies to an exact message |
-| `"{resource}" on message matching ".*subscribe.*" replies:` | Replies to messages matching a regex pattern |
+| `"prices-stub" on connect sends:` | Sends a message when a client connects |
+| `"prices-stub" on message "ping" replies:` | Replies to an exact message |
+| `"prices-stub" on message matching ".*subscribe.*" replies:` | Replies to messages matching a regex pattern |
 
 
 ### Examples
 
 **Sends a message when a client connects:**
 ```gherkin
-"{resource}" on connect sends:
+"prices-stub" on connect sends:
   """
   {"type": "welcome"}
   """
@@ -27,7 +27,7 @@ Steps for stubbing WebSocket services
 
 **Replies to an exact message:**
 ```gherkin
-"{resource}" on message "ping" replies:
+"prices-stub" on message "ping" replies:
   """
   pong
   """
@@ -35,7 +35,7 @@ Steps for stubbing WebSocket services
 
 **Replies to messages matching a regex pattern:**
 ```gherkin
-"{resource}" on message matching ".*subscribe.*" replies:
+"prices-stub" on message matching ".*subscribe.*" replies:
   """
   {"status": "subscribed"}
   """
@@ -46,15 +46,15 @@ Steps for stubbing WebSocket services
 
 | Step | Description |
 |------|-------------|
-| `"{resource}" broadcasts:` | Broadcasts a message to all connected clients |
-| `"{resource}" broadcasts "ping"` | Broadcasts a short message to all connected clients |
+| `"prices-stub" broadcasts:` | Broadcasts a message to all connected clients |
+| `"prices-stub" broadcasts "ping"` | Broadcasts a short message to all connected clients |
 
 
 ### Examples
 
 **Broadcasts a message to all connected clients:**
 ```gherkin
-"{resource}" broadcasts:
+"prices-stub" broadcasts:
   """
   {"event": "update"}
   """
@@ -65,8 +65,8 @@ Steps for stubbing WebSocket services
 
 | Step | Description |
 |------|-------------|
-| `"{resource}" has "2" connections` | Asserts the number of connected clients |
-| `"{resource}" received message "ping"` | Asserts a specific message was received |
-| `"{resource}" received "3" messages` | Asserts the total number of messages received |
+| `"prices-stub" has "2" connections` | Asserts the number of connected clients |
+| `"prices-stub" received message "ping"` | Asserts a specific message was received |
+| `"prices-stub" received "3" messages` | Asserts the total number of messages received |
 
 

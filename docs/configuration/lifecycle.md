@@ -16,13 +16,13 @@ It has no options. The steps name the containers from `containers:` in
 
 ```gherkin
 Scenario: The app keeps its orders across a database failover
-  Given "api" sends "POST" to "/orders" with json:
+  Given "orders-client" sends "POST" to "/orders" with json:
     """
     {"id": "o-1"}
     """
   When "lifecycle" restarts container "postgres"
-  And "api" sends "GET" to "/orders/o-1"
-  Then "api" response status is "200"
+  And "orders-client" sends "GET" to "/orders/o-1"
+  Then "orders-client" response status is "200"
 ```
 
 ## What each step does

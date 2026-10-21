@@ -16,7 +16,7 @@ makes it worth having.
 
 | Page | What it covers |
 |------|----------------|
-| [Step Coverage](getting-started/coverage.md) | Finding the steps no scenario uses, and gating on it |
+| [Test Coverage](getting-started/coverage.md) | Which lines of your service the scenarios ran, per language |
 | [GitHub Action](getting-started/github-action.md) | Running the suite in CI |
 
 ## Configuring

@@ -22,18 +22,18 @@ Feature: Kafka Avro in the AWS Glue wire format
       """
 
   Scenario: The app is pointed at tomato's Glue registry
-    When "api" sends "GET" to "/env?name=AWS_ENDPOINT_URL_GLUE"
-    Then "api" response json "value" is "http://127.0.0.1:9994"
+    When "app-client" sends "GET" to "/env?name=AWS_ENDPOINT_URL_GLUE"
+    Then "app-client" response json "value" is "http://127.0.0.1:9994"
 
   Scenario: The app fetches a registered schema the way its SerDe does
     Given "glue-events" registers schema for subject "glue-orders" from file "tests/testdata/order.avsc"
-    And "api" header "X-Amz-Target" is "AWSGlue.GetSchemaVersion"
-    When "api" sends "POST" to "http://127.0.0.1:9994/" with json:
+    And "app-client" header "X-Amz-Target" is "AWSGlue.GetSchemaVersion"
+    When "app-client" sends "POST" to "http://127.0.0.1:9994/" with json:
       """
       {"SchemaId": {"SchemaName": "glue-orders", "RegistryName": "portfolio"}, "SchemaVersionNumber": {"LatestVersion": true}}
       """
-    Then "api" response status is "200"
-    And "api" response json "DataFormat" is "AVRO"
-    And "api" response json "SchemaArn" is "arn:aws:glue:eu-central-1:000000000000:schema/portfolio/glue-orders"
-    And "api" response json "SchemaVersionId" is uuid
-    And "api" response json "SchemaDefinition" exists
+    Then "app-client" response status is "200"
+    And "app-client" response json "DataFormat" is "AVRO"
+    And "app-client" response json "SchemaArn" is "arn:aws:glue:eu-central-1:000000000000:schema/portfolio/glue-orders"
+    And "app-client" response json "SchemaVersionId" is uuid
+    And "app-client" response json "SchemaDefinition" exists
