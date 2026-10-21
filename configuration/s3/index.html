@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -2019,7 +2019,7 @@ all three.</p>
 </code></pre></div>
 <h2 id="resource-configuration">Resource configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">orders-storage</span><span class="p">:</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2100,7 +2100,7 @@ all three.</p>
 <h3 id="connecting-without-a-container">Connecting without a container<a class="headerlink" href="#connecting-without-a-container" title="Permanent link">&para;</a></h3>
 <p>Point the resource at an endpoint directly to test against something tomato does not manage:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">orders-storage</span><span class="p">:</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">"https://s3.eu-central-1.amazonaws.com"</span>
@@ -2143,7 +2143,7 @@ scope it with <code>reset_buckets</code>.</p>
 <code>buckets</code>. That way buckets your application creates at runtime are cleaned up too.
 Narrow it with <code>reset_buckets</code>, or protect individual buckets with <code>reset_exclude</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">orders-storage</span><span class="p">:</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2166,7 +2166,7 @@ hook is where its contents are seeded.</p>
 </code></pre></div>
 <h2 id="object-paths">Object paths<a class="headerlink" href="#object-paths" title="Permanent link">&para;</a></h2>
 <p>Every object step takes a single <code>bucket/key</code> path. An <code>s3://</code> prefix is stripped if present.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/2026/01/report.pdf</span><span class="nf">" is "</span><span class="s">...</span><span class="nf">"</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">orders-storage</span><span class="nf">" object "</span><span class="s">uploads/2026/01/report.pdf</span><span class="nf">" is "</span><span class="s">...</span><span class="nf">"</span>
 </code></pre></div>
 <p>Writing to a bucket that does not exist creates it, so seeding steps do not need a
 <code>bucket ... exists</code> line first.</p>
@@ -2174,13 +2174,13 @@ hook is where its contents are seeded.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Feature:</span><span class="nf"> Report export</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Exporting writes a report to S3</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">      |</span><span class="s"> id</span><span class="k"> |</span><span class="s"> total</span><span class="k"> |</span>
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">      |</span><span class="s"> 1</span><span class="k">  |</span><span class="s"> 42.00</span><span class="k"> |</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/exports</span><span class="nf">"</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">202</span><span class="nf">"</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" should exist within "</span><span class="s">10s</span><span class="nf">"</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" content should contain "</span><span class="s">42.00</span><span class="nf">"</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/exports</span><span class="nf">"</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">202</span><span class="nf">"</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-storage</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" should exist within "</span><span class="s">10s</span><span class="nf">"</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-storage</span><span class="nf">" object "</span><span class="s">reports/orders.csv</span><span class="nf">" content should contain "</span><span class="s">42.00</span><span class="nf">"</span>
 </code></pre></div>
 <p>The <code>within</code> steps matter here: applications usually upload in the background, so a
 plain <code>should exist</code> would race the write.</p>
@@ -2259,6 +2259,8 @@ plain <code>should exist</code> would race the write.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

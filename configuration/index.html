@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -2591,7 +2591,7 @@ message), its <code>step_end</code> also has a <code>mismatch</code> object with
 <code>expected</code> and <code>actual</code> together are over 256 KB. The event format is not part
 of the <a href="../stability/">stable surface</a>.</p>
 <p>In the <code>tomato</code> format, a <code>step_end</code> event carries <code>screenshots</code> when the step
-left images behind, as a list of <code>{"resource": "alice", "path": "…/after-apply.png"}</code>:
+left images behind, as a list of <code>{"resource": "alice-browser", "path": "…/after-apply.png"}</code>:
 the <a href="browser/">browser resource</a>'s <code>saves screenshot</code>, and the page when a
 step failed. <code>tomato ui</code> reads it to put the picture on the step.</p>
 <h2 id="app-configuration">App configuration<a class="headerlink" href="#app-configuration" title="Permanent link">&para;</a></h2>
@@ -2746,14 +2746,14 @@ ports and wait strategy; anything the entry sets itself (an <code>env</code> key
 configurable. A resource with no <code>container:</code> is a system tomato did not
 start, so resetting it destroys someone's real data. tomato refuses to load
 such a config:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>resource "db" (postgres) has no container, so it points at a system tomato
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>resource "app-db" (postgres) has no container, so it points at a system tomato
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>does not manage — and tomato wipes every resource before every scenario,
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>which would destroy its data.
 </code></pre></div>
 <p>Give it a <code>container:</code> so tomato runs it, or, if it genuinely is a throwaway
 system, say so:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">db</span><span class="p">:</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">app-db</span><span class="p">:</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nt">allow_destructive_reset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">   </span><span class="c1"># yes, wipe it before every scenario</span>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2841,10 +2841,13 @@ every scenario. A scenario that needs a starting state builds it in a
 written for an earlier release fails to load rather than having a resource it
 used to leave alone wiped before every scenario.</p>
 <h2 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
-<p>Define handlers for test steps.</p>
+<p>Define handlers for test steps. The key is the name steps use to refer to the
+resource (<code>"app-client" sends …</code>), so it should say whose it is and what role
+it plays: <code>orders-client</code>, <code>stripe-stub</code>, <code>orders-db</code>, not <code>api</code>, <code>mock</code> or
+<code>db</code>. See <a href="../guide/philosophy/#naming-resources">Naming resources</a>.</p>
 <h3 id="http">HTTP<a class="headerlink" href="#http" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">api</span><span class="p">:</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">app-client</span><span class="p">:</span>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http</span>
 <a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://localhost:8080</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2886,11 +2889,11 @@ used to leave alone wiped before every scenario.</p>
 </tr>
 </tbody>
 </table>
-<p>Request headers are set by steps (<code>"api" header "Authorization" is "..."</code>), not
+<p>Request headers are set by steps (<code>"app-client" header "Authorization" is "..."</code>), not
 here, and are cleared between scenarios.</p>
 <h3 id="postgresql">PostgreSQL<a class="headerlink" href="#postgresql" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">db</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">app-db</span><span class="p">:</span>
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres</span>
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="nt">database</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test</span>
@@ -2985,7 +2988,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <p>The <code>container</code> field automatically provides the connection details - tomato resolves the container's host and port at runtime.</p>
 <h3 id="scylladb-cassandra">ScyllaDB / Cassandra<a class="headerlink" href="#scylladb-cassandra" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">scylla</span><span class="p">:</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">app-db</span><span class="p">:</span>
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scylladb</span><span class="w">          </span><span class="c1"># or: cassandra</span>
 <a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scylla</span>
 <a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2999,7 +3002,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <code>exclude</code>. See <a href="scylladb/">ScyllaDB Configuration</a> for all options.</p>
 <h3 id="redis">Redis<a class="headerlink" href="#redis" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">cache</span><span class="p">:</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">app-cache</span><span class="p">:</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis</span>
 <a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -3010,7 +3013,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 </code></pre></div>
 <h3 id="kafka">Kafka<a class="headerlink" href="#kafka" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">app-events</span><span class="p">:</span>
 <a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -3048,7 +3051,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <p>See <a href="kafka/#avro-and-schema-registry">Kafka: Avro and Schema Registry</a>.</p>
 <h3 id="websocket">WebSocket<a class="headerlink" href="#websocket" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">ws</span><span class="p">:</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">app-ws-client</span><span class="p">:</span>
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">websocket</span>
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ws://localhost:8080/ws</span>
 <a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="c1"># Or use container</span>
@@ -3063,7 +3066,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 </code></pre></div>
 <h3 id="grpc">gRPC<a class="headerlink" href="#grpc" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">grpc</span><span class="p">:</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">app-grpc-client</span><span class="p">:</span>
 <a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grpc</span>
 <a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="s">"localhost:9090"</span><span class="w">   </span><span class="c1"># or: container: myservice</span>
 <a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -3073,7 +3076,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <a href="grpc/">gRPC Configuration</a>.</p>
 <h3 id="grpc-server">gRPC server<a class="headerlink" href="#grpc-server" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">users</span><span class="p">:</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">users-stub</span><span class="p">:</span>
 <a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grpc-server</span>
 <a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
 <a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9995</span><span class="w">                              </span><span class="c1"># fixed, so app.env can name it</span>
@@ -3081,12 +3084,12 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
 <a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="nt">app</span><span class="p">:</span>
 <a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span><span class="nt">env</span><span class="p">:</span>
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="nt">USERS_ADDR</span><span class="p">:</span><span class="w"> </span><span class="s">"{{.users.address}}"</span><span class="w">          </span><span class="c1"># localhost:9995</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="nt">USERS_ADDR</span><span class="p">:</span><span class="w"> </span><span class="s">"{{.users-stub.address}}"</span><span class="w">     </span><span class="c1"># localhost:9995</span>
 </code></pre></div>
 <p>Stubs the gRPC services the app calls. See <a href="grpc-server/">gRPC Server</a>.</p>
 <h3 id="s3">S3<a class="headerlink" href="#s3" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span><span class="nt">files</span><span class="p">:</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span><span class="nt">uploads-storage</span><span class="p">:</span>
 <a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">s3</span>
 <a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minio</span>
 <a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -3110,7 +3113,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">hooks</span><span class="p">:</span>
 <a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">before_all</span><span class="p">:</span>
 <a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">sql_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./fixtures/schema.sql</span>
-<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app-db</span>
 <a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">shell</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./scripts/setup.sh</span>
 <a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
 <a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">  </span><span class="nt">after_all</span><span class="p">:</span>
@@ -3118,7 +3121,7 @@ statement, so a generated id starts again from 1 in every scenario.</p>
 <a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>
 <a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">  </span><span class="nt">before_scenario</span><span class="p">:</span>
 <a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">sql</span><span class="p">:</span><span class="w"> </span><span class="s">"DELETE</span><span class="nv"> </span><span class="s">FROM</span><span class="nv"> </span><span class="s">events"</span>
-<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">db</span>
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app-db</span>
 <a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>
 <a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a><span class="w">  </span><span class="nt">after_scenario</span><span class="p">:</span>
 <a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">exec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redis-cli FLUSHDB</span>
@@ -3278,6 +3281,8 @@ default in <code>tomato.yml</code>.</p>
     
     
       <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/split-flow.js"></script>
       
     
   </body>

@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1791,13 +1791,13 @@ drives the app and checks that it recovers.</p>
 <p>It has no options. The steps name the containers from <code>containers:</code> in
 <code>tomato.yml</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">Scenario:</span><span class="nf"> The app keeps its orders across a database failover</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nf">    </span><span class="k">"""</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">    {"id": "o-1"}</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s">    </span><span class="k">"""</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">lifecycle</span><span class="nf">" restarts container "</span><span class="s">postgres</span><span class="nf">"</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/o-1</span><span class="nf">"</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/o-1</span><span class="nf">"</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
 </code></pre></div>
 <h2 id="what-each-step-does">What each step does<a class="headerlink" href="#what-each-step-does" title="Permanent link">&para;</a></h2>
 <table>
@@ -1930,6 +1930,8 @@ Docker host (<code>DOCKER_HOST=tcp://...</code>) keeps Docker's own allocation.<
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

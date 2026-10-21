@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1992,7 +1992,7 @@
 <p>The port opens before the node serves CQL. The resource keeps retrying until a query succeeds (<code>ready_timeout</code>, 90s by default), so the port wait is enough.</p>
 <h2 id="resource-configuration">Resource configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">scylla</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">app-db</span><span class="p">:</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scylladb</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scylla</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2102,7 +2102,7 @@
 <p>If your application creates its own schema on startup (for example with a migration tool), you can leave <code>schema</code> out and let the app do it.</p>
 <h2 id="seeding-data">Seeding data<a class="headerlink" href="#seeding-data" title="Permanent link">&para;</a></h2>
 <p><code>table ... has values:</code> inserts rows with <code>INSERT ... JSON</code>, so cells are written as text and CQL converts them to the column type (int, uuid, timestamp, boolean, ...). A cell holding a JSON array or object fills a list, set, map or UDT column, and <code>null</code> writes a null.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">scylla</span><span class="nf">" table "</span><span class="s">users</span><span class="nf">" has values:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">app-db</span><span class="nf">" table "</span><span class="s">users</span><span class="nf">" has values:</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> id</span><span class="k">                                   |</span><span class="s"> email</span><span class="k">          |</span><span class="s"> created_at</span><span class="k">           |</span><span class="s"> tags</span><span class="k">          |</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> 11111111-1111-4111-a111-111111111111</span><span class="k"> |</span><span class="s"> alice@test.com</span><span class="k"> |</span><span class="s"> 2026-01-01T00:00:00Z</span><span class="k"> |</span><span class="s"> ["admin"]</span><span class="k">     |</span>
 </code></pre></div>
@@ -2123,7 +2123,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">hooks</span><span class="p">:</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">before_all</span><span class="p">:</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">sql_file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./fixtures/extra.cql</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scylla</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app-db</span>
 </code></pre></div>
 
 
@@ -2195,6 +2195,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

@@ -27,7 +27,7 @@
     
     
       
-        <title>Step Coverage - 🍅 tomato</title>
+        <title>Test Coverage - 🍅 tomato</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#step-coverage" class="md-skip">
+        <a href="#test-coverage" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Step Coverage
+              Test Coverage
             
           </span>
         </div>
@@ -432,6 +432,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Coverage
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -439,7 +457,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -448,6 +466,36 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tomato-coverage-a-lint-for-the-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tomato coverage: a lint for the suite
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1628,6 +1676,25 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tomato-coverage-a-lint-for-the-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tomato coverage: a lint for the suite
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1646,21 +1713,72 @@
   
 
 
-<h1 id="step-coverage">Step coverage<a class="headerlink" href="#step-coverage" title="Permanent link">&para;</a></h1>
-<p><code>tomato coverage</code> shows which steps of your resources your feature files
-actually use. It reads <code>tomato.yml</code> and every feature file, expands Scenario
-Outlines, skips scenarios that <code>features.tags</code> excludes, and matches each step
-against the step definitions of the resources you declared.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>tomato<span class="w"> </span>coverage
+<h1 id="test-coverage">Test coverage<a class="headerlink" href="#test-coverage" title="Permanent link">&para;</a></h1>
+<p>The coverage worth tracking is <strong>which lines of your service ran while the
+scenarios ran</strong>. tomato can't see that: it only talks to your service over the
+network. Your service can. Every mainstream language can measure a running
+process and write the result when it exits, and tomato starts your service
+with its environment and stops it cleanly, so turning that on is all it takes.</p>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Turn it on</th>
+<th>Read it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Go</td>
+<td>build with <code>go build -cover</code>, set <code>GOCOVERDIR</code></td>
+<td><code>go tool covdata percent</code></td>
+</tr>
+<tr>
+<td>Rust</td>
+<td>build with <code>RUSTFLAGS="-C instrument-coverage"</code>, set <code>LLVM_PROFILE_FILE</code></td>
+<td><code>llvm-profdata</code>, <code>llvm-cov</code></td>
+</tr>
+<tr>
+<td>Java, Kotlin, Scala</td>
+<td>the JaCoCo agent, through <code>JAVA_OPTS</code> or <code>JAVA_TOOL_OPTIONS</code></td>
+<td><code>jacococli report</code></td>
+</tr>
+<tr>
+<td>Python</td>
+<td>coverage.py, started by <code>COVERAGE_PROCESS_START</code></td>
+<td><code>coverage combine</code>, <code>coverage report</code></td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>set <code>NODE_V8_COVERAGE</code></td>
+<td><code>c8 report</code></td>
+</tr>
+</tbody>
+</table>
+<p>Set the variable on the <code>tomato run</code> step, or in your shell: tomato passes its
+environment to the service, so <code>tomato.yml</code> stays the same with or without
+coverage.</p>
+<p>The one requirement: <strong>your service exits cleanly on SIGTERM, within five
+seconds.</strong> That is how tomato stops it, and coverage is written on exit. A
+service killed instead writes nothing.</p>
+<p><a href="https://tomatool.github.io/blog/posts/code-coverage-for-black-box-tests/">Code coverage for black-box tests</a>
+walks through each language, with the commands, a CI job, and what the number
+does and doesn't tell you.</p>
+<h2 id="tomato-coverage-a-lint-for-the-suite"><code>tomato coverage</code>: a lint for the suite<a class="headerlink" href="#tomato-coverage-a-lint-for-the-suite" title="Permanent link">&para;</a></h2>
+<p><code>tomato coverage</code> is something else: it reports which of tomato's <strong>steps</strong>
+your feature files use. That says how the suite is worded, not what it tests,
+so use it as a lint, not a metric:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>tomato<span class="w"> </span>coverage<span class="w"> </span>--format<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">'.unmatched_steps'</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Step coverage: 41/52 (78.8%)
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  http                20/36    55.6%
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>      missing: ^"&lt;resource&gt;" response header "([^"]*)" is "([^"]*)"$
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>      ...
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  postgres            10/10   100.0%
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  kafka               11/26    42.3%
-</code></pre></div>
+<ul>
+<li><strong><code>unmatched_steps</code></strong> lists steps that match no step definition, usually a
+  typo, before <code>tomato run</code> finds it.</li>
+<li><strong>A declared resource with no steps used</strong> is a resource no scenario checks:
+  a Kafka topic nobody asserts on, say.</li>
+</ul>
+<p>Don't gate CI on its percentage. Using ten of the HTTP client's fifty-odd
+steps can be a complete suite, and the percentage drops whenever tomato adds
+steps.</p>
 <table>
 <thead>
 <tr>
@@ -1675,11 +1793,7 @@ against the step definitions of the resources you declared.</p>
 </tr>
 <tr>
 <td><code>--format</code></td>
-<td><code>text</code> (default), <code>markdown</code> (a table for PR comments) or <code>json</code></td>
-</tr>
-<tr>
-<td><code>--min</code></td>
-<td>Exit non-zero if any resource type is below this percentage</td>
+<td><code>text</code> (default), <code>markdown</code> or <code>json</code></td>
 </tr>
 <tr>
 <td><code>--all-types</code></td>
@@ -1691,13 +1805,6 @@ against the step definitions of the resources you declared.</p>
 </tr>
 </tbody>
 </table>
-<p>Steps that match no resource are listed under <code>unmatched_steps</code> in the JSON
-output, which catches typos in step text before <code>tomato run</code> does.</p>
-<p>Use it in CI to keep a suite from quietly losing coverage:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tomato coverage --min 80 --format markdown -o coverage.md</span>
-</code></pre></div>
-<p>Coverage here means "used by at least one scenario". It says nothing about
-whether the scenarios pass; <code>tomato run</code> does that.</p>
 
 
 
@@ -1768,6 +1875,8 @@ whether the scenarios pass; <code>tomato run</code> does that.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

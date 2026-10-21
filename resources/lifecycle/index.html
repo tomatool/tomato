@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1785,26 +1785,26 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" restarts the app</code></td>
+<td><code>"lifecycle" restarts the app</code></td>
 <td>Stop the app and start it again, waiting until it is ready, as a deploy or a crash does</td>
 </tr>
 <tr>
-<td><code>"{resource}" restarts the app with env:</code></td>
+<td><code>"lifecycle" restarts the app with env:</code></td>
 <td>Restart the app with these environment variables changed, for the rest of the scenario, e.g. a boundary a few seconds away</td>
 </tr>
 <tr>
-<td><code>"{resource}" stops the app</code></td>
+<td><code>"lifecycle" stops the app</code></td>
 <td>Stop the app, as when it crashes</td>
 </tr>
 <tr>
-<td><code>"{resource}" starts the app</code></td>
+<td><code>"lifecycle" starts the app</code></td>
 <td>Start the stopped app and wait until it is ready</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <p><strong>Restart the app with these environment variables changed, for the rest of the scenario, e.g. a boundary a few seconds away:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" restarts the app with env:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">lifecycle</span><span class="nf">" restarts the app with env:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">  |</span><span class="s"> name</span><span class="k">             |</span><span class="s"> value</span><span class="k"> |</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">  |</span><span class="s"> SESSION_BOUNDARY</span><span class="k"> |</span><span class="s"> 10s</span><span class="k">   |</span>
 </code></pre></div></p>
@@ -1818,23 +1818,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" stops container "postgres"</code></td>
+<td><code>"lifecycle" stops container "postgres"</code></td>
 <td>Stop a container, as when the service it runs goes down. It keeps its state and its host ports</td>
 </tr>
 <tr>
-<td><code>"{resource}" starts container "postgres"</code></td>
+<td><code>"lifecycle" starts container "postgres"</code></td>
 <td>Start a stopped container on the same address and wait until it is ready</td>
 </tr>
 <tr>
-<td><code>"{resource}" restarts container "postgres"</code></td>
+<td><code>"lifecycle" restarts container "postgres"</code></td>
 <td>Stop a container and start it again, as a failover does</td>
 </tr>
 <tr>
-<td><code>"{resource}" pauses container "rabbitmq"</code></td>
+<td><code>"lifecycle" pauses container "rabbitmq"</code></td>
 <td>Freeze a container: connections stay open and nothing answers, as with a hung service or a network partition</td>
 </tr>
 <tr>
-<td><code>"{resource}" unpauses container "rabbitmq"</code></td>
+<td><code>"lifecycle" unpauses container "rabbitmq"</code></td>
 <td>Resume a paused container</td>
 </tr>
 </tbody>
@@ -1909,6 +1909,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

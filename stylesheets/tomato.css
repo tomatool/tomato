@@ -244,3 +244,34 @@
 .highlight .m {
   color: var(--var);
 }
+
+/* ─── "split a flow where it crosses a boundary" (Getting Started) ───────── */
+
+.split-flow { margin: 1.2em 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-1); }
+.split-flow .sf-modes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.split-flow .sf-modes button {
+  font: 500 12.5px var(--md-code-font-family, monospace); color: var(--fg-2); cursor: pointer;
+  padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg-2);
+}
+.split-flow .sf-modes button[aria-selected="true"] { color: var(--fail); border-color: var(--fail); }
+.split-flow .sf-canvas { overflow-x: auto; }
+.split-flow svg { display: block; width: 100%; min-width: 560px; height: auto; font-family: var(--md-code-font-family, monospace); }
+.split-flow .sf-node rect { fill: var(--bg-2); stroke: var(--line-strong); }
+.split-flow .sf-node.topic rect { stroke-dasharray: 5 4; }
+.split-flow .sf-node text { fill: var(--fg-0); font-size: 12.5px; text-anchor: middle; font-weight: 600; }
+.split-flow .sf-node text.sub { fill: var(--fg-3); font-size: 11px; font-weight: 400; }
+.split-flow .sf-wire { fill: none; stroke: var(--line-strong); stroke-width: 1.6; transition: stroke 0.3s; }
+.split-flow .sf-head { fill: var(--line-strong); }
+.split-flow .sf-bracket { fill: none; stroke-width: 2; stroke-dasharray: 7 5; opacity: 0; transition: opacity 0.4s; }
+.split-flow .sf-label { font-size: 11.5px; opacity: 0; transition: opacity 0.4s; }
+.split-flow .b-long { stroke: var(--fail); fill: var(--fail); }
+.split-flow rect.b-long { fill: none; }
+.split-flow .b1 { stroke: var(--given); fill: var(--given); }
+.split-flow .b2 { stroke: var(--then); fill: var(--then); }
+.split-flow rect.b1, .split-flow path.b2 { fill: none; }
+.split-flow[data-mode="long"] .b-long { opacity: 1; }
+.split-flow[data-mode="long"] .sf-wire { stroke: var(--fail); }
+.split-flow[data-mode="split"] :is(.b1, .b2) { opacity: 1; }
+.split-flow[data-mode="split"] .w1 { stroke: var(--given); }
+.split-flow[data-mode="split"] .w2 { stroke: var(--then); }
+.split-flow .sf-text p { margin: 10px 0 0; }

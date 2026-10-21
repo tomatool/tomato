@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -2212,9 +2212,9 @@ rather than naming resources themselves.</p>
 <p>Handlers are responsible for translating Gherkin steps into actions against resources:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>flowchart LR
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    subgraph Steps["Gherkin Steps"]
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        S1["Given 'db' table 'users' has values:"]
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        S2["When 'api' sends 'GET' to '/users/1'"]
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        S3["Then 'api' response status is '200'"]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        S1["Given 'app-db' table 'users' has values:"]
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        S2["When 'app-client' sends 'GET' to '/users/1'"]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        S3["Then 'app-client' response status is '200'"]
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    end
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    subgraph Handlers["Handler Registry"]
@@ -2304,19 +2304,19 @@ rather than naming resources themselves.</p>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    Note over Feature: Scenario: Create user
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    Feature-&gt;&gt;Godog: Given "db" table "users" has values:
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    Feature-&gt;&gt;Godog: Given "app-db" table "users" has values:
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    Godog-&gt;&gt;PG: SetTableValues(table, data)
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    PG-&gt;&gt;DB: INSERT INTO users...
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    DB--&gt;&gt;PG: OK
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    PG--&gt;&gt;Godog: Success
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    Feature-&gt;&gt;Godog: When "db" executes:
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    Feature-&gt;&gt;Godog: When "app-db" executes:
 <a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    Godog-&gt;&gt;PG: ExecuteQuery(query)
 <a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    PG-&gt;&gt;DB: SELECT * FROM users
 <a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    DB--&gt;&gt;PG: Results
 <a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    PG--&gt;&gt;Godog: Store results
 <a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
-<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    Feature-&gt;&gt;Godog: Then "db" query "..." returns:
+<a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a>    Feature-&gt;&gt;Godog: Then "app-db" query "..." returns:
 <a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>    Godog-&gt;&gt;PG: AssertQueryResult(expected)
 <a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a>    PG--&gt;&gt;Godog: Match/No match
 </code></pre></div>
@@ -2326,18 +2326,18 @@ rather than naming resources themselves.</p>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    participant HTTP as HTTP Handler
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    participant API as Target API
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    Feature-&gt;&gt;HTTP: Given "api" header "X-Token" is "abc"
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    Feature-&gt;&gt;HTTP: Given "app-client" header "X-Token" is "abc"
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    HTTP--&gt;&gt;HTTP: Store header
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    Feature-&gt;&gt;HTTP: When "api" sends "POST" to "/users" with json:
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    Feature-&gt;&gt;HTTP: When "app-client" sends "POST" to "/users" with json:
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    HTTP-&gt;&gt;API: POST /users
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    API--&gt;&gt;HTTP: 201 Created + JSON body
 <a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    HTTP--&gt;&gt;HTTP: Store response
 <a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    Feature-&gt;&gt;HTTP: Then "api" response status is "201"
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    Feature-&gt;&gt;HTTP: Then "app-client" response status is "201"
 <a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    HTTP--&gt;&gt;HTTP: Assert status
 <a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    Feature-&gt;&gt;HTTP: And "api" response json "id" exists
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    Feature-&gt;&gt;HTTP: And "app-client" response json "id" exists
 <a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>    HTTP--&gt;&gt;HTTP: Assert JSON path
 </code></pre></div>
 <h2 id="configuration-structure">Configuration structure<a class="headerlink" href="#configuration-structure" title="Permanent link">&para;</a></h2>
@@ -2352,9 +2352,9 @@ rather than naming resources themselves.</p>
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        end
 <a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
 <a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        subgraph resources
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>            R1[name: db&lt;br/&gt;type: postgres&lt;br/&gt;container: postgres]
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>            R2[name: cache&lt;br/&gt;type: redis&lt;br/&gt;container: redis]
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>            R3[name: api&lt;br/&gt;type: http&lt;br/&gt;base_url: ...]
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>            R1[name: app-db&lt;br/&gt;type: postgres&lt;br/&gt;container: postgres]
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>            R2[name: app-cache&lt;br/&gt;type: redis&lt;br/&gt;container: redis]
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>            R3[name: app-client&lt;br/&gt;type: http&lt;br/&gt;base_url: ...]
 <a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>        end
 <a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
 <a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>        subgraph app
@@ -2457,6 +2457,8 @@ rather than naming resources themselves.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

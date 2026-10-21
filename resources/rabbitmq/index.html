@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1941,19 +1941,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" declares queue "orders"</code></td>
+<td><code>"orders-queue" declares queue "orders"</code></td>
 <td>Declares a queue with default settings</td>
 </tr>
 <tr>
-<td><code>"{resource}" declares durable queue "orders"</code></td>
+<td><code>"orders-queue" declares durable queue "orders"</code></td>
 <td>Declares a durable queue</td>
 </tr>
 <tr>
-<td><code>"{resource}" queue "orders" exists</code></td>
+<td><code>"orders-queue" queue "orders" exists</code></td>
 <td>Asserts a queue exists</td>
 </tr>
 <tr>
-<td><code>"{resource}" purges queue "orders"</code></td>
+<td><code>"orders-queue" purges queue "orders"</code></td>
 <td>Purges all messages from a queue</td>
 </tr>
 </tbody>
@@ -1968,15 +1968,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" declares exchange "events" of type "topic"</code></td>
+<td><code>"orders-queue" declares exchange "events" of type "topic"</code></td>
 <td>Declares an exchange (direct, fanout, topic, headers)</td>
 </tr>
 <tr>
-<td><code>"{resource}" declares durable exchange "events" of type "topic"</code></td>
+<td><code>"orders-queue" declares durable exchange "events" of type "topic"</code></td>
 <td>Declares a durable exchange</td>
 </tr>
 <tr>
-<td><code>"{resource}" exchange "events" exists</code></td>
+<td><code>"orders-queue" exchange "events" exists</code></td>
 <td>Asserts an exchange exists</td>
 </tr>
 </tbody>
@@ -1991,11 +1991,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" binds queue "orders" to exchange "events"</code></td>
+<td><code>"orders-queue" binds queue "orders" to exchange "events"</code></td>
 <td>Binds a queue to an exchange with empty routing key</td>
 </tr>
 <tr>
-<td><code>"{resource}" binds queue "orders" to exchange "events" with routing key "order.*"</code></td>
+<td><code>"orders-queue" binds queue "orders" to exchange "events" with routing key "order.*"</code></td>
 <td>Binds a queue to an exchange with a routing key</td>
 </tr>
 </tbody>
@@ -2010,58 +2010,58 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" message header "trace-id" is "abc-123"</code></td>
+<td><code>"orders-queue" message header "trace-id" is "abc-123"</code></td>
 <td>Sets a header on the next message published (any publish step)</td>
 </tr>
 <tr>
-<td><code>"{resource}" publishes to queue "orders":</code></td>
+<td><code>"orders-queue" publishes to queue "orders":</code></td>
 <td>Publishes a message directly to a queue</td>
 </tr>
 <tr>
-<td><code>"{resource}" publishes json to queue "orders":</code></td>
+<td><code>"orders-queue" publishes json to queue "orders":</code></td>
 <td>Publishes a JSON message directly to a queue</td>
 </tr>
 <tr>
-<td><code>"{resource}" publishes to exchange "events" with routing key "order.created":</code></td>
+<td><code>"orders-queue" publishes to exchange "events" with routing key "order.created":</code></td>
 <td>Publishes a message to an exchange with routing key</td>
 </tr>
 <tr>
-<td><code>"{resource}" publishes json to exchange "events" with routing key "order.created":</code></td>
+<td><code>"orders-queue" publishes json to exchange "events" with routing key "order.created":</code></td>
 <td>Publishes a JSON message to an exchange with routing key</td>
 </tr>
 <tr>
-<td><code>"{resource}" publishes messages to queue "orders":</code></td>
+<td><code>"orders-queue" publishes messages to queue "orders":</code></td>
 <td>Publishes multiple messages from a table</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <p><strong>Publishes a message directly to a queue:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to queue "</span><span class="s">orders</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" publishes to queue "</span><span class="s">orders</span><span class="nf">":</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  Hello World</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Publishes a JSON message directly to a queue:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to queue "</span><span class="s">orders</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" publishes json to queue "</span><span class="s">orders</span><span class="nf">":</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  {"order_id": 123}</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Publishes a message to an exchange with routing key:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" publishes to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  Order created</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Publishes a JSON message to an exchange with routing key:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes json to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" publishes json to exchange "</span><span class="s">events</span><span class="nf">" with routing key "</span><span class="s">order.created</span><span class="nf">":</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"event": "order.created"}</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Publishes multiple messages from a table:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" publishes messages to queue "</span><span class="s">orders</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" publishes messages to queue "</span><span class="s">orders</span><span class="nf">":</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">  |</span><span class="s"> routing_key</span><span class="k"> |</span><span class="s"> message</span><span class="k"> |</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">  |</span><span class="s"> order.1</span><span class="k">     |</span><span class="s"> msg1</span><span class="k">    |</span>
 </code></pre></div></p>
@@ -2075,22 +2075,22 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" consumes from queue "orders"</code></td>
+<td><code>"orders-queue" consumes from queue "orders"</code></td>
 <td>Starts consuming messages from a queue</td>
 </tr>
 <tr>
-<td><code>"{resource}" receives from queue "orders" within "5s"</code></td>
+<td><code>"orders-queue" receives from queue "orders" within "5s"</code></td>
 <td>Waits for a message from a queue within timeout</td>
 </tr>
 <tr>
-<td><code>"{resource}" receives from queue "orders" within "5s":</code></td>
+<td><code>"orders-queue" receives from queue "orders" within "5s":</code></td>
 <td>Asserts a specific message is received within timeout</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
 <p><strong>Asserts a specific message is received within timeout:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" receives from queue "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" receives from queue "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">5s</span><span class="nf">":</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">  Hello World</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -2105,30 +2105,30 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" queue "orders" has "3" messages</code></td>
+<td><code>"orders-queue" queue "orders" has "3" messages</code></td>
 <td>Asserts queue has exactly N messages consumed</td>
 </tr>
 <tr>
-<td><code>"{resource}" queue "orders" is empty</code></td>
+<td><code>"orders-queue" queue "orders" is empty</code></td>
 <td>Asserts no messages have been consumed from queue</td>
 </tr>
 <tr>
-<td><code>"{resource}" last message contains:</code></td>
+<td><code>"orders-queue" last message contains:</code></td>
 <td>Asserts the last consumed message contains content</td>
 </tr>
 <tr>
-<td><code>"{resource}" last message has routing key "order.created"</code></td>
+<td><code>"orders-queue" last message has routing key "order.created"</code></td>
 <td>Asserts the last consumed message has specific routing key</td>
 </tr>
 <tr>
-<td><code>"{resource}" last message has header "content-type" with value "application/json"</code></td>
+<td><code>"orders-queue" last message has header "content-type" with value "application/json"</code></td>
 <td>Asserts the last message has a header with value</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h3>
 <p><strong>Asserts the last consumed message contains content:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last message contains:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nf">"</span><span class="s">orders-queue</span><span class="nf">" last message contains:</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  order_id</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -2203,6 +2203,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

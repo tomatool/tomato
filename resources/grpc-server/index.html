@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1885,38 +1885,38 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" stub "users.v1.UserService/GetUser" with request json "id" "42" returns json:</code></td>
+<td><code>"users-stub" stub "users.v1.UserService/GetUser" with request json "id" "42" returns json:</code></td>
 <td>Creates a stub that answers a method with this response message, written as JSON (protojson). Between the method and "returns", <code>with metadata "k" "v"</code> and <code>with request json "field" "value"</code> (a path into the request, with the same @ matchers as json assertions) narrow which calls it answers; the most specific stub wins, then the most recent. On a server-streaming method the message is a stream of one</td>
 </tr>
 <tr>
-<td><code>"{resource}" stub "users.v1.UserService/GetUser" returns status "NOT_FOUND" with message "no user 42"</code></td>
+<td><code>"users-stub" stub "users.v1.UserService/GetUser" returns status "NOT_FOUND" with message "no user 42"</code></td>
 <td>Creates a stub that fails a method with a gRPC status (NOT_FOUND, PERMISSION_DENIED, UNAVAILABLE, ...) and an optional message</td>
 </tr>
 <tr>
-<td><code>"{resource}" stub "users.v1.UserService/GetUser" returns in sequence:</code></td>
+<td><code>"users-stub" stub "users.v1.UserService/GetUser" returns in sequence:</code></td>
 <td>Creates a stub that answers each call with the next row, and repeats the last row once the rows are used up. Columns: json (the response message), status (default OK) and message for a failure, and delay (e.g. 3s) to answer late, as a slow dependency does; a client whose deadline passes first gets DEADLINE_EXCEEDED</td>
 </tr>
 <tr>
-<td><code>"{resource}" stub "users.v1.UserService/WatchUsers" streams:</code></td>
+<td><code>"users-stub" stub "users.v1.UserService/WatchUsers" streams:</code></td>
 <td>Creates a stub that answers a server-streaming method with one message per row, in order, then ends the stream. Columns: json, and delay before a message; a last row with a status (and message) instead of json ends the stream with that status</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <p><strong>Creates a stub that answers a method with this response message, written as JSON (protojson). Between the method and "returns", <code>with metadata "k" "v"</code> and <code>with request json "field" "value"</code> (a path into the request, with the same @ matchers as json assertions) narrow which calls it answers; the most specific stub wins, then the most recent. On a server-streaming method the message is a stream of one:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" stub "</span><span class="s">users.v1.UserService/GetUser</span><span class="nf">" with request json "</span><span class="s">id</span><span class="nf">" "</span><span class="s">42</span><span class="nf">" returns json:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">users-stub</span><span class="nf">" stub "</span><span class="s">users.v1.UserService/GetUser</span><span class="nf">" with request json "</span><span class="s">id</span><span class="nf">" "</span><span class="s">42</span><span class="nf">" returns json:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {"id": "42", "name": "Alice"}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Creates a stub that answers each call with the next row, and repeats the last row once the rows are used up. Columns: json (the response message), status (default OK) and message for a failure, and delay (e.g. 3s) to answer late, as a slow dependency does; a client whose deadline passes first gets DEADLINE_EXCEEDED:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" stub "</span><span class="s">users.v1.UserService/GetUser</span><span class="nf">" returns in sequence:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">users-stub</span><span class="nf">" stub "</span><span class="s">users.v1.UserService/GetUser</span><span class="nf">" returns in sequence:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">  |</span><span class="s"> status</span><span class="k">      |</span><span class="s"> json</span><span class="k">                         |</span><span class="s"> delay</span><span class="k"> |</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">  |</span><span class="s"> UNAVAILABLE</span><span class="k"> |                              |       |</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">  |</span><span class="s"> OK</span><span class="k">          |</span><span class="s"> {"id": "42"}</span><span class="k">                 |</span><span class="s"> 2s</span><span class="k">    |</span>
 </code></pre></div></p>
 <p><strong>Creates a stub that answers a server-streaming method with one message per row, in order, then ends the stream. Columns: json, and delay before a message; a last row with a status (and message) instead of json ends the stream with that status:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" stub "</span><span class="s">users.v1.UserService/WatchUsers</span><span class="nf">" streams:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">users-stub</span><span class="nf">" stub "</span><span class="s">users.v1.UserService/WatchUsers</span><span class="nf">" streams:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">  |</span><span class="s"> json</span><span class="k">                 |</span><span class="s"> delay</span><span class="k"> |</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">  |</span><span class="s"> {"id": "1"}</span><span class="k">          |       |</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">  |</span><span class="s"> {"id": "2"}</span><span class="k">          |</span><span class="s"> 100ms</span><span class="k"> |</span>
@@ -1931,11 +1931,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" refuses connections</code></td>
+<td><code>"users-stub" refuses connections</code></td>
 <td>Close the server's port and its open connections, so the app's calls fail with UNAVAILABLE as when the service is down. Calls already in flight finish</td>
 </tr>
 <tr>
-<td><code>"{resource}" accepts connections</code></td>
+<td><code>"users-stub" accepts connections</code></td>
 <td>Open the port again on the same address, with the stubs kept. Every scenario starts accepting</td>
 </tr>
 </tbody>
@@ -1950,23 +1950,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" received "users.v1.UserService/GetUser"</code></td>
+<td><code>"users-stub" received "users.v1.UserService/GetUser"</code></td>
 <td>Asserts a method was called</td>
 </tr>
 <tr>
-<td><code>"{resource}" received "users.v1.UserService/GetUser" "2" times</code></td>
+<td><code>"users-stub" received "users.v1.UserService/GetUser" "2" times</code></td>
 <td>Asserts a method was called N times</td>
 </tr>
 <tr>
-<td><code>"{resource}" received "users.v1.UserService/GetUser" with metadata "authorization" "Bearer {{token}}"</code></td>
+<td><code>"users-stub" received "users.v1.UserService/GetUser" with metadata "authorization" "Bearer {{token}}"</code></td>
 <td>Asserts a method was called with this exact metadata value, e.g. the user's token the app forwards</td>
 </tr>
 <tr>
-<td><code>"{resource}" did not receive "users.v1.UserService/DeleteUser"</code></td>
+<td><code>"users-stub" did not receive "users.v1.UserService/DeleteUser"</code></td>
 <td>Asserts a method was not called</td>
 </tr>
 <tr>
-<td><code>"{resource}" received "3" calls</code></td>
+<td><code>"users-stub" received "3" calls</code></td>
 <td>Asserts the total number of calls received, to any method</td>
 </tr>
 </tbody>
@@ -1981,26 +1981,26 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" last "orders.v1.OrderService/CreateOrder" request json "clientOrderId" saved as "{{order_id}}"</code></td>
+<td><code>"users-stub" last "orders.v1.OrderService/CreateOrder" request json "clientOrderId" saved as "{{order_id}}"</code></td>
 <td>Save a field of the last request message a method received, as JSON (protojson, so field names are lowerCamelCase), e.g. an id the app generated and later refers to</td>
 </tr>
 <tr>
-<td><code>"{resource}" last "users.v1.UserService/GetUser" request metadata "x-request-id" saved as "{{request_id}}"</code></td>
+<td><code>"users-stub" last "users.v1.UserService/GetUser" request metadata "x-request-id" saved as "{{request_id}}"</code></td>
 <td>Save a metadata value of the last call a method received</td>
 </tr>
 <tr>
-<td><code>"{resource}" last "users.v1.UserService/GetUser" request metadata "authorization" is "Bearer {{token}}"</code></td>
+<td><code>"users-stub" last "users.v1.UserService/GetUser" request metadata "authorization" is "Bearer {{token}}"</code></td>
 <td>Assert a metadata value of the last call a method received</td>
 </tr>
 <tr>
-<td><code>"{resource}" last "users.v1.UserService/ListUsers" request json contains:</code></td>
+<td><code>"users-stub" last "users.v1.UserService/ListUsers" request json contains:</code></td>
 <td>Assert the last request message a method received contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains")</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
 <p><strong>Assert the last request message a method received contains these JSON fields (extra fields ignored, same matchers as the http resource's "response json contains"):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" last "</span><span class="s">users.v1.UserService/ListUsers</span><span class="nf">" request json contains:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">users-stub</span><span class="nf">" last "</span><span class="s">users.v1.UserService/ListUsers</span><span class="nf">" request json contains:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"pageSize": 50}</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -2015,7 +2015,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" address is stored in "USERS_ADDR"</code></td>
+<td><code>"users-stub" address is stored in "USERS_ADDR"</code></td>
 <td>Stores the server's address (localhost:port) in a variable for use in other steps</td>
 </tr>
 </tbody>
@@ -2090,6 +2090,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

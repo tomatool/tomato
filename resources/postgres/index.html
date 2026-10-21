@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1751,23 +1751,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"db" table "users" has values:</code></td>
+<td><code>"app-db" table "users" has values:</code></td>
 <td>Insert rows from table</td>
 </tr>
 <tr>
-<td><code>"db" clears table "users"</code></td>
+<td><code>"app-db" clears table "users"</code></td>
 <td>Truncate a table (removes all rows)</td>
 </tr>
 <tr>
-<td><code>"db" clears tables:</code></td>
+<td><code>"app-db" clears tables:</code></td>
 <td>Truncate multiple tables from list</td>
 </tr>
 <tr>
-<td><code>"db" executes:</code></td>
+<td><code>"app-db" executes:</code></td>
 <td>Execute raw SQL</td>
 </tr>
 <tr>
-<td><code>"db" executes file "fixtures/seed.sql"</code></td>
+<td><code>"app-db" executes file "fixtures/seed.sql"</code></td>
 <td>Execute SQL from file</td>
 </tr>
 </tbody>
@@ -1782,27 +1782,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"db" table "users" contains:</code></td>
+<td><code>"app-db" table "users" contains:</code></td>
 <td>Assert table contains rows</td>
 </tr>
 <tr>
-<td><code>"db" table "users" is empty</code></td>
+<td><code>"app-db" table "users" is empty</code></td>
 <td>Assert table is empty</td>
 </tr>
 <tr>
-<td><code>"db" table "users" has "5" rows</code></td>
+<td><code>"app-db" table "users" has "5" rows</code></td>
 <td>Assert row count</td>
 </tr>
 <tr>
-<td><code>"db" query "SELECT id, name FROM users" returns:</code></td>
+<td><code>"app-db" query "SELECT id, name FROM users" returns:</code></td>
 <td>Assert exact match of query result rows</td>
 </tr>
 <tr>
-<td><code>"db" query "SELECT status FROM orders" returns within "10s":</code></td>
+<td><code>"app-db" query "SELECT status FROM orders" returns within "10s":</code></td>
 <td>Waits until the query result matches the rows exactly, for state the app writes asynchronously</td>
 </tr>
 <tr>
-<td><code>"db" query result of "SELECT id, name FROM users" contains:</code></td>
+<td><code>"app-db" query result of "SELECT id, name FROM users" contains:</code></td>
 <td>Assert query result contains expected rows (superset)</td>
 </tr>
 </tbody>
@@ -1877,6 +1877,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

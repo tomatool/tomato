@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1861,15 +1861,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" metadata "authorization" is "Bearer token"</code></td>
+<td><code>"app-grpc-client" metadata "authorization" is "Bearer token"</code></td>
 <td>Set a request metadata entry</td>
 </tr>
 <tr>
-<td><code>"grpc" metadata are:</code></td>
+<td><code>"app-grpc-client" metadata are:</code></td>
 <td>Set multiple metadata entries from table</td>
 </tr>
 <tr>
-<td><code>"grpc" request is:</code></td>
+<td><code>"app-grpc-client" request is:</code></td>
 <td>Set the request message as JSON (docstring)</td>
 </tr>
 </tbody>
@@ -1884,11 +1884,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" calls "helloworld.Greeter/SayHello"</code></td>
+<td><code>"app-grpc-client" calls "helloworld.Greeter/SayHello"</code></td>
 <td>Call a unary method using the previously set request</td>
 </tr>
 <tr>
-<td><code>"grpc" calls "helloworld.Greeter/SayHello" with:</code></td>
+<td><code>"app-grpc-client" calls "helloworld.Greeter/SayHello" with:</code></td>
 <td>Call a unary method with a JSON request (docstring)</td>
 </tr>
 </tbody>
@@ -1903,19 +1903,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" response status is "OK"</code></td>
+<td><code>"app-grpc-client" response status is "OK"</code></td>
 <td>Assert the gRPC status code by name (OK, NOT_FOUND, INVALID_ARGUMENT, ...; NotFound and the number work too)</td>
 </tr>
 <tr>
-<td><code>"grpc" call succeeds</code></td>
+<td><code>"app-grpc-client" call succeeds</code></td>
 <td>Assert the call returned OK</td>
 </tr>
 <tr>
-<td><code>"grpc" call fails</code></td>
+<td><code>"app-grpc-client" call fails</code></td>
 <td>Assert the call returned any non-OK status</td>
 </tr>
 <tr>
-<td><code>"grpc" response error contains "not found"</code></td>
+<td><code>"app-grpc-client" response error contains "not found"</code></td>
 <td>Assert the status message contains a substring</td>
 </tr>
 </tbody>
@@ -1930,11 +1930,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" response contains "SERVING"</code></td>
+<td><code>"app-grpc-client" response contains "SERVING"</code></td>
 <td>Assert the JSON-rendered response contains a substring</td>
 </tr>
 <tr>
-<td><code>"grpc" response does not contain "error"</code></td>
+<td><code>"app-grpc-client" response does not contain "error"</code></td>
 <td>Assert the JSON-rendered response does not contain a substring</td>
 </tr>
 </tbody>
@@ -1949,23 +1949,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" response json "status" is "SERVING"</code></td>
+<td><code>"app-grpc-client" response json "status" is "SERVING"</code></td>
 <td>Assert a JSON path value on the response message</td>
 </tr>
 <tr>
-<td><code>"grpc" response json "employees[0].email" exists</code></td>
+<td><code>"app-grpc-client" response json "employees[0].email" exists</code></td>
 <td>Assert a JSON path exists on the response message</td>
 </tr>
 <tr>
-<td><code>"grpc" response json "nextPageToken" does not exist</code></td>
+<td><code>"app-grpc-client" response json "nextPageToken" does not exist</code></td>
 <td>Assert a JSON path is absent from the response message</td>
 </tr>
 <tr>
-<td><code>"grpc" response json matches:</code></td>
+<td><code>"app-grpc-client" response json matches:</code></td>
 <td>Assert the exact response structure, with the same matchers the HTTP handler supports</td>
 </tr>
 <tr>
-<td><code>"grpc" response json contains:</code></td>
+<td><code>"app-grpc-client" response json contains:</code></td>
 <td>Assert the response contains the given fields, ignoring extras</td>
 </tr>
 </tbody>
@@ -1980,11 +1980,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" exposes service "grpc.health.v1.Health"</code></td>
+<td><code>"app-grpc-client" exposes service "grpc.health.v1.Health"</code></td>
 <td>Assert the server advertises a service via reflection</td>
 </tr>
 <tr>
-<td><code>"grpc" service "grpc.health.v1.Health" has method "Check"</code></td>
+<td><code>"app-grpc-client" service "grpc.health.v1.Health" has method "Check"</code></td>
 <td>Assert a service exposes a method</td>
 </tr>
 </tbody>
@@ -1999,7 +1999,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"grpc" response time is less than "500ms"</code></td>
+<td><code>"app-grpc-client" response time is less than "500ms"</code></td>
 <td>Assert the call completed within a time budget</td>
 </tr>
 </tbody>
@@ -2074,6 +2074,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

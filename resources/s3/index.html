@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1885,15 +1885,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"files" bucket "uploads" exists</code></td>
+<td><code>"uploads-storage" bucket "uploads" exists</code></td>
 <td>Create a bucket if it does not already exist</td>
 </tr>
 <tr>
-<td><code>"files" bucket "uploads" is empty</code></td>
+<td><code>"uploads-storage" bucket "uploads" is empty</code></td>
 <td>Delete every object in a bucket</td>
 </tr>
 <tr>
-<td><code>"files" bucket "uploads" is deleted</code></td>
+<td><code>"uploads-storage" bucket "uploads" is deleted</code></td>
 <td>Delete a bucket and everything in it</td>
 </tr>
 </tbody>
@@ -1908,49 +1908,49 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"files" object "uploads/hello.txt" is "hello world"</code></td>
+<td><code>"uploads-storage" object "uploads/hello.txt" is "hello world"</code></td>
 <td>Write an object with inline content (path is bucket/key)</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/user.json" is:</code></td>
+<td><code>"uploads-storage" object "uploads/user.json" is:</code></td>
 <td>Write an object with multiline content (docstring)</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/a.csv" is "id,name" with content type "text/csv"</code></td>
+<td><code>"uploads-storage" object "uploads/a.csv" is "id,name" with content type "text/csv"</code></td>
 <td>Write an object with an explicit content type</td>
 </tr>
 <tr>
-<td><code>"{resource}" object "uploads/a.csv" is "id,name" with metadata:</code></td>
+<td><code>"uploads-storage" object "uploads/a.csv" is "id,name" with metadata:</code></td>
 <td>Upload an object with user metadata (table of key</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/logo.png" is file "testdata/logo.png"</code></td>
+<td><code>"uploads-storage" object "uploads/logo.png" is file "testdata/logo.png"</code></td>
 <td>Upload a local file as an object</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/hello.txt" is deleted</code></td>
+<td><code>"uploads-storage" object "uploads/hello.txt" is deleted</code></td>
 <td>Delete a single object</td>
 </tr>
 <tr>
-<td><code>"files" objects:</code></td>
+<td><code>"uploads-storage" objects:</code></td>
 <td>Seed multiple objects from a table with path and content columns</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <p><strong>Write an object with multiline content (docstring):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/user.json</span><span class="nf">" is:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">uploads-storage</span><span class="nf">" object "</span><span class="s">uploads/user.json</span><span class="nf">" is:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {"id": 1, "name": "John"}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Upload an object with user metadata (table of key | value):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" object "</span><span class="s">uploads/a.csv</span><span class="nf">" is "</span><span class="s">id,name</span><span class="nf">" with metadata:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">uploads-storage</span><span class="nf">" object "</span><span class="s">uploads/a.csv</span><span class="nf">" is "</span><span class="s">id,name</span><span class="nf">" with metadata:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">  |</span><span class="s"> key</span><span class="k">   |</span><span class="s"> value</span><span class="k">   |</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">  |</span><span class="s"> owner</span><span class="k"> |</span><span class="s"> billing</span><span class="k"> |</span>
 </code></pre></div></p>
 <p><strong>Seed multiple objects from a table with path and content columns:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" objects:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">uploads-storage</span><span class="nf">" objects:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">  |</span><span class="s"> path</span><span class="k">                |</span><span class="s"> content</span><span class="k">     |</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">  |</span><span class="s"> uploads/a.txt</span><span class="k">       |</span><span class="s"> first</span><span class="k">       |</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">  |</span><span class="s"> uploads/b.txt</span><span class="k">       |</span><span class="s"> second</span><span class="k">      |</span>
@@ -1965,27 +1965,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"files" bucket "uploads" should exist</code></td>
+<td><code>"uploads-storage" bucket "uploads" should exist</code></td>
 <td>Assert a bucket exists</td>
 </tr>
 <tr>
-<td><code>"files" bucket "temp" should not exist</code></td>
+<td><code>"uploads-storage" bucket "temp" should not exist</code></td>
 <td>Assert a bucket does not exist</td>
 </tr>
 <tr>
-<td><code>"files" bucket "uploads" should have "3" objects</code></td>
+<td><code>"uploads-storage" bucket "uploads" should have "3" objects</code></td>
 <td>Assert the object count in a bucket</td>
 </tr>
 <tr>
-<td><code>"files" bucket "uploads" should be empty</code></td>
+<td><code>"uploads-storage" bucket "uploads" should be empty</code></td>
 <td>Assert a bucket holds no objects</td>
 </tr>
 <tr>
-<td><code>"files" bucket "uploads" should have "2" objects with prefix "2026/"</code></td>
+<td><code>"uploads-storage" bucket "uploads" should have "2" objects with prefix "2026/"</code></td>
 <td>Assert the object count under a key prefix</td>
 </tr>
 <tr>
-<td><code>"files" bucket "uploads" should have "1" objects within "10s"</code></td>
+<td><code>"uploads-storage" bucket "uploads" should have "1" objects within "10s"</code></td>
 <td>Wait for a bucket to reach an object count (async writes)</td>
 </tr>
 </tbody>
@@ -2000,56 +2000,56 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"files" object "uploads/hello.txt" should exist</code></td>
+<td><code>"uploads-storage" object "uploads/hello.txt" should exist</code></td>
 <td>Assert an object exists</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/gone.txt" should not exist</code></td>
+<td><code>"uploads-storage" object "uploads/gone.txt" should not exist</code></td>
 <td>Assert an object does not exist</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/report.pdf" should exist within "10s"</code></td>
+<td><code>"uploads-storage" object "uploads/report.pdf" should exist within "10s"</code></td>
 <td>Wait for an object to appear (async writes)</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/hello.txt" content should be "hello world"</code></td>
+<td><code>"uploads-storage" object "uploads/hello.txt" content should be "hello world"</code></td>
 <td>Assert exact object content</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/hello.txt" content should be:</code></td>
+<td><code>"uploads-storage" object "uploads/hello.txt" content should be:</code></td>
 <td>Assert exact object content (docstring)</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/log.txt" content should contain "ERROR"</code></td>
+<td><code>"uploads-storage" object "uploads/log.txt" content should contain "ERROR"</code></td>
 <td>Assert object content contains a substring</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/user.json" content should match:</code></td>
+<td><code>"uploads-storage" object "uploads/user.json" content should match:</code></td>
 <td>Assert object JSON content matches (partial, supports @matchers)</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/hello.txt" size should be "11" bytes</code></td>
+<td><code>"uploads-storage" object "uploads/hello.txt" size should be "11" bytes</code></td>
 <td>Assert object size in bytes</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/a.csv" content type should be "text/csv"</code></td>
+<td><code>"uploads-storage" object "uploads/a.csv" content type should be "text/csv"</code></td>
 <td>Assert object content type</td>
 </tr>
 <tr>
-<td><code>"files" object "uploads/a.csv" metadata "owner" should be "billing"</code></td>
+<td><code>"uploads-storage" object "uploads/a.csv" metadata "owner" should be "billing"</code></td>
 <td>Assert a user metadata value on an object</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
 <p><strong>Assert exact object content (docstring):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/hello.txt</span><span class="nf">" content should be:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">uploads-storage</span><span class="nf">" object "</span><span class="s">uploads/hello.txt</span><span class="nf">" content should be:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  hello world</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Assert object JSON content matches (partial, supports @matchers):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">uploads/user.json</span><span class="nf">" content should match:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nf">"</span><span class="s">uploads-storage</span><span class="nf">" object "</span><span class="s">uploads/user.json</span><span class="nf">" content should match:</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s">  {"id": "@number", "name": "John"}</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -2064,7 +2064,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"files" object "uploads/id.txt" content is captured as "user_id"</code></td>
+<td><code>"uploads-storage" object "uploads/id.txt" content is captured as "user_id"</code></td>
 <td>Store object content in a variable for later steps</td>
 </tr>
 </tbody>
@@ -2139,6 +2139,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

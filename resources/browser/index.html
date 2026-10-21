@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1795,7 +1795,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"alice" opens "/master"</code></td>
+<td><code>"alice-browser" opens "/master"</code></td>
 <td>Open a page and wait until it has loaded. A path is joined to base_url</td>
 </tr>
 </tbody>
@@ -1810,39 +1810,39 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"alice" clicks "Apply"</code></td>
+<td><code>"alice-browser" clicks "Apply"</code></td>
 <td>Click what is called this: a button, link or tab by its accessible name, or else the element showing this text. Waits until it is there, enabled and not covered</td>
 </tr>
 <tr>
-<td><code>"alice" fills "Search" with "Zinsen"</code></td>
+<td><code>"alice-browser" fills "Search" with "Zinsen"</code></td>
 <td>Replace what a field holds. The field is named by its label, placeholder or accessible name; a contenteditable editor counts as a field</td>
 </tr>
 <tr>
-<td><code>"alice" types " und Gebühren" at the end of "7.2"</code></td>
+<td><code>"alice-browser" types " und Gebühren" at the end of "7.2"</code></td>
 <td>Put the caret at the end of the paragraph or field showing this text, and type there key by key</td>
 </tr>
 <tr>
-<td><code>"alice" types "Neuer Satz."</code></td>
+<td><code>"alice-browser" types "Neuer Satz."</code></td>
 <td>Type key by key into whatever has focus</td>
 </tr>
 <tr>
-<td><code>"alice" presses "ctrl+z"</code></td>
+<td><code>"alice-browser" presses "ctrl+z"</code></td>
 <td>Press a key or a shortcut, such as Enter, Escape, Tab, ArrowDown or ctrl+z</td>
 </tr>
 <tr>
-<td><code>"alice" checks "Austria"</code></td>
+<td><code>"alice-browser" checks "Austria"</code></td>
 <td>Tick a checkbox or switch by its label, unless it is ticked already</td>
 </tr>
 <tr>
-<td><code>"alice" unchecks "Netherlands"</code></td>
+<td><code>"alice-browser" unchecks "Netherlands"</code></td>
 <td>Clear a checkbox or switch by its label, unless it is clear already</td>
 </tr>
 <tr>
-<td><code>"alice" chooses "Selected countries"</code></td>
+<td><code>"alice-browser" chooses "Selected countries"</code></td>
 <td>Choose a radio button, tab or option by its label</td>
 </tr>
 <tr>
-<td><code>"alice" selects "Austria" from "Country"</code></td>
+<td><code>"alice-browser" selects "Austria" from "Country"</code></td>
 <td>Pick an option of a select box or combobox, both by what they show</td>
 </tr>
 </tbody>
@@ -1857,31 +1857,31 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"alice" sees "7 Zinsen"</code></td>
+<td><code>"alice-browser" sees "7 Zinsen"</code></td>
 <td>Assert the page shows this text now, in its content or in a field</td>
 </tr>
 <tr>
-<td><code>"bob" sees "Neuer Satz." within "3s"</code></td>
+<td><code>"bob-browser" sees "Neuer Satz." within "3s"</code></td>
 <td>Wait until the page shows this text, for at most the duration</td>
 </tr>
 <tr>
-<td><code>"alice" does not see "clause_id"</code></td>
+<td><code>"alice-browser" does not see "clause_id"</code></td>
 <td>Assert the page does not show this text now</td>
 </tr>
 <tr>
-<td><code>"alice" no longer sees "Saving…" within "5s"</code></td>
+<td><code>"alice-browser" no longer sees "Saving…" within "5s"</code></td>
 <td>Wait until the page stops showing this text, for at most the duration</td>
 </tr>
 <tr>
-<td><code>"alice" sees "Apply" is disabled</code></td>
+<td><code>"alice-browser" sees "Apply" is disabled</code></td>
 <td>Assert a button, field or other control is disabled</td>
 </tr>
 <tr>
-<td><code>"alice" sees "Apply" is enabled</code></td>
+<td><code>"alice-browser" sees "Apply" is enabled</code></td>
 <td>Assert a button, field or other control is enabled</td>
 </tr>
 <tr>
-<td><code>"alice" url is "/master/7.2"</code></td>
+<td><code>"alice-browser" url is "/master/7.2"</code></td>
 <td>Assert the page's address: the path with its query and fragment, or the whole URL when one is given</td>
 </tr>
 </tbody>
@@ -1896,7 +1896,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"alice" saves screenshot "after-apply"</code></td>
+<td><code>"alice-browser" saves screenshot "after-apply"</code></td>
 <td>Save what the page shows as <name>.png in the screenshots directory</td>
 </tr>
 </tbody>
@@ -1971,6 +1971,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

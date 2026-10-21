@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1729,11 +1729,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" role "arn:aws:iam::000000000000:role/my-service" was assumed</code></td>
+<td><code>"aws" role "arn:aws:iam::000000000000:role/my-service" was assumed</code></td>
 <td>Asserts the application assumed the role at tomato's STS during the run</td>
 </tr>
 <tr>
-<td><code>"{resource}" role "arn:aws:iam::000000000000:role/my-service" was not assumed</code></td>
+<td><code>"aws" role "arn:aws:iam::000000000000:role/my-service" was not assumed</code></td>
 <td>Asserts the application never assumed the role at tomato's STS during the run</td>
 </tr>
 </tbody>
@@ -1808,6 +1808,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

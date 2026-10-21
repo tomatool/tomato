@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1841,34 +1841,34 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" on connect sends:</code></td>
+<td><code>"prices-stub" on connect sends:</code></td>
 <td>Sends a message when a client connects</td>
 </tr>
 <tr>
-<td><code>"{resource}" on message "ping" replies:</code></td>
+<td><code>"prices-stub" on message "ping" replies:</code></td>
 <td>Replies to an exact message</td>
 </tr>
 <tr>
-<td><code>"{resource}" on message matching ".*subscribe.*" replies:</code></td>
+<td><code>"prices-stub" on message matching ".*subscribe.*" replies:</code></td>
 <td>Replies to messages matching a regex pattern</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <p><strong>Sends a message when a client connects:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" on connect sends:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">prices-stub</span><span class="nf">" on connect sends:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {"type": "welcome"}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Replies to an exact message:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" on message "</span><span class="s">ping</span><span class="nf">" replies:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">prices-stub</span><span class="nf">" on message "</span><span class="s">ping</span><span class="nf">" replies:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  pong</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Replies to messages matching a regex pattern:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" on message matching "</span><span class="s">.*subscribe.*</span><span class="nf">" replies:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nf">"</span><span class="s">prices-stub</span><span class="nf">" on message matching "</span><span class="s">.*subscribe.*</span><span class="nf">" replies:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">  {"status": "subscribed"}</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -1883,18 +1883,18 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" broadcasts:</code></td>
+<td><code>"prices-stub" broadcasts:</code></td>
 <td>Broadcasts a message to all connected clients</td>
 </tr>
 <tr>
-<td><code>"{resource}" broadcasts "ping"</code></td>
+<td><code>"prices-stub" broadcasts "ping"</code></td>
 <td>Broadcasts a short message to all connected clients</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
 <p><strong>Broadcasts a message to all connected clients:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">{resource}</span><span class="nf">" broadcasts:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nf">"</span><span class="s">prices-stub</span><span class="nf">" broadcasts:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">  {"event": "update"}</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -1909,15 +1909,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" has "2" connections</code></td>
+<td><code>"prices-stub" has "2" connections</code></td>
 <td>Asserts the number of connected clients</td>
 </tr>
 <tr>
-<td><code>"{resource}" received message "ping"</code></td>
+<td><code>"prices-stub" received message "ping"</code></td>
 <td>Asserts a specific message was received</td>
 </tr>
 <tr>
-<td><code>"{resource}" received "3" messages</code></td>
+<td><code>"prices-stub" received "3" messages</code></td>
 <td>Asserts the total number of messages received</td>
 </tr>
 </tbody>
@@ -1992,6 +1992,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

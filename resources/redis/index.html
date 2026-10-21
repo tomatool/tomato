@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1839,31 +1839,31 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" key "user:1" is "John"</code></td>
+<td><code>"app-cache" key "user:1" is "John"</code></td>
 <td>Set a string value</td>
 </tr>
 <tr>
-<td><code>"cache" key "session:abc" is "data" with TTL "1h"</code></td>
+<td><code>"app-cache" key "session:abc" is "data" with TTL "1h"</code></td>
 <td>Set a string value with expiration</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" is:</code></td>
+<td><code>"app-cache" key "user:1" is:</code></td>
 <td>Set a JSON/multiline value</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" is deleted</code></td>
+<td><code>"app-cache" key "user:1" is deleted</code></td>
 <td>Delete a key</td>
 </tr>
 <tr>
-<td><code>"cache" key "counter" is incremented</code></td>
+<td><code>"app-cache" key "counter" is incremented</code></td>
 <td>Increment integer value by 1</td>
 </tr>
 <tr>
-<td><code>"cache" key "counter" is incremented by "5"</code></td>
+<td><code>"app-cache" key "counter" is incremented by "5"</code></td>
 <td>Increment integer value by N</td>
 </tr>
 <tr>
-<td><code>"cache" key "counter" is decremented</code></td>
+<td><code>"app-cache" key "counter" is decremented</code></td>
 <td>Decrement integer value by 1</td>
 </tr>
 </tbody>
@@ -1878,23 +1878,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" key "user:1" exists</code></td>
+<td><code>"app-cache" key "user:1" exists</code></td>
 <td>Assert key exists</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" does not exist</code></td>
+<td><code>"app-cache" key "user:1" does not exist</code></td>
 <td>Assert key doesn't exist</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" has value "John"</code></td>
+<td><code>"app-cache" key "user:1" has value "John"</code></td>
 <td>Assert exact value</td>
 </tr>
 <tr>
-<td><code>"cache" key "user:1" contains "John"</code></td>
+<td><code>"app-cache" key "user:1" contains "John"</code></td>
 <td>Assert value contains substring</td>
 </tr>
 <tr>
-<td><code>"cache" key "session:abc" has TTL greater than "3600" seconds</code></td>
+<td><code>"app-cache" key "session:abc" has TTL greater than "3600" seconds</code></td>
 <td>Assert TTL greater than N seconds</td>
 </tr>
 </tbody>
@@ -1909,15 +1909,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" hash "user:1" has fields:</code></td>
+<td><code>"app-cache" hash "user:1" has fields:</code></td>
 <td>Set hash fields from table</td>
 </tr>
 <tr>
-<td><code>"cache" hash "user:1" field "name" is "John"</code></td>
+<td><code>"app-cache" hash "user:1" field "name" is "John"</code></td>
 <td>Assert hash field value</td>
 </tr>
 <tr>
-<td><code>"cache" hash "user:1" contains:</code></td>
+<td><code>"app-cache" hash "user:1" contains:</code></td>
 <td>Assert hash contains fields</td>
 </tr>
 </tbody>
@@ -1932,19 +1932,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" list "queue" has "item1"</code></td>
+<td><code>"app-cache" list "queue" has "item1"</code></td>
 <td>Push value to list</td>
 </tr>
 <tr>
-<td><code>"cache" list "queue" has values:</code></td>
+<td><code>"app-cache" list "queue" has values:</code></td>
 <td>Push multiple values to list</td>
 </tr>
 <tr>
-<td><code>"cache" list "queue" has "3" items</code></td>
+<td><code>"app-cache" list "queue" has "3" items</code></td>
 <td>Assert list length</td>
 </tr>
 <tr>
-<td><code>"cache" list "queue" contains "item1"</code></td>
+<td><code>"app-cache" list "queue" contains "item1"</code></td>
 <td>Assert list contains value</td>
 </tr>
 </tbody>
@@ -1959,19 +1959,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" set "tags" has "tag1"</code></td>
+<td><code>"app-cache" set "tags" has "tag1"</code></td>
 <td>Add member to set</td>
 </tr>
 <tr>
-<td><code>"cache" set "tags" has members:</code></td>
+<td><code>"app-cache" set "tags" has members:</code></td>
 <td>Add multiple members to set</td>
 </tr>
 <tr>
-<td><code>"cache" set "tags" contains "tag1"</code></td>
+<td><code>"app-cache" set "tags" contains "tag1"</code></td>
 <td>Assert set contains member</td>
 </tr>
 <tr>
-<td><code>"cache" set "tags" has "3" members</code></td>
+<td><code>"app-cache" set "tags" has "3" members</code></td>
 <td>Assert set size</td>
 </tr>
 </tbody>
@@ -1986,11 +1986,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"cache" has "5" keys</code></td>
+<td><code>"app-cache" has "5" keys</code></td>
 <td>Assert total key count</td>
 </tr>
 <tr>
-<td><code>"cache" is empty</code></td>
+<td><code>"app-cache" is empty</code></td>
 <td>Assert database is empty</td>
 </tr>
 </tbody>
@@ -2065,6 +2065,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

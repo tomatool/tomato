@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1983,31 +1983,31 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" header "Content-Type" is "application/json"</code></td>
+<td><code>"app-client" header "Content-Type" is "application/json"</code></td>
 <td>Set a header (a "Host" header sets the request host)</td>
 </tr>
 <tr>
-<td><code>"api" headers are:</code></td>
+<td><code>"app-client" headers are:</code></td>
 <td>Set multiple headers from table</td>
 </tr>
 <tr>
-<td><code>"api" cookie "session" is "{{session}}"</code></td>
+<td><code>"app-client" cookie "session" is "{{session}}"</code></td>
 <td>Set a request cookie (kept for the rest of the scenario, like headers)</td>
 </tr>
 <tr>
-<td><code>"api" query param "page" is "1"</code></td>
+<td><code>"app-client" query param "page" is "1"</code></td>
 <td>Set a query parameter</td>
 </tr>
 <tr>
-<td><code>"api" body is:</code></td>
+<td><code>"app-client" body is:</code></td>
 <td>Set raw request body (docstring)</td>
 </tr>
 <tr>
-<td><code>"api" json body is:</code></td>
+<td><code>"app-client" json body is:</code></td>
 <td>Set JSON body + Content-Type header</td>
 </tr>
 <tr>
-<td><code>"api" form body is:</code></td>
+<td><code>"app-client" form body is:</code></td>
 <td>Set form-encoded body from table</td>
 </tr>
 </tbody>
@@ -2022,15 +2022,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" sends "GET" to "/users"</code></td>
+<td><code>"app-client" sends "GET" to "/users"</code></td>
 <td>Send HTTP request</td>
 </tr>
 <tr>
-<td><code>"api" sends "POST" to "/users" with body:</code></td>
+<td><code>"app-client" sends "POST" to "/users" with body:</code></td>
 <td>Send with raw body</td>
 </tr>
 <tr>
-<td><code>"api" sends "POST" to "/users" with json:</code></td>
+<td><code>"app-client" sends "POST" to "/users" with json:</code></td>
 <td>Send with JSON body</td>
 </tr>
 </tbody>
@@ -2045,11 +2045,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response status is "200"</code></td>
+<td><code>"app-client" response status is "200"</code></td>
 <td>Assert exact status code</td>
 </tr>
 <tr>
-<td><code>"api" response status is success</code></td>
+<td><code>"app-client" response status is success</code></td>
 <td>Assert status class (2xx, 3xx, 4xx, 5xx)</td>
 </tr>
 </tbody>
@@ -2064,15 +2064,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response header "Content-Type" is "application/json"</code></td>
+<td><code>"app-client" response header "Content-Type" is "application/json"</code></td>
 <td>Assert exact header value</td>
 </tr>
 <tr>
-<td><code>"api" response header "Content-Type" contains "json"</code></td>
+<td><code>"app-client" response header "Content-Type" contains "json"</code></td>
 <td>Assert header contains substring</td>
 </tr>
 <tr>
-<td><code>"api" response header "X-Request-Id" exists</code></td>
+<td><code>"app-client" response header "X-Request-Id" exists</code></td>
 <td>Assert header exists</td>
 </tr>
 </tbody>
@@ -2087,27 +2087,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response body is:</code></td>
+<td><code>"app-client" response body is:</code></td>
 <td>Assert exact body match</td>
 </tr>
 <tr>
-<td><code>"api" response body contains "success"</code></td>
+<td><code>"app-client" response body contains "success"</code></td>
 <td>Assert body contains substring</td>
 </tr>
 <tr>
-<td><code>"api" response body contains:</code></td>
+<td><code>"app-client" response body contains:</code></td>
 <td>Assert body contains the docstring text (use for text with quotes)</td>
 </tr>
 <tr>
-<td><code>"api" response body does not contain "error"</code></td>
+<td><code>"app-client" response body does not contain "error"</code></td>
 <td>Assert body doesn't contain substring</td>
 </tr>
 <tr>
-<td><code>"api" response body does not contain:</code></td>
+<td><code>"app-client" response body does not contain:</code></td>
 <td>Assert body doesn't contain the docstring text</td>
 </tr>
 <tr>
-<td><code>"api" response body is empty</code></td>
+<td><code>"app-client" response body is empty</code></td>
 <td>Assert empty body</td>
 </tr>
 </tbody>
@@ -2122,15 +2122,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response cookie "session" exists</code></td>
+<td><code>"app-client" response cookie "session" exists</code></td>
 <td>Assert the response sets a cookie</td>
 </tr>
 <tr>
-<td><code>"api" response cookie "session" is ""</code></td>
+<td><code>"app-client" response cookie "session" is ""</code></td>
 <td>Assert a cookie's value (an empty value means the cookie is cleared)</td>
 </tr>
 <tr>
-<td><code>"api" response cookie "session" saved as "{{session}}"</code></td>
+<td><code>"app-client" response cookie "session" saved as "{{session}}"</code></td>
 <td>Save a cookie's value to a variable</td>
 </tr>
 </tbody>
@@ -2145,39 +2145,39 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response json "data.id" is "123"</code></td>
+<td><code>"app-client" response json "data.id" is "123"</code></td>
 <td>Assert JSON path value</td>
 </tr>
 <tr>
-<td><code>"api" response json "data.id" exists</code></td>
+<td><code>"app-client" response json "data.id" exists</code></td>
 <td>Assert JSON path exists</td>
 </tr>
 <tr>
-<td><code>"api" response json "data.deleted" does not exist</code></td>
+<td><code>"app-client" response json "data.deleted" does not exist</code></td>
 <td>Assert JSON path doesn't exist</td>
 </tr>
 <tr>
-<td><code>"api" response json matches:</code></td>
+<td><code>"app-client" response json matches:</code></td>
 <td>Assert exact JSON structure with matchers: @string, @number, @boolean, @array, @object, @any, @null, @notnull, @empty, @notempty, @regex:pattern, @contains:text, @startswith:text, @endswith:text, @gt:n, @gte:n, @lt:n, @lte:n, @len:n</td>
 </tr>
 <tr>
-<td><code>"api" response json contains:</code></td>
+<td><code>"app-client" response json contains:</code></td>
 <td>Assert JSON contains specified fields (ignores extra fields). Supports same matchers as 'matches'</td>
 </tr>
 <tr>
-<td><code>"api" response json "id" matches pattern "^[0-9a-f-]{36}$"</code></td>
+<td><code>"app-client" response json "id" matches pattern "^[0-9a-f-]{36}$"</code></td>
 <td>Assert JSON path value matches regex pattern</td>
 </tr>
 <tr>
-<td><code>"api" response json "id" is uuid</code></td>
+<td><code>"app-client" response json "id" is uuid</code></td>
 <td>Assert JSON path value is a valid UUID</td>
 </tr>
 <tr>
-<td><code>"api" response json "email" is email</code></td>
+<td><code>"app-client" response json "email" is email</code></td>
 <td>Assert JSON path value is a valid email format</td>
 </tr>
 <tr>
-<td><code>"api" response json "created_at" is iso-timestamp</code></td>
+<td><code>"app-client" response json "created_at" is iso-timestamp</code></td>
 <td>Assert JSON path value is an ISO 8601 timestamp</td>
 </tr>
 </tbody>
@@ -2192,7 +2192,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response time is less than "500ms"</code></td>
+<td><code>"app-client" response time is less than "500ms"</code></td>
 <td>Assert response time</td>
 </tr>
 </tbody>
@@ -2207,11 +2207,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" response json "id" saved as "{{user_id}}"</code></td>
+<td><code>"app-client" response json "id" saved as "{{user_id}}"</code></td>
 <td>Save JSON path value to variable for use in subsequent requests</td>
 </tr>
 <tr>
-<td><code>"api" response header "Location" saved as "{{location}}"</code></td>
+<td><code>"app-client" response header "Location" saved as "{{location}}"</code></td>
 <td>Save response header value to variable</td>
 </tr>
 </tbody>
@@ -2226,63 +2226,63 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" opens stream "/events"</code></td>
+<td><code>"app-client" opens stream "/events"</code></td>
 <td>Open a Server-Sent Events stream with the scenario's headers, cookies and query params, and fail unless it answers 200 with text/event-stream</td>
 </tr>
 <tr>
-<td><code>"api" opens stream "/events" after event id "{{last_id}}"</code></td>
+<td><code>"app-client" opens stream "/events" after event id "{{last_id}}"</code></td>
 <td>Resume a stream: open it with a Last-Event-ID header, as a reconnecting client does</td>
 </tr>
 <tr>
-<td><code>"api" closes stream</code></td>
+<td><code>"app-client" closes stream</code></td>
 <td>Close the stream from the client side</td>
 </tr>
 <tr>
-<td><code>"api" stream skips events "heartbeat"</code></td>
+<td><code>"app-client" stream skips events "heartbeat"</code></td>
 <td>Leave events of these comma-separated types out of every receive and assertion for the rest of the scenario, e.g. heartbeats sent as events</td>
 </tr>
 <tr>
-<td><code>"api" receives event "order.created" within "5s"</code></td>
+<td><code>"app-client" receives event "order.created" within "5s"</code></td>
 <td>Assert the next event has this type, waiting for it up to the duration</td>
 </tr>
 <tr>
-<td><code>"api" receives event "order.created" within "5s" with json containing:</code></td>
+<td><code>"app-client" receives event "order.created" within "5s" with json containing:</code></td>
 <td>Assert the next event has this type and its data contains the JSON fields given (extra fields ignored, same matchers as "response json contains")</td>
 </tr>
 <tr>
-<td><code>"api" receives events within "5s":</code></td>
+<td><code>"app-client" receives events within "5s":</code></td>
 <td>Assert the next events, in order, from a table with an event column and optional id and data columns</td>
 </tr>
 <tr>
-<td><code>"api" does not receive an event within "2s"</code></td>
+<td><code>"app-client" does not receive an event within "2s"</code></td>
 <td>Assert no further event arrives for the duration (comments don't count)</td>
 </tr>
 <tr>
-<td><code>"api" receives a comment within "2s"</code></td>
+<td><code>"app-client" receives a comment within "2s"</code></td>
 <td>Assert a comment line (": ..."), the usual keep-alive, arrives within the duration</td>
 </tr>
 <tr>
-<td><code>"api" stream event ids are consecutive from "1"</code></td>
+<td><code>"app-client" stream event ids are consecutive from "1"</code></td>
 <td>Assert the ids of every event received on this stream so far are integers counting up by one from the number given, with no gap or repeat. Events without an id are left out</td>
 </tr>
 <tr>
-<td><code>"api" stops reading the stream</code></td>
+<td><code>"app-client" stops reading the stream</code></td>
 <td>Stop reading the stream without closing it, as a stalled client does: what the server sends piles up in the connection's buffers until the server blocks, and a server that protects itself disconnects the slow consumer</td>
 </tr>
 <tr>
-<td><code>"api" resumes reading the stream</code></td>
+<td><code>"app-client" resumes reading the stream</code></td>
 <td>Read the stream again: what arrived while paused is delivered in order, then whatever the server did meanwhile (sent more, or closed the stream)</td>
 </tr>
 <tr>
-<td><code>"api" stream is closed by the server within "5s"</code></td>
+<td><code>"app-client" stream is closed by the server within "5s"</code></td>
 <td>Assert the server ends the stream within the duration</td>
 </tr>
 <tr>
-<td><code>"api" stream is disconnected by the server within "5s"</code></td>
+<td><code>"app-client" stream is disconnected by the server within "5s"</code></td>
 <td>Assert the server ends the stream within the duration, cleanly or by dropping the connection, as a server that disconnects a slow consumer does</td>
 </tr>
 <tr>
-<td><code>"api" last stream event id saved as "{{last_id}}"</code></td>
+<td><code>"app-client" last stream event id saved as "{{last_id}}"</code></td>
 <td>Save the id of the last event a receive step matched, the position a client would resume from</td>
 </tr>
 </tbody>
@@ -2297,36 +2297,36 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"api" sends "2" concurrent "POST" to "/orders"</code></td>
+<td><code>"app-client" sends "2" concurrent "POST" to "/orders"</code></td>
 <td>Send the same request N times at the same moment, with the scenario's headers, cookies and query params</td>
 </tr>
 <tr>
-<td><code>"api" sends "2" concurrent "POST" to "/orders" with json:</code></td>
+<td><code>"app-client" sends "2" concurrent "POST" to "/orders" with json:</code></td>
 <td>Send the same JSON request N times at the same moment</td>
 </tr>
 <tr>
-<td><code>"api" "2" of the concurrent responses have status "202"</code></td>
+<td><code>"app-client" "2" of the concurrent responses have status "202"</code></td>
 <td>Assert how many of the concurrent responses have this status</td>
 </tr>
 <tr>
-<td><code>"api" "1" of the concurrent responses have json "duplicate" is "true"</code></td>
+<td><code>"app-client" "1" of the concurrent responses have json "duplicate" is "true"</code></td>
 <td>Assert how many of the concurrent responses have this value at a JSON path (a missing path counts as not having it)</td>
 </tr>
 <tr>
-<td><code>"api" "1" of the concurrent responses contain json:</code></td>
+<td><code>"app-client" "1" of the concurrent responses contain json:</code></td>
 <td>Assert how many of the concurrent responses contain these JSON fields (same matchers as "response json contains")</td>
 </tr>
 </tbody>
 </table>
 <h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <p><strong>Send the same JSON request N times at the same moment:</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">2</span><span class="nf">" concurrent "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">"</span><span class="s">app-client</span><span class="nf">" sends "</span><span class="s">2</span><span class="nf">" concurrent "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">  {"clientOrderId": "c-60"}</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">  </span><span class="k">"""</span>
 </code></pre></div></p>
 <p><strong>Assert how many of the concurrent responses contain these JSON fields (same matchers as "response json contains"):</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">api</span><span class="nf">" "</span><span class="s">1</span><span class="nf">" of the concurrent responses contain json:</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nf">"</span><span class="s">app-client</span><span class="nf">" "</span><span class="s">1</span><span class="nf">" of the concurrent responses contain json:</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">  {"duplicate": true}</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">  </span><span class="k">"""</span>
@@ -2401,6 +2401,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

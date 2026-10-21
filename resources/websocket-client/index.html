@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1795,23 +1795,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"ws" connects</code></td>
+<td><code>"app-ws-client" connects</code></td>
 <td>Connect to WebSocket endpoint</td>
 </tr>
 <tr>
-<td><code>"ws" connects with headers:</code></td>
+<td><code>"app-ws-client" connects with headers:</code></td>
 <td>Connect with custom headers</td>
 </tr>
 <tr>
-<td><code>"ws" disconnects</code></td>
+<td><code>"app-ws-client" disconnects</code></td>
 <td>Disconnect from WebSocket</td>
 </tr>
 <tr>
-<td><code>"ws" is connected</code></td>
+<td><code>"app-ws-client" is connected</code></td>
 <td>Assert connected</td>
 </tr>
 <tr>
-<td><code>"ws" is disconnected</code></td>
+<td><code>"app-ws-client" is disconnected</code></td>
 <td>Assert disconnected</td>
 </tr>
 </tbody>
@@ -1826,15 +1826,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"ws" sends:</code></td>
+<td><code>"app-ws-client" sends:</code></td>
 <td>Send text message (docstring)</td>
 </tr>
 <tr>
-<td><code>"ws" sends "ping"</code></td>
+<td><code>"app-ws-client" sends "ping"</code></td>
 <td>Send short text message</td>
 </tr>
 <tr>
-<td><code>"ws" sends json:</code></td>
+<td><code>"app-ws-client" sends json:</code></td>
 <td>Send JSON message</td>
 </tr>
 </tbody>
@@ -1849,23 +1849,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"ws" receives within "5s":</code></td>
+<td><code>"app-ws-client" receives within "5s":</code></td>
 <td>Assert message received within timeout</td>
 </tr>
 <tr>
-<td><code>"ws" receives within "5s" containing "success"</code></td>
+<td><code>"app-ws-client" receives within "5s" containing "success"</code></td>
 <td>Assert message containing substring received</td>
 </tr>
 <tr>
-<td><code>"ws" receives json within "5s" matching:</code></td>
+<td><code>"app-ws-client" receives json within "5s" matching:</code></td>
 <td>Assert JSON message matching structure</td>
 </tr>
 <tr>
-<td><code>"ws" receives "3" messages within "10s"</code></td>
+<td><code>"app-ws-client" receives "3" messages within "10s"</code></td>
 <td>Assert N messages received within timeout</td>
 </tr>
 <tr>
-<td><code>"ws" does not receive within "2s"</code></td>
+<td><code>"app-ws-client" does not receive within "2s"</code></td>
 <td>Assert no message received</td>
 </tr>
 </tbody>
@@ -1880,19 +1880,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"ws" last message is:</code></td>
+<td><code>"app-ws-client" last message is:</code></td>
 <td>Assert last message matches exactly</td>
 </tr>
 <tr>
-<td><code>"ws" last message contains "success"</code></td>
+<td><code>"app-ws-client" last message contains "success"</code></td>
 <td>Assert last message contains substring</td>
 </tr>
 <tr>
-<td><code>"ws" last message is json matching:</code></td>
+<td><code>"app-ws-client" last message is json matching:</code></td>
 <td>Assert last message is JSON matching structure</td>
 </tr>
 <tr>
-<td><code>"ws" received "5" messages</code></td>
+<td><code>"app-ws-client" received "5" messages</code></td>
 <td>Assert total message count</td>
 </tr>
 </tbody>
@@ -1967,6 +1967,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -2279,7 +2279,7 @@ it, and points the kafka resource at it:</p>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">preset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">events</span><span class="p">:</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">orders-events</span><span class="p">:</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2462,7 +2462,7 @@ listener for traffic between containers. The preset does this for you.</p>
 <h2 id="resource-configuration">Resource configuration<a class="headerlink" href="#resource-configuration" title="Permanent link">&para;</a></h2>
 <p>Configure the Kafka resource to connect to the container:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">events</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">orders-events</span><span class="p">:</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2539,7 +2539,7 @@ listener for traffic between containers. The preset does this for you.</p>
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="nt">preset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
 <a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="nt">events</span><span class="p">:</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="nt">orders-events</span><span class="p">:</span>
 <a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2559,14 +2559,14 @@ listener for traffic between containers. The preset does this for you.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">Feature:</span><span class="nf"> Event Processing</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Order events are published correctly</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">events</span><span class="nf">" creates topic "</span><span class="s">order-events</span><span class="nf">"</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">events</span><span class="nf">" consumes from "</span><span class="s">order-events</span><span class="nf">"</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">events</span><span class="nf">" publishes json to "</span><span class="s">order-events</span><span class="nf">" with key "</span><span class="s">order-123</span><span class="nf">":</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" creates topic "</span><span class="s">order-events</span><span class="nf">"</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" consumes from "</span><span class="s">order-events</span><span class="nf">"</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" publishes json to "</span><span class="s">order-events</span><span class="nf">" with key "</span><span class="s">order-123</span><span class="nf">":</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nf">      </span><span class="k">"""</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="s">      {"event": "order.created", "orderId": "123", "amount": 99.99}</span>
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="s">      </span><span class="k">"""</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">events</span><span class="nf">" receives from "</span><span class="s">order-events</span><span class="nf">" with key "</span><span class="s">order-123</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">"</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">events</span><span class="nf">" last message contains:</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" receives from "</span><span class="s">order-events</span><span class="nf">" with key "</span><span class="s">order-123</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">"</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" last message contains:</span>
 <a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="nf">      </span><span class="k">"""</span>
 <a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="s">      order.created</span>
 <a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s">      </span><span class="k">"""</span>
@@ -2596,7 +2596,7 @@ under test sees ordinary Avro messages. Feature files stay plain JSON.</p>
 <a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">90s</span>
 <a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>
 <a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">  </span><span class="nt">kafka</span><span class="p">:</span>
+<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">  </span><span class="nt">orders-events</span><span class="p">:</span>
 <a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2638,17 +2638,17 @@ under test sees ordinary Avro messages. Feature files stay plain JSON.</p>
 </table>
 <h3 id="writing-avro-tests">Writing Avro tests<a class="headerlink" href="#writing-avro-tests" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">Scenario:</span><span class="nf"> Order service emits an OrderCreated event</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" registers schema for subject "</span><span class="s">orders-value</span><span class="nf">" from file "</span><span class="s">schemas/order.avsc</span><span class="nf">"</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" consumes from "</span><span class="s">orders</span><span class="nf">"</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">  Given </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" registers schema for subject "</span><span class="s">orders-value</span><span class="nf">" from file "</span><span class="s">schemas/order.avsc</span><span class="nf">"</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" consumes from "</span><span class="s">orders</span><span class="nf">"</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nf">  </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nf">    </span><span class="k">"""</span>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="s">    {"id": "order-1", "amount": 4200}</span>
 <a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="s">    </span><span class="k">"""</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" receives avro from "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">":</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="nf">  </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" receives avro from "</span><span class="s">orders</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">":</span>
 <a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nf">    </span><span class="k">"""</span>
 <a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="s">    {"id": "order-1", "status": "CREATED"}</span>
 <a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="s">    </span><span class="k">"""</span>
-<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">kafka</span><span class="nf">" last message avro matches:</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="nf">  </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" last message avro matches:</span>
 <a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="nf">    </span><span class="k">"""</span>
 <a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="s">    {"id": "order-1", "amount": 4200, "status": "CREATED", "note": null}</span>
 <a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="s">    </span><span class="k">"""</span>
@@ -2671,7 +2671,7 @@ through the AWS SDK. With <code>format: glue</code>, tomato speaks that format a
 the Glue API itself, so the app fetches the schema the scenario registered and
 no AWS account is involved:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">resources</span><span class="p">:</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">events</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">trades-events</span><span class="p">:</span>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="nt">container</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kafka</span>
 <a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
@@ -2730,8 +2730,8 @@ does not verify signatures. The endpoint answers <code>GetSchemaVersion</code>,
 <p><strong>Subjects are schema names.</strong> The steps are the same as for the Confluent
 registry; a topic's schema is named after the topic (the SerDe's default),
 unless <code>subjects</code> maps it:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">events</span><span class="nf">" registers schema for subject "</span><span class="s">trade-events</span><span class="nf">" from file "</span><span class="s">schemas/trade.avsc</span><span class="nf">"</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">When </span><span class="nf">"</span><span class="s">events</span><span class="nf">" publishes avro to "</span><span class="s">trade-events</span><span class="nf">" with key "</span><span class="s">user-1</span><span class="nf">":</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">Given </span><span class="nf">"</span><span class="s">trades-events</span><span class="nf">" registers schema for subject "</span><span class="s">trade-events</span><span class="nf">" from file "</span><span class="s">schemas/trade.avsc</span><span class="nf">"</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">When </span><span class="nf">"</span><span class="s">trades-events</span><span class="nf">" publishes avro to "</span><span class="s">trade-events</span><span class="nf">" with key "</span><span class="s">user-1</span><span class="nf">":</span>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nf">  </span><span class="k">"""</span>
 <a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="s">  {"tradeId": "t-1", "quantity": "10"}</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="s">  </span><span class="k">"""</span>
@@ -2829,6 +2829,8 @@ on that port clashes. The preset picks a free host port and is unaffected.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

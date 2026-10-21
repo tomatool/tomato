@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1817,15 +1817,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" reads file "out/ca.pdf"</code></td>
+<td><code>"contract-pdf" reads file "out/ca.pdf"</code></td>
 <td>Read a PDF from a file on disk, relative to where tomato runs</td>
 </tr>
 <tr>
-<td><code>"{resource}" reads "files" object "cas/CA_Version_No._07.07_AT-de.pdf"</code></td>
+<td><code>"contract-pdf" reads "uploads-storage" object "cas/CA_Version_No._07.07_AT-de.pdf"</code></td>
 <td>Read a PDF from an object of an s3 resource, as "bucket/key"</td>
 </tr>
 <tr>
-<td><code>"{resource}" reads "api" response body</code></td>
+<td><code>"contract-pdf" reads "app-client" response body</code></td>
 <td>Read a PDF from the body of the last response an http resource received</td>
 </tr>
 </tbody>
@@ -1840,7 +1840,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" has "142" pages</code></td>
+<td><code>"contract-pdf" has "142" pages</code></td>
 <td>Assert the number of pages</td>
 </tr>
 </tbody>
@@ -1855,19 +1855,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" text contains "9 Kryptowerte"</code></td>
+<td><code>"contract-pdf" text contains "9 Kryptowerte"</code></td>
 <td>Assert the document's text contains this, on any page</td>
 </tr>
 <tr>
-<td><code>"{resource}" text does not contain "{{"</code></td>
+<td><code>"contract-pdf" text does not contain "{{"</code></td>
 <td>Assert the document's text does not contain this anywhere, e.g. an unrendered template placeholder</td>
 </tr>
 <tr>
-<td><code>"{resource}" page "3" contains "Inhaltsverzeichnis"</code></td>
+<td><code>"contract-pdf" page "3" contains "Inhaltsverzeichnis"</code></td>
 <td>Assert the text of one page, counted from 1, contains this</td>
 </tr>
 <tr>
-<td><code>"{resource}" text "Conditions générales" appears before "General Terms and Conditions"</code></td>
+<td><code>"contract-pdf" text "Conditions générales" appears before "General Terms and Conditions"</code></td>
 <td>Assert one piece of text comes before another in the document, e.g. the German block of a bilingual contract before the English one</td>
 </tr>
 </tbody>
@@ -1882,15 +1882,15 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" metadata "Title" is "Kundenvereinbarung"</code></td>
+<td><code>"contract-pdf" metadata "Title" is "Kundenvereinbarung"</code></td>
 <td>Assert a metadata entry (Title, Author, Subject, Producer, Creator, Keywords) from the Info dictionary, or the XMP metadata when the Info dictionary lacks it</td>
 </tr>
 <tr>
-<td><code>"{resource}" language is "de-AT"</code></td>
+<td><code>"contract-pdf" language is "de-AT"</code></td>
 <td>Assert the document's language, the catalog's Lang entry as a BCP 47 tag</td>
 </tr>
 <tr>
-<td><code>"{resource}" outline contains "7 Zinsen"</code></td>
+<td><code>"contract-pdf" outline contains "7 Zinsen"</code></td>
 <td>Assert the outline (the bookmarks a viewer shows as a table of contents) has an entry with this title, at any level</td>
 </tr>
 </tbody>
@@ -1905,11 +1905,11 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"{resource}" is tagged</code></td>
+<td><code>"contract-pdf" is tagged</code></td>
 <td>Assert the document is tagged: MarkInfo says Marked and a structure tree is present</td>
 </tr>
 <tr>
-<td><code>"{resource}" conforms to "PDF/UA-1"</code></td>
+<td><code>"contract-pdf" conforms to "PDF/UA-1"</code></td>
 <td>Assert the document conforms to PDF/UA-1, PDF/UA-2 or a PDF/A level (1a, 1b, 2a, 2b, 2u, 3a, 3b, 3u, 4, 4e, 4f), checked by the veraPDF container named in options.validator; fails with the rules it breaks</td>
 </tr>
 </tbody>
@@ -1984,6 +1984,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

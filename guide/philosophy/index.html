@@ -488,6 +488,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#naming-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-suite-is-configuration-not-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -543,7 +554,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1771,6 +1782,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#naming-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming resources
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#a-suite-is-configuration-not-code" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1836,40 +1858,40 @@ scenario.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">Feature:</span><span class="nf"> Orders</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Order lifecycle</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">    When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">    When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nf">      </span><span class="k">"""</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s">      {"sku": "TMT-01", "qty": 2}</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="s">      </span><span class="k">"""</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">DELETE</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">204</span><span class="nf">"</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">DELETE</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">204</span><span class="nf">"</span>
 </code></pre></div>
 <p>This:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">Feature:</span><span class="nf"> Orders</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Placing an order returns it</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">    When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">    When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nf">      </span><span class="k">"""</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s">      {"sku": "TMT-01", "qty": 2}</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s">      </span><span class="k">"""</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> A placed order can be read back</span>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">      |</span><span class="s"> id</span><span class="k"> |</span><span class="s"> sku</span><span class="k">    |</span><span class="s"> qty</span><span class="k"> |</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">      |</span><span class="s"> 1</span><span class="k">  |</span><span class="s"> TMT-01</span><span class="k"> |</span><span class="s"> 2</span><span class="k">   |</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
 <a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
 <a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Deleting an order removes it</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">      |</span><span class="s"> id</span><span class="k"> |</span><span class="s"> sku</span><span class="k">    |</span><span class="s"> qty</span><span class="k"> |</span>
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="k">      |</span><span class="s"> 1</span><span class="k">  |</span><span class="s"> TMT-01</span><span class="k"> |</span><span class="s"> 2</span><span class="k">   |</span>
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">DELETE</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">204</span><span class="nf">"</span>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" is empty</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">DELETE</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">204</span><span class="nf">"</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" is empty</span>
 </code></pre></div>
 <p>The second version is longer and tells you more. Each scenario sets up what it
 needs, and a failure names the behaviour that broke. They are also independent:
@@ -1889,26 +1911,26 @@ breaks silently.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">Feature:</span><span class="nf"> Checkout</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> Placing an order</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">    When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">    When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nf">      </span><span class="k">"""</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s">      {"sku": "TMT-01", "qty": 2, "email": "ada@example.com"}</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">      </span><span class="k">"""</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
 </code></pre></div>
 <p>That passes if the handler returns <code>201</code> and does nothing else.</p>
 <p>The same behaviour, asserted through its effects:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">Feature:</span><span class="nf"> Checkout</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> A placed order reaches every dependency</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">events</span><span class="nf">" consumes from "</span><span class="s">order.created</span><span class="nf">"</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" consumes from "</span><span class="s">order.created</span><span class="nf">"</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">" with json:</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nf">      </span><span class="k">"""</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s">      {"sku": "TMT-01", "qty": 2, "email": "ada@example.com"}</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">      </span><span class="k">"""</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has "</span><span class="s">1</span><span class="nf">" rows</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">events</span><span class="nf">" receives from "</span><span class="s">order.created</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">"</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">files</span><span class="nf">" object "</span><span class="s">receipts/1.pdf</span><span class="nf">" should exist within "</span><span class="s">10s</span><span class="nf">"</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">201</span><span class="nf">"</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has "</span><span class="s">1</span><span class="nf">" rows</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-events</span><span class="nf">" receives from "</span><span class="s">order.created</span><span class="nf">" within "</span><span class="s">10s</span><span class="nf">"</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">receipts-storage</span><span class="nf">" object "</span><span class="s">receipts/1.pdf</span><span class="nf">" should exist within "</span><span class="s">10s</span><span class="nf">"</span>
 </code></pre></div>
 <p>Four assertions, four different systems, one behaviour. If the order lands in
 the database but the event never publishes, this fails and tells you which.</p>
@@ -1925,19 +1947,144 @@ trusted when it goes green.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">Feature:</span><span class="nf"> Reading an order</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nf">  </span><span class="k">Background:</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has values:</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="k">      |</span><span class="s"> id</span><span class="k"> |</span><span class="s"> sku</span><span class="k">    |</span><span class="s"> status</span><span class="k">  |</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">      |</span><span class="s"> 1</span><span class="k">  |</span><span class="s"> TMT-01</span><span class="k"> |</span><span class="s"> shipped</span><span class="k"> |</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> An existing order is returned</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="k">    When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">api</span><span class="nf">" response json "</span><span class="s">status</span><span class="nf">" is "</span><span class="s">shipped</span><span class="nf">"</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="k">    When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">GET</span><span class="nf">" to "</span><span class="s">/orders/1</span><span class="nf">"</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response status is "</span><span class="s">200</span><span class="nf">"</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" response json "</span><span class="s">status</span><span class="nf">" is "</span><span class="s">shipped</span><span class="nf">"</span>
 </code></pre></div>
 <p>A corollary worth knowing: <strong>do not assert on generated identifiers you did not
 set</strong>. Sequences, UUIDs and timestamps are not part of the reset contract in
 every store, and a scenario asserting <code>id</code> is <code>1</code> is asserting the order it
 happens to run in. Seed the id, or assert on something you control.</p>
+<h2 id="naming-resources">Naming resources<a class="headerlink" href="#naming-resources" title="Permanent link">&para;</a></h2>
+<p>A step is read far more often than the <code>tomato.yml</code> behind it, usually by
+someone looking at a failure. Its first word is the resource name, so that
+name has to say what is being talked to without opening the config.</p>
+<p>Not this:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">Feature:</span><span class="nf"> Checkout</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> A paid order is stored</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">mock</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/v1/charges</span><span class="nf">" returns "</span><span class="s">201</span><span class="nf">"</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">api</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">"</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has "</span><span class="s">1</span><span class="nf">" rows</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">mock</span><span class="nf">" received "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/v1/charges</span><span class="nf">"</span>
+</code></pre></div>
+<p>Which API? A mock of what? Whose database? In a suite with two services and
+three dependencies, every one of those is a guess.</p>
+<p>This:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">Feature:</span><span class="nf"> Checkout</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nf">  </span><span class="k">Scenario:</span><span class="nf"> A paid order is stored</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">    Given </span><span class="nf">"</span><span class="s">stripe-stub</span><span class="nf">" stub "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/v1/charges</span><span class="nf">" returns "</span><span class="s">201</span><span class="nf">"</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nf">    </span><span class="k">When </span><span class="nf">"</span><span class="s">orders-client</span><span class="nf">" sends "</span><span class="s">POST</span><span class="nf">" to "</span><span class="s">/orders</span><span class="nf">"</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nf">    </span><span class="k">Then </span><span class="nf">"</span><span class="s">orders-db</span><span class="nf">" table "</span><span class="s">orders</span><span class="nf">" has "</span><span class="s">1</span><span class="nf">" rows</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nf">    </span><span class="k">And </span><span class="nf">"</span><span class="s">stripe-stub</span><span class="nf">" received "</span><span class="s">POST</span><span class="nf">" "</span><span class="s">/v1/charges</span><span class="nf">"</span>
+</code></pre></div>
+<p>The rule is <code>&lt;name&gt;-&lt;role&gt;</code>, lower-case and hyphenated. <code>&lt;name&gt;</code> is the
+service, dependency, owner or person; <code>&lt;role&gt;</code> comes from the resource type:</p>
+<table>
+<thead>
+<tr>
+<th>Resource types</th>
+<th>Role suffix</th>
+<th>Name is</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>http-client</code>, <code>grpc</code>, <code>websocket-client</code></td>
+<td><code>-client</code></td>
+<td>the service it calls, usually the app under test</td>
+<td><code>orders-client</code>, <code>catalog-client</code></td>
+</tr>
+<tr>
+<td>two clients of one service over different protocols</td>
+<td><code>-&lt;protocol&gt;-client</code></td>
+<td></td>
+<td><code>orders-http-client</code>, <code>orders-grpc-client</code></td>
+</tr>
+<tr>
+<td><code>http-server</code>, <code>grpc-server</code>, <code>websocket-server</code></td>
+<td><code>-stub</code></td>
+<td>the dependency it stands in for</td>
+<td><code>stripe-stub</code>, <code>catalog-stub</code>, <code>prices-stub</code></td>
+</tr>
+<tr>
+<td><code>postgres</code>, <code>scylladb</code></td>
+<td><code>-db</code></td>
+<td>the owner of the data</td>
+<td><code>orders-db</code></td>
+</tr>
+<tr>
+<td><code>redis</code></td>
+<td><code>-cache</code> (<code>-db</code> when it is the primary store)</td>
+<td>the owner</td>
+<td><code>sessions-cache</code></td>
+</tr>
+<tr>
+<td><code>kafka</code></td>
+<td><code>-events</code></td>
+<td>the owner or stream</td>
+<td><code>orders-events</code></td>
+</tr>
+<tr>
+<td><code>rabbitmq</code></td>
+<td><code>-queue</code></td>
+<td>the owner or stream</td>
+<td><code>payments-queue</code></td>
+</tr>
+<tr>
+<td><code>s3</code></td>
+<td><code>-storage</code></td>
+<td>the owner</td>
+<td><code>invoices-storage</code></td>
+</tr>
+<tr>
+<td><code>browser</code></td>
+<td><code>-browser</code></td>
+<td>the person using it</td>
+<td><code>alice-browser</code>, <code>shopper-browser</code></td>
+</tr>
+<tr>
+<td><code>shell</code></td>
+<td><code>-cli</code> when it runs one tool, else plain <code>shell</code></td>
+<td>the tool</td>
+<td><code>todo-cli</code>, <code>shell</code></td>
+</tr>
+<tr>
+<td><code>pdf</code></td>
+<td><code>-pdf</code></td>
+<td>the document</td>
+<td><code>invoice-pdf</code></td>
+</tr>
+<tr>
+<td><code>aws</code>, <code>lifecycle</code></td>
+<td>none: there is one of each</td>
+<td></td>
+<td><code>aws</code>, <code>lifecycle</code></td>
+</tr>
+</tbody>
+</table>
+<p>A few consequences:</p>
+<ul>
+<li><strong>Never a bare type or a generic word.</strong> Not <code>api</code>, <code>http</code>, <code>client</code>, <code>db</code>,
+  <code>mock</code>, <code>server</code> or <code>grpc</code>: each of them fits every resource of its kind,
+  so it tells the reader nothing.</li>
+<li><strong>The app under test's client is named after the app</strong>: <code>orders-client</code>.
+  Examples with no particular app, like the ones in this documentation's step
+  reference, use <code>app-client</code>.</li>
+<li><strong>Containers keep naming the software.</strong> Entries under <code>containers:</code> —
+  <code>postgres</code>, <code>kafka</code>, <code>minio</code>, <code>chrome</code> — are infrastructure, not roles; only
+  entries under <code>resources:</code> follow this rule.</li>
+<li><strong>Templates follow the name</strong>: <code>{{.stripe-stub.url}}</code>,
+  <code>{{.catalog-stub.address}}</code>. A rename covers <code>tomato.yml</code>, every feature
+  file, and any prose that mentions the resource.</li>
+</ul>
 <h2 id="a-suite-is-configuration-not-code">A suite is configuration, not code<a class="headerlink" href="#a-suite-is-configuration-not-code" title="Permanent link">&para;</a></h2>
 <p>Everything above is <code>tomato.yml</code> and <code>.feature</code> files. There is no glue code to
 write, no test harness to maintain, no fixtures library that drifts away from
@@ -2031,6 +2178,8 @@ thing that passed is the thing you ship.</p>
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>

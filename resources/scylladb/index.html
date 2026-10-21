@@ -430,7 +430,7 @@
   <span class="md-ellipsis">
     
   
-    Step Coverage
+    Test Coverage
   
 
     
@@ -1751,19 +1751,19 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"scylla" table "users" has values:</code></td>
+<td><code>"app-db" table "users" has values:</code></td>
 <td>Insert rows from table (values are converted to the column types)</td>
 </tr>
 <tr>
-<td><code>"scylla" clears table "users"</code></td>
+<td><code>"app-db" clears table "users"</code></td>
 <td>Truncate a table (removes all rows)</td>
 </tr>
 <tr>
-<td><code>"scylla" executes:</code></td>
+<td><code>"app-db" executes:</code></td>
 <td>Execute CQL (several statements separated by <code>;</code>)</td>
 </tr>
 <tr>
-<td><code>"scylla" executes file "fixtures/schema.cql"</code></td>
+<td><code>"app-db" executes file "fixtures/schema.cql"</code></td>
 <td>Execute CQL from file</td>
 </tr>
 </tbody>
@@ -1778,23 +1778,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>"scylla" table "users" contains:</code></td>
+<td><code>"app-db" table "users" contains:</code></td>
 <td>Assert table contains rows (in any order)</td>
 </tr>
 <tr>
-<td><code>"scylla" table "users" is empty</code></td>
+<td><code>"app-db" table "users" is empty</code></td>
 <td>Assert table is empty</td>
 </tr>
 <tr>
-<td><code>"scylla" table "users" has "5" rows</code></td>
+<td><code>"app-db" table "users" has "5" rows</code></td>
 <td>Assert row count</td>
 </tr>
 <tr>
-<td><code>"scylla" query "SELECT id, name FROM users WHERE id = 1" returns:</code></td>
+<td><code>"app-db" query "SELECT id, name FROM users WHERE id = 1" returns:</code></td>
 <td>Assert exact match of query result rows</td>
 </tr>
 <tr>
-<td><code>"scylla" query result of "SELECT id, name FROM users" contains:</code></td>
+<td><code>"app-db" query result of "SELECT id, name FROM users" contains:</code></td>
 <td>Assert query result contains expected rows (superset)</td>
 </tr>
 </tbody>
@@ -1869,6 +1869,8 @@
     
     
       <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/split-flow.js"></script>
       
     
   </body>
