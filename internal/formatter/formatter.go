@@ -53,11 +53,36 @@ type Event struct {
 	// to guess which file a step produced from the file's name.
 	Screenshots []resource.Screenshot `json:"screenshots,omitempty"`
 
+	// Network is what network resources did while the step ran, and the
+	// faults that were on when it ended, so a report can show which steps
+	// ran on a bad network. On a scenario_end, the events after its last step.
+	Network *Network `json:"network,omitempty"`
+
 	// Summary fields
 	Total   int `json:"total,omitempty"`
 	Passed  int `json:"passed,omitempty"`
 	Failed  int `json:"failed,omitempty"`
 	Skipped int `json:"skipped,omitempty"`
+}
+
+// Network is the step_end event's "network" object.
+type Network struct {
+	Events []resource.NetworkEvent `json:"events,omitempty"`
+	// Active has a line per fault that was on when the step ended.
+	Active []string `json:"active,omitempty"`
+}
+
+// networkOf reports the scenario's network events and active faults, nil
+// when there is nothing to say.
+func networkOf(scenario string, withActive bool) *Network {
+	n := &Network{Events: resource.TakeNetworkEvents(scenario)}
+	if withActive {
+		n.Active = resource.NetworkFaults()
+	}
+	if len(n.Events) == 0 && len(n.Active) == 0 {
+		return nil
+	}
+	return n
 }
 
 // Mismatch is the step_end event's "mismatch" object.
@@ -185,6 +210,7 @@ func (f *TomatoFormatter) stepEnd(pickle *messages.Pickle, step *messages.Pickle
 		DurationMs:  f.stepElapsed(),
 		Screenshots: resource.TakeScreenshots(pickle.Name),
 		Mismatch:    mm,
+		Network:     networkOf(pickle.Name, true),
 	})
 }
 
@@ -255,6 +281,7 @@ func (f *TomatoFormatter) emitScenarioEndIfNeeded() {
 		Status:     status,
 		Error:      f.currentScenarioErr,
 		DurationMs: dur,
+		Network:    networkOf(f.currentScenario, false),
 	})
 
 	// Update counters

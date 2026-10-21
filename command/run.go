@@ -203,6 +203,9 @@ func runTests(c *cli.Context) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources the app depends on: %w", err)
 	}
+	for _, line := range registry.Descriptions() {
+		fmt.Printf("  %s %s\n", checkStyle.Render("⇄"), line)
+	}
 
 	// Step 2: Start the application under test
 	var appRunner *apprunner.Runner
@@ -219,12 +222,19 @@ func runTests(c *cli.Context) (err error) {
 		appRunner.SetShowLogs(!c.Bool("quiet"))
 		appRunner.SetResources(cfg.Resources)
 		appRunner.SetProvidedEnv(appEnv.Set, appEnv.Unset)
+		appRunner.SetPortOverrides(registry.AppPorts())
 
 		// Force container mode if --container flag is set
 		if c.Bool("container") {
 			if err := appRunner.SetContainerMode(true); err != nil {
 				return fmt.Errorf("cannot use container mode: %w", err)
 			}
+		}
+
+		// A network resource's proxy listens in tomato's process, where an app
+		// in a container on the Docker network does not look.
+		if appRunner.GetMode() == apprunner.ModeContainer && len(registry.AppPorts()) > 0 {
+			return fmt.Errorf("network resources need the app to run as a local process (app.command); container mode is not supported yet")
 		}
 
 		// Show which mode we're using

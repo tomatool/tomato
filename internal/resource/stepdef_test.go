@@ -2,6 +2,7 @@ package resource
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -60,5 +61,26 @@ func TestStepHandler_DeprecatedWarnsOnceAndStillRuns(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), `use \"api\" new step instead`) {
 		t.Errorf("warning should carry the replacement hint, got %s", buf.String())
+	}
+}
+
+func TestFailingStepCarriesTheNetworkFaults(t *testing.T) {
+	RegisterNetworkFaults("test-network", func() []string { return []string{"test-network adds latency 300ms (step 1)"} })
+	defer RegisterNetworkFaults("test-network", func() []string { return nil })
+
+	cause := errors.New("expected status 201, got 502")
+	h := StepDef{Handler: func(s string) error { return cause }}.stepHandler("p").(func(string) error)
+	err := h("x")
+	if !errors.Is(err, cause) {
+		t.Fatalf("the step's own error is lost: %v", err)
+	}
+	want := "expected status 201, got 502\nwhile the network was faulty:\n  test-network adds latency 300ms (step 1)"
+	if err.Error() != want {
+		t.Errorf("got:\n%s\nwant:\n%s", err, want)
+	}
+
+	ok := StepDef{Handler: func(s string) error { return nil }}.stepHandler("p").(func(string) error)
+	if err := ok("x"); err != nil {
+		t.Errorf("a passing step failed: %v", err)
 	}
 }

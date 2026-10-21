@@ -59,6 +59,7 @@ nav:
     - S3: configuration/s3.md
     - AWS: configuration/aws.md
     - Lifecycle: configuration/lifecycle.md
+    - Network: configuration/network.md
     - Browser: configuration/browser.md
     - PDF: configuration/pdf.md
   - Step Reference:
@@ -78,11 +79,13 @@ nav:
     - S3: resources/s3.md
     - AWS: resources/aws.md
     - Lifecycle: resources/lifecycle.md
+    - Network: resources/network.md
     - Browser: resources/browser.md
     - PDF: resources/pdf.md
   - Developer Guide:
     - Architecture: developer-guide/architecture.md
     - Adding a Step or Resource: developer-guide/adding-a-resource.md
+    - "Design: Network Faults": developer-guide/network-faults.md
   - Stability: stability.md
 
 markdown_extensions:

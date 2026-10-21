@@ -240,3 +240,15 @@ describe('a failed comparison', () => {
     expect(stepRun(feed([{ type: 'run_started' }, done('S', 0, 'failed', 1, 'boom')]), 'S', 0, step).mismatch).toBeUndefined()
   })
 })
+
+describe('network on a step', () => {
+  it('keeps what network resources did while the step ran, and the faults on when it ended', () => {
+    const network = {
+      events: [{ at: '2026-10-21T07:03:23.120Z', resource: 'postgres-network', kind: 'applied', detail: 'resets connections for 3s' }],
+      active: ['postgres-network resets connections (step 1, 2.9s left)'],
+    }
+    const run = reduceRun(emptyRun(), { type: 'step_finished', scenario: 'S', stepIndex: 0, status: 'passed', stepNetwork: network })
+    expect(stepRun(run, 'S', 0).network).toEqual(network)
+    expect(stepRun(run, 'S', 1).network).toBeUndefined()
+  })
+})

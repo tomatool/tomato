@@ -485,6 +485,12 @@ func (c *Config) validate() error {
 
 	// Validate resource references
 	for name, res := range c.Resources {
+		if res.Type == "network" && res.Container == "" {
+			return fmt.Errorf("resource %q (network) needs container: the dependency the app reaches through it", name)
+		}
+		if res.Type == "network" && res.Container != "" && c.App.IsConfigured() && res.Container == c.App.GetName() {
+			return fmt.Errorf("resource %q (network) stands between the app and a dependency; container %q is the app", name, res.Container)
+		}
 		if res.Container != "" {
 			// Check if it references a configured container
 			if _, ok := c.Containers[res.Container]; !ok {

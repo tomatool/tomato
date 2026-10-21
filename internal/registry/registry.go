@@ -28,6 +28,7 @@ import (
 	"github.com/tomatool/tomato/internal/resource/httpserver"
 	"github.com/tomatool/tomato/internal/resource/kafka"
 	"github.com/tomatool/tomato/internal/resource/lifecycle"
+	"github.com/tomatool/tomato/internal/resource/network"
 	"github.com/tomatool/tomato/internal/resource/pdf"
 	"github.com/tomatool/tomato/internal/resource/postgres"
 	"github.com/tomatool/tomato/internal/resource/rabbitmq"
@@ -124,6 +125,7 @@ var handlerFactories = map[string]handlerFactory{
 	"lifecycle":        factory(lifecycle.New),
 	"browser":          factory(browser.New),
 	"pdf":              factory(pdf.New),
+	"network":          factory(network.New),
 }
 
 // optionValidators check a resource type's options without connecting to
@@ -134,6 +136,7 @@ var optionValidators = map[string]func(map[string]any) error{
 	"postgresql": postgres.ValidateOptions,
 	// Loads the descriptor set, so a missing or broken one fails here.
 	"grpc-server": grpcserver.ValidateOptions,
+	"network":     network.ValidateOptions,
 }
 
 // unimplementedTypes are resource types people reach for that tomato does not
@@ -192,6 +195,13 @@ func (r *Registry) InitAppEnvProviders(ctx context.Context) (resource.AppEnv, er
 	env := resource.AppEnv{Set: make(map[string]string)}
 	for _, name := range names {
 		h := r.handlers[name]
+		if _, ok := h.(resource.AppPortProvider); ok {
+			log.Debug().Str("handler", name).Msg("initializing handler before the app")
+			if err := h.Init(ctx); err != nil {
+				return resource.AppEnv{}, fmt.Errorf("initializing %s: %w", name, err)
+			}
+			continue
+		}
 		provider, ok := h.(resource.AppEnvProvider)
 		if !ok {
 			continue
@@ -210,6 +220,49 @@ func (r *Registry) InitAppEnvProviders(ctx context.Context) (resource.AppEnv, er
 		env.Unset = append(env.Unset, provided.Unset...)
 	}
 	return env, nil
+}
+
+// AppPorts merges what the AppPortProviders tell the app: per container and
+// container port, the port on 127.0.0.1 it should use instead. Call it after
+// InitAppEnvProviders, which starts them.
+func (r *Registry) AppPorts() map[string]map[string]int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := map[string]map[string]int{}
+	for _, h := range r.handlers {
+		p, ok := h.(resource.AppPortProvider)
+		if !ok {
+			continue
+		}
+		for container, ports := range p.AppPorts() {
+			if out[container] == nil {
+				out[container] = map[string]int{}
+			}
+			for port, to := range ports {
+				out[container][port] = to
+			}
+		}
+	}
+	return out
+}
+
+// Descriptions returns what resources have to say at the start of a run, in
+// resource-name order.
+func (r *Registry) Descriptions() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	names := make([]string, 0, len(r.handlers))
+	for name := range r.handlers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var out []string
+	for _, name := range names {
+		if d, ok := r.handlers[name].(resource.Describer); ok {
+			out = append(out, d.Describe()...)
+		}
+	}
+	return out
 }
 
 // WaitReady waits for all handlers to be ready
@@ -329,6 +382,7 @@ var canonicalTypes = []string{
 	"lifecycle",
 	"browser",
 	"pdf",
+	"network",
 }
 
 // AllStepCategories returns every resource's step definitions, in a stable
@@ -391,6 +445,7 @@ func ContainerBasedTypes() []string {
 		"redis", "rabbitmq", "kafka",
 		"s3", "minio",
 		"browser",
+		"network",
 	}
 }
 

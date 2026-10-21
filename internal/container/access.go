@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -114,4 +115,27 @@ func (m *Manager) Exec(ctx context.Context, name string, cmd []string) (int, str
 	output := string(buf[:n])
 
 	return exitCode, output, nil
+}
+
+// ExposedPorts returns the container ports a configured container exposes, as
+// "5432/tcp", whether they are mapped to a fixed host port or a dynamic one.
+func (m *Manager) ExposedPorts(name string) []string {
+	m.mu.RLock()
+	cfg, ok := m.configs[name]
+	m.mu.RUnlock()
+	if !ok {
+		return nil
+	}
+	out := make([]string, 0, len(cfg.Ports))
+	for _, spec := range cfg.Ports {
+		port := spec
+		if i := strings.LastIndex(spec, ":"); i >= 0 {
+			port = spec[i+1:]
+		}
+		if !strings.Contains(port, "/") {
+			port += "/tcp"
+		}
+		out = append(out, port)
+	}
+	return out
 }

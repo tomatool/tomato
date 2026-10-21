@@ -155,6 +155,9 @@ type WSMessage struct {
 	// StepScreenshots are the ones a step just took, on its step_finished.
 	Screenshots     []ScreenshotJSON      `json:"screenshots,omitempty"`
 	StepScreenshots []resource.Screenshot `json:"stepScreenshots,omitempty"`
+	// StepNetwork is what network resources did while a step ran and the
+	// faults on when it ended, relayed as the runner sent it on step_end.
+	StepNetwork json.RawMessage `json:"stepNetwork,omitempty"`
 }
 
 // TomatoEvent represents a structured event from the tomato formatter
@@ -175,6 +178,8 @@ type TomatoEvent struct {
 	Skipped    int             `json:"skipped,omitempty"`
 	// Screenshots are the images a step left behind, on its step_end.
 	Screenshots []resource.Screenshot `json:"screenshots,omitempty"`
+	// Network is what network resources did while the step ran.
+	Network json.RawMessage `json:"network,omitempty"`
 }
 
 func runWebUI(c *cli.Context) error {
@@ -941,6 +946,7 @@ func stepFinished(event TomatoEvent) WSMessage {
 		DurationMs:      event.DurationMs,
 		Mismatch:        event.Mismatch,
 		StepScreenshots: event.Screenshots,
+		StepNetwork:     event.Network,
 	}
 }
 

@@ -21,6 +21,7 @@ Tomato supports the following resource types for behavioral testing.
 | [Lifecycle](lifecycle.md) | `lifecycle` | Steps for stopping and starting the app and its containers mid-scenario |
 | [Browser](browser.md) | `browser` | Steps for using a web UI in a real Chromium, the way a person does: by what the page shows |
 | [PDF](pdf.md) | `pdf` | Steps for asserting on what the PDF documents your application generates contain: pages, text, metadata, outline and accessibility |
+| [Network](network.md) | `network` | Steps for making the network between the app and a dependency slow, unreliable or down. Every fault lasts until the scenario ends, or for the duration given |
 
 
 ## Variables and Dynamic Values

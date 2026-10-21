@@ -38,12 +38,13 @@ container to it:
 [S3](configuration/s3.md) ·
 [AWS](configuration/aws.md) ·
 [Lifecycle](configuration/lifecycle.md) ·
+[Network](configuration/network.md) ·
 [Browser](configuration/browser.md) ·
 [PDF](configuration/pdf.md)
 
 ## Steps, by resource
 
-322 steps across 17 resource types. Every page is generated from the step
+334 steps across 18 resource types. Every page is generated from the step
 definitions themselves, so it cannot disagree with the binary you are running
 — and `tomato steps` prints the same thing in your terminal.
 
@@ -61,6 +62,7 @@ definitions themselves, so it cannot disagree with the binary you are running
 | [WebSocket Client](resources/websocket-client.md) | 17 | Connecting and exchanging messages |
 | [gRPC Server](resources/grpc-server.md) | 16 | Stubbing the gRPC services your application calls |
 | [PDF](resources/pdf.md) | 13 | What is inside the PDFs your application generates: pages, text, metadata, outline and accessibility |
+| [Network](resources/network.md) | 12 | Making the network to a dependency slow, unreliable or down |
 | [PostgreSQL](resources/postgres.md) | 11 | Seeding tables, running SQL, asserting on rows |
 | [ScyllaDB](resources/scylladb.md) | 9 | Cassandra and ScyllaDB over CQL |
 | [Lifecycle](resources/lifecycle.md) | 9 | Stopping and starting the app and its containers mid-scenario |
@@ -75,6 +77,7 @@ definitions themselves, so it cannot disagree with the binary you are running
 |------|----------------|
 | [Architecture](developer-guide/architecture.md) | What is in the repository, which parts ship, and which of them CI checks |
 | [Adding a Step or Resource](developer-guide/adding-a-resource.md) | The walkthrough for both, and how to deprecate rather than rename |
+| [Design: Network Faults](developer-guide/network-faults.md) | Why the network resource embeds Toxiproxy, what a spike found per dependency, and how faults reach the reports |
 | [Stability](stability.md) | What counts as a breaking change, and how long a deprecation lasts |
 
 ## The short version
