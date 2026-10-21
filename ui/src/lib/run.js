@@ -22,8 +22,11 @@ export function splitKey(k) {
 // stepShots are the screenshots a step took, [{resource, path}] under its key:
 // what the runner recorded on the step's end, so a picture is matched to its
 // step by path and never guessed from the file's name (lib/screenshots.js).
+// stepNet is what network resources did while a step ran, {events, active}:
+// the faults applied, healed or failing connections, with their times, and
+// the faults still on when the step ended.
 export const emptyRun = () => ({
-  scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, stepShots: {}, stepMismatch: {}, scOrder: [],
+  scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, stepShots: {}, stepMismatch: {}, stepNet: {}, scOrder: [],
 })
 
 // The /ws message types that change the run state. Everything else — the
@@ -70,6 +73,7 @@ export function reduceRun(state, m) {
         // Both sides of a failed comparison, when the runner sent them
         // (internal/formatter); components/Mismatch.jsx draws the diff.
         stepMismatch: m.mismatch ? { ...state.stepMismatch, [k]: m.mismatch } : state.stepMismatch,
+        stepNet: m.stepNetwork ? { ...state.stepNet, [k]: m.stepNetwork } : state.stepNet,
       }
     }
     case 'run_finished':
@@ -97,7 +101,7 @@ export const pickleIndex = (background, i) => (background?.length ?? 0) + i
 // reads as undefined before the suite has ever run.
 export function stepRun(runState, scenario, index, step) {
   const fallback = step?.unmatched ? 'undefined' : ''
-  if (scenario == null || index == null) return { status: fallback, dur: undefined, error: undefined, screenshots: undefined, mismatch: undefined }
+  if (scenario == null || index == null) return { status: fallback, dur: undefined, error: undefined, screenshots: undefined, mismatch: undefined, network: undefined }
   const k = stepKey(scenario, index)
   return {
     status: runState.stepStatus[k] ?? fallback,
@@ -105,6 +109,7 @@ export function stepRun(runState, scenario, index, step) {
     error: runState.stepError[k],
     screenshots: runState.stepShots?.[k],
     mismatch: runState.stepMismatch?.[k],
+    network: runState.stepNet?.[k],
   }
 }
 

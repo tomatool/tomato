@@ -116,6 +116,11 @@ app:
   env:
     DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test?sslmode=disable"
     REDIS_URL: "redis://{{.redis.host}}:{{.redis.port.6379}}"
+    # The network feature's probes (tests/app/network.go). With the network
+    # resources below, these ports and the two above resolve to their proxies.
+    S3_ENDPOINT: "http://{{.minio.host}}:{{.minio.port.9000}}"
+    KAFKA_BROKERS: "{{.kafka.host}}:{{.kafka.port.9092}}"
+    AMQP_URL: "amqp://guest:guest@{{.rabbitmq.host}}:{{.rabbitmq.port.5672}}/"
     # The user directory's gRPC dependency, which the users-stub resource stubs.
     USERS_ADDR: "{{.users-stub.address}}"
 
@@ -195,6 +200,27 @@ resources:
       user: guest
       password: guest
       reset_strategy: purge
+
+  # A proxy between the app and each dependency it reaches, for the network
+  # feature. Every other scenario goes through them too, on a healthy network,
+  # and tomato's own resources above still connect to the containers directly.
+  postgres-network:
+    type: network
+    container: postgres
+    options:
+      seed: 42
+  redis-network:
+    type: network
+    container: redis
+  minio-network:
+    type: network
+    container: minio
+  rabbitmq-network:
+    type: network
+    container: rabbitmq
+  kafka-network:
+    type: network
+    container: kafka
 
   app-storage:
     type: s3

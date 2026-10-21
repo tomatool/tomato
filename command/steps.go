@@ -126,6 +126,7 @@ var exampleResourceNames = map[string]string{
 	"PDF":              "contract-pdf",
 	"AWS":              "aws",
 	"Lifecycle":        "lifecycle",
+	"Network":          "postgres-network",
 }
 
 // exampleFor fills in the {resource} placeholder of a step example with the

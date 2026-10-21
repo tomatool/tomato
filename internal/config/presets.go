@@ -51,6 +51,7 @@ const (
 	KafkaIAMPort   = "9098" // AWS_MSK_IAM, for the host (auth: aws_msk_iam)
 
 	kafkaInternalPlainPort = "29092" // plain, for containers on tomato's network: <name>:29092
+	kafkaDirectPort        = "9094"  // plain, for tomato's own kafka resource when a network resource proxies the app's listeners
 	kafkaInternalIAMPort   = "29098" // AWS_MSK_IAM, for containers on tomato's network: <name>:29098
 	kafkaControllerPort    = "9093"
 )
@@ -169,6 +170,10 @@ func (c *Config) expandKafkaPreset(name string, cont *Container) error {
 		cont.Files = append(cont.Files, ContainerFile{Path: kafkaPluginPath, Content: presets.MskIamJar, Mode: 0o644})
 	}
 
+	if err := c.proxyKafkaListeners(name, &listeners, &advertised, &protocols, &ports); err != nil {
+		return err
+	}
+
 	env["KAFKA_LISTENERS"] = strings.Join(listeners, ",")
 	env["KAFKA_ADVERTISED_LISTENERS"] = strings.Join(advertised, ",")
 	env["KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"] = strings.Join(protocols, ",")
@@ -181,6 +186,71 @@ func (c *Config) expandKafkaPreset(name string, cont *Container) error {
 
 	if cont.WaitFor.Type == "" {
 		cont.WaitFor = WaitStrategy{Type: "log", Target: "Kafka Server started", Timeout: 2 * time.Minute}
+	}
+	return nil
+}
+
+// proxyKafkaListeners puts a network resource's proxy in front of the
+// broker's host listeners, when one stands in front of this container.
+//
+// A Kafka client dials the bootstrap address once and then the address the
+// broker advertises, so a proxy only in front of the bootstrap port is
+// bypassed after the first request. Instead the broker advertises the proxy's
+// port, and the network resource listens there; and a listener of its own,
+// advertised on its own port, keeps tomato's kafka resource off the proxy, so
+// the steps that check a result never see the faults.
+func (c *Config) proxyKafkaListeners(name string, listeners, advertised, protocols, ports *[]string) error {
+	var networks []string
+	for resName, res := range c.Resources {
+		if res.Type == "network" && res.Container == name {
+			networks = append(networks, resName)
+		}
+	}
+	if len(networks) == 0 {
+		return nil
+	}
+	sort.Strings(networks)
+	if len(networks) > 1 {
+		return fmt.Errorf("network resources %s all stand in front of it; one per container", strings.Join(networks, ", "))
+	}
+
+	listen := map[string]any{}
+	for i, a := range *advertised {
+		for _, l := range []struct{ name, port string }{{"EXTERNAL", KafkaPlainPort}, {"IAM", KafkaIAMPort}} {
+			if !strings.HasPrefix(a, l.name+"://localhost:") {
+				continue
+			}
+			proxyPort, err := freePort()
+			if err != nil {
+				return fmt.Errorf("picking a port for the network proxy: %w", err)
+			}
+			(*advertised)[i] = l.name + "://localhost:" + proxyPort
+			n, _ := strconv.Atoi(proxyPort)
+			listen[l.port+"/tcp"] = n
+		}
+	}
+
+	directHostPort, err := freePort()
+	if err != nil {
+		return fmt.Errorf("picking a host port: %w", err)
+	}
+	*listeners = append(*listeners, "TOMATO://:"+kafkaDirectPort)
+	*advertised = append(*advertised, "TOMATO://localhost:"+directHostPort)
+	*protocols = append(*protocols, "TOMATO:PLAINTEXT")
+	*ports = append(*ports, directHostPort+":"+kafkaDirectPort)
+
+	network := c.Resources[networks[0]]
+	if network.Options == nil {
+		network.Options = map[string]any{}
+	}
+	network.Options["listen"] = listen
+	c.Resources[networks[0]] = network
+
+	for resName, res := range c.Resources {
+		if res.Type == "kafka" && res.Container == name && len(res.Brokers) == 0 {
+			res.Brokers = []string{"localhost:" + directHostPort}
+			c.Resources[resName] = res
+		}
 	}
 	return nil
 }

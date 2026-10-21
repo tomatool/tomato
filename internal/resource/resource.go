@@ -67,6 +67,23 @@ type OptionsValidator interface {
 	ValidateOptions() error
 }
 
+// AppPortProvider is implemented by resources that stand between the
+// application and a container, like the network resource's proxy. They are
+// initialized before the application starts, and the application's
+// {{.<container>.port.<port>}} resolves to the port they return instead of
+// the container's. tomato's own resources still reach the container directly.
+type AppPortProvider interface {
+	// AppPorts maps a container name and its port ("5432/tcp") to the port
+	// on 127.0.0.1 the application should use.
+	AppPorts() map[string]map[string]int
+}
+
+// Describer is implemented by resources with something to say at the start
+// of a run, next to the containers: the network resource's proxies.
+type Describer interface {
+	Describe() []string
+}
+
 // AppControl is the application under test, for resources that stop and
 // start it mid-scenario.
 type AppControl interface {

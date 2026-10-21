@@ -38,26 +38,45 @@ type StepDef struct {
 // step used in every scenario warns once per run, not once per use.
 var warnedDeprecated sync.Map
 
-// stepHandler returns the function to register with godog: the handler itself,
-// or for a deprecated step a wrapper with the same signature that warns first.
+// stepHandler returns the function to register with godog: a wrapper with
+// the handler's signature that warns first when the step is deprecated, and
+// adds the network faults that were active to the error of a step that
+// failed, so a failure is never read without knowing the network was bad.
 func (s StepDef) stepHandler(pattern string) interface{} {
-	if s.Deprecated == "" || s.Handler == nil {
-		return s.Handler
-	}
 	fn := reflect.ValueOf(s.Handler)
-	if fn.Kind() != reflect.Func {
+	if s.Handler == nil || fn.Kind() != reflect.Func {
 		return s.Handler
 	}
-	return reflect.MakeFunc(fn.Type(), func(args []reflect.Value) []reflect.Value {
-		if _, seen := warnedDeprecated.LoadOrStore(pattern, true); !seen {
-			log.Warn().Str("step", pattern).Msgf("deprecated step: %s", s.Deprecated)
+	t := fn.Type()
+	returnsError := t.NumOut() > 0 && t.Out(t.NumOut()-1) == errorType
+	if s.Deprecated == "" && !returnsError {
+		return s.Handler
+	}
+	return reflect.MakeFunc(t, func(args []reflect.Value) []reflect.Value {
+		if s.Deprecated != "" {
+			if _, seen := warnedDeprecated.LoadOrStore(pattern, true); !seen {
+				log.Warn().Str("step", pattern).Msgf("deprecated step: %s", s.Deprecated)
+			}
 		}
-		if fn.Type().IsVariadic() {
-			return fn.CallSlice(args)
+		var out []reflect.Value
+		if t.IsVariadic() {
+			out = fn.CallSlice(args)
+		} else {
+			out = fn.Call(args)
 		}
-		return fn.Call(args)
+		if returnsError {
+			last := out[len(out)-1]
+			if err, ok := last.Interface().(error); ok && err != nil {
+				if wrapped := WithNetworkFaults(err); wrapped != err {
+					out[len(out)-1] = reflect.ValueOf(&wrapped).Elem()
+				}
+			}
+		}
+		return out
 	}).Interface()
 }
+
+var errorType = reflect.TypeOf((*error)(nil)).Elem()
 
 // StepCategory groups related steps together
 type StepCategory struct {

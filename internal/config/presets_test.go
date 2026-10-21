@@ -109,6 +109,81 @@ resources:
 	}
 }
 
+func TestKafkaPreset_NetworkResourceProxiesTheAppsListenersOnly(t *testing.T) {
+	stubPorts(t)
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  kafka:
+    preset: kafka
+    auth: aws_msk_iam
+resources:
+  aws:
+    type: aws
+  events:
+    type: kafka
+    container: kafka
+  kafka-network:
+    type: network
+    container: kafka
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	k := cfg.Containers["kafka"]
+	// plain 40001, iam 40002; then the proxies 40003 (plain) and 40004 (iam),
+	// and tomato's own listener 40005.
+	wantAdvertised := "EXTERNAL://localhost:40003,INTERNAL://kafka:29092,IAM://localhost:40004,IAM_INTERNAL://kafka:29098,TOMATO://localhost:40005"
+	if got := k.Env["KAFKA_ADVERTISED_LISTENERS"]; got != wantAdvertised {
+		t.Errorf("advertised listeners\n got %q\nwant %q", got, wantAdvertised)
+	}
+	if !strings.Contains(k.Env["KAFKA_LISTENERS"], "TOMATO://:9094") || !strings.Contains(k.Env["KAFKA_LISTENER_SECURITY_PROTOCOL_MAP"], "TOMATO:PLAINTEXT") {
+		t.Errorf("no listener of tomato's own: %q", k.Env["KAFKA_LISTENERS"])
+	}
+	if strings.Join(k.Ports, ",") != "40001:9092,40002:9098,40005:9094" {
+		t.Errorf("ports %v", k.Ports)
+	}
+	listen, _ := cfg.Resources["kafka-network"].Options["listen"].(map[string]any)
+	if listen["9092/tcp"] != 40003 || listen["9098/tcp"] != 40004 || len(listen) != 2 {
+		t.Errorf("the network listens on %v", listen)
+	}
+	if got := cfg.Resources["events"].Brokers; len(got) != 1 || got[0] != "localhost:40005" {
+		t.Errorf("tomato's kafka resource dials %v, want its own listener", got)
+	}
+}
+
+func TestKafkaPreset_OneNetworkPerContainer(t *testing.T) {
+	stubPorts(t)
+	_, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  kafka:
+    preset: kafka
+resources:
+  a:
+    type: network
+    container: kafka
+  b:
+    type: network
+    container: kafka
+`))
+	if err == nil || !strings.Contains(err.Error(), "one per container") {
+		t.Errorf("want one network per container, got %v", err)
+	}
+}
+
+func TestNetworkResourceNeedsAContainer(t *testing.T) {
+	_, err := Load(createTempConfig(t, `
+version: 2
+resources:
+  db-network:
+    type: network
+`))
+	if err == nil || !strings.Contains(err.Error(), "needs container") {
+		t.Errorf("got %v", err)
+	}
+}
+
 func TestKafkaPreset_WithoutAWSResourceAllowsAnyIdentity(t *testing.T) {
 	stubPorts(t)
 	cfg, err := Load(createTempConfig(t, `

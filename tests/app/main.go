@@ -87,6 +87,7 @@ func main() {
 	// Setup routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", healthHandler)
+	registerNetworkProbes(mux)
 	mux.HandleFunc("/env", envHandler)
 	mux.HandleFunc("/users", usersHandler)
 	mux.HandleFunc("/users/", userHandler)

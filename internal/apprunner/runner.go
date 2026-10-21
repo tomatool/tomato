@@ -67,6 +67,10 @@ type Runner struct {
 
 	// envOverrides replaces app.env values on a restart (see StartApp).
 	envOverrides map[string]string
+
+	// portOverrides points {{.<container>.port.<port>}} somewhere other than
+	// the container: at a network resource's proxy (see SetPortOverrides).
+	portOverrides map[string]map[string]int
 }
 
 // NewRunner creates a new app runner
@@ -90,6 +94,13 @@ func NewRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
 // SetResources sets resource configurations for template resolution
 func (r *Runner) SetResources(resources map[string]config.Resource) {
 	r.resources = resources
+}
+
+// SetPortOverrides makes the app's {{.<container>.port.<port>}} resolve to
+// the given port instead of the container's, per container and container port
+// ("5432/tcp"): where a network resource's proxy listens. Command mode only.
+func (r *Runner) SetPortOverrides(ports map[string]map[string]int) {
+	r.portOverrides = ports
 }
 
 // SetProvidedEnv sets the environment resources provide to the app, such as the
@@ -334,6 +345,11 @@ func (r *Runner) buildEnvForCommand() map[string]string {
 				// Ensure port has /tcp suffix for lookup
 				if !strings.Contains(port, "/") {
 					port = port + "/tcp"
+				}
+				// A network resource stands in front of this port: the app
+				// goes through its proxy, tomato's resources do not.
+				if to, ok := r.portOverrides[containerName][port]; ok {
+					return fmt.Sprintf("%d", to)
 				}
 				mappedPort := r.container.GetMappedPort(containerName, port)
 				if mappedPort == 0 {

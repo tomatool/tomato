@@ -724,3 +724,18 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .srcpath .btn{color:var(--fg-3)}
 .srcpath .btn:hover{color:var(--fg-1)}
 .srcpath .btn[data-copied="true"]{color:var(--pass)}
+
+/* network faults on a step (StepRow): the steps that ran on a bad network
+   carry a band and a badge naming the networks; what changed is listed */
+.step[data-network="faulty"]{box-shadow:inset 2px 0 0 var(--warn)}
+.net{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s-2)}
+.net-badge{display:inline-flex;align-items:center;gap:var(--s-2);padding:1px var(--s-3);border:1px solid var(--warn);border-radius:var(--r-1);background:var(--warn-bg);color:var(--warn-ink);font:var(--fs-11)/1.4 var(--font-mono);white-space:nowrap;cursor:help}
+.net-ico{font-style:normal}
+.net-events{list-style:none;margin:0;padding:0;font:var(--fs-11)/1.6 var(--font-mono);color:var(--fg-2)}
+.net-events li{display:grid;grid-template-columns:max-content max-content max-content 1fr;gap:var(--s-3)}
+.net-at{color:var(--fg-3)}
+.net-res{color:var(--fg-1)}
+.net-kind{color:var(--warn-ink)}
+.net-events li[data-kind="healed"] .net-kind{color:var(--pass-ink)}
+.net-events li[data-kind="connection"] .net-kind{color:var(--fail-ink)}
+.net-detail{color:var(--fg-1);overflow-wrap:anywhere}
