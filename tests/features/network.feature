@@ -105,3 +105,37 @@ Feature: Network faults between the app and its dependencies
       {"id": 1}
       """
     Then "app-events" receives from "test-events" within "10s"
+
+  Scenario: A slow link makes every response slow
+    Given "app-client" sends "GET" to "/deps/s3"
+    And "app-client" response status is "200"
+    When "minio-network" limits bandwidth to "1KB/s"
+    And "app-client" sends "GET" to "/deps/s3"
+    Then "app-client" response status is "200"
+    And "app-client" response json contains:
+      """
+      {"ms": "@gte:200"}
+      """
+
+  Scenario: The app rides out Redis restarting in a loop
+    Given "redis-network" flaps every "500ms" for "3s"
+    When "app-client" sends "GET" to "/deps/redis?retry=10s"
+    Then "app-client" response status is "200"
+
+  Scenario: A share of new connections fails, for a while
+    Given "minio-network" fails "100%" of new connections for "1s"
+    When "app-client" sends "GET" to "/deps/s3?fresh=1"
+    Then "app-client" response status is "502"
+    When "app-client" sends "GET" to "/deps/s3?fresh=1&retry=10s"
+    Then "app-client" response status is "200"
+    And "minio-network" sees a new connection within "5s"
+
+  Scenario: Data lost on the way stalls the app until the network heals
+    Given "app-client" sends "GET" to "/deps/redis"
+    And "app-client" response status is "200"
+    When "redis-network" loses "100%" of the data
+    And "app-client" sends "GET" to "/deps/redis"
+    Then "app-client" response status is "502"
+    When "redis-network" is healthy
+    And "app-client" sends "GET" to "/deps/redis?retry=10s"
+    Then "app-client" response status is "200"
