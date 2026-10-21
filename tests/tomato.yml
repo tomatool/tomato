@@ -116,11 +116,11 @@ app:
   env:
     DATABASE_URL: "postgres://test:test@{{.postgres.host}}:{{.postgres.port.5432}}/test?sslmode=disable"
     REDIS_URL: "redis://{{.redis.host}}:{{.redis.port.6379}}"
-    # The user directory's gRPC dependency, which the users resource stubs.
-    USERS_ADDR: "{{.users.address}}"
+    # The user directory's gRPC dependency, which the users-stub resource stubs.
+    USERS_ADDR: "{{.users-stub.address}}"
 
 resources:
-  db:
+  app-db:
     type: postgres
     container: postgres
     database: test
@@ -131,7 +131,7 @@ resources:
   # Resets by schema: every table in billing and in any plugin_* schema, found
   # when it resets, so a schema a scenario creates is covered from the next
   # one on; plus audit.events. billing.fx_rates is reference data.
-  ledger:
+  ledger-db:
     type: postgres
     container: postgres
     database: test
@@ -142,7 +142,7 @@ resources:
       tables: [audit.events]
       exclude: [billing.fx_rates]
 
-  scylla:
+  app-scylla-db:
     type: scylladb
     container: scylla
     options:
@@ -151,11 +151,11 @@ resources:
       exclude:
         - countries
 
-  cache:
+  app-cache:
     type: redis
     container: redis
 
-  events:
+  app-events:
     type: kafka
     container: kafka
     options:
@@ -188,7 +188,7 @@ resources:
         compression: zlib
         port: 9994
 
-  mq:
+  app-queue:
     type: rabbitmq
     container: rabbitmq
     options:
@@ -196,7 +196,7 @@ resources:
       password: guest
       reset_strategy: purge
 
-  files:
+  app-storage:
     type: s3
     container: minio
     options:
@@ -204,11 +204,11 @@ resources:
         - uploads
         - reports
 
-  api:
+  app-client:
     type: http-client
     base_url: "http://localhost:8080"
 
-  grpc:
+  app-grpc-client:
     type: grpc
     address: "localhost:9090"
 
@@ -220,38 +220,38 @@ resources:
   lifecycle:
     type: lifecycle
 
-  ws:
+  app-ws-client:
     type: websocket-client
     url: "ws://localhost:8080/ws"
 
-  wsmock:
+  feed-stub:
     type: websocket-server
     options:
       port: 9997
 
-  wsmock-client:
+  feed-client:
     type: websocket-client
     url: "ws://localhost:9997/"
 
   # The gRPC service the app's user directory calls, stubbed from its
   # descriptor set (go test ./internal/grpcfixture -update regenerates it).
-  users:
+  users-stub:
     type: grpc-server
     options:
       port: 9995
       descriptor_set: tests/testdata/grpc/users.binpb
 
   # Calls that stub directly, through the reflection it serves.
-  users-grpc:
+  users-client:
     type: grpc
     address: "localhost:9995"
 
-  mock:
+  upstream-stub:
     type: http-server
     options:
       port: 9999
 
-  mock2:
+  other-upstream-stub:
     type: http-server
     options:
       port: 9998
@@ -267,7 +267,7 @@ resources:
       port: 9996
 
   # Two people using the app's web UI, each in their own browser context.
-  alice:
+  alice-browser:
     type: browser
     container: chrome
     options:
@@ -276,7 +276,7 @@ resources:
       locale: de-DE
       screenshots: .tomato/screenshots
 
-  bob:
+  bob-browser:
     type: browser
     container: chrome
     options:
@@ -284,13 +284,13 @@ resources:
       timeout: 3s
 
   # Calls the aws resource's STS directly.
-  sts:
+  sts-client:
     type: http-client
     base_url: "http://localhost:9996"
 
   # The PDFs the app generates: read from an s3 object, an http response body
   # or a file, and asserted on. The validator checks PDF/UA and PDF/A.
-  pdf:
+  document-pdf:
     type: pdf
     options:
       validator: verapdf

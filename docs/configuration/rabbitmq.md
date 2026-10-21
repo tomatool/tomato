@@ -71,7 +71,7 @@ Configure the RabbitMQ resource:
 
 ```yaml
 resources:
-  mq:
+  orders-queue:
     type: rabbitmq
     container: rabbitmq
     options:
@@ -107,7 +107,7 @@ You can pre-declare queues, exchanges, and bindings in the config:
 
 ```yaml
 resources:
-  mq:
+  orders-queue:
     type: rabbitmq
     container: rabbitmq
     options:
@@ -159,7 +159,7 @@ containers:
       timeout: 30s
 
 resources:
-  mq:
+  orders-queue:
     type: rabbitmq
     container: rabbitmq
     options:
@@ -180,14 +180,14 @@ features:
 Feature: Order Processing
 
   Scenario: Orders are queued for processing
-    Given "mq" declares queue "orders"
-    And "mq" consumes from queue "orders"
-    When "mq" publishes json to queue "orders":
+    Given "orders-queue" declares queue "orders"
+    And "orders-queue" consumes from queue "orders"
+    When "orders-queue" publishes json to queue "orders":
       """
       {"order_id": "123", "amount": 99.99}
       """
-    Then "mq" receives from queue "orders" within "5s"
-    And "mq" last message contains:
+    Then "orders-queue" receives from queue "orders" within "5s"
+    And "orders-queue" last message contains:
       """
       order_id
       """
@@ -197,17 +197,17 @@ Feature: Order Processing
 
 ```gherkin
 Scenario: Route orders by type
-  Given "mq" declares exchange "orders" of type "topic"
-  And "mq" declares queue "domestic-orders"
-  And "mq" declares queue "international-orders"
-  And "mq" binds queue "domestic-orders" to exchange "orders" with routing key "order.domestic.*"
-  And "mq" binds queue "international-orders" to exchange "orders" with routing key "order.international.*"
-  And "mq" consumes from queue "domestic-orders"
-  When "mq" publishes to exchange "orders" with routing key "order.domestic.new":
+  Given "orders-queue" declares exchange "orders" of type "topic"
+  And "orders-queue" declares queue "domestic-orders"
+  And "orders-queue" declares queue "international-orders"
+  And "orders-queue" binds queue "domestic-orders" to exchange "orders" with routing key "order.domestic.*"
+  And "orders-queue" binds queue "international-orders" to exchange "orders" with routing key "order.international.*"
+  And "orders-queue" consumes from queue "domestic-orders"
+  When "orders-queue" publishes to exchange "orders" with routing key "order.domestic.new":
     """
     New domestic order
     """
-  Then "mq" receives from queue "domestic-orders" within "5s":
+  Then "orders-queue" receives from queue "domestic-orders" within "5s":
     """
     New domestic order
     """
@@ -217,24 +217,24 @@ Scenario: Route orders by type
 
 ```gherkin
 Scenario: Broadcast notifications to all subscribers
-  Given "mq" declares exchange "notifications" of type "fanout"
-  And "mq" declares queue "email-service"
-  And "mq" declares queue "push-service"
-  And "mq" declares queue "sms-service"
-  And "mq" binds queue "email-service" to exchange "notifications"
-  And "mq" binds queue "push-service" to exchange "notifications"
-  And "mq" binds queue "sms-service" to exchange "notifications"
-  And "mq" consumes from queue "email-service"
-  And "mq" consumes from queue "push-service"
-  When "mq" publishes to exchange "notifications" with routing key "":
+  Given "orders-queue" declares exchange "notifications" of type "fanout"
+  And "orders-queue" declares queue "email-service"
+  And "orders-queue" declares queue "push-service"
+  And "orders-queue" declares queue "sms-service"
+  And "orders-queue" binds queue "email-service" to exchange "notifications"
+  And "orders-queue" binds queue "push-service" to exchange "notifications"
+  And "orders-queue" binds queue "sms-service" to exchange "notifications"
+  And "orders-queue" consumes from queue "email-service"
+  And "orders-queue" consumes from queue "push-service"
+  When "orders-queue" publishes to exchange "notifications" with routing key "":
     """
     System maintenance in 1 hour
     """
-  Then "mq" receives from queue "email-service" within "5s":
+  Then "orders-queue" receives from queue "email-service" within "5s":
     """
     System maintenance in 1 hour
     """
-  And "mq" receives from queue "push-service" within "5s":
+  And "orders-queue" receives from queue "push-service" within "5s":
     """
     System maintenance in 1 hour
     """

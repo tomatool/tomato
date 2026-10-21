@@ -92,16 +92,16 @@ containers:
 
 # Define resources (handlers) for your tests
 resources:
-  db:
+  users-db:
     type: postgres
     container: postgres
     database: test
 
-  cache:
+  users-cache:
     type: redis
     container: redis
 
-  api:
+  users-client:
     type: http
     base_url: http://localhost:8080
 
@@ -112,6 +112,11 @@ features:
   tags: "@smoke"  # Optional: filter by tags
 ```
 
+Each resource's name is how your steps refer to it, so name it after whose it is
+and the role it plays — `users-client`, `users-db` — rather than `api` or `db`.
+[Naming resources](../guide/philosophy.md#naming-resources) has the full
+convention.
+
 ## 4. Write your first scenario
 
 Create a feature file in `features/`:
@@ -121,22 +126,22 @@ Create a feature file in `features/`:
 Feature: User API
 
   Background:
-    Given "db" table "users" has values:
+    Given "users-db" table "users" has values:
       | id | name  | email          |
       | 1  | Alice | alice@test.com |
 
   Scenario: Get user by ID
-    When "api" sends "GET" to "/users/1"
-    Then "api" response status is "200"
-    And "api" response json "name" is "Alice"
+    When "users-client" sends "GET" to "/users/1"
+    Then "users-client" response status is "200"
+    And "users-client" response json "name" is "Alice"
 
   Scenario: Create new user
-    When "api" sends "POST" to "/users" with json:
+    When "users-client" sends "POST" to "/users" with json:
       """
       {"name": "Bob", "email": "bob@test.com"}
       """
-    Then "api" response status is "201"
-    And "db" table "users" has "2" rows
+    Then "users-client" response status is "201"
+    And "users-db" table "users" has "2" rows
 ```
 
 ## 5. Check it before you run it

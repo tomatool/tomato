@@ -31,7 +31,7 @@ type document struct {
 var disableConfigDir sync.Once
 
 // loadDocument parses a PDF. source says where the bytes came from, for
-// messages: `file "out/ca.pdf"`, `"files" object "cas/x.pdf"`.
+// messages: `file "out/ca.pdf"`, `"uploads-storage" object "cas/x.pdf"`.
 func loadDocument(c context.Context, data []byte, source string) (doc *document, err error) {
 	disableConfigDir.Do(api.DisableConfigDir)
 	defer recoverTo(&err, "reading the PDF from "+source)

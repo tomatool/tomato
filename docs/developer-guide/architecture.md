@@ -173,9 +173,9 @@ Handlers are responsible for translating Gherkin steps into actions against reso
 ```mermaid
 flowchart LR
     subgraph Steps["Gherkin Steps"]
-        S1["Given 'db' table 'users' has values:"]
-        S2["When 'api' sends 'GET' to '/users/1'"]
-        S3["Then 'api' response status is '200'"]
+        S1["Given 'app-db' table 'users' has values:"]
+        S2["When 'app-client' sends 'GET' to '/users/1'"]
+        S3["Then 'app-client' response status is '200'"]
     end
 
     subgraph Handlers["Handler Registry"]
@@ -277,19 +277,19 @@ sequenceDiagram
 
     Note over Feature: Scenario: Create user
 
-    Feature->>Godog: Given "db" table "users" has values:
+    Feature->>Godog: Given "app-db" table "users" has values:
     Godog->>PG: SetTableValues(table, data)
     PG->>DB: INSERT INTO users...
     DB-->>PG: OK
     PG-->>Godog: Success
 
-    Feature->>Godog: When "db" executes:
+    Feature->>Godog: When "app-db" executes:
     Godog->>PG: ExecuteQuery(query)
     PG->>DB: SELECT * FROM users
     DB-->>PG: Results
     PG-->>Godog: Store results
 
-    Feature->>Godog: Then "db" query "..." returns:
+    Feature->>Godog: Then "app-db" query "..." returns:
     Godog->>PG: AssertQueryResult(expected)
     PG-->>Godog: Match/No match
 ```
@@ -302,18 +302,18 @@ sequenceDiagram
     participant HTTP as HTTP Handler
     participant API as Target API
 
-    Feature->>HTTP: Given "api" header "X-Token" is "abc"
+    Feature->>HTTP: Given "app-client" header "X-Token" is "abc"
     HTTP-->>HTTP: Store header
 
-    Feature->>HTTP: When "api" sends "POST" to "/users" with json:
+    Feature->>HTTP: When "app-client" sends "POST" to "/users" with json:
     HTTP->>API: POST /users
     API-->>HTTP: 201 Created + JSON body
     HTTP-->>HTTP: Store response
 
-    Feature->>HTTP: Then "api" response status is "201"
+    Feature->>HTTP: Then "app-client" response status is "201"
     HTTP-->>HTTP: Assert status
 
-    Feature->>HTTP: And "api" response json "id" exists
+    Feature->>HTTP: And "app-client" response json "id" exists
     HTTP-->>HTTP: Assert JSON path
 ```
 
@@ -331,9 +331,9 @@ flowchart TB
         end
 
         subgraph resources
-            R1[name: db<br/>type: postgres<br/>container: postgres]
-            R2[name: cache<br/>type: redis<br/>container: redis]
-            R3[name: api<br/>type: http<br/>base_url: ...]
+            R1[name: app-db<br/>type: postgres<br/>container: postgres]
+            R2[name: app-cache<br/>type: redis<br/>container: redis]
+            R3[name: app-client<br/>type: http<br/>base_url: ...]
         end
 
         subgraph app

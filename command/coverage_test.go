@@ -35,8 +35,8 @@ func TestCoverageCountsStepsPerResourceType(t *testing.T) {
 	dir := t.TempDir()
 	writeFeature(t, dir, "a.feature", `Feature: a
   Scenario: set and check a key
-    Given "cache" key "k" is "v"
-    Then "cache" key "k" exists
+    Given "app-cache" key "k" is "v"
+    Then "app-cache" key "k" exists
 
   Scenario Outline: outlines are expanded
     Then "shell" runs "<cmd>"
@@ -46,15 +46,15 @@ func TestCoverageCountsStepsPerResourceType(t *testing.T) {
 
   @skip
   Scenario: excluded by tags
-    Then "cache" key "k" does not exist
+    Then "app-cache" key "k" does not exist
 
   Scenario: a step no resource defines
     Then nothing matches this
 `)
 	cfg := &config.Config{
 		Resources: map[string]config.Resource{
-			"cache": {Type: "redis"},
-			"shell": {Type: "shell"},
+			"app-cache": {Type: "redis"},
+			"shell":     {Type: "shell"},
 		},
 		Features: config.Features{Paths: []string{dir}, Tags: "~@skip"},
 	}

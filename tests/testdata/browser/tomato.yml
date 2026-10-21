@@ -7,7 +7,7 @@ containers:
     preset: chromium
 
 resources:
-  page:
+  visitor-browser:
     type: browser
     container: chrome
     options:

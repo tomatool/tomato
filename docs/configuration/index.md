@@ -116,7 +116,7 @@ message), its `step_end` also has a `mismatch` object with both sides, which
 of the [stable surface](../stability.md).
 
 In the `tomato` format, a `step_end` event carries `screenshots` when the step
-left images behind, as a list of `{"resource": "alice", "path": "…/after-apply.png"}`:
+left images behind, as a list of `{"resource": "alice-browser", "path": "…/after-apply.png"}`:
 the [browser resource](browser.md)'s `saves screenshot`, and the page when a
 step failed. `tomato ui` reads it to put the picture on the step.
 
@@ -263,7 +263,7 @@ start, so resetting it destroys someone's real data. tomato refuses to load
 such a config:
 
 ```
-resource "db" (postgres) has no container, so it points at a system tomato
+resource "app-db" (postgres) has no container, so it points at a system tomato
 does not manage — and tomato wipes every resource before every scenario,
 which would destroy its data.
 ```
@@ -273,7 +273,7 @@ system, say so:
 
 ```yaml
 resources:
-  db:
+  app-db:
     type: postgres
     allow_destructive_reset: true   # yes, wipe it before every scenario
     options:
@@ -339,13 +339,16 @@ used to leave alone wiped before every scenario.
 
 ## Resources
 
-Define handlers for test steps.
+Define handlers for test steps. The key is the name steps use to refer to the
+resource (`"app-client" sends …`), so it should say whose it is and what role
+it plays: `orders-client`, `stripe-stub`, `orders-db`, not `api`, `mock` or
+`db`. See [Naming resources](../guide/philosophy.md#naming-resources).
 
 ### HTTP
 
 ```yaml
 resources:
-  api:
+  app-client:
     type: http
     base_url: http://localhost:8080
     options:
@@ -360,14 +363,14 @@ resources:
 | `scheme` | `http` | Scheme for the base URL built from `container` |
 | `health_path` | *(none)* | Path polled once at startup to check the service answers |
 
-Request headers are set by steps (`"api" header "Authorization" is "..."`), not
+Request headers are set by steps (`"app-client" header "Authorization" is "..."`), not
 here, and are cleared between scenarios.
 
 ### PostgreSQL
 
 ```yaml
 resources:
-  db:
+  app-db:
     type: postgres
     container: postgres
     database: test
@@ -439,7 +442,7 @@ The `container` field automatically provides the connection details - tomato res
 
 ```yaml
 resources:
-  scylla:
+  app-db:
     type: scylladb          # or: cassandra
     container: scylla
     options:
@@ -457,7 +460,7 @@ Every table in the keyspace is truncated before each scenario, except those in
 
 ```yaml
 resources:
-  cache:
+  app-cache:
     type: redis
     container: redis
     options:
@@ -471,7 +474,7 @@ resources:
 
 ```yaml
 resources:
-  kafka:
+  app-events:
     type: kafka
     container: kafka
     options:
@@ -497,7 +500,7 @@ See [Kafka: Avro and Schema Registry](kafka.md#avro-and-schema-registry).
 
 ```yaml
 resources:
-  ws:
+  app-ws-client:
     type: websocket
     url: ws://localhost:8080/ws
     # Or use container
@@ -515,7 +518,7 @@ resources:
 
 ```yaml
 resources:
-  grpc:
+  app-grpc-client:
     type: grpc
     address: "localhost:9090"   # or: container: myservice
     options:
@@ -529,7 +532,7 @@ The server must register the gRPC reflection service. See
 
 ```yaml
 resources:
-  users:
+  users-stub:
     type: grpc-server
     options:
       port: 9995                              # fixed, so app.env can name it
@@ -537,7 +540,7 @@ resources:
 
 app:
   env:
-    USERS_ADDR: "{{.users.address}}"          # localhost:9995
+    USERS_ADDR: "{{.users-stub.address}}"     # localhost:9995
 ```
 
 Stubs the gRPC services the app calls. See [gRPC Server](grpc-server.md).
@@ -546,7 +549,7 @@ Stubs the gRPC services the app calls. See [gRPC Server](grpc-server.md).
 
 ```yaml
 resources:
-  files:
+  uploads-storage:
     type: s3
     container: minio
     options:
@@ -578,7 +581,7 @@ Execute actions at different lifecycle points.
 hooks:
   before_all:
     - sql_file: ./fixtures/schema.sql
-      resource: db
+      resource: app-db
     - shell: ./scripts/setup.sh
 
   after_all:
@@ -586,7 +589,7 @@ hooks:
 
   before_scenario:
     - sql: "DELETE FROM events"
-      resource: db
+      resource: app-db
 
   after_scenario:
     - exec: redis-cli FLUSHDB

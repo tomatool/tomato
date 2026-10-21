@@ -10,10 +10,10 @@ Steps for interacting with ScyllaDB and Apache Cassandra over CQL
 
 | Step | Description |
 |------|-------------|
-| `"scylla" table "users" has values:` | Insert rows from table (values are converted to the column types) |
-| `"scylla" clears table "users"` | Truncate a table (removes all rows) |
-| `"scylla" executes:` | Execute CQL (several statements separated by `;`) |
-| `"scylla" executes file "fixtures/schema.cql"` | Execute CQL from file |
+| `"app-db" table "users" has values:` | Insert rows from table (values are converted to the column types) |
+| `"app-db" clears table "users"` | Truncate a table (removes all rows) |
+| `"app-db" executes:` | Execute CQL (several statements separated by `;`) |
+| `"app-db" executes file "fixtures/schema.cql"` | Execute CQL from file |
 
 
 
@@ -21,10 +21,10 @@ Steps for interacting with ScyllaDB and Apache Cassandra over CQL
 
 | Step | Description |
 |------|-------------|
-| `"scylla" table "users" contains:` | Assert table contains rows (in any order) |
-| `"scylla" table "users" is empty` | Assert table is empty |
-| `"scylla" table "users" has "5" rows` | Assert row count |
-| `"scylla" query "SELECT id, name FROM users WHERE id = 1" returns:` | Assert exact match of query result rows |
-| `"scylla" query result of "SELECT id, name FROM users" contains:` | Assert query result contains expected rows (superset) |
+| `"app-db" table "users" contains:` | Assert table contains rows (in any order) |
+| `"app-db" table "users" is empty` | Assert table is empty |
+| `"app-db" table "users" has "5" rows` | Assert row count |
+| `"app-db" query "SELECT id, name FROM users WHERE id = 1" returns:` | Assert exact match of query result rows |
+| `"app-db" query result of "SELECT id, name FROM users" contains:` | Assert query result contains expected rows (superset) |
 
 

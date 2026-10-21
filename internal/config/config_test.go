@@ -61,7 +61,7 @@ containers:
       type: port
       target: "5432/tcp"
 resources:
-  db:
+  app-db:
     type: postgres
     container: postgres
     database: test
@@ -88,8 +88,8 @@ features:
 				if _, ok := cfg.Containers["postgres"]; !ok {
 					t.Error("expected postgres container")
 				}
-				if _, ok := cfg.Resources["db"]; !ok {
-					t.Error("expected db resource")
+				if _, ok := cfg.Resources["app-db"]; !ok {
+					t.Error("expected app-db resource")
 				}
 				if len(cfg.Features.Paths) != 2 {
 					t.Errorf("expected 2 feature paths, got %d", len(cfg.Features.Paths))
@@ -214,7 +214,7 @@ version: 1
 			content: `
 version: 2
 resources:
-  db:
+  app-db:
     type: postgres
     container: nonexistent
 `,
@@ -256,13 +256,13 @@ containers:
   postgres:
     image: postgres:15
 resources:
-  db:
+  app-db:
     type: postgres
     container: postgres
     reset: false
 `,
 			wantErr:     true,
-			errContains: "resource \"db\": `reset` was removed",
+			errContains: "resource \"app-db\": `reset` was removed",
 		},
 		{
 			name: "reset_strategy none was removed",
@@ -272,14 +272,14 @@ containers:
   minio:
     image: minio/minio
 resources:
-  files:
+  app-storage:
     type: s3
     container: minio
     options:
       reset_strategy: none
 `,
 			wantErr:     true,
-			errContains: "resource \"files\": `reset_strategy: none` was removed",
+			errContains: "resource \"app-storage\": `reset_strategy: none` was removed",
 		},
 		{
 			name: "other reset strategies still load",
@@ -289,7 +289,7 @@ containers:
   minio:
     image: minio/minio
 resources:
-  files:
+  app-storage:
     type: s3
     container: minio
     options:
@@ -297,7 +297,7 @@ resources:
 `,
 			wantErr: false,
 			validate: func(t *testing.T, cfg *Config) {
-				if got := cfg.Resources["files"].Options["reset_strategy"]; got != "purge" {
+				if got := cfg.Resources["app-storage"].Options["reset_strategy"]; got != "purge" {
 					t.Errorf("expected reset_strategy purge, got %v", got)
 				}
 			},
@@ -466,7 +466,7 @@ func TestValidate(t *testing.T) {
 					"postgres": {Image: "postgres:15"},
 				},
 				Resources: map[string]Resource{
-					"db": {Type: "postgres", Container: "postgres"},
+					"app-db": {Type: "postgres", Container: "postgres"},
 				},
 			},
 			wantErr: false,
@@ -476,7 +476,7 @@ func TestValidate(t *testing.T) {
 			config: Config{
 				Version: 2,
 				Resources: map[string]Resource{
-					"db": {Type: "postgres", Container: "nonexistent"},
+					"app-db": {Type: "postgres", Container: "nonexistent"},
 				},
 			},
 			wantErr:     true,
@@ -487,7 +487,7 @@ func TestValidate(t *testing.T) {
 			config: Config{
 				Version: 2,
 				Resources: map[string]Resource{
-					"api": {Type: "http", BaseURL: "http://localhost:8080"},
+					"app-client": {Type: "http", BaseURL: "http://localhost:8080"},
 				},
 			},
 			wantErr: false,
@@ -699,7 +699,7 @@ containers:
   rabbitmq:
     image: rabbitmq:3
 resources:
-  db:
+  app-db:
     type: postgres
     container: postgres
     database: testdb
@@ -707,21 +707,21 @@ resources:
       tables:
         - users
         - orders
-  api:
+  app-client:
     type: http
     base_url: http://localhost:8080
-  queue:
+  orders-queue:
     type: rabbitmq
     container: rabbitmq
     options:
       queue: events
-  kafka:
+  orders-events:
     type: kafka
     brokers:
       - localhost:9092
     consumer_group: test-group
     allow_destructive_reset: true
-  ws:
+  app-ws-client:
     type: websocket
     url: ws://localhost:8080/ws
 `
@@ -733,7 +733,7 @@ resources:
 	}
 
 	// Check postgres resource
-	db := cfg.Resources["db"]
+	db := cfg.Resources["app-db"]
 	if db.Type != "postgres" {
 		t.Errorf("expected type postgres, got %s", db.Type)
 	}
@@ -745,7 +745,7 @@ resources:
 	}
 
 	// Check http resource
-	api := cfg.Resources["api"]
+	api := cfg.Resources["app-client"]
 	if api.Type != "http" {
 		t.Errorf("expected type http, got %s", api.Type)
 	}
@@ -754,7 +754,7 @@ resources:
 	}
 
 	// Check kafka resource
-	kafka := cfg.Resources["kafka"]
+	kafka := cfg.Resources["orders-events"]
 	if len(kafka.Brokers) != 1 {
 		t.Errorf("expected 1 broker, got %d", len(kafka.Brokers))
 	}
@@ -763,7 +763,7 @@ resources:
 	}
 
 	// Check websocket resource
-	ws := cfg.Resources["ws"]
+	ws := cfg.Resources["app-ws-client"]
 	if ws.URL != "ws://localhost:8080/ws" {
 		t.Errorf("expected url ws://localhost:8080/ws, got %s", ws.URL)
 	}
@@ -1139,7 +1139,7 @@ func TestUnmanagedStatefulResourceIsRefused(t *testing.T) {
 
 	unmanaged := `version: 2
 resources:
-  db:
+  app-db:
     type: postgres
     options:
       host: prod.internal
@@ -1168,7 +1168,7 @@ func TestStatelessResourceNeedsNoAcknowledgement(t *testing.T) {
 	path := filepath.Join(dir, "tomato.yml")
 	body := `version: 2
 resources:
-  api:
+  app-client:
     type: http-client
     base_url: https://example.com
 features:
@@ -1222,7 +1222,7 @@ func TestLoad_ExplainsABareTemplate(t *testing.T) {
 app:
   env:
     DATABASE_URL: postgres://u:p@{{.postgres.host}}:{{.postgres.port.5432}}/db
-    KAFKA_BROKERS: {{.kafka.host}}:{{.kafka.port.9092}}
+    KAFKA_BROKERS: {{.orders-events.host}}:{{.orders-events.port.9092}}
 
 resources: {}
 `
@@ -1237,8 +1237,8 @@ resources: {}
 	msg := err.Error()
 
 	for _, want := range []string{
-		"KAFKA_BROKERS",                   // the offending line, not the one YAML blamed
-		`KAFKA_BROKERS: "{{.kafka.host}}`, // the corrected line, ready to paste
+		"KAFKA_BROKERS", // the offending line, not the one YAML blamed
+		`KAFKA_BROKERS: "{{.orders-events.host}}`, // the corrected line, ready to paste
 		"Quote it",
 	} {
 		if !strings.Contains(msg, want) {

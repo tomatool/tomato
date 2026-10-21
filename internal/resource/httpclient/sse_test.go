@@ -467,7 +467,7 @@ func TestStream_StepDefinitions(t *testing.T) {
 		if s.Group != "Event Streams" || s.Description == "" || s.Handler == nil {
 			t.Errorf("step %q: needs the Event Streams group, a description and a handler", s.Pattern)
 		}
-		re := regexp.MustCompile(strings.ReplaceAll(s.Pattern, "{resource}", "api"))
+		re := regexp.MustCompile(strings.ReplaceAll(s.Pattern, "{resource}", "app-client"))
 		if !re.MatchString(s.Example) {
 			t.Errorf("example %q does not match its pattern %q", s.Example, s.Pattern)
 		}

@@ -47,7 +47,7 @@ export function definitionKind(step) {
 }
 
 // stepKind is the kind in context. A Background is preparation whatever it
-// contains. A probe under a Given is preparation too — `Given "api" sends
+// contains. A probe under a Given is preparation too — `Given "app-client" sends
 // "POST" to "/users"` creates the fixture the scenario is about, and the
 // author said so with the keyword — while under a When it is the probe.
 // A check stays a check under any keyword.

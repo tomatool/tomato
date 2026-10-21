@@ -13,7 +13,7 @@ containers:
     preset: kafka
 
 resources:
-  events:
+  orders-events:
     type: kafka
     container: kafka
     options:
@@ -176,7 +176,7 @@ Configure the Kafka resource to connect to the container:
 
 ```yaml
 resources:
-  events:
+  orders-events:
     type: kafka
     container: kafka
     options:
@@ -222,7 +222,7 @@ containers:
     preset: kafka
 
 resources:
-  events:
+  orders-events:
     type: kafka
     container: kafka
     options:
@@ -246,14 +246,14 @@ Once configured, you can write Gherkin scenarios to test Kafka:
 Feature: Event Processing
 
   Scenario: Order events are published correctly
-    Given "events" creates topic "order-events"
-    And "events" consumes from "order-events"
-    When "events" publishes json to "order-events" with key "order-123":
+    Given "orders-events" creates topic "order-events"
+    And "orders-events" consumes from "order-events"
+    When "orders-events" publishes json to "order-events" with key "order-123":
       """
       {"event": "order.created", "orderId": "123", "amount": 99.99}
       """
-    Then "events" receives from "order-events" with key "order-123" within "10s"
-    And "events" last message contains:
+    Then "orders-events" receives from "order-events" with key "order-123" within "10s"
+    And "orders-events" last message contains:
       """
       order.created
       """
@@ -289,7 +289,7 @@ containers:
       timeout: 90s
 
 resources:
-  kafka:
+  orders-events:
     type: kafka
     container: kafka
     options:
@@ -315,17 +315,17 @@ app:
 
 ```gherkin
 Scenario: Order service emits an OrderCreated event
-  Given "kafka" registers schema for subject "orders-value" from file "schemas/order.avsc"
-  And "kafka" consumes from "orders"
-  When "api" sends "POST" to "/orders" with json:
+  Given "orders-events" registers schema for subject "orders-value" from file "schemas/order.avsc"
+  And "orders-events" consumes from "orders"
+  When "orders-client" sends "POST" to "/orders" with json:
     """
     {"id": "order-1", "amount": 4200}
     """
-  Then "kafka" receives avro from "orders" within "10s":
+  Then "orders-events" receives avro from "orders" within "10s":
     """
     {"id": "order-1", "status": "CREATED"}
     """
-  And "kafka" last message avro matches:
+  And "orders-events" last message avro matches:
     """
     {"id": "order-1", "amount": 4200, "status": "CREATED", "note": null}
     """
@@ -351,7 +351,7 @@ no AWS account is involved:
 
 ```yaml
 resources:
-  events:
+  trades-events:
     type: kafka
     container: kafka
     options:
@@ -387,8 +387,8 @@ registry; a topic's schema is named after the topic (the SerDe's default),
 unless `subjects` maps it:
 
 ```gherkin
-Given "events" registers schema for subject "trade-events" from file "schemas/trade.avsc"
-When "events" publishes avro to "trade-events" with key "user-1":
+Given "trades-events" registers schema for subject "trade-events" from file "schemas/trade.avsc"
+When "trades-events" publishes avro to "trade-events" with key "user-1":
   """
   {"tradeId": "t-1", "quantity": "10"}
   """

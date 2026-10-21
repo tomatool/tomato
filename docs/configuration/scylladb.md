@@ -47,7 +47,7 @@ The port opens before the node serves CQL. The resource keeps retrying until a q
 
 ```yaml
 resources:
-  scylla:
+  app-db:
     type: scylladb
     container: scylla
     options:
@@ -103,7 +103,7 @@ If your application creates its own schema on startup (for example with a migrat
 `table ... has values:` inserts rows with `INSERT ... JSON`, so cells are written as text and CQL converts them to the column type (int, uuid, timestamp, boolean, ...). A cell holding a JSON array or object fills a list, set, map or UDT column, and `null` writes a null.
 
 ```gherkin
-Given "scylla" table "users" has values:
+Given "app-db" table "users" has values:
   | id                                   | email          | created_at           | tags          |
   | 11111111-1111-4111-a111-111111111111 | alice@test.com | 2026-01-01T00:00:00Z | ["admin"]     |
 ```
@@ -135,5 +135,5 @@ CQL resources work with `sql` and `sql_file` hooks:
 hooks:
   before_all:
     - sql_file: ./fixtures/extra.cql
-      resource: scylla
+      resource: app-db
 ```

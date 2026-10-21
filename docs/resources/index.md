@@ -42,7 +42,7 @@ Built-in functions generate unique values on each use:
 
 **Example:**
 ```gherkin
-When "api" sends "POST" to "/api/users" with json:
+When "app-client" sends "POST" to "/api/users" with json:
   """
   {
     "id": "{{uuid}}",
@@ -58,28 +58,28 @@ Save values from responses to use in subsequent requests:
 
 | Step | Description |
 |------|-------------|
-| `"api" response json "path" saved as "{{var}}"` | Save JSON path value to variable |
-| `"api" response header "Name" saved as "{{var}}"` | Save response header to variable |
+| `"app-client" response json "path" saved as "{{var}}"` | Save JSON path value to variable |
+| `"app-client" response header "Name" saved as "{{var}}"` | Save response header to variable |
 
 **Example - CRUD workflow:**
 ```gherkin
 Scenario: Create and retrieve a user
   # Create user and capture the ID
-  When "api" sends "POST" to "/api/users" with json:
+  When "app-client" sends "POST" to "/api/users" with json:
     """
     { "name": "Alice" }
     """
-  Then "api" response status is "201"
-  And "api" response json "id" saved as "{{user_id}}"
+  Then "app-client" response status is "201"
+  And "app-client" response json "id" saved as "{{user_id}}"
 
   # Use captured ID in subsequent request
-  When "api" sends "GET" to "/api/users/{{user_id}}"
-  Then "api" response status is "200"
-  And "api" response json "name" is "Alice"
+  When "app-client" sends "GET" to "/api/users/{{user_id}}"
+  Then "app-client" response status is "200"
+  And "app-client" response json "name" is "Alice"
 
   # Delete the user
-  When "api" sends "DELETE" to "/api/users/{{user_id}}"
-  Then "api" response status is "204"
+  When "app-client" sends "DELETE" to "/api/users/{{user_id}}"
+  Then "app-client" response status is "204"
 ```
 
 Variables and sequences are automatically reset between scenarios.
@@ -130,7 +130,7 @@ When using `response json matches:` or `response json contains:`, you can use th
 ### Example
 
 ```gherkin
-Then "api" response json contains:
+Then "app-client" response json contains:
   """
   {
     "id": "@regex:^[0-9a-f-]{36}$",

@@ -89,7 +89,7 @@ func runSteps(ctx *cli.Context) error {
 		for _, step := range cat.Steps {
 			// Replace {resource} with placeholder
 			pattern := strings.ReplaceAll(step.Pattern, "{resource}", "<resource>")
-			example := strings.ReplaceAll(step.Example, "{resource}", "api")
+			example := exampleFor(cat.Name, step.Example)
 
 			fmt.Printf("  \033[1m%s\033[0m\n", step.Description)
 			fmt.Printf("  \033[33m%s\033[0m\n", pattern)
@@ -101,4 +101,39 @@ func runSteps(ctx *cli.Context) error {
 	}
 
 	return nil
+}
+
+// exampleResourceNames is the resource name `tomato steps` and the generated
+// docs (docs/resources/) put in place of {resource}, per step category. Each
+// follows the resource naming convention, <name>-<role> (see "Naming
+// resources" in docs/guide/philosophy.md), so the examples read the way a
+// suite should: "app-client" sends ..., "users-stub" stub ..., "app-db" table ...
+var exampleResourceNames = map[string]string{
+	"HTTP Client":      "app-client",
+	"HTTP Server":      "users-stub",
+	"gRPC":             "app-grpc-client",
+	"gRPC Server":      "users-stub",
+	"WebSocket Client": "app-ws-client",
+	"WebSocket Server": "prices-stub",
+	"PostgreSQL":       "app-db",
+	"ScyllaDB":         "app-db",
+	"Redis":            "app-cache",
+	"Kafka":            "orders-events",
+	"RabbitMQ":         "orders-queue",
+	"S3":               "uploads-storage",
+	"Browser":          "alice-browser",
+	"Shell":            "shell",
+	"PDF":              "contract-pdf",
+	"AWS":              "aws",
+	"Lifecycle":        "lifecycle",
+}
+
+// exampleFor fills in the {resource} placeholder of a step example with the
+// example name for its category.
+func exampleFor(category, example string) string {
+	name, ok := exampleResourceNames[category]
+	if !ok {
+		name = "<resource>"
+	}
+	return strings.ReplaceAll(example, "{resource}", name)
 }

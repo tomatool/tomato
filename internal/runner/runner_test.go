@@ -219,7 +219,7 @@ func TestExecuteHook(t *testing.T) {
 		{
 			name: "SQL hook success",
 			hook: config.Hook{
-				Resource: "db",
+				Resource: "app-db",
 				SQL:      "SELECT 1",
 			},
 			registry: &mockRegistry{
@@ -244,7 +244,7 @@ func TestExecuteHook(t *testing.T) {
 		{
 			name: "SQL hook - handler does not support SQL",
 			hook: config.Hook{
-				Resource: "http",
+				Resource: "app-client",
 				SQL:      "SELECT 1",
 			},
 			registry: &mockRegistry{
@@ -257,7 +257,7 @@ func TestExecuteHook(t *testing.T) {
 		{
 			name: "SQL hook - ExecSQL fails",
 			hook: config.Hook{
-				Resource: "db",
+				Resource: "app-db",
 				SQL:      "INVALID SQL",
 			},
 			registry: &mockRegistry{
@@ -272,7 +272,7 @@ func TestExecuteHook(t *testing.T) {
 		{
 			name: "SQLFile hook success",
 			hook: config.Hook{
-				Resource: "db",
+				Resource: "app-db",
 				SQLFile:  "schema.sql",
 			},
 			registry: &mockRegistry{
@@ -297,7 +297,7 @@ func TestExecuteHook(t *testing.T) {
 		{
 			name: "SQLFile hook - handler does not support SQL",
 			hook: config.Hook{
-				Resource: "http",
+				Resource: "app-client",
 				SQLFile:  "schema.sql",
 			},
 			registry: &mockRegistry{
@@ -310,7 +310,7 @@ func TestExecuteHook(t *testing.T) {
 		{
 			name: "SQLFile hook - ExecSQLFile fails",
 			hook: config.Hook{
-				Resource: "db",
+				Resource: "app-db",
 				SQLFile:  "missing.sql",
 			},
 			registry: &mockRegistry{
@@ -457,7 +457,7 @@ func TestRunHooks(t *testing.T) {
 		{
 			name: "mixed hook types",
 			hooks: []config.Hook{
-				{Resource: "db", SQL: "SELECT 1"},
+				{Resource: "app-db", SQL: "SELECT 1"},
 				{Container: "app", Exec: "echo test"},
 			},
 			registry: &mockRegistry{

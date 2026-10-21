@@ -185,29 +185,29 @@ app:
   command: ./server
   port: 8080
 resources:
-  alice:
+  alice-browser:
     type: browser
     container: chrome
     options:
       base_url: http://127.0.0.1:3000
-  api:
+  app-client:
     type: http
     base_url: http://localhost:8080
-  ws:
+  app-ws-client:
     type: websocket
     url: ws://localhost:7000/ws
-  pm:
+  payments-stub:
     type: http-server
     options:
       port: 9999
-  wsmock:
+  prices-stub:
     type: websocket-server
     options:
       port: 9997
-  elsewhere:
+  example-client:
     type: http
     base_url: https://api.example.com
-  secure:
+  bob-browser:
     type: browser
     container: chrome
     base_url: https://localhost

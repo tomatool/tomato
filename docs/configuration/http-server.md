@@ -19,7 +19,7 @@ The HTTP Server is a standalone handler that doesn't require a container:
 
 ```yaml
 resources:
-  mock:
+  payments-stub:
     type: http-server
     options:
       port: 9999
@@ -39,12 +39,12 @@ Use the `{{.resource_name.url}}` template syntax to reference mock server URLs:
 
 ```yaml
 resources:
-  payment-api:
+  payments-stub:
     type: http-server
     options:
       port: 9001
 
-  notification-api:
+  notifications-stub:
     type: http-server
     options:
       port: 9002
@@ -53,8 +53,8 @@ app:
   command: go run ./cmd/server
   env:
     # Use template syntax to reference mock server URLs
-    PAYMENT_API_URL: "{{.payment-api.url}}"
-    NOTIFICATION_API_URL: "{{.notification-api.url}}"
+    PAYMENT_API_URL: "{{.payments-stub.url}}"
+    NOTIFICATION_API_URL: "{{.notifications-stub.url}}"
 ```
 
 The templates resolve to:
@@ -85,19 +85,19 @@ settings:
 
 resources:
   # Mock external payment gateway
-  payment-api:
+  payments-stub:
     type: http-server
     options:
       port: 9001
 
   # Mock notification service
-  notification-api:
+  notifications-stub:
     type: http-server
     options:
       port: 9002
 
   # HTTP client to test your app
-  api:
+  app-client:
     type: http-client
     base_url: "http://localhost:8080"
 
@@ -106,8 +106,8 @@ app:
   port: 8080
   env:
     # Templates resolve to http://localhost:9001, http://localhost:9002
-    PAYMENT_API_URL: "{{.payment-api.url}}"
-    NOTIFICATION_API_URL: "{{.notification-api.url}}"
+    PAYMENT_API_URL: "{{.payments-stub.url}}"
+    NOTIFICATION_API_URL: "{{.notifications-stub.url}}"
   ready:
     type: http
     path: /health
@@ -127,65 +127,65 @@ Feature: Payment Processing
 
   Scenario: Process successful payment
     # Stub the payment gateway
-    Given "payment-api" stub "POST" "/charge" returns "200" with json:
+    Given "payments-stub" stub "POST" "/charge" returns "200" with json:
       """
       {"transaction_id": "txn_123", "status": "success"}
       """
     # Your app calls the payment gateway
-    When "api" sends "POST" to "/process-payment" with json:
+    When "app-client" sends "POST" to "/process-payment" with json:
       """
       {"amount": 100, "currency": "USD"}
       """
-    Then "api" response status is "200"
-    And "api" response json "status" is "completed"
+    Then "app-client" response status is "200"
+    And "app-client" response json "status" is "completed"
 ```
 
 ### Stubbing different responses
 
 ```gherkin
 Scenario: Handle payment gateway error
-  Given "payment-api" stub "POST" "/charge" returns "500" with json:
+  Given "payments-stub" stub "POST" "/charge" returns "500" with json:
     """
     {"error": "Gateway unavailable"}
     """
-  When "api" sends "POST" to "/process-payment" with json:
+  When "app-client" sends "POST" to "/process-payment" with json:
     """
     {"amount": 100}
     """
-  Then "api" response status is "503"
+  Then "app-client" response status is "503"
 ```
 
 ### Custom response headers
 
 ```gherkin
 Scenario: API returns rate limit headers
-  Given "payment-api" stub "GET" "/balance" returns "200" with headers:
+  Given "payments-stub" stub "GET" "/balance" returns "200" with headers:
     | header           | value |
     | X-RateLimit-Remaining | 99    |
     | X-RateLimit-Reset     | 3600  |
-  When "api" sends "GET" to "/check-balance"
-  Then "api" response status is "200"
+  When "app-client" sends "GET" to "/check-balance"
+  Then "app-client" response status is "200"
 ```
 
 ### Verifying requests
 
 ```gherkin
 Scenario: Verify authorization header is sent
-  Given "payment-api" stub "POST" "/charge" returns "200"
-  When "api" sends "POST" to "/process-payment" with json:
+  Given "payments-stub" stub "POST" "/charge" returns "200"
+  When "app-client" sends "POST" to "/process-payment" with json:
     """
     {"amount": 50}
     """
-  Then "payment-api" received "POST" "/charge"
-  And "payment-api" received request with header "Authorization" containing "Bearer"
+  Then "payments-stub" received "POST" "/charge"
+  And "payments-stub" received request with header "Authorization" containing "Bearer"
 
 Scenario: Verify request body
-  Given "payment-api" stub "POST" "/charge" returns "200"
-  When "api" sends "POST" to "/process-payment" with json:
+  Given "payments-stub" stub "POST" "/charge" returns "200"
+  When "app-client" sends "POST" to "/process-payment" with json:
     """
     {"amount": 75, "currency": "EUR"}
     """
-  Then "payment-api" received request with body containing "EUR"
+  Then "payments-stub" received request with body containing "EUR"
 ```
 
 ### Request counting
@@ -193,19 +193,19 @@ Scenario: Verify request body
 ```gherkin
 Scenario: Verify retry behavior
   # Stub fails first two times, succeeds third
-  Given "payment-api" stub "POST" "/charge" returns "503"
-  When "api" sends "POST" to "/process-payment-with-retry"
+  Given "payments-stub" stub "POST" "/charge" returns "503"
+  When "app-client" sends "POST" to "/process-payment-with-retry"
   # App should have retried 3 times
-  Then "payment-api" received "POST" "/charge" "3" times
+  Then "payments-stub" received "POST" "/charge" "3" times
 ```
 
 ### Negative assertions
 
 ```gherkin
 Scenario: Verify no unauthorized calls
-  Given "payment-api" stub "GET" "/balance" returns "200"
-  When "api" sends "GET" to "/public-info"
-  Then "payment-api" did not receive "GET" "/balance"
+  Given "payments-stub" stub "GET" "/balance" returns "200"
+  When "app-client" sends "GET" to "/public-info"
+  Then "payments-stub" did not receive "GET" "/balance"
 ```
 
 See [HTTP Server Steps](../resources/http-server.md) for the complete list of available steps.
@@ -216,17 +216,17 @@ You can configure multiple mock servers for different external services:
 
 ```yaml
 resources:
-  payment-api:
+  payments-stub:
     type: http-server
     options:
       port: 9001
 
-  notification-api:
+  notifications-stub:
     type: http-server
     options:
       port: 9002
 
-  analytics-api:
+  analytics-stub:
     type: http-server
     options:
       port: 9003

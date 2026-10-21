@@ -651,7 +651,7 @@ func generateTomatoConfig(m initModel) string {
 	s.WriteString("resources:\n")
 
 	if m.selected["postgresql"] {
-		s.WriteString("  db:\n")
+		s.WriteString("  app-db:\n")
 		s.WriteString("    type: postgres\n")
 		s.WriteString("    container: postgres\n")
 		s.WriteString("    database: testdb\n")
@@ -662,7 +662,7 @@ func generateTomatoConfig(m initModel) string {
 	}
 
 	if m.selected["redis"] {
-		s.WriteString("  cache:\n")
+		s.WriteString("  app-cache:\n")
 		s.WriteString("    type: redis\n")
 		s.WriteString("    container: redis\n")
 		s.WriteString("    options:\n")
@@ -671,7 +671,7 @@ func generateTomatoConfig(m initModel) string {
 	}
 
 	if m.selected["kafka"] {
-		s.WriteString("  queue:\n")
+		s.WriteString("  app-events:\n")
 		s.WriteString("    type: kafka\n")
 		s.WriteString("    container: kafka\n")
 		s.WriteString("    options:\n")
@@ -681,23 +681,23 @@ func generateTomatoConfig(m initModel) string {
 	}
 
 	if m.selected["rabbitmq"] {
-		// Not "queue": kafka already takes that name, and selecting both
-		// produced a config with a duplicate mapping key that would not parse.
-		s.WriteString("  broker:\n")
+		// Not the kafka resource's name: selecting both once produced a
+		// config with a duplicate mapping key that would not parse.
+		s.WriteString("  app-queue:\n")
 		s.WriteString("    type: rabbitmq\n")
 		s.WriteString("    container: rabbitmq\n")
 		s.WriteString("\n")
 	}
 
 	if m.selected["http"] {
-		s.WriteString("  http:\n")
+		s.WriteString("  users-stub:\n")
 		s.WriteString("    type: http-server\n")
 		s.WriteString("    options:\n")
-		s.WriteString("      port: 9999  # point your app at {{.http.url}}\n")
+		s.WriteString("      port: 9999  # point your app at {{.users-stub.url}}\n")
 		s.WriteString("\n")
 		// The example feature needs something to call the stub. Until the
-		// app does, a client stands in for it.
-		s.WriteString("  client:\n")
+		// app does, a client stands in for it, named for what it calls.
+		s.WriteString("  users-client:\n")
 		s.WriteString("    type: http-client\n")
 		s.WriteString("    base_url: \"http://localhost:9999\"  # stands in for your app in features/example.feature\n")
 		s.WriteString("\n")
@@ -745,30 +745,30 @@ func generateExampleFeatureFile(m initModel) string {
 		// Nothing creates a schema in a project with no app yet, so the
 		// example creates the table it seeds. The app's migrations replace it.
 		s.WriteString("  Scenario: Database operations\n")
-		s.WriteString("    Given \"db\" executes:\n")
+		s.WriteString("    Given \"app-db\" executes:\n")
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, name TEXT, email TEXT)\n")
 		s.WriteString("      \"\"\"\n")
-		s.WriteString("    And \"db\" table \"users\" has values:\n")
+		s.WriteString("    And \"app-db\" table \"users\" has values:\n")
 		s.WriteString("      | id | name  | email          |\n")
 		s.WriteString("      | 1  | Alice | alice@test.com |\n")
-		s.WriteString("    Then \"db\" table \"users\" has \"1\" rows\n\n")
+		s.WriteString("    Then \"app-db\" table \"users\" has \"1\" rows\n\n")
 	}
 
 	if m.selected["redis"] {
 		s.WriteString("  Scenario: Cache operations\n")
-		s.WriteString("    Given \"cache\" key \"session:123\" is \"user_data\"\n")
-		s.WriteString("    Then \"cache\" key \"session:123\" exists\n\n")
+		s.WriteString("    Given \"app-cache\" key \"session:123\" is \"user_data\"\n")
+		s.WriteString("    Then \"app-cache\" key \"session:123\" exists\n\n")
 	}
 
 	if m.selected["kafka"] {
 		s.WriteString("  Scenario: Kafka messaging\n")
-		s.WriteString("    Given \"queue\" consumes from \"events\"\n")
-		s.WriteString("    When \"queue\" publishes json to \"events\":\n")
+		s.WriteString("    Given \"app-events\" consumes from \"events\"\n")
+		s.WriteString("    When \"app-events\" publishes json to \"events\":\n")
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      {\"type\": \"test_event\"}\n")
 		s.WriteString("      \"\"\"\n")
-		s.WriteString("    Then \"queue\" receives from \"events\" within \"5s\":\n")
+		s.WriteString("    Then \"app-events\" receives from \"events\" within \"5s\":\n")
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      {\"type\": \"test_event\"}\n")
 		s.WriteString("      \"\"\"\n\n")
@@ -776,26 +776,27 @@ func generateExampleFeatureFile(m initModel) string {
 
 	if m.selected["rabbitmq"] {
 		s.WriteString("  Scenario: Queue messaging\n")
-		s.WriteString("    Given \"broker\" declares queue \"orders\"\n")
-		s.WriteString("    And \"broker\" consumes from queue \"orders\"\n")
-		s.WriteString("    When \"broker\" publishes json to queue \"orders\":\n")
+		s.WriteString("    Given \"app-queue\" declares queue \"orders\"\n")
+		s.WriteString("    And \"app-queue\" consumes from queue \"orders\"\n")
+		s.WriteString("    When \"app-queue\" publishes json to queue \"orders\":\n")
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      {\"id\": 1}\n")
 		s.WriteString("      \"\"\"\n")
-		s.WriteString("    Then \"broker\" queue \"orders\" has \"1\" messages\n\n")
+		s.WriteString("    Then \"app-queue\" queue \"orders\" has \"1\" messages\n\n")
 	}
 
 	if m.selected["http"] {
-		// The "External HTTP" dependency is a mock the application calls,
-		// an http-server resource named "http" — not a client named "api".
+		// The "External HTTP" dependency is a stub the application calls,
+		// an http-server resource named for what it stands in for
+		// ("users-stub"), not a client and not a bare "http".
 		s.WriteString("  Scenario: Stubbing an external API\n")
-		s.WriteString("    Given \"http\" stub \"GET\" \"/users\" returns \"200\" with json:\n")
+		s.WriteString("    Given \"users-stub\" stub \"GET\" \"/users\" returns \"200\" with json:\n")
 		s.WriteString("      \"\"\"\n")
 		s.WriteString("      [{\"id\": 1}]\n")
 		s.WriteString("      \"\"\"\n")
-		s.WriteString("    When \"client\" sends \"GET\" to \"/users\"\n")
-		s.WriteString("    Then \"client\" response status is \"200\"\n")
-		s.WriteString("    And \"http\" received \"GET\" \"/users\"\n\n")
+		s.WriteString("    When \"users-client\" sends \"GET\" to \"/users\"\n")
+		s.WriteString("    Then \"users-client\" response status is \"200\"\n")
+		s.WriteString("    And \"users-stub\" received \"GET\" \"/users\"\n\n")
 	}
 
 	// Always include shell example

@@ -62,7 +62,7 @@ Configure the Redis resource:
 
 ```yaml
 resources:
-  cache:
+  app-cache:
     type: redis
     container: redis
     options:
@@ -110,7 +110,7 @@ containers:
       timeout: 30s
 
 resources:
-  cache:
+  app-cache:
     type: redis
     container: redis
     options:
@@ -130,33 +130,33 @@ features:
 Feature: Caching
 
   Scenario: Cache user data
-    Given "cache" key "user:123" is "John Doe"
-    Then "cache" key "user:123" exists
-    And "cache" key "user:123" has value "John Doe"
+    Given "app-cache" key "user:123" is "John Doe"
+    Then "app-cache" key "user:123" exists
+    And "app-cache" key "user:123" has value "John Doe"
 
   Scenario: Cache with expiration
-    Given "cache" key "session:abc" is "token123" with TTL "1h"
-    Then "cache" key "session:abc" has TTL greater than "3500" seconds
+    Given "app-cache" key "session:abc" is "token123" with TTL "1h"
+    Then "app-cache" key "session:abc" has TTL greater than "3500" seconds
 
   Scenario: Store JSON data
-    Given "cache" key "config" is:
+    Given "app-cache" key "config" is:
       """
       {"debug": true, "timeout": 30}
       """
-    Then "cache" key "config" contains "debug"
+    Then "app-cache" key "config" contains "debug"
 ```
 
 ### Hash operations
 
 ```gherkin
 Scenario: Store user profile as hash
-  Given "cache" hash "user:100" has fields:
+  Given "app-cache" hash "user:100" has fields:
     | field | value           |
     | name  | Alice           |
     | email | alice@test.com  |
     | role  | admin           |
-  Then "cache" hash "user:100" field "name" is "Alice"
-  And "cache" hash "user:100" contains:
+  Then "app-cache" hash "user:100" field "name" is "Alice"
+  And "app-cache" hash "user:100" contains:
     | field | value          |
     | email | alice@test.com |
 ```
@@ -165,35 +165,35 @@ Scenario: Store user profile as hash
 
 ```gherkin
 Scenario: Manage task queue
-  Given "cache" list "tasks" has values:
+  Given "app-cache" list "tasks" has values:
     | process-order-1 |
     | process-order-2 |
     | send-email-3    |
-  Then "cache" list "tasks" has "3" items
-  And "cache" list "tasks" contains "process-order-1"
+  Then "app-cache" list "tasks" has "3" items
+  And "app-cache" list "tasks" contains "process-order-1"
 ```
 
 ### Set operations
 
 ```gherkin
 Scenario: Track unique visitors
-  Given "cache" set "visitors" has members:
+  Given "app-cache" set "visitors" has members:
     | user-1 |
     | user-2 |
     | user-3 |
-  Then "cache" set "visitors" has "3" members
-  And "cache" set "visitors" contains "user-2"
+  Then "app-cache" set "visitors" has "3" members
+  And "app-cache" set "visitors" contains "user-2"
 ```
 
 ### Counter operations
 
 ```gherkin
 Scenario: Track page views
-  Given "cache" key "pageviews" is "100"
-  When "cache" key "pageviews" is incremented
-  Then "cache" key "pageviews" has value "101"
-  When "cache" key "pageviews" is incremented by "10"
-  Then "cache" key "pageviews" has value "111"
+  Given "app-cache" key "pageviews" is "100"
+  When "app-cache" key "pageviews" is incremented
+  Then "app-cache" key "pageviews" has value "101"
+  When "app-cache" key "pageviews" is incremented by "10"
+  Then "app-cache" key "pageviews" has value "111"
 ```
 
 See [Redis Steps](../resources/redis.md) for the complete list of available steps.
@@ -204,14 +204,14 @@ You can configure multiple Redis resources pointing to different databases:
 
 ```yaml
 resources:
-  cache:
+  app-cache:
     type: redis
     container: redis
     options:
       db: 0
       reset_strategy: flush
 
-  sessions:
+  sessions-cache:
     type: redis
     container: redis
     options:
