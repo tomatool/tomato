@@ -78,6 +78,12 @@ Feature: HTTP requests and responses in depth
     Then "app-client" response json "cookies.session" is "sess-42"
     And "app-client" response json "query.session[0]" is "sess-42"
 
+  Scenario: A query param of the URL in a response header is saved
+    When "app-client" sends "POST" to "/login"
+    Then "app-client" response header "Location" query param "session" saved as "{{session_id}}"
+    When "app-client" sends "GET" to "/echo?id={{session_id}}"
+    Then "app-client" response json "query.id[0]" is "sess-42"
+
   Scenario: A cleared cookie has an empty value
     When "app-client" sends "POST" to "/logout"
     Then "app-client" response cookie "session" is ""
