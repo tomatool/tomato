@@ -44,6 +44,13 @@ type Runner struct {
 	cmd     *exec.Cmd
 	cmdHost string // Host for test runner (usually localhost)
 	cmdPort int    // Port from config
+	// exited is closed when the process started last exits, with exitState
+	// set; the one Wait on it, so the ready check and Stop both see it.
+	exited    chan struct{}
+	exitState *os.ProcessState
+	// logStreams counts the goroutines copying the process's output, so the
+	// last lines it wrote are in logLines before its exit is reported.
+	logStreams sync.WaitGroup
 
 	// Container mode fields
 	appContainer testcontainers.Container
@@ -283,10 +290,35 @@ func (r *Runner) startProcess(ctx context.Context) error {
 	}
 
 	// Stream logs
-	go r.streamCommandLogs(stdout, "stdout")
-	go r.streamCommandLogs(stderr, "stderr")
+	r.logStreams.Add(2)
+	go func() { defer r.logStreams.Done(); r.streamCommandLogs(stdout, "stdout") }()
+	go func() { defer r.logStreams.Done(); r.streamCommandLogs(stderr, "stderr") }()
+
+	exited := make(chan struct{})
+	r.exited, r.exitState = exited, nil
+	go func(p *os.Process) {
+		state, _ := p.Wait()
+		r.exitState = state
+		close(exited)
+	}(r.cmd.Process)
 
 	return nil
+}
+
+// exitedBeforeReady describes an app that exited while tomato waited for it to
+// be ready, once the output it wrote last has been read.
+func (r *Runner) exitedBeforeReady(started time.Time) error {
+	drained := make(chan struct{})
+	go func() { r.logStreams.Wait(); close(drained) }()
+	select {
+	case <-drained:
+	case <-time.After(time.Second):
+	}
+	status := "an unknown status"
+	if r.exitState != nil {
+		status = r.exitState.String()
+	}
+	return fmt.Errorf("app exited with %s %s after it started, before it was ready", status, time.Since(started).Round(100*time.Millisecond))
 }
 
 // buildEnvForCommand creates environment variables with mapped host ports
@@ -454,12 +486,16 @@ func (r *Runner) waitForReady(ctx context.Context) error {
 		timeout = r.config.Ready.Timeout
 	}
 
-	deadline := time.Now().Add(timeout)
+	started := time.Now()
+	deadline := started.Add(timeout)
 
 	for time.Now().Before(deadline) {
+		// An app that exited won't become ready: say so now, not at the timeout
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-r.exited:
+			return r.exitedBeforeReady(started)
 		default:
 		}
 
@@ -491,10 +527,16 @@ func (r *Runner) waitForReady(ctx context.Context) error {
 			}
 		}
 
-		time.Sleep(500 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-r.exited:
+			return r.exitedBeforeReady(started)
+		case <-time.After(500 * time.Millisecond):
+		}
 	}
 
-	return fmt.Errorf("timeout waiting for app to be ready")
+	return fmt.Errorf("timeout waiting for app to be ready after %s", timeout)
 }
 
 // startContainer starts the app as a testcontainer
@@ -920,12 +962,16 @@ func (r *Runner) stopCommand() error {
 		}
 	}
 
-	// Wait for process to exit
-	done := make(chan error, 1)
-	go func() {
-		_, err := r.cmd.Process.Wait()
-		done <- err
-	}()
+	// Wait for process to exit: on the Wait started with it when there is one
+	done := r.exited
+	if done == nil {
+		ch := make(chan struct{})
+		go func() {
+			r.cmd.Process.Wait()
+			close(ch)
+		}()
+		done = ch
+	}
 
 	select {
 	case <-done:
@@ -935,7 +981,7 @@ func (r *Runner) stopCommand() error {
 		<-done
 	}
 
-	r.cmd = nil
+	r.cmd, r.exited = nil, nil
 	return nil
 }
 

@@ -92,6 +92,18 @@ with a `type`: `feature_start`, `scenario_start`, `step_start`, `step_end`,
 `scenario_end`, `feature_end` and `summary`. A `step_end` has the step's
 `status`, `stepIndex`, `durationMs` and, when it failed, its `error` text.
 
+A run that fails before its scenarios start writes a `run_error` instead: its
+`phase` (`config`, `containers`, `resources` or `app`), the `error`, and, when
+the app failed to start or its health check failed, the last lines it logged in
+`logs`. The GitHub Action shows it in the pull request comment and the job
+summary, so a run that never got to a scenario doesn't read as 0 passed.
+
+```json
+{"type": "run_error", "status": "failed", "phase": "app",
+ "error": "failed to start application: app not ready: app exited with exit status 1 300ms after it started, before it was ready",
+ "logs": ["{\"level\":\"fatal\",\"message\":\"missing config\"}"]}
+```
+
 When a step failed because a value it compared did not match (`stdout is:`,
 `response body is:`, `response json contains:`, a Kafka, RabbitMQ or WebSocket
 message), its `step_end` also has a `mismatch` object with both sides, which

@@ -14,6 +14,7 @@ import (
 	"github.com/tomatool/tomato/internal/apprunner"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/formatter"
 	"github.com/tomatool/tomato/internal/registry"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/runner"
@@ -74,6 +75,18 @@ are reset between each scenario to ensure clean state.`,
 }
 
 func runTests(c *cli.Context) (err error) {
+	// A run that fails before its scenarios produces no scenario events, so a
+	// report reading the tomato format would see nothing ran and nothing failed.
+	// Say where it failed and why, with what the app logged last.
+	phase := "config"
+	testsStarted := false
+	var appLogs []string
+	defer func() {
+		if err != nil && !testsStarted && c.String("format") == "tomato" {
+			formatter.EmitRunError(os.Stdout, phase, err, appLogs)
+		}
+	}()
+
 	// Check for updates (non-blocking, skipped for RC versions)
 	checkForUpdate()
 
@@ -149,6 +162,7 @@ func runTests(c *cli.Context) (err error) {
 	fmt.Println()
 
 	// Check if Docker is needed and available
+	phase = "containers"
 	needsDocker := len(cfg.Containers) > 0 || cfg.App.UseContainer() || c.Bool("container")
 	if needsDocker {
 		if err := container.CheckDockerAvailable(); err != nil {
@@ -190,6 +204,7 @@ func runTests(c *cli.Context) (err error) {
 	// Resources the app depends on while it starts (the aws resource's STS)
 	// are initialized before it, so its environment can point at them. The same
 	// registry then serves the tests.
+	phase = "resources"
 	registry, err := registry.New(cfg.Resources, cm)
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources: %w", err)
@@ -210,6 +225,7 @@ func runTests(c *cli.Context) (err error) {
 	// Step 2: Start the application under test
 	var appRunner *apprunner.Runner
 	if cfg.App.IsConfigured() {
+		phase = "app"
 		fmt.Println()
 		fmt.Println(subtitleStyle.Render("Starting application..."))
 		if !c.Bool("quiet") {
@@ -252,6 +268,7 @@ func runTests(c *cli.Context) (err error) {
 			fmt.Println()
 
 			recentLogs := appRunner.GetRecentLogs(20)
+			appLogs = recentLogs
 			if len(recentLogs) > 0 {
 				fmt.Println(subtitleStyle.Render("Recent application logs:"))
 				fmt.Println(helpStyle.Render("─────────────────────────────────────────"))
@@ -290,6 +307,7 @@ func runTests(c *cli.Context) (err error) {
 
 		// Final health check before running tests
 		if err := appRunner.VerifyHealthy(c.Context); err != nil {
+			appLogs = appRunner.GetRecentLogs(20)
 			return fmt.Errorf("app health check failed: %w", err)
 		}
 		fmt.Printf("  %s health check passed\n", checkStyle.Render("✓"))
@@ -304,6 +322,7 @@ func runTests(c *cli.Context) (err error) {
 	}
 
 	// Step 3: Initialize test resources
+	phase = "resources"
 	fmt.Println()
 	fmt.Println(subtitleStyle.Render("Initializing resources..."))
 
@@ -324,6 +343,7 @@ func runTests(c *cli.Context) (err error) {
 	fmt.Println(subtitleStyle.Render("Running tests..."))
 	fmt.Println()
 
+	testsStarted = true
 	testErr := r.Run(c.Context)
 
 	// Handle keep-alive mode

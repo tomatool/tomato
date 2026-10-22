@@ -174,3 +174,26 @@ func TestStepEndOmitsMismatchOtherwise(t *testing.T) {
 		}
 	}
 }
+
+func TestEmitRunError(t *testing.T) {
+	var buf bytes.Buffer
+	EmitRunError(&buf, "app", errors.New("failed to start application: app exited with exit status 1"), []string{`{"level":"fatal","message":"no config"}`})
+
+	line := strings.TrimSpace(buf.String())
+	if !strings.HasPrefix(line, "TOMATO_EVENT:") {
+		t.Fatalf("not an event line: %q", line)
+	}
+	var ev Event
+	if err := json.Unmarshal([]byte(strings.TrimPrefix(line, "TOMATO_EVENT:")), &ev); err != nil {
+		t.Fatal(err)
+	}
+	if ev.Type != EventRunError || ev.Phase != "app" || ev.Status != "failed" {
+		t.Errorf("event = %+v", ev)
+	}
+	if !strings.Contains(ev.Error, "exit status 1") {
+		t.Errorf("error = %q", ev.Error)
+	}
+	if len(ev.Logs) != 1 || !strings.Contains(ev.Logs[0], "no config") {
+		t.Errorf("logs = %q", ev.Logs)
+	}
+}
