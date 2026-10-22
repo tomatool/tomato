@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/netip"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -141,6 +143,14 @@ func (m *Manager) Start(ctx context.Context, name string) error {
 	// kafka preset's AWS_MSK_IAM plugin.
 	req.Files = containerFiles(cfg.Files)
 
+	// The CA a preset made for the run, on the host, where the app and
+	// tomato's resources read it from.
+	if cfg.CAFile != "" {
+		if err := writeCAFile(cfg.CAFile, cfg.CA); err != nil {
+			return fmt.Errorf("container %s: %w", name, err)
+		}
+	}
+
 	// Host ports the container reaches as host.testcontainers.internal, such
 	// as the app's for the chromium preset. testcontainers tunnels them over
 	// SSH, which works where host.docker.internal does not resolve to the
@@ -268,6 +278,16 @@ func buildImageName(name, buildContext, dockerfile string) (repo, tag string) {
 	}
 	sum := sha256.Sum256([]byte(buildContext + "\x00" + dockerfile))
 	return "tomato-" + repo, hex.EncodeToString(sum[:6])
+}
+
+func writeCAFile(path string, pem []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("writing the CA: %w", err)
+	}
+	if err := os.WriteFile(path, pem, 0o644); err != nil {
+		return fmt.Errorf("writing the CA: %w", err)
+	}
+	return nil
 }
 
 // containerFiles copies files into a container through the Docker API, which

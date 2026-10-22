@@ -111,7 +111,13 @@ type Container struct {
 	Preset string `yaml:"preset,omitempty"`
 	// Auth selects how a preset authenticates clients (kafka: plaintext or
 	// aws_msk_iam).
-	Auth      string            `yaml:"auth,omitempty"`
+	Auth string `yaml:"auth,omitempty"`
+	// Cluster runs the redis preset in cluster mode: one node owning every
+	// slot, announcing the host port clients reach it on.
+	Cluster bool `yaml:"cluster,omitempty"`
+	// TLS serves the redis preset over TLS only, with a certificate from a CA
+	// made for the run (see CAFile).
+	TLS       bool              `yaml:"tls,omitempty"`
 	Image     string            `yaml:"image"`
 	Build     *BuildConfig      `yaml:"build,omitempty"`
 	Command   StringList        `yaml:"command,omitempty"`
@@ -132,6 +138,12 @@ type Container struct {
 	// any Docker, local or remote. Presets fill them in; tomato.yml cannot
 	// set them.
 	HostAccessPorts []int `yaml:"-"`
+	// CA is the PEM of the CA a preset made for the run, which tomato writes
+	// to CAFile on the host when the container starts: what
+	// {{.<name>.ca_file}} names for the app, and what tomato's own resources
+	// trust. Presets fill them in; tomato.yml cannot set them.
+	CA     []byte `yaml:"-"`
+	CAFile string `yaml:"-"`
 }
 
 // ContainerFile is a file tomato puts into a container before it starts.

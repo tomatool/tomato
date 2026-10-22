@@ -82,9 +82,16 @@ func (c *Config) expandPresets() error {
 			if cont.Auth != "" {
 				return fmt.Errorf("container %q: auth needs a preset (auth: %s)", name, cont.Auth)
 			}
+			if cont.Cluster || cont.TLS {
+				return fmt.Errorf("container %q: cluster and tls need preset: %s", name, PresetRedis)
+			}
 			continue
 		case PresetKafka:
 			if err := c.expandKafkaPreset(name, &cont); err != nil {
+				return fmt.Errorf("container %q: %w", name, err)
+			}
+		case PresetRedis:
+			if err := c.expandRedisPreset(name, &cont); err != nil {
 				return fmt.Errorf("container %q: %w", name, err)
 			}
 		case PresetChromium:
@@ -96,7 +103,10 @@ func (c *Config) expandPresets() error {
 				return fmt.Errorf("container %q: %w", name, err)
 			}
 		default:
-			return fmt.Errorf("container %q: unknown preset %q (available: %s, %s, %s)", name, cont.Preset, PresetChromium, PresetKafka, PresetVeraPDF)
+			return fmt.Errorf("container %q: unknown preset %q (available: %s, %s, %s, %s)", name, cont.Preset, PresetChromium, PresetKafka, PresetRedis, PresetVeraPDF)
+		}
+		if cont.Preset != PresetRedis && (cont.Cluster || cont.TLS) {
+			return fmt.Errorf("container %q: cluster and tls are options of preset: %s, not %s", name, PresetRedis, cont.Preset)
 		}
 		c.Containers[name] = cont
 	}
@@ -251,6 +261,151 @@ func (c *Config) proxyKafkaListeners(name string, listeners, advertised, protoco
 			res.Brokers = []string{"localhost:" + directHostPort}
 			c.Resources[resName] = res
 		}
+	}
+	return nil
+}
+
+// PresetRedis is a single Redis server; with cluster and tls it runs the way
+// ElastiCache does with cluster mode and in-transit encryption, so an app
+// keeps the client it uses in production.
+const PresetRedis = "redis"
+
+// RedisImage is what the redis preset runs unless the entry sets image or
+// build. With cluster or tls the preset's entrypoint calls redis-server and
+// redis-cli, so an override has to have both.
+const RedisImage = "redis:7.4"
+
+// RedisPort is where the redis preset listens inside the container, plain or
+// TLS.
+const RedisPort = "6379"
+
+// redisReady is what the preset's entrypoint prints once the server takes
+// commands and, in cluster mode, owns every slot.
+const redisReady = "tomato: redis is ready"
+
+// Where the redis preset's certificate and key go in the container.
+const (
+	redisCertPath = "/tomato/tls/server.pem"
+	redisKeyPath  = "/tomato/tls/server.key"
+	redisCAPath   = "/tomato/tls/ca.pem"
+)
+
+func (c *Config) expandRedisPreset(name string, cont *Container) error {
+	if cont.Auth != "" {
+		return fmt.Errorf("the redis preset has no auth (auth: %s)", cont.Auth)
+	}
+	if cont.Image == "" && cont.Build == nil {
+		cont.Image = RedisImage
+	}
+	if (cont.Cluster || cont.TLS) && (c.App.Image != "" || c.App.Build != nil) {
+		// A cluster node announces localhost:<host port>, and the CA is a
+		// file on the host: neither reaches an app in a container.
+		return fmt.Errorf("cluster and tls need the app to run as a command (app.command), not in a container")
+	}
+	if (cont.Cluster || cont.TLS) && c.Settings.Containers.Reuse {
+		// A reused container keeps the CA and the announced port of the run
+		// that started it; this run makes new ones.
+		return fmt.Errorf("cluster and tls can't be used with settings.containers.reuse")
+	}
+	if cont.Cluster {
+		for resName, res := range c.Resources {
+			if res.Type == "network" && res.Container == name {
+				// The client follows the address the node announces, which
+				// would take it around the proxy after the first request.
+				return fmt.Errorf("network resource %q can't stand in front of a redis cluster", resName)
+			}
+		}
+	}
+
+	port := RedisPort + "/tcp"
+	if !cont.Cluster && !cont.TLS {
+		if !containsPort(cont.Ports, RedisPort) {
+			cont.Ports = append([]string{port}, cont.Ports...)
+		}
+		if cont.WaitFor.Type == "" {
+			cont.WaitFor = WaitStrategy{Type: "log", Target: "Ready to accept connections", Timeout: time.Minute}
+		}
+		return nil
+	}
+
+	server := []string{"--appendonly", "no", "--save", "''"}
+	cli := []string{}
+	if cont.TLS {
+		cert, err := newServerCert("localhost", "127.0.0.1", name)
+		if err != nil {
+			return fmt.Errorf("making a certificate: %w", err)
+		}
+		cont.CA, cont.CAFile = cert.CA, cert.CAFile
+		cont.Files = append(cont.Files,
+			ContainerFile{Path: redisCertPath, Content: cert.Cert, Mode: 0o644},
+			ContainerFile{Path: redisKeyPath, Content: cert.Key, Mode: 0o644},
+			ContainerFile{Path: redisCAPath, Content: cert.CA, Mode: 0o644},
+		)
+		// TLS only, as ElastiCache with in-transit encryption: a plain
+		// client is refused, not served.
+		server = append(server, "--port", "0", "--tls-port", RedisPort,
+			"--tls-cert-file", redisCertPath, "--tls-key-file", redisKeyPath,
+			"--tls-ca-cert-file", redisCAPath, "--tls-auth-clients", "no")
+		cli = append(cli, "--tls", "--cacert", redisCAPath)
+	}
+	if cont.Cluster {
+		// A node that has never met another reports its address in CLUSTER
+		// SLOTS as an empty host and its port in the container, which a
+		// client on the host can't dial. It announces the host port
+		// instead, so that port is picked here, before the container starts.
+		hostPort, err := freePort()
+		if err != nil {
+			return fmt.Errorf("picking a host port: %w", err)
+		}
+		server = append(server, "--cluster-enabled", "yes",
+			"--cluster-announce-ip", "127.0.0.1", "--cluster-announce-port", hostPort)
+		if cont.TLS {
+			server = append(server, "--cluster-announce-tls-port", hostPort)
+		}
+		port = hostPort + ":" + RedisPort
+	}
+
+	// The server starts in the background; once it answers, a cluster node
+	// takes every slot (after a restart it already owns them, and the
+	// command fails harmlessly), and the ready line tells tomato it can go.
+	// Whatever the entry sets as command is added to redis-server's
+	// arguments.
+	redisCLI := "redis-cli " + strings.Join(cli, " ")
+	script := "redis-server " + strings.Join(server, " ") + ` "$@" &
+pid=$!
+trap 'kill $pid' TERM INT
+until ` + redisCLI + ` ping >/dev/null 2>&1; do sleep 0.1; done
+`
+	if cont.Cluster {
+		script += redisCLI + ` cluster addslotsrange 0 16383 >/dev/null 2>&1
+until ` + redisCLI + ` cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 0.1; done
+`
+	}
+	script += "echo '" + redisReady + "'\nwait $pid\n"
+	cont.Entrypoint = []string{"sh", "-c", script, "redis"}
+
+	if !containsPort(cont.Ports, RedisPort) {
+		cont.Ports = append([]string{port}, cont.Ports...)
+	}
+	if cont.WaitFor.Type == "" {
+		cont.WaitFor = WaitStrategy{Type: "log", Target: redisReady, Timeout: time.Minute}
+	}
+
+	// tomato's redis resources reach it the way the app does.
+	for resName, res := range c.Resources {
+		if res.Type != "redis" || res.Container != name {
+			continue
+		}
+		if res.Options == nil {
+			res.Options = map[string]any{}
+		}
+		if _, set := res.Options["cluster"]; !set && cont.Cluster {
+			res.Options["cluster"] = true
+		}
+		if _, set := res.Options["tls_ca_file"]; !set && cont.TLS {
+			res.Options["tls_ca_file"] = cont.CAFile
+		}
+		c.Resources[resName] = res
 	}
 	return nil
 }

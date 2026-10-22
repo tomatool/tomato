@@ -139,3 +139,12 @@ func (m *Manager) ExposedPorts(name string) []string {
 	}
 	return out
 }
+
+// CAFile is where the CA a preset made for container name is on the host, or
+// "" when it has none.
+func (m *Manager) CAFile(name string) string {
+	if m == nil {
+		return ""
+	}
+	return m.configs[name].CAFile
+}
