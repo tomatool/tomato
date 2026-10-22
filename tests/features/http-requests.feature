@@ -43,6 +43,15 @@ Feature: HTTP requests and responses in depth
     And "app-client" response json "form.remember" is "yes"
     And "app-client" response json "headers.Content-Type[0]" is "application/x-www-form-urlencoded"
 
+  Scenario: A form-encoded body substitutes saved variables
+    Given "app-client" sends "POST" to "/login"
+    And "app-client" response header "Location" query param "session" saved as "{{session_id}}"
+    And "app-client" form body is:
+      | field   | value          |
+      | session | {{session_id}} |
+    When "app-client" sends "POST" to "/echo"
+    Then "app-client" response json "form.session" is "sess-42"
+
   Scenario: Exact plain-text body and header value
     When "app-client" sends "GET" to "/text"
     Then "app-client" response status is "200"

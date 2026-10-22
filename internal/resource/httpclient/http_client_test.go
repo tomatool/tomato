@@ -410,3 +410,33 @@ func TestHTTPClient_AssertionsUseVariables(t *testing.T) {
 		t.Errorf("unknown variable: %v", err)
 	}
 }
+
+func TestHTTPClient_FormBodySubstitutesVariables(t *testing.T) {
+	var got url.Values
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		got = r.PostForm
+	}))
+	defer server.Close()
+
+	resource.SetVariable("form_code", "abc&123")
+	client := newTestHTTPClient(t, server.URL)
+	if err := client.setFormBody(eventsTable(
+		[]string{"field", "value"},
+		[]string{"code", "{{form_code}}"},
+		[]string{"{{form_code}}", "as a field name"},
+	)); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.sendRequest("POST", "/token"); err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	// Substituted, then encoded: the & in the value doesn't split the field
+	if v := got.Get("code"); v != "abc&123" {
+		t.Errorf("code = %q, want %q", v, "abc&123")
+	}
+	if v := got.Get("abc&123"); v != "as a field name" {
+		t.Errorf("substituted field name = %q, want %q", v, "as a field name")
+	}
+}

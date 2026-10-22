@@ -26,6 +26,32 @@ Feature: Redis Handler
     Then "app-cache" key "user:json" exists
     And "app-cache" key "user:json" contains "Test User"
 
+  Scenario: Keys, values, fields and members substitute saved variables
+    Given "app-client" sends "POST" to "/login"
+    And "app-client" response header "Location" query param "session" saved as "{{session_id}}"
+    And "app-cache" key "session:{{session_id}}" is "{{session_id}}"
+    And "app-cache" hash "user:{{session_id}}" has fields:
+      | field   | value          |
+      | session | {{session_id}} |
+    And "app-cache" list "sessions" has "{{session_id}}"
+    And "app-cache" set "active" has "{{session_id}}"
+    # Stored under the substituted names, not the placeholders
+    Then "app-cache" key "session:sess-42" has value "sess-42"
+    And "app-cache" key "session:{{session_id}}" exists
+    And "app-cache" key "session:{{session_id}}" contains "{{session_id}}"
+    And "app-cache" hash "user:sess-42" field "session" is "{{session_id}}"
+    And "app-cache" list "sessions" contains "sess-42"
+    And "app-cache" set "active" contains "{{session_id}}"
+
+  Scenario: A substituted key that was never written does not exist
+    Given "app-client" sends "POST" to "/login"
+    And "app-client" response header "Location" query param "session" saved as "{{session_id}}"
+    And "app-cache" key "{{session_id}}" is "written"
+    # The placeholder isn't looked up literally, so this checks the real key
+    Then "app-cache" key "session:{{session_id}}" does not exist
+    # And the key written was the substituted one
+    And "app-cache" key "sess-42" has value "written"
+
   Scenario: Hash operations
     Given "app-cache" hash "user:100" has fields:
       | field | value           |
