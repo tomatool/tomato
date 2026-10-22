@@ -470,10 +470,12 @@ func (r *HTTPClient) setJSONBody(doc *godog.DocString) error {
 }
 
 func (r *HTTPClient) setFormBody(table *godog.Table) error {
+	// Substituted before encoding: once encoded, {{name}} is %7B%7Bname%7D%7D and the
+	// substitution at send time no longer finds it.
 	form := url.Values{}
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
-			form.Set(row.Cells[0].Value, row.Cells[1].Value)
+			form.Set(resource.ReplaceVariables(row.Cells[0].Value), resource.ReplaceVariables(row.Cells[1].Value))
 		}
 	}
 	r.requestBody = []byte(form.Encode())

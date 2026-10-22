@@ -365,10 +365,15 @@ func (r *Redis) Steps() resource.StepCategory {
 }
 
 func (r *Redis) setKey(key, value string) error {
+	key = resource.ReplaceVariables(key)
+	value = resource.ReplaceVariables(value)
 	return r.client.Set(context.Background(), key, value, 0).Err()
 }
 
 func (r *Redis) setKeyWithTTL(key, value, ttl string) error {
+	key = resource.ReplaceVariables(key)
+	value = resource.ReplaceVariables(value)
+	ttl = resource.ReplaceVariables(ttl)
 	duration, err := time.ParseDuration(ttl)
 	if err != nil {
 		return fmt.Errorf("invalid TTL duration: %w", err)
@@ -377,18 +382,22 @@ func (r *Redis) setKeyWithTTL(key, value, ttl string) error {
 }
 
 func (r *Redis) setKeyJSON(key string, doc *godog.DocString) error {
+	key = resource.ReplaceVariables(key)
+	content := resource.ReplaceVariables(doc.Content)
 	var js json.RawMessage
-	if err := json.Unmarshal([]byte(doc.Content), &js); err != nil {
+	if err := json.Unmarshal([]byte(content), &js); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
-	return r.client.Set(context.Background(), key, doc.Content, 0).Err()
+	return r.client.Set(context.Background(), key, content, 0).Err()
 }
 
 func (r *Redis) deleteKey(key string) error {
+	key = resource.ReplaceVariables(key)
 	return r.client.Del(context.Background(), key).Err()
 }
 
 func (r *Redis) keyShouldExist(key string) error {
+	key = resource.ReplaceVariables(key)
 	exists, err := r.client.Exists(context.Background(), key).Result()
 	if err != nil {
 		return err
@@ -400,6 +409,7 @@ func (r *Redis) keyShouldExist(key string) error {
 }
 
 func (r *Redis) keyShouldNotExist(key string) error {
+	key = resource.ReplaceVariables(key)
 	exists, err := r.client.Exists(context.Background(), key).Result()
 	if err != nil {
 		return err
@@ -411,6 +421,8 @@ func (r *Redis) keyShouldNotExist(key string) error {
 }
 
 func (r *Redis) keyShouldHaveValue(key, expected string) error {
+	key = resource.ReplaceVariables(key)
+	expected = resource.ReplaceVariables(expected)
 	value, err := r.client.Get(context.Background(), key).Result()
 	if err != nil {
 		return fmt.Errorf("getting key %q: %w", key, err)
@@ -422,6 +434,8 @@ func (r *Redis) keyShouldHaveValue(key, expected string) error {
 }
 
 func (r *Redis) keyShouldContain(key, substr string) error {
+	key = resource.ReplaceVariables(key)
+	substr = resource.ReplaceVariables(substr)
 	value, err := r.client.Get(context.Background(), key).Result()
 	if err != nil {
 		return fmt.Errorf("getting key %q: %w", key, err)
@@ -433,6 +447,7 @@ func (r *Redis) keyShouldContain(key, substr string) error {
 }
 
 func (r *Redis) keyShouldHaveTTL(key string, minSeconds int) error {
+	key = resource.ReplaceVariables(key)
 	ttl, err := r.client.TTL(context.Background(), key).Result()
 	if err != nil {
 		return fmt.Errorf("getting TTL for key %q: %w", key, err)
@@ -466,19 +481,23 @@ func (r *Redis) shouldBeEmpty() error {
 }
 
 func (r *Redis) setHash(hash string, table *godog.Table) error {
+	hash = resource.ReplaceVariables(hash)
 	if len(table.Rows) < 2 {
 		return fmt.Errorf("table must have headers and at least one data row")
 	}
 	fields := make(map[string]interface{})
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
-			fields[row.Cells[0].Value] = row.Cells[1].Value
+			fields[resource.ReplaceVariables(row.Cells[0].Value)] = resource.ReplaceVariables(row.Cells[1].Value)
 		}
 	}
 	return r.client.HSet(context.Background(), hash, fields).Err()
 }
 
 func (r *Redis) hashFieldShouldBe(hash, field, expected string) error {
+	hash = resource.ReplaceVariables(hash)
+	field = resource.ReplaceVariables(field)
+	expected = resource.ReplaceVariables(expected)
 	value, err := r.client.HGet(context.Background(), hash, field).Result()
 	if err != nil {
 		return fmt.Errorf("getting hash %q field %q: %w", hash, field, err)
@@ -489,6 +508,7 @@ func (r *Redis) hashFieldShouldBe(hash, field, expected string) error {
 	return nil
 }
 
+// hashShouldContain leaves substitution to hashFieldShouldBe, so nothing is substituted twice.
 func (r *Redis) hashShouldContain(hash string, table *godog.Table) error {
 	if len(table.Rows) < 2 {
 		return fmt.Errorf("table must have headers and at least one data row")
@@ -504,20 +524,24 @@ func (r *Redis) hashShouldContain(hash string, table *godog.Table) error {
 }
 
 func (r *Redis) pushToList(list, value string) error {
+	list = resource.ReplaceVariables(list)
+	value = resource.ReplaceVariables(value)
 	return r.client.RPush(context.Background(), list, value).Err()
 }
 
 func (r *Redis) pushMultipleToList(list string, table *godog.Table) error {
+	list = resource.ReplaceVariables(list)
 	var values []interface{}
 	for _, row := range table.Rows {
 		if len(row.Cells) > 0 {
-			values = append(values, row.Cells[0].Value)
+			values = append(values, resource.ReplaceVariables(row.Cells[0].Value))
 		}
 	}
 	return r.client.RPush(context.Background(), list, values...).Err()
 }
 
 func (r *Redis) listShouldHaveLength(list string, expected int) error {
+	list = resource.ReplaceVariables(list)
 	length, err := r.client.LLen(context.Background(), list).Result()
 	if err != nil {
 		return err
@@ -529,6 +553,8 @@ func (r *Redis) listShouldHaveLength(list string, expected int) error {
 }
 
 func (r *Redis) listShouldContain(list, expected string) error {
+	list = resource.ReplaceVariables(list)
+	expected = resource.ReplaceVariables(expected)
 	values, err := r.client.LRange(context.Background(), list, 0, -1).Result()
 	if err != nil {
 		return err
@@ -542,20 +568,25 @@ func (r *Redis) listShouldContain(list, expected string) error {
 }
 
 func (r *Redis) addToSet(set, member string) error {
+	set = resource.ReplaceVariables(set)
+	member = resource.ReplaceVariables(member)
 	return r.client.SAdd(context.Background(), set, member).Err()
 }
 
 func (r *Redis) addMultipleToSet(set string, table *godog.Table) error {
+	set = resource.ReplaceVariables(set)
 	var members []interface{}
 	for _, row := range table.Rows {
 		if len(row.Cells) > 0 {
-			members = append(members, row.Cells[0].Value)
+			members = append(members, resource.ReplaceVariables(row.Cells[0].Value))
 		}
 	}
 	return r.client.SAdd(context.Background(), set, members...).Err()
 }
 
 func (r *Redis) setShouldContain(set, member string) error {
+	set = resource.ReplaceVariables(set)
+	member = resource.ReplaceVariables(member)
 	isMember, err := r.client.SIsMember(context.Background(), set, member).Result()
 	if err != nil {
 		return err
@@ -567,6 +598,7 @@ func (r *Redis) setShouldContain(set, member string) error {
 }
 
 func (r *Redis) setShouldHaveSize(set string, expected int) error {
+	set = resource.ReplaceVariables(set)
 	size, err := r.client.SCard(context.Background(), set).Result()
 	if err != nil {
 		return err
@@ -578,14 +610,17 @@ func (r *Redis) setShouldHaveSize(set string, expected int) error {
 }
 
 func (r *Redis) incrementKey(key string) error {
+	key = resource.ReplaceVariables(key)
 	return r.client.Incr(context.Background(), key).Err()
 }
 
 func (r *Redis) incrementKeyBy(key string, amount int) error {
+	key = resource.ReplaceVariables(key)
 	return r.client.IncrBy(context.Background(), key, int64(amount)).Err()
 }
 
 func (r *Redis) decrementKey(key string) error {
+	key = resource.ReplaceVariables(key)
 	return r.client.Decr(context.Background(), key).Err()
 }
 
