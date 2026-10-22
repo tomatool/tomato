@@ -2400,17 +2400,18 @@ consumes.</p>
   <div class="sf-canvas">
   <svg viewBox="0 0 760 250" role="img" aria-label="A flow from a request to the service, to its database and Kafka, and back through a consumer, covered by one long scenario or by two scenarios that meet at the topic">
     <defs><marker id="sf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" class="sf-head"/></marker></defs>
-    <g class="sf-node"><rect x="10" y="90" width="110" height="54" rx="8"/><text x="65" y="113">orders-client</text><text class="sub" x="65" y="131">POST /orders</text></g>
+    <g class="sf-node tm"><rect x="10" y="90" width="110" height="54" rx="8"/><text x="65" y="113">orders-client</text><text class="sub" x="65" y="131">tomato sends</text></g>
     <g class="sf-node"><rect x="170" y="90" width="120" height="54" rx="8"/><text x="230" y="113">orders API</text><text class="sub" x="230" y="131">your service</text></g>
-    <g class="sf-node"><rect x="340" y="20" width="120" height="54" rx="8"/><text x="400" y="43">orders-db</text><text class="sub" x="400" y="61">order: pending</text></g>
-    <g class="sf-node topic"><rect x="340" y="160" width="120" height="54" rx="8"/><text x="400" y="183">Kafka</text><text class="sub" x="400" y="201">placed · payments</text></g>
+    <g class="sf-node tm"><rect x="340" y="20" width="120" height="54" rx="8"/><text x="400" y="43">orders-db</text><text class="sub" x="400" y="61">checks: pending</text></g>
+    <g class="sf-node topic tm"><rect x="340" y="160" width="120" height="54" rx="8"/><text x="400" y="183">orders-events</text><text class="sub" x="400" y="201">reads · publishes</text></g>
     <g class="sf-node"><rect x="510" y="160" width="120" height="54" rx="8"/><text x="570" y="183">consumer</text><text class="sub" x="570" y="201">your service</text></g>
-    <g class="sf-node"><rect x="630" y="20" width="120" height="54" rx="8"/><text x="690" y="43">orders-db</text><text class="sub" x="690" y="61">order: paid</text></g>
+    <g class="sf-node tm"><rect x="630" y="20" width="120" height="54" rx="8"/><text x="690" y="43">orders-db</text><text class="sub" x="690" y="61">checks: paid</text></g>
     <path class="sf-wire w1" d="M120 117 H170" marker-end="url(#sf-arrow)"/>
     <path class="sf-wire w1" d="M290 105 L340 55" marker-end="url(#sf-arrow)"/>
     <path class="sf-wire w1" d="M290 130 L340 180" marker-end="url(#sf-arrow)"/>
     <path class="sf-wire w2" d="M460 187 H510" marker-end="url(#sf-arrow)"/>
     <path class="sf-wire w2" d="M630 175 L680 74" marker-end="url(#sf-arrow)"/>
+    <g class="sf-legend"><rect class="tm" x="20" y="30" width="12" height="12" rx="3"/><text x="38" y="40">tomato drives or checks it</text><rect x="20" y="52" width="12" height="12" rx="3"/><text x="38" y="62">your service</text></g>
     <rect class="sf-bracket b-long" x="4" y="10" width="752" height="230" rx="12"/>
     <text class="sf-label b-long" x="16" y="234">one scenario: four reasons to fail, and a wait for the consumer</text>
     <rect class="sf-bracket b1" x="4" y="10" width="462" height="214" rx="12"/>

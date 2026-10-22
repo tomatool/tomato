@@ -260,6 +260,11 @@
 .split-flow .sf-node.topic rect { stroke-dasharray: 5 4; }
 .split-flow .sf-node text { fill: var(--fg-0); font-size: 12.5px; text-anchor: middle; font-weight: 600; }
 .split-flow .sf-node text.sub { fill: var(--fg-3); font-size: 11px; font-weight: 400; }
+.split-flow .sf-node.tm rect { fill: color-mix(in oklch, var(--fail) 9%, var(--bg-2)); stroke: var(--fail); }
+.split-flow .sf-node.tm text.sub { fill: var(--fail); }
+.split-flow .sf-legend rect { fill: var(--bg-2); stroke: var(--line-strong); }
+.split-flow .sf-legend rect.tm { fill: color-mix(in oklch, var(--fail) 9%, var(--bg-2)); stroke: var(--fail); }
+.split-flow .sf-legend text { fill: var(--fg-2); font-size: 11px; }
 .split-flow .sf-wire { fill: none; stroke: var(--line-strong); stroke-width: 1.6; transition: stroke 0.3s; }
 .split-flow .sf-head { fill: var(--line-strong); }
 .split-flow .sf-bracket { fill: none; stroke-width: 2; stroke-dasharray: 7 5; opacity: 0; transition: opacity 0.4s; }
