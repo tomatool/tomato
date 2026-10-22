@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -415,6 +416,13 @@ func (r *HTTPClient) Steps() resource.StepCategory {
 				Description: "Save response header value to variable",
 				Example:     `"app-client" response header "Location" saved as "{{location}}"`,
 				Handler:     r.saveHeaderToVariable,
+			},
+			{
+				Group:       "Variable Capture",
+				Pattern:     `^"{resource}" response header "([^"]*)" query param "([^"]*)" saved as "\{\{([^}]+)\}\}"$`,
+				Description: "Save one query parameter of a URL in a response header, such as the code and state of an OAuth redirect's Location",
+				Example:     `"app-client" response header "Location" query param "code" saved as "{{code}}"`,
+				Handler:     r.saveHeaderQueryParamToVariable,
 			},
 		}, append(r.streamSteps(), r.concurrentSteps()...)...),
 	}
@@ -904,6 +912,45 @@ func (r *HTTPClient) saveHeaderToVariable(header, varName string) error {
 	}
 
 	resource.SetVariable(varName, value)
+	return nil
+}
+
+// saveHeaderQueryParamToVariable saves one query parameter of the URL a
+// response header carries. A missing or empty parameter fails, naming the ones
+// the URL has, so a redirect that lost the parameter can't pass as an empty value.
+func (r *HTTPClient) saveHeaderQueryParamToVariable(header, param, varName string) error {
+	if r.lastResponse == nil {
+		return fmt.Errorf("no response received")
+	}
+
+	value := r.lastResponse.Header.Get(header)
+	if value == "" {
+		return fmt.Errorf("header %q not found or empty", header)
+	}
+
+	u, err := url.Parse(value)
+	if err != nil {
+		return fmt.Errorf("header %q is not a URL: %w", header, err)
+	}
+
+	query := u.Query()
+	values, ok := query[param]
+	if !ok || values[0] == "" {
+		names := make([]string, 0, len(query))
+		for name := range query {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		if !ok {
+			return fmt.Errorf("header %q URL has no query param %q (has: %s)\nurl: %s", header, param, strings.Join(names, ", "), value)
+		}
+		return fmt.Errorf("header %q URL query param %q is empty\nurl: %s", header, param, value)
+	}
+	if len(values) > 1 {
+		return fmt.Errorf("header %q URL has %d values for query param %q, expected one\nurl: %s", header, len(values), param, value)
+	}
+
+	resource.SetVariable(varName, values[0])
 	return nil
 }
 

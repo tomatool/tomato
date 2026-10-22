@@ -102,6 +102,7 @@ Steps for making HTTP requests, validating responses, reading event streams and 
 |------|-------------|
 | `"app-client" response json "id" saved as "{{user_id}}"` | Save JSON path value to variable for use in subsequent requests |
 | `"app-client" response header "Location" saved as "{{location}}"` | Save response header value to variable |
+| `"app-client" response header "Location" query param "code" saved as "{{code}}"` | Save one query parameter of a URL in a response header, such as the code and state of an OAuth redirect's Location |
 
 
 

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -250,6 +251,59 @@ func TestHTTPClient_ResponseCookies(t *testing.T) {
 	}
 	if got := resource.ReplaceVariables("{{saved}}"); got != "new" {
 		t.Errorf("saved variable = %q, want %q", got, "new")
+	}
+}
+
+func TestHTTPClient_SaveHeaderQueryParam(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 201 with a Location, so the client doesn't follow it
+		w.Header().Set("Location", r.URL.Query().Get("location"))
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer server.Close()
+
+	client := newTestHTTPClient(t, server.URL)
+	send := func(location string) {
+		t.Helper()
+		if err := client.sendRequest("GET", "/?location="+url.QueryEscape(location)); err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+	}
+
+	send("https://app.example.com/callback?code=abc%2F123&state=xyz")
+	if err := client.saveHeaderQueryParamToVariable("Location", "code", "code"); err != nil {
+		t.Fatal(err)
+	}
+	if got := resource.ReplaceVariables("{{code}}"); got != "abc/123" {
+		t.Errorf("saved code = %q, want the decoded %q", got, "abc/123")
+	}
+
+	send("/echo?session=sess-42")
+	if err := client.saveHeaderQueryParamToVariable("Location", "session", "session"); err != nil {
+		t.Fatalf("relative URL: %v", err)
+	}
+	if got := resource.ReplaceVariables("{{session}}"); got != "sess-42" {
+		t.Errorf("saved session = %q, want %q", got, "sess-42")
+	}
+
+	send("https://app.example.com/callback?state=xyz&error=denied")
+	err := client.saveHeaderQueryParamToVariable("Location", "code", "code")
+	if err == nil || !strings.Contains(err.Error(), "has: error, state") {
+		t.Errorf("missing param error = %v, want it to list the params the URL has", err)
+	}
+
+	send("https://app.example.com/callback?code=&state=xyz")
+	if err := client.saveHeaderQueryParamToVariable("Location", "code", "code"); err == nil {
+		t.Error("expected error for an empty param")
+	}
+
+	send("https://app.example.com/callback?code=a&code=b")
+	if err := client.saveHeaderQueryParamToVariable("Location", "code", "code"); err == nil {
+		t.Error("expected error for a repeated param")
+	}
+
+	if err := client.saveHeaderQueryParamToVariable("X-Missing", "code", "code"); err == nil {
+		t.Error("expected error for a missing header")
 	}
 }
 
