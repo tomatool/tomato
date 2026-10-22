@@ -678,3 +678,30 @@ func TestVerifyHealthy(t *testing.T) {
 		})
 	}
 }
+
+func TestStartCommandExitBeforeReadyFailsAtOnce(t *testing.T) {
+	if _, err := exec.LookPath("sh"); err != nil {
+		t.Skip("sh not available")
+	}
+	r := quietRunner(config.AppConfig{
+		Command: "sh -c echo_the_reason_then_exit",
+		Port:    freePort(t),
+		Ready:   &config.ReadyCheck{Type: "http", Path: "/ready", Timeout: 30 * time.Second},
+	}, nil)
+	// sh -c with a command that doesn't exist: it says so on stderr and exits 127
+	start := time.Now()
+	err := r.Start(context.Background())
+	if err == nil {
+		t.Fatal("an app that exits should not be ready")
+	}
+	if took := time.Since(start); took > 10*time.Second {
+		t.Errorf("took %s: the exit should end the wait, not the 30s timeout", took)
+	}
+	if !strings.Contains(err.Error(), "app exited with exit status 127") || !strings.Contains(err.Error(), "before it was ready") {
+		t.Errorf("error = %q, want it to say the app exited and how", err)
+	}
+	logs := strings.Join(r.GetRecentLogs(20), "\n")
+	if !strings.Contains(logs, "echo_the_reason_then_exit") {
+		t.Errorf("the app's last output should be in the recent logs before the error is reported, got %q", logs)
+	}
+}

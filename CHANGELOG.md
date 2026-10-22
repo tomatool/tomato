@@ -70,6 +70,7 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 - HTTP: the `Host` header is honoured, plus steps for cookies and docstring request bodies.
 
 ### Fixed
+- A run that fails before any scenario says why. The app runner stops waiting as soon as the app exits (`app exited with exit status 1 300ms after it started, before it was ready`) instead of polling the ready check until its timeout and reporting only that. The `tomato` format writes a `run_error` event with the phase, the error and the app's last log lines. The GitHub Action's status follows tomato's exit code, and its PR comment and job summary show "tomato failed before any scenario ran" with the error and those log lines, instead of "✅ 0 scenarios". ([#234](https://github.com/tomatool/tomato/issues/234))
 - `form body is:` substitutes variables in its fields and values. The table was encoded before substitution, so `{{code}}` went out as `%7B%7Bcode%7D%7D`. ([#229](https://github.com/tomatool/tomato/issues/229))
 - Redis steps substitute variables in keys, values, hash fields, list values and set members, as the other resources do. They used the placeholder literally, so `key "lock:{{id}}" exists` failed and `does not exist` always passed. ([#230](https://github.com/tomatool/tomato/issues/230))
 - `grpc`: `response status is "NOT_FOUND"` never matched, because it compared against grpc-go's spelling, `NotFound`; the spec's names, the documented ones, now work, as do grpc-go's and the number.

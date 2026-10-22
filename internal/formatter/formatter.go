@@ -24,6 +24,10 @@ const (
 	EventStepStart     = "step_start"
 	EventStepEnd       = "step_end"
 	EventSummary       = "summary"
+	// EventRunError is a run that failed outside any scenario: a container
+	// that didn't start, a resource that couldn't connect, an app that never
+	// became ready. Without it a report sees no scenarios and nothing failed.
+	EventRunError = "run_error"
 )
 
 // Event represents a structured test event
@@ -57,6 +61,11 @@ type Event struct {
 	// faults that were on when it ended, so a report can show which steps
 	// ran on a bad network. On a scenario_end, the events after its last step.
 	Network *Network `json:"network,omitempty"`
+
+	// Phase is where a run_error happened: containers, resources or app.
+	Phase string `json:"phase,omitempty"`
+	// Logs are the app's last log lines, on a run_error in the app phase.
+	Logs []string `json:"logs,omitempty"`
 
 	// Summary fields
 	Total   int `json:"total,omitempty"`
@@ -148,6 +157,12 @@ func TomatoFormatterFunc(suite string, out io.Writer) formatters.Formatter {
 	return &TomatoFormatter{
 		out: out,
 	}
+}
+
+// EmitRunError writes a run_error event: the run failed in phase before or
+// outside the scenarios, with err, and logs the app wrote last when there are any.
+func EmitRunError(out io.Writer, phase string, err error, logs []string) {
+	(&TomatoFormatter{out: out}).emit(Event{Type: EventRunError, Phase: phase, Status: "failed", Error: err.Error(), Logs: logs})
 }
 
 func (f *TomatoFormatter) emit(event Event) {
