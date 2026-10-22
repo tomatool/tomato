@@ -80,3 +80,69 @@ Feature: Redis Handler
 
   Scenario: Check database is empty
     Then "app-cache" is empty
+
+  # Each step reads and writes through the app as well as through tomato, or
+  # with literal names on one side: a key that is {{order_id}} on both sides
+  # would match itself whether or not anything was substituted.
+  Scenario: Keys named after a value from an earlier step
+    When "app-client" sends "POST" to "/echo" with json:
+      """
+      {"id": "{{uuid}}"}
+      """
+    And "app-client" response json "body.id" saved as "{{order_id}}"
+    And "app-client" sends "POST" to "/cache?key=lock:{{order_id}}" with json:
+      """
+      {"value": "held by {{order_id}}"}
+      """
+    Then "app-cache" key "lock:{{order_id}}" exists
+    And "app-cache" key "lock:{{order_id}}" has value "held by {{order_id}}"
+    And "app-cache" key "lock:{{order_id}}" contains "{{order_id}}"
+    And "app-cache" key "lock:{{order_id}}" has TTL greater than "3500" seconds
+    When "app-cache" key "session:{{order_id}}" is "user-{{order_id}}"
+    And "app-client" sends "GET" to "/cache?key=session:{{order_id}}"
+    Then "app-client" response status is "200"
+    And "app-client" response json "value" is "user-{{order_id}}"
+    When "app-cache" key "lock:{{order_id}}" is deleted
+    And "app-client" sends "GET" to "/cache?key=lock:{{order_id}}"
+    Then "app-client" response status is "404"
+
+  Scenario: Every step substitutes variables in its keys, values, fields and members
+    When "app-client" sends "POST" to "/echo" with json:
+      """
+      {"n": "42"}
+      """
+    And "app-client" response json "body.n" saved as "{{n}}"
+    And "app-cache" key "t:{{n}}" is "v-{{n}}" with TTL "1h"
+    And "app-cache" key "doc:{{n}}" is:
+      """
+      {"id": "{{n}}"}
+      """
+    And "app-cache" hash "h:{{n}}" has fields:
+      | field   | value   |
+      | f-{{n}} | v-{{n}} |
+    And "app-cache" list "l:{{n}}" has "v-{{n}}"
+    And "app-cache" list "l:{{n}}" has values:
+      | w-{{n}} |
+    And "app-cache" set "s:{{n}}" has "m-{{n}}"
+    And "app-cache" set "s:{{n}}" has members:
+      | n-{{n}} |
+    And "app-cache" key "c:{{n}}" is incremented by "3"
+    And "app-cache" key "c:{{n}}" is incremented
+    And "app-cache" key "c:{{n}}" is decremented
+    Then "app-cache" key "t:42" has value "v-42"
+    And "app-cache" key "doc:42" contains "42"
+    And "app-cache" hash "h:42" field "f-42" is "v-42"
+    And "app-cache" list "l:42" contains "w-42"
+    And "app-cache" set "s:42" contains "n-42"
+    And "app-cache" key "c:42" has value "3"
+    And "app-cache" key "t:{{n}}" has TTL greater than "3500" seconds
+    And "app-cache" hash "h:{{n}}" contains:
+      | field   | value   |
+      | f-{{n}} | v-{{n}} |
+    And "app-cache" list "l:{{n}}" has "2" items
+    And "app-cache" list "l:{{n}}" contains "v-{{n}}"
+    And "app-cache" set "s:{{n}}" has "2" members
+    And "app-cache" set "s:{{n}}" contains "m-{{n}}"
+    When "app-cache" key "t:{{n}}" is deleted
+    Then "app-cache" key "t:42" does not exist
+    And "app-cache" key "t:{{n}}" does not exist
