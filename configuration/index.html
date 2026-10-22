@@ -2823,6 +2823,10 @@ ports and wait strategy; anything the entry sets itself (an <code>env</code> key
 <td><code>kafka</code></td>
 <td>A single-node KRaft broker, reachable from the host and from other containers. With <code>auth: aws_msk_iam</code>, a second listener speaks SASL <code>AWS_MSK_IAM</code> like MSK's IAM port. See <a href="kafka/#preset">Kafka</a>.</td>
 </tr>
+<tr>
+<td><code>redis</code></td>
+<td>A Redis server. With <code>cluster: true</code> it runs in cluster mode, one node owning every slot; with <code>tls: true</code> it speaks TLS only, with a certificate from a CA made for the run. Together, Redis the way ElastiCache runs it with cluster mode and in-transit encryption. See <a href="redis/#preset">Redis</a>.</td>
+</tr>
 </tbody>
 </table>
 <h3 id="resources-tomato-does-not-manage">Resources tomato does not manage<a class="headerlink" href="#resources-tomato-does-not-manage" title="Permanent link">&para;</a></h3>
