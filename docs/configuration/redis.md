@@ -48,6 +48,8 @@ app:
   env:
     REDIS_URL: "{{.redis.host}}:{{.redis.port.6379}}"
     SSL_CERT_FILE: "{{.redis.ca_file}}"   # trust the run's CA
+    # On macOS, when go.mod says a go version below 1.27 (see below):
+    # GODEBUG: x509sslcertoverrideplatform=1
 
 resources:
   sessions-db:
@@ -65,7 +67,7 @@ What each option does:
 
 | Option | What tomato does |
 |--------|------------------|
-| `cluster: true` | Starts the server with cluster mode on and gives the node every slot. The node announces `127.0.0.1` and the host port tomato picked before it started, so a cluster client on the host follows `CLUSTER SLOTS` to an address it can dial. |
+| `cluster: true` | Starts the server with cluster mode on and gives the node every slot. The node announces `127.0.0.1` and the host port tomato picked before it started, so a cluster client on the host follows `CLUSTER SLOTS` to an address it can dial. To choose that port, list it in `ports` (`"16379:6379"`); tomato announces it instead. |
 | `tls: true` | Makes a CA and a server certificate for `localhost` and `127.0.0.1` for the run, and serves TLS only: a plain client is refused, as ElastiCache refuses it. `{{.redis.ca_file}}` is the CA's path on your machine; tomato removes it when the run ends. |
 
 Both set the redis resource's `cluster` and `tls_ca_file` options, so it reaches
@@ -77,11 +79,14 @@ Things to know:
 - **The app runs as a command** (`app.command`). The node announces an address
   on your machine, and the CA is a file there; neither reaches an app in a
   container.
-- **`SSL_CERT_FILE` is read on Linux, not on macOS.** On Linux, Go and the
-  clients built on OpenSSL (Python, Ruby) trust the file it names; Node needs
-  `NODE_EXTRA_CA_CERTS` instead, and Java a trust store. Go on macOS verifies
-  through the system and ignores it. On a Mac, run the suite on Linux (in CI or
-  a container), or give the service a CA-file setting.
+- **`SSL_CERT_FILE` on macOS depends on the service's Go version.** On Linux,
+  Go and the clients built on OpenSSL (Python, Ruby) trust the file it names;
+  Node needs `NODE_EXTRA_CA_CERTS` instead, and Java a trust store. On macOS
+  (and Windows), Go honours it since Go 1.27, but only when the main module
+  says `go 1.27` or later; an older `go` line keeps verifying through the
+  system. For those, add `GODEBUG: x509sslcertoverrideplatform=1` to
+  `app.env`. Either way the service has to be built with Go 1.27 or later:
+  earlier releases ignore `SSL_CERT_FILE` on macOS, whatever is set.
 - **A network resource can't stand in front of a cluster.** The client follows
   the address the node announces, which takes it around the proxy.
 - **`settings.containers.reuse` can't be used with them.** A reused container

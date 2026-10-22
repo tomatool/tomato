@@ -352,10 +352,17 @@ func (c *Config) expandRedisPreset(name string, cont *Container) error {
 		// A node that has never met another reports its address in CLUSTER
 		// SLOTS as an empty host and its port in the container, which a
 		// client on the host can't dial. It announces the host port
-		// instead, so that port is picked here, before the container starts.
-		hostPort, err := freePort()
-		if err != nil {
-			return fmt.Errorf("picking a host port: %w", err)
+		// instead, so the preset owns 6379's mapping: a host port the entry
+		// fixes is the one announced, and otherwise one is picked here,
+		// before the container starts. An entry leaving the port to Docker
+		// would publish it somewhere the node doesn't announce.
+		var hostPort string
+		cont.Ports, hostPort = takePort(cont.Ports, RedisPort)
+		if hostPort == "" {
+			var err error
+			if hostPort, err = freePort(); err != nil {
+				return fmt.Errorf("picking a host port: %w", err)
+			}
 		}
 		server = append(server, "--cluster-enabled", "yes",
 			"--cluster-announce-ip", "127.0.0.1", "--cluster-announce-port", hostPort)
@@ -368,17 +375,20 @@ func (c *Config) expandRedisPreset(name string, cont *Container) error {
 	// The server starts in the background; once it answers, a cluster node
 	// takes every slot (after a restart it already owns them, and the
 	// command fails harmlessly), and the ready line tells tomato it can go.
-	// Whatever the entry sets as command is added to redis-server's
-	// arguments.
+	// If the server exits on the way, as with a bad argument, the container
+	// exits with its status at once, its error last in the log, rather than
+	// when the wait times out. Whatever the entry sets as command is added
+	// to redis-server's arguments.
 	redisCLI := "redis-cli " + strings.Join(cli, " ")
 	script := "redis-server " + strings.Join(server, " ") + ` "$@" &
 pid=$!
 trap 'kill $pid' TERM INT
-until ` + redisCLI + ` ping >/dev/null 2>&1; do sleep 0.1; done
+alive() { kill -0 $pid 2>/dev/null || { wait $pid; exit; }; }
+until ` + redisCLI + ` ping >/dev/null 2>&1; do alive; sleep 0.1; done
 `
 	if cont.Cluster {
 		script += redisCLI + ` cluster addslotsrange 0 16383 >/dev/null 2>&1
-until ` + redisCLI + ` cluster info 2>/dev/null | grep -q cluster_state:ok; do sleep 0.1; done
+until ` + redisCLI + ` cluster info 2>/dev/null | grep -q cluster_state:ok; do alive; sleep 0.1; done
 `
 	}
 	script += "echo '" + redisReady + "'\nwait $pid\n"
@@ -514,6 +524,22 @@ func expandVeraPDFPreset(cont *Container) error {
 		cont.WaitFor = WaitStrategy{Type: "http", Path: "/api/info", Target: port, Timeout: 3 * time.Minute}
 	}
 	return nil
+}
+
+// takePort removes the entries publishing the container port from ports, and
+// returns the host port the first of them fixes ("16379:6379"), or "" when
+// they leave it to Docker or there are none.
+func takePort(ports []string, port string) (rest []string, hostPort string) {
+	for _, p := range ports {
+		if !containsPort([]string{p}, port) {
+			rest = append(rest, p)
+			continue
+		}
+		if i := strings.LastIndex(p, ":"); i >= 0 && hostPort == "" {
+			hostPort = p[strings.LastIndex(p[:i], ":")+1 : i]
+		}
+	}
+	return rest, hostPort
 }
 
 // containsPort reports whether ports already publish the container port.

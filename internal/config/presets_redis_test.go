@@ -3,6 +3,7 @@ package config
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -177,5 +178,84 @@ resources:
 				t.Errorf("want an error with %q, got %v", tc.want, err)
 			}
 		})
+	}
+}
+
+// In cluster mode the node announces the host port 6379 is published on, so
+// the preset owns that mapping, whatever the entry lists.
+func TestRedisPreset_ClusterOwnsThePortItAnnounces(t *testing.T) {
+	for _, tc := range []struct {
+		ports, want, announced string
+	}{
+		{`["6379/tcp"]`, "[40001:6379]", "40001"},
+		{`["6379"]`, "[40001:6379]", "40001"},
+		{`["16379:6379"]`, "[16379:6379]", "16379"},
+		{`["16379:6379/tcp", "8001/tcp"]`, "[16379:6379 8001/tcp]", "16379"},
+		{`["8001/tcp"]`, "[40001:6379 8001/tcp]", "40001"},
+	} {
+		t.Run(tc.ports, func(t *testing.T) {
+			stubPorts(t)
+			cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  redis:
+    preset: redis
+    cluster: true
+    ports: `+tc.ports+`
+`))
+			if err != nil {
+				t.Fatalf("Load: %v", err)
+			}
+			r := cfg.Containers["redis"]
+			if got := fmt.Sprint(r.Ports); got != tc.want {
+				t.Errorf("ports %s, want %s", got, tc.want)
+			}
+			if !strings.Contains(r.Entrypoint[2], "--cluster-announce-port "+tc.announced+" ") {
+				t.Errorf("doesn't announce %s:\n%s", tc.announced, r.Entrypoint[2])
+			}
+		})
+	}
+}
+
+// Without cluster mode nothing is announced, so the entry's port stays.
+func TestRedisPreset_TLSKeepsTheEntrysPort(t *testing.T) {
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  redis:
+    preset: redis
+    tls: true
+    ports: ["16379:6379"]
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if got := fmt.Sprint(cfg.Containers["redis"].Ports); got != "[16379:6379]" {
+		t.Errorf("ports %s, want [16379:6379]", got)
+	}
+}
+
+// The wait loops give up as soon as redis-server exits, so a bad argument
+// fails the start at once instead of when the wait times out.
+func TestRedisPreset_StartupStopsWhenTheServerExits(t *testing.T) {
+	stubPorts(t)
+	cfg, err := Load(createTempConfig(t, `
+version: 2
+containers:
+  redis:
+    preset: redis
+    cluster: true
+    tls: true
+`))
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	script := cfg.Containers["redis"].Entrypoint[2]
+	for _, loop := range []string{"ping", "cluster info"} {
+		for _, line := range strings.Split(script, "\n") {
+			if strings.HasPrefix(line, "until ") && strings.Contains(line, loop) && !strings.Contains(line, "do alive;") {
+				t.Errorf("the %s loop doesn't check the server is alive: %s", loop, line)
+			}
+		}
 	}
 }
