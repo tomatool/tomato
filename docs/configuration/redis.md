@@ -6,9 +6,95 @@ This guide covers how to configure Redis for integration testing with tomato.
 
 Redis is an in-memory data structure store used as a database, cache, and message broker. Tomato's Redis handler supports strings, hashes, lists, and sets.
 
+## Preset
+
+The shortest setup is the `redis` preset:
+
+```yaml
+containers:
+  redis:
+    preset: redis
+
+resources:
+  sessions-cache:
+    type: redis
+    container: redis
+```
+
+### Cluster mode and TLS, as ElastiCache runs it
+
+A service that talks to ElastiCache with cluster mode and in-transit encryption
+usually has one Redis client, and it is a cluster client over TLS:
+
+```go
+redis.NewClusterClient(&redis.ClusterOptions{
+    Addrs:     []string{cfg.URL},
+    TLSConfig: &tls.Config{}, // verifies against the system roots
+})
+```
+
+A plain Redis container can't stand in for that server. `cluster` and `tls` make
+the preset one that can, without a change to the service:
+
+```yaml
+containers:
+  redis:
+    preset: redis
+    cluster: true   # one node owning all 16384 slots
+    tls: true       # TLS only, with a certificate from a CA made for the run
+
+app:
+  command: ./bin/app
+  env:
+    REDIS_URL: "{{.redis.host}}:{{.redis.port.6379}}"
+    SSL_CERT_FILE: "{{.redis.ca_file}}"   # trust the run's CA
+    # On macOS, when go.mod says a go version below 1.27 (see below):
+    # GODEBUG: x509sslcertoverrideplatform=1
+
+resources:
+  sessions-cache:
+    type: redis
+    container: redis   # connects the same way: cluster, TLS, the run's CA
+```
+
+The redis steps work as they do against a single server:
+
+```gherkin
+Then "sessions-cache" key "claim:{{id}}" exists
+```
+
+What each option does:
+
+| Option | What tomato does |
+|--------|------------------|
+| `cluster: true` | Starts the server with cluster mode on and gives the node every slot. The node announces `127.0.0.1` and the host port tomato picked before it started, so a cluster client on the host follows `CLUSTER SLOTS` to an address it can dial. To choose that port, list it in `ports` (`"16379:6379"`); tomato announces it instead. |
+| `tls: true` | Makes a CA and a server certificate for `localhost` and `127.0.0.1` for the run, and serves TLS only: a plain client is refused, as ElastiCache refuses it. `{{.redis.ca_file}}` is the CA's path on your machine; tomato removes it when the run ends. |
+
+Both set the redis resource's `cluster` and `tls_ca_file` options, so it reaches
+the server the way the app does. Resets flush every key, as they do on a single
+server.
+
+Things to know:
+
+- **The app runs as a command** (`app.command`). The node announces an address
+  on your machine, and the CA is a file there; neither reaches an app in a
+  container.
+- **`SSL_CERT_FILE` on macOS depends on the service's Go version.** On Linux,
+  Go and the clients built on OpenSSL (Python, Ruby) trust the file it names;
+  Node needs `NODE_EXTRA_CA_CERTS` instead, and Java a trust store. On macOS
+  (and Windows), Go honours it since Go 1.27, but only when the main module
+  says `go 1.27` or later; an older `go` line keeps verifying through the
+  system. For those, add `GODEBUG: x509sslcertoverrideplatform=1` to
+  `app.env`. Either way the service has to be built with Go 1.27 or later:
+  earlier releases ignore `SSL_CERT_FILE` on macOS, whatever is set.
+- **A network resource can't stand in front of a cluster.** The client follows
+  the address the node announces, which takes it around the proxy.
+- **`settings.containers.reuse` can't be used with them.** A reused container
+  keeps the CA and the port of the run that started it.
+
 ## Container setup
 
-Add a Redis container to your `tomato.yml`:
+Without the preset, add a Redis container to your `tomato.yml`:
 
 ```yaml
 containers:
@@ -79,6 +165,8 @@ resources:
 | `password` | string | `""` | Redis password (if authentication enabled) |
 | `reset_strategy` | string | `flush` | How to reset between scenarios |
 | `reset_pattern` | string | `*` | Pattern for selective key deletion (when using `pattern` strategy) |
+| `cluster` | bool | `false` | Connect as a cluster client (the preset's `cluster: true` sets it) |
+| `tls_ca_file` | string | | Connect over TLS, trusting this CA (the preset's `tls: true` sets it) |
 
 ### Reset strategies
 

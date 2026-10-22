@@ -4,8 +4,11 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -20,7 +23,7 @@ type Redis struct {
 	name      string
 	config    config.Resource
 	container *container.Manager
-	client    *redis.Client
+	client    redis.UniversalClient
 }
 
 func New(name string, cfg config.Resource, cm *container.Manager) (*Redis, error) {
@@ -51,11 +54,42 @@ func (r *Redis) Init(ctx context.Context) error {
 	if p, ok := r.config.Options["password"].(string); ok {
 		password = p
 	}
+	addr := fmt.Sprintf("%s:%s", host, port)
+
+	// tls_ca_file: the server speaks TLS only, with a certificate this CA
+	// signed (the redis preset's tls sets it).
+	var tlsConfig *tls.Config
+	if caFile, _ := r.config.Options["tls_ca_file"].(string); caFile != "" {
+		pem, err := os.ReadFile(caFile)
+		if err != nil {
+			return fmt.Errorf("reading tls_ca_file: %w", err)
+		}
+		roots := x509.NewCertPool()
+		if !roots.AppendCertsFromPEM(pem) {
+			return fmt.Errorf("tls_ca_file %s: no certificates in it", caFile)
+		}
+		tlsConfig = &tls.Config{RootCAs: roots}
+	}
+
+	// cluster: the server runs in cluster mode (the redis preset's cluster
+	// sets it), and keys go to the node owning their slot.
+	if cluster, _ := r.config.Options["cluster"].(bool); cluster {
+		if db != 0 {
+			return fmt.Errorf("a redis cluster only has db 0 (db: %d)", db)
+		}
+		r.client = redis.NewClusterClient(&redis.ClusterOptions{
+			Addrs:     []string{addr},
+			Password:  password,
+			TLSConfig: tlsConfig,
+		})
+		return nil
+	}
 
 	r.client = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", host, port),
-		Password: password,
-		DB:       db,
+		Addr:      addr,
+		Password:  password,
+		DB:        db,
+		TLSConfig: tlsConfig,
 	})
 	return nil
 }
@@ -72,7 +106,7 @@ func (r *Redis) Reset(ctx context.Context) error {
 
 	switch strategy {
 	case "flush":
-		return r.client.FlushDB(ctx).Err()
+		return r.flush(ctx)
 	case "pattern":
 		pattern := "*"
 		if p, ok := r.config.Options["reset_pattern"].(string); ok {
@@ -80,19 +114,45 @@ func (r *Redis) Reset(ctx context.Context) error {
 		}
 		return r.deleteByPattern(ctx, pattern)
 	default:
-		return r.client.FlushDB(ctx).Err()
+		return r.flush(ctx)
 	}
 }
 
+// flush empties the database, on every master of a cluster.
+func (r *Redis) flush(ctx context.Context) error {
+	if c, ok := r.client.(*redis.ClusterClient); ok {
+		return c.ForEachMaster(ctx, func(ctx context.Context, n *redis.Client) error {
+			return n.FlushDB(ctx).Err()
+		})
+	}
+	return r.client.FlushDB(ctx).Err()
+}
+
 func (r *Redis) deleteByPattern(ctx context.Context, pattern string) error {
+	// SCAN walks one node's keys, so a cluster is walked node by node.
+	if c, ok := r.client.(*redis.ClusterClient); ok {
+		return c.ForEachMaster(ctx, func(ctx context.Context, n *redis.Client) error {
+			return deleteByPattern(ctx, n, pattern)
+		})
+	}
+	return deleteByPattern(ctx, r.client, pattern)
+}
+
+func deleteByPattern(ctx context.Context, c redis.Cmdable, pattern string) error {
 	var cursor uint64
 	for {
-		keys, nextCursor, err := r.client.Scan(ctx, cursor, pattern, 100).Result()
+		keys, nextCursor, err := c.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			return err
 		}
+		// One DEL per key, pipelined: in a cluster, the keys of one DEL
+		// have to share a slot.
 		if len(keys) > 0 {
-			if err := r.client.Del(ctx, keys...).Err(); err != nil {
+			pipe := c.Pipeline()
+			for _, k := range keys {
+				pipe.Del(ctx, k)
+			}
+			if _, err := pipe.Exec(ctx); err != nil {
 				return err
 			}
 		}

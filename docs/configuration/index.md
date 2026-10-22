@@ -254,6 +254,7 @@ containers:
 | `chromium` | A headless Chromium for `browser` resources. Pages it opens on `localhost` reach the app on your machine, through a tunnel to each port the suite uses there. See [Browser](browser.md#the-chromium-preset). |
 | `verapdf` | A veraPDF validation service for the `pdf` resource's `conforms to` step: PDF/UA and PDF/A, with the rules a document breaks in the failure. See [PDF](pdf.md#the-verapdf-preset). |
 | `kafka` | A single-node KRaft broker, reachable from the host and from other containers. With `auth: aws_msk_iam`, a second listener speaks SASL `AWS_MSK_IAM` like MSK's IAM port. See [Kafka](kafka.md#preset). |
+| `redis` | A Redis server. With `cluster: true` it runs in cluster mode, one node owning every slot; with `tls: true` it speaks TLS only, with a certificate from a CA made for the run. Together, Redis the way ElastiCache runs it with cluster mode and in-transit encryption. See [Redis](redis.md#preset). |
 
 ### Resources tomato does not manage
 

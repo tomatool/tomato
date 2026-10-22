@@ -322,6 +322,9 @@ func (r *Runner) buildEnvForCommand() map[string]string {
 		// before {{.x.host}} is taken for a container's.
 		resolved = r.resolveGRPCServers(resolved, "localhost")
 
+		// The CA a preset made for a container, e.g. {{.redis.ca_file}}.
+		resolved = r.resolveCAFiles(resolved)
+
 		// Then resolve container templates (e.g., {{.postgres.host}})
 		resolved = containerPattern.ReplaceAllStringFunc(resolved, func(match string) string {
 			matches := containerPattern.FindStringSubmatch(match)
@@ -713,6 +716,21 @@ func (r *Runner) buildEnvForDocker() map[string]string {
 	}
 
 	return env
+}
+
+var caFilePattern = regexp.MustCompile(`\{\{\s*\.([\w-]+)\.ca_file\s*\}\}`)
+
+// resolveCAFiles replaces {{.<container>.ca_file}} with the path on the host
+// of the CA the container's preset made for the run.
+func (r *Runner) resolveCAFiles(value string) string {
+	return caFilePattern.ReplaceAllStringFunc(value, func(match string) string {
+		name := caFilePattern.FindStringSubmatch(match)[1]
+		if f := r.container.CAFile(name); f != "" {
+			return f
+		}
+		log.Warn().Str("container", name).Msg("container has no CA: ca_file needs preset: redis with tls: true")
+		return match
+	})
 }
 
 // grpcServerPattern matches {{.name.address}}, {{.name.host}} and

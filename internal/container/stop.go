@@ -28,6 +28,13 @@ func (m *Manager) StopAll(ctx context.Context, removeVolumes bool) error {
 		return nil
 	}
 
+	// The CAs presets made for the run go with their containers.
+	for _, cfg := range m.configs {
+		if cfg.CAFile != "" {
+			_ = os.Remove(cfg.CAFile)
+		}
+	}
+
 	// Stop in reverse order
 	for i := len(m.order) - 1; i >= 0; i-- {
 		name := m.order[i]
