@@ -739,3 +739,37 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .net-events li[data-kind="healed"] .net-kind{color:var(--pass-ink)}
 .net-events li[data-kind="connection"] .net-kind{color:var(--fail-ink)}
 .net-detail{color:var(--fg-1);overflow-wrap:anywhere}
+
+/* the scenario profile (components/Profile.jsx): a line of what a scenario
+   cost on its card, and the run as a timeline in the inspector */
+.profile-strip{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2) var(--s-4);margin:0 0 var(--s-3);padding:var(--s-2) var(--s-4);border-radius:var(--r-1);background:var(--bg-1);font:var(--fs-11)/1.5 var(--font-mono)}
+.pf{display:inline-flex;gap:var(--s-2);color:var(--fg-1)}
+.pf-label{color:var(--fg-3)}
+.pf[data-warn="true"] .pf-value{color:var(--warn-ink)}
+.pf[title]{cursor:help}
+.spark{flex:none;overflow:visible}
+.spark-cpu{fill:none;stroke:var(--fail);stroke-width:1.2}
+.spark-mem{fill:none;stroke:var(--fg-3);stroke-width:1;stroke-dasharray:2 2}
+.profile-timeline{display:flex;flex-direction:column;gap:var(--s-3);padding:var(--s-4)}
+.pt-meta,.pt-hover{font:var(--fs-11)/1.4 var(--font-mono);color:var(--fg-3)}
+.pt-hover{min-height:1.4em;color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-lane{display:grid;grid-template-columns:7.5rem 1fr;align-items:center;gap:var(--s-3)}
+.pt-label{display:flex;flex-direction:column;font:var(--fs-11)/1.3 var(--font-mono);color:var(--fg-1);overflow:hidden}
+.pt-label span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-peak{color:var(--fg-3)}
+.pt-chart{width:100%;height:28px;border-bottom:1px solid var(--line)}
+.pt-band{fill:transparent;cursor:pointer}
+.pt-band[data-odd="true"]{fill:var(--bg-1)}
+.pt-band[data-hover="true"]{fill:var(--warn-bg)}
+.pt-line{fill:none;stroke:var(--fail);stroke-width:1.2}
+.pt-line[data-unit="bytes"]{stroke:var(--pass)}
+.pt-table{width:100%;border-collapse:collapse;font:var(--fs-11)/1.6 var(--font-mono);color:var(--fg-1)}
+.pt-table th{text-align:left;font-weight:500;color:var(--fg-3);border-bottom:1px solid var(--line)}
+.pt-table td,.pt-table th{padding:2px var(--s-3) 2px 0}
+.pt-table tr:hover td{background:var(--bg-1)}
+.pt-name{max-width:14rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* A narrow inspector scrolls its tabs instead of cutting the last one off. */
+.tabs{overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none}
+.pt-table td{white-space:nowrap}

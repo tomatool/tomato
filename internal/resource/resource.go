@@ -78,6 +78,32 @@ type AppPortProvider interface {
 	AppPorts() map[string]map[string]int
 }
 
+// DependencyMeter is implemented by resources that see the app's traffic to
+// a dependency, like the network resource's proxy. The scenario profile
+// reports what they measured, per scenario.
+type DependencyMeter interface {
+	MeterDependency() DependencyTraffic
+}
+
+// DependencyTraffic is what went over the network between the app and one
+// dependency since the scenario started.
+type DependencyTraffic struct {
+	// Container is the dependency, as tomato.yml names it.
+	Container string `json:"container"`
+	// Connections the app opened this scenario, and how many were still
+	// open when it ended: a number that keeps growing is a leak.
+	Connections int `json:"connections"`
+	Open        int `json:"open"`
+	// Sent and Received are bytes, app to dependency and back.
+	Sent     int64 `json:"sent"`
+	Received int64 `json:"received"`
+	// RoundTrips counts requests the dependency answered, and WaitMs the
+	// time from each request to the first byte of its answer, summed over
+	// connections: the time the app spent waiting on the dependency.
+	RoundTrips int   `json:"roundTrips"`
+	WaitMs     int64 `json:"waitMs"`
+}
+
 // Describer is implemented by resources with something to say at the start
 // of a run, next to the containers: the network resource's proxies.
 type Describer interface {

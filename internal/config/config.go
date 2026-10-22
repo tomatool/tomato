@@ -92,6 +92,19 @@ type Settings struct {
 	FailFast   bool              `yaml:"fail_fast"`
 	Output     string            `yaml:"output"`
 	Containers ContainerSettings `yaml:"containers"`
+	// Profile measures the app and its containers per scenario: CPU,
+	// memory, the traffic to each dependency and the errors it logs. On
+	// unless set to false; off when scenarios run in parallel, since a
+	// scenario's figures would then include another's.
+	Profile *bool `yaml:"profile,omitempty"`
+}
+
+// Profiling reports whether the run measures each scenario.
+func (s Settings) Profiling() bool {
+	if s.Parallel > 1 {
+		return false
+	}
+	return s.Profile == nil || *s.Profile
 }
 
 // ContainerSettings tunes how tomato runs the containers it starts.

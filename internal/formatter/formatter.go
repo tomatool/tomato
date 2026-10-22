@@ -12,6 +12,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/tomatool/tomato/internal/jsonmatch"
+	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -58,6 +59,12 @@ type Event struct {
 	// ran on a bad network. On a scenario_end, the events after its last step.
 	Network *Network `json:"network,omitempty"`
 
+	// Samples are the app's and its containers' readings since the last
+	// event that carried them, on a step_end; Profile is what a scenario
+	// cost, on its scenario_end. Only when the run is profiled.
+	Samples []profile.Sample `json:"samples,omitempty"`
+	Profile *profile.Summary `json:"profile,omitempty"`
+
 	// Summary fields
 	Total   int `json:"total,omitempty"`
 	Passed  int `json:"passed,omitempty"`
@@ -83,6 +90,20 @@ func networkOf(scenario string, withActive bool) *Network {
 		return nil
 	}
 	return n
+}
+
+func takeSamples() []profile.Sample {
+	if p := profile.Active(); p != nil {
+		return p.TakeSamples()
+	}
+	return nil
+}
+
+func takeProfile(scenario string) *profile.Summary {
+	if p := profile.Active(); p != nil {
+		return p.TakeSummary(scenario)
+	}
+	return nil
 }
 
 // Mismatch is the step_end event's "mismatch" object.
@@ -211,6 +232,7 @@ func (f *TomatoFormatter) stepEnd(pickle *messages.Pickle, step *messages.Pickle
 		Screenshots: resource.TakeScreenshots(pickle.Name),
 		Mismatch:    mm,
 		Network:     networkOf(pickle.Name, true),
+		Samples:     takeSamples(),
 	})
 }
 
@@ -282,6 +304,8 @@ func (f *TomatoFormatter) emitScenarioEndIfNeeded() {
 		Error:      f.currentScenarioErr,
 		DurationMs: dur,
 		Network:    networkOf(f.currentScenario, false),
+		Samples:    takeSamples(),
+		Profile:    takeProfile(f.currentScenario),
 	})
 
 	// Update counters

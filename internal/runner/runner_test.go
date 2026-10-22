@@ -5,10 +5,12 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/resource"
 )
 
@@ -962,5 +964,48 @@ func TestResolveFormat(t *testing.T) {
 				t.Errorf("resolveFormat(%q, %q) = %q, want %q", tt.configured, tt.override, got, tt.want)
 			}
 		})
+	}
+}
+
+type recordingProfiler struct{ calls []string }
+
+func (p *recordingProfiler) ScenarioStarted(name string) { p.calls = append(p.calls, "start "+name) }
+func (p *recordingProfiler) ScenarioEnded(name string) *profile.Summary {
+	p.calls = append(p.calls, "end "+name)
+	return nil
+}
+
+// The profile window opens after the reset, so tomato's own work is not
+// counted to the scenario, and closes when the scenario ends.
+func TestProfilerWindowFollowsTheScenario(t *testing.T) {
+	prof := &recordingProfiler{}
+	reg := &mockRegistry{}
+	r, err := newRunner(newTestConfig(), &mockContainerExecutor{}, reg, Options{Profiler: prof})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hooks := &capturingScenarioContext{}
+	r.setupScenarioHooks(hooks)
+	sc := &godog.Scenario{Name: "refund"}
+
+	if _, err := hooks.beforeHook(context.Background(), sc); err != nil {
+		t.Fatal(err)
+	}
+	if !reg.resetAllCalled || len(prof.calls) != 1 || prof.calls[0] != "start refund" {
+		t.Fatalf("after the before hook: reset %v, calls %v", reg.resetAllCalled, prof.calls)
+	}
+	if _, err := hooks.afterHook(context.Background(), sc, nil); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(prof.calls, ",") != "start refund,end refund" {
+		t.Errorf("calls %v", prof.calls)
+	}
+
+	// A reset that fails opens no window.
+	prof.calls = nil
+	reg.resetAllErr = errors.New("db down")
+	_, _ = hooks.beforeHook(context.Background(), sc)
+	if len(prof.calls) != 0 {
+		t.Errorf("a failed reset opened a window: %v", prof.calls)
 	}
 }

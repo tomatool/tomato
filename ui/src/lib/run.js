@@ -25,9 +25,22 @@ export function splitKey(k) {
 // stepNet is what network resources did while a step ran, {events, active}:
 // the faults applied, healed or failing connections, with their times, and
 // the faults still on when the step ended.
+// scProfile is what each scenario cost (internal/profile's Summary), and
+// samples the app's and containers' readings over the whole run, oldest
+// first, for the profile timeline.
 export const emptyRun = () => ({
   scStatus: {}, scDur: {}, stepStatus: {}, stepDur: {}, stepError: {}, stepShots: {}, stepMismatch: {}, stepNet: {}, scOrder: [],
+  scProfile: {}, samples: [],
 })
+
+// maxSamples bounds the timeline: about an hour and a half at four a second.
+export const maxSamples = 20000
+
+const withSamples = (samples, more) => {
+  if (!more?.length) return samples
+  const next = samples.concat(more)
+  return next.length > maxSamples ? next.slice(next.length - maxSamples) : next
+}
 
 // The /ws message types that change the run state. Everything else — the
 // feature list, output lines, run ids — is the App's business.
@@ -55,6 +68,8 @@ export function reduceRun(state, m) {
         ...state,
         scStatus: { ...state.scStatus, [m.scenario]: status },
         scDur: m.durationMs == null ? state.scDur : { ...state.scDur, [m.scenario]: m.durationMs },
+        scProfile: m.profile ? { ...state.scProfile, [m.scenario]: m.profile } : state.scProfile,
+        samples: withSamples(state.samples, m.samples),
       }
     }
     case 'step_started': {
@@ -74,6 +89,7 @@ export function reduceRun(state, m) {
         // (internal/formatter); components/Mismatch.jsx draws the diff.
         stepMismatch: m.mismatch ? { ...state.stepMismatch, [k]: m.mismatch } : state.stepMismatch,
         stepNet: m.stepNetwork ? { ...state.stepNet, [k]: m.stepNetwork } : state.stepNet,
+        samples: withSamples(state.samples, m.samples),
       }
     }
     case 'run_finished':
