@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -68,6 +69,13 @@ type Runner struct {
 	// envOverrides replaces app.env values on a restart (see StartApp).
 	envOverrides map[string]string
 
+	// pid is the running app process's id, 0 when none runs: read by the
+	// profiler's sampler while a restart may replace the process.
+	pid atomic.Int64
+
+	// logObserver is told every line the app logs (see SetLogObserver).
+	logObserver func(line string)
+
 	// portOverrides points {{.<container>.port.<port>}} somewhere other than
 	// the container: at a network resource's proxy (see SetPortOverrides).
 	portOverrides map[string]map[string]int
@@ -95,6 +103,16 @@ func NewRunner(cfg config.AppConfig, cm *container.Manager) *Runner {
 func (r *Runner) SetResources(resources map[string]config.Resource) {
 	r.resources = resources
 }
+
+// SetLogObserver is told every line the app logs, as it arrives: the
+// profiler counts the errors and warnings a scenario makes the app log.
+// Set it before Start.
+func (r *Runner) SetLogObserver(fn func(line string)) { r.logObserver = fn }
+
+// ProcessGroup is the running app's process group in command mode, which is
+// its pid: the app is started in a group of its own. 0 when it is not
+// running, or runs in a container.
+func (r *Runner) ProcessGroup() int { return int(r.pid.Load()) }
 
 // SetPortOverrides makes the app's {{.<container>.port.<port>}} resolve to
 // the given port instead of the container's, per container and container port
@@ -281,6 +299,7 @@ func (r *Runner) startProcess(ctx context.Context) error {
 	if err := r.cmd.Start(); err != nil {
 		return fmt.Errorf("starting app: %w", err)
 	}
+	r.pid.Store(int64(r.cmd.Process.Pid))
 
 	// Stream logs
 	go r.streamCommandLogs(stdout, "stdout")
@@ -412,6 +431,10 @@ func (r *Runner) streamCommandLogs(pipe io.Reader, source string) {
 			r.logLines = r.logLines[1:]
 		}
 		r.logMu.Unlock()
+
+		if r.logObserver != nil {
+			r.logObserver(line)
+		}
 
 		// Write to log file
 		if r.logFile != nil {
@@ -806,6 +829,10 @@ func (r *Runner) captureContainerLogs(ctx context.Context) {
 					continue
 				}
 
+				if r.logObserver != nil {
+					r.logObserver(line)
+				}
+
 				// Store log line
 				r.logMu.Lock()
 				r.logLines = append(r.logLines, line)
@@ -918,6 +945,7 @@ func (r *Runner) stopCommand() error {
 	}
 
 	r.cmd = nil
+	r.pid.Store(0)
 	return nil
 }
 

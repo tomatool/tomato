@@ -13,6 +13,7 @@ import { Flow } from './components/Flow.jsx'
 import { Topology } from './components/Topology.jsx'
 import { Runs } from './components/Runs.jsx'
 import { Screenshots } from './components/Screenshots.jsx'
+import { ProfileTimeline } from './components/Profile.jsx'
 import { Lightbox } from './components/Lightbox.jsx'
 import { Transport } from './components/Transport.jsx'
 import { Console } from './components/Console.jsx'
@@ -29,7 +30,7 @@ const THEMES = ['dark', 'light']
 
 // The inspector's tabs. Flow and Topology look at the selected scenario and
 // share the transport; Runs and Screenshots are lists of what is on disk.
-const SIDE_TABS = { flow: 'Flow', topology: 'Topology', runs: 'Runs', shots: 'Screenshots' }
+const SIDE_TABS = { flow: 'Flow', topology: 'Topology', runs: 'Runs', shots: 'Screenshots', profile: 'Profile' }
 
 export function App() {
   // server data
@@ -611,6 +612,9 @@ export function App() {
           <button className="tab" type="button" role="tab" aria-selected={sideTab === 'shots' ? 'true' : undefined} onClick={showShots}>
             {SIDE_TABS.shots} <span className="count">{shots.length}</span>
           </button>
+          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'profile' ? 'true' : undefined} onClick={() => setSideTab('profile')}>
+            {SIDE_TABS.profile}
+          </button>
           <span style={{ flex: 1 }} />
           <button
             className="btn btn--ghost btn--sm btn--icon" type="button" style={{ alignSelf: 'center' }}
@@ -637,6 +641,8 @@ export function App() {
             <Runs runs={runs} openRun={openRun} onOpenRun={setOpenRun} onOpenLog={openLog} />
           ) : sideTab === 'shots' ? (
             <Screenshots shots={sortedShots} runState={runState} onOpen={openShot} />
+          ) : sideTab === 'profile' ? (
+            <ProfileTimeline runState={runState} />
           ) : !model ? (
             <div className="empty">
               <h3>No scenario selected</h3>

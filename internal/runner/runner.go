@@ -14,6 +14,7 @@ import (
 	"github.com/tomatool/tomato/internal/container"
 	"github.com/tomatool/tomato/internal/feature"
 	_ "github.com/tomatool/tomato/internal/formatter" // Register tomato formatter
+	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/registry"
 	"github.com/tomatool/tomato/internal/resource"
 )
@@ -22,6 +23,14 @@ import (
 type Options struct {
 	Watch  bool
 	Format string // Override output format (e.g., "tomato" for structured events)
+	// Profiler, when set, measures each scenario (see internal/profile).
+	Profiler ScenarioProfiler
+}
+
+// ScenarioProfiler opens a window per scenario and closes it when it ends.
+type ScenarioProfiler interface {
+	ScenarioStarted(name string)
+	ScenarioEnded(name string) *profile.Summary
 }
 
 // Runner executes behavioral tests
@@ -159,10 +168,18 @@ func (r *Runner) setupScenarioHooks(ctx ScenarioContext) {
 			return ctx, fmt.Errorf("before_scenario hooks failed: %w", err)
 		}
 
+		// The scenario's profile starts after the resets and hooks, so
+		// tomato's own work is not counted to it.
+		if r.opts.Profiler != nil {
+			r.opts.Profiler.ScenarioStarted(sc.Name)
+		}
 		return ctx, nil
 	})
 
 	ctx.After(func(ctx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
+		if r.opts.Profiler != nil {
+			r.opts.Profiler.ScenarioEnded(sc.Name)
+		}
 		if hookErr := r.runHooks(ctx, r.config.Hooks.AfterScenario); hookErr != nil {
 			log.Warn().Err(hookErr).Msg("after_scenario hooks failed")
 		}
