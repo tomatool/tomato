@@ -16,7 +16,7 @@ containers:
     preset: redis
 
 resources:
-  sessions-db:
+  sessions-cache:
     type: redis
     container: redis
 ```
@@ -44,7 +44,7 @@ containers:
     tls: true       # TLS only, with a certificate from a CA made for the run
 
 app:
-  command: ./auth-proxy
+  command: ./bin/app
   env:
     REDIS_URL: "{{.redis.host}}:{{.redis.port.6379}}"
     SSL_CERT_FILE: "{{.redis.ca_file}}"   # trust the run's CA
@@ -52,7 +52,7 @@ app:
     # GODEBUG: x509sslcertoverrideplatform=1
 
 resources:
-  sessions-db:
+  sessions-cache:
     type: redis
     container: redis   # connects the same way: cluster, TLS, the run's CA
 ```
@@ -60,7 +60,7 @@ resources:
 The redis steps work as they do against a single server:
 
 ```gherkin
-Then "sessions-db" key "cli_code_claim:{{code}}" exists
+Then "sessions-cache" key "claim:{{id}}" exists
 ```
 
 What each option does:
