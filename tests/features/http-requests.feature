@@ -43,6 +43,19 @@ Feature: HTTP requests and responses in depth
     And "app-client" response json "form.remember" is "yes"
     And "app-client" response json "headers.Content-Type[0]" is "application/x-www-form-urlencoded"
 
+  Scenario: Variables in a form body and query params are substituted before they are encoded
+    When "app-client" sends "GET" to "/echo?code=a%20b%26c%3Dd"
+    And "app-client" response json "query.code[0]" saved as "{{code}}"
+    And "app-client" form body is:
+      | field | value    |
+      | code  | {{code}} |
+      | id    | {{uuid}} |
+    And "app-client" query param "state" is "{{code}}"
+    And "app-client" sends "POST" to "/echo"
+    Then "app-client" response json "form.code" is "a b&c=d"
+    And "app-client" response json "form.id" is uuid
+    And "app-client" response json "query.state[0]" is "a b&c=d"
+
   Scenario: Exact plain-text body and header value
     When "app-client" sends "GET" to "/text"
     Then "app-client" response status is "200"

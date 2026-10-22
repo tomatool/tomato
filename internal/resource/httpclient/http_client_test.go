@@ -410,3 +410,50 @@ func TestHTTPClient_AssertionsUseVariables(t *testing.T) {
 		t.Errorf("unknown variable: %v", err)
 	}
 }
+
+// Form fields and query parameters are encoded, so their variables have to be
+// substituted first: encoded, {{code}} is %7B%7Bcode%7D%7D and stays that way.
+func TestHTTPClient_FormAndQueryUseVariables(t *testing.T) {
+	var gotBody, gotQuery string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		gotBody, gotQuery = string(b), r.URL.RawQuery
+	}))
+	defer server.Close()
+
+	client, err := New("api", config.Resource{BaseURL: server.URL}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.Init(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	resource.SetVariable("code", "a b&c=d")
+
+	if err := client.setFormBody(eventsTable([]string{"field", "value"}, []string{"code", "{{code}}"}, []string{"id", "{{uuid}}"})); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.sendRequest("POST", "/token"); err != nil {
+		t.Fatal(err)
+	}
+	form, err := url.ParseQuery(gotBody)
+	if err != nil {
+		t.Fatalf("body %q: %v", gotBody, err)
+	}
+	if form.Get("code") != "a b&c=d" || !strings.Contains(gotBody, "code=a+b%26c%3Dd") {
+		t.Errorf("form body %q, want code=a+b%%26c%%3Dd", gotBody)
+	}
+	if id := form.Get("id"); len(id) != 36 || strings.Contains(id, "{") {
+		t.Errorf("form field id %q, want a generated uuid", id)
+	}
+
+	if err := client.setQueryParam("code", "{{code}}"); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.sendRequest("GET", "/"); err != nil {
+		t.Fatal(err)
+	}
+	if gotQuery != "code=a+b%26c%3Dd" {
+		t.Errorf("query %q, want code=a+b%%26c%%3Dd", gotQuery)
+	}
+}

@@ -470,10 +470,12 @@ func (r *HTTPClient) setJSONBody(doc *godog.DocString) error {
 }
 
 func (r *HTTPClient) setFormBody(table *godog.Table) error {
+	// Variables are substituted before the form is encoded: encoded, {{code}}
+	// is %7B%7Bcode%7D%7D, which nothing replaces when the request is sent.
 	form := url.Values{}
 	for _, row := range table.Rows[1:] {
 		if len(row.Cells) >= 2 {
-			form.Set(row.Cells[0].Value, row.Cells[1].Value)
+			form.Set(resource.ReplaceVariables(row.Cells[0].Value), resource.ReplaceVariables(row.Cells[1].Value))
 		}
 	}
 	r.requestBody = []byte(form.Encode())
@@ -551,7 +553,15 @@ func (r *HTTPClient) newRequest(ctx context.Context, method, path string, body i
 		if strings.Contains(reqURL, "?") {
 			sep = "&"
 		}
-		reqURL += sep + r.requestParams.Encode()
+		// Variables are substituted before the parameters are encoded, as a
+		// form body's are, and per request, as headers' and cookies' are.
+		params := url.Values{}
+		for k, vs := range r.requestParams {
+			for _, v := range vs {
+				params.Add(resource.ReplaceVariables(k), resource.ReplaceVariables(v))
+			}
+		}
+		reqURL += sep + params.Encode()
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, reqURL, body)
