@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/cucumber/godog"
@@ -41,7 +42,9 @@ const (
 
 // Event represents a structured test event
 type Event struct {
-	Type     string `json:"type"`
+	Type string `json:"type"`
+	// At is when the event happened, in UTC.
+	At       string `json:"at,omitempty"`
 	Feature  string `json:"feature,omitempty"`
 	Scenario string `json:"scenario,omitempty"`
 	Step     string `json:"step,omitempty"`
@@ -155,6 +158,8 @@ func mismatchOf(err error) *Mismatch {
 // TomatoFormatter outputs structured JSON events for UI parsing
 type TomatoFormatter struct {
 	out io.Writer
+	// rec is the run's recorder, when this formatter claimed it (Record).
+	rec io.Writer
 
 	// Track current context
 	currentFeature     string
@@ -189,7 +194,49 @@ func init() {
 func TomatoFormatterFunc(suite string, out io.Writer) formatters.Formatter {
 	return &TomatoFormatter{
 		out: out,
+		rec: claimRecorder(),
 	}
+}
+
+// The recorder is where a run's events are kept, whatever it prints: the
+// events.log in its run directory, which reports and replays are built from
+// after the fact. Exactly one TomatoFormatter writes the scenarios to it, the
+// first one godog creates, because the profile's samples are drained by
+// whichever formatter takes them; Emit writes the rest of the run to it.
+var (
+	recMu      sync.Mutex
+	recorder   io.Writer
+	recClaimed bool
+)
+
+// Record sends the run's events to w from now on, until the returned stop
+// is called.
+func Record(w io.Writer) (stop func()) {
+	recMu.Lock()
+	recorder, recClaimed = w, false
+	recMu.Unlock()
+	return func() {
+		recMu.Lock()
+		recorder, recClaimed = nil, false
+		recMu.Unlock()
+	}
+}
+
+// claimRecorder hands the recorder to the first formatter that asks.
+func claimRecorder() io.Writer {
+	recMu.Lock()
+	defer recMu.Unlock()
+	if recorder == nil || recClaimed {
+		return nil
+	}
+	recClaimed = true
+	return recorder
+}
+
+func currentRecorder() io.Writer {
+	recMu.Lock()
+	defer recMu.Unlock()
+	return recorder
 }
 
 // EmitRunError writes a run_error event: the run failed in phase before or
@@ -199,9 +246,10 @@ func EmitRunError(out io.Writer, phase string, err error, logs []string) {
 }
 
 // Emit writes one event, for what happens outside godog: the phases of a run
-// before its scenarios, and the containers and app coming up in them.
+// before its scenarios, and the containers and app coming up in them. It goes
+// to out, when there is one, and to the run's recorder.
 func Emit(out io.Writer, event Event) {
-	(&TomatoFormatter{out: out}).emit(event)
+	(&TomatoFormatter{out: out, rec: currentRecorder()}).emit(event)
 }
 
 // Millis is a duration as an event carries it.
@@ -211,8 +259,17 @@ func Millis(d time.Duration) *int64 {
 }
 
 func (f *TomatoFormatter) emit(event Event) {
+	if event.At == "" {
+		event.At = time.Now().UTC().Format(time.RFC3339Nano)
+	}
 	data, _ := json.Marshal(event)
-	fmt.Fprintf(f.out, "TOMATO_EVENT:%s\n", string(data))
+	line := fmt.Sprintf("TOMATO_EVENT:%s\n", data)
+	if f.out != nil {
+		io.WriteString(f.out, line)
+	}
+	if f.rec != nil && f.rec != f.out {
+		io.WriteString(f.rec, line)
+	}
 }
 
 func intp(i int) *int { return &i }

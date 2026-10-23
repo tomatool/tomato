@@ -16,8 +16,10 @@ import (
 	"github.com/tomatool/tomato/internal/formatter"
 	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/registry"
+	"github.com/tomatool/tomato/internal/report"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/runner"
+	"github.com/tomatool/tomato/internal/version"
 	"github.com/urfave/cli/v2"
 )
 
@@ -82,19 +84,25 @@ func runTests(c *cli.Context) (err error) {
 	testsStarted := false
 	var appLogs []string
 	structured := c.String("format") == "tomato"
+	// The events go to stdout in the structured output, and always to the
+	// run's events.log once the run directory exists (see below).
+	var stdoutEvents io.Writer
+	if structured {
+		stdoutEvents = os.Stdout
+	}
+	// finish is the last thing the run does, once it has said how it ended:
+	// it writes the reports built from the events and stops recording them.
+	finish := func(failed bool) {}
 	defer func() {
-		if err != nil && !testsStarted && structured {
-			formatter.EmitRunError(os.Stdout, phase, err, appLogs)
+		if err != nil && !testsStarted {
+			formatter.EmitRunError(stdoutEvents, phase, err, appLogs)
 		}
+		finish(err != nil)
 	}()
 	// The structured output carries the run coming up as well as its
 	// scenarios: each phase it enters, and the containers and the app in
 	// them, so `tomato ui` can show the wait before the first scenario.
-	emit := func(ev formatter.Event) {
-		if structured {
-			formatter.Emit(os.Stdout, ev)
-		}
-	}
+	emit := func(ev formatter.Event) { formatter.Emit(stdoutEvents, ev) }
 	enter := func(p string) {
 		phase = p
 		emit(formatter.Event{Type: formatter.EventPhase, Phase: p})
@@ -140,6 +148,22 @@ func runTests(c *cli.Context) (err error) {
 
 	// Tee stdout to both console and log file, until the run returns.
 	defer teeStdout(tomatoLog)()
+
+	// Every run keeps its events, whatever it prints, so a report can be
+	// written for it later (`tomato report`, the UI's Export); the reports
+	// output asks for (`ctrf:reports/ctrf.json`) are written from them as
+	// the run ends.
+	if events, eerr := os.Create(runCtx.LogPath(runlog.EventsLog)); eerr != nil {
+		fmt.Fprintf(os.Stderr, "%s could not record the run's events: %v\n", warnStyle.Render("⚠"), eerr)
+	} else {
+		stopRecording := formatter.Record(events)
+		outputs := runner.ReportOutputs(cfg.Settings.Output)
+		finish = func(bool) {
+			stopRecording()
+			events.Close()
+			writeReportOutputs(runCtx, outputs)
+		}
+	}
 
 	// Stop the app and containers on Ctrl+C, or the UI's Stop, too.
 	interrupts := handleInterrupts(tomatoLog)
@@ -366,7 +390,7 @@ func runTests(c *cli.Context) (err error) {
 	fmt.Println()
 	fmt.Println(subtitleStyle.Render("Initializing resources..."))
 
-	opts := runner.Options{Format: c.String("format")}
+	opts := runner.Options{Format: c.String("format"), Record: true}
 	if prof != nil {
 		opts.Profiler = prof
 	}
@@ -518,4 +542,41 @@ func printKeepAliveInfo(cm *container.Manager, app *apprunner.Runner, cfg *confi
 		fmt.Printf("  curl http://%s:%d/\n", app.GetHost(), app.GetPort())
 	}
 	fmt.Println()
+}
+
+// writeReportOutputs writes the reports tomato builds from the run's events
+// rather than through godog, such as `ctrf:reports/ctrf.json`.
+func writeReportOutputs(runCtx *runlog.RunContext, outputs map[string][]string) {
+	if len(outputs) == 0 {
+		return
+	}
+	run, err := report.Load(runCtx.Dir, runCtx.ID, runCtx.Timestamp)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s could not write the reports: %v\n", warnStyle.Render("⚠"), err)
+		return
+	}
+	for format, paths := range outputs {
+		for _, path := range paths {
+			if err := writeReportFile(path, format, run); err != nil {
+				fmt.Fprintf(os.Stderr, "%s could not write %s: %v\n", warnStyle.Render("⚠"), path, err)
+			}
+		}
+	}
+}
+
+func writeReportFile(path, format string, run *report.Run) error {
+	if dir := filepath.Dir(path); dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	if err := report.Write(f, format, run, version.Version); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }
