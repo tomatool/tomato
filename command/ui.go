@@ -17,6 +17,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -749,13 +750,32 @@ func (s *UIServer) handleStop(w http.ResponseWriter, r *http.Request) {
 	cmd := s.runningCmd
 	s.runningMux.Unlock()
 
-	// Kill the process
+	// Ask the run to stop, so it stops the app and containers it started. A
+	// killed run left its app running, holding the app port for the next one.
 	if cmd.Process != nil {
-		cmd.Process.Kill()
+		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+			cmd.Process.Kill()
+		} else {
+			go s.killIfStillRunning(cmd, stopGracePeriod)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "stopped"})
+}
+
+// stopGracePeriod is how long Stop waits for a run to shut down before
+// killing it: long enough to stop the app and the containers.
+const stopGracePeriod = 45 * time.Second
+
+// killIfStillRunning kills cmd if it is still the running run after grace.
+func (s *UIServer) killIfStillRunning(cmd *exec.Cmd, grace time.Duration) {
+	time.Sleep(grace)
+	s.runningMux.Lock()
+	defer s.runningMux.Unlock()
+	if s.runningCmd == cmd && cmd.Process != nil {
+		cmd.Process.Kill()
+	}
 }
 
 func (s *UIServer) handleRunLog(w http.ResponseWriter, r *http.Request) {

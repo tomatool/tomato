@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -143,6 +141,10 @@ func runTests(c *cli.Context) (err error) {
 	// Tee stdout to both console and log file, until the run returns.
 	defer teeStdout(tomatoLog)()
 
+	// Stop the app and containers on Ctrl+C, or the UI's Stop, too.
+	interrupts := handleInterrupts(tomatoLog)
+	defer interrupts.stop()
+
 	// Record why a run ended in the run log. main prints the error to stderr
 	// after this function returns — the tee only copies stdout, and by then
 	// it has been torn down anyway — so a run that dies while starting
@@ -208,6 +210,7 @@ func runTests(c *cli.Context) (err error) {
 			fmt.Printf("  %s %s %s\n", checkStyle.Render("✓"), name, mutedStyle.Render(took.Round(100*time.Millisecond).String()))
 		}
 	})
+	interrupts.onInterrupt(cm.Cleanup)
 
 	// Only auto-cleanup if not in keep-alive mode
 	keepAlive := c.Bool("keep-alive")
@@ -232,6 +235,7 @@ func runTests(c *cli.Context) (err error) {
 	// connected to a stopped container keeps reconnecting, and gocql logs
 	// every attempt.
 	defer cleanupResources(registry)
+	interrupts.onInterrupt(func() { cleanupResources(registry) })
 	appEnv, err := registry.InitAppEnvProviders(c.Context)
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources the app depends on: %w", err)
@@ -258,6 +262,8 @@ func runTests(c *cli.Context) (err error) {
 		appRunner.SetResources(cfg.Resources)
 		appRunner.SetProvidedEnv(appEnv.Set, appEnv.Unset)
 		appRunner.SetPortOverrides(registry.AppPorts())
+		// Registered before Start: an app still starting up is stopped too.
+		interrupts.onInterrupt(func() { appRunner.Stop() })
 
 		// Force container mode if --container flag is set
 		if c.Bool("container") {
@@ -396,7 +402,7 @@ func runTests(c *cli.Context) (err error) {
 	// Handle keep-alive mode
 	if keepAlive {
 		printKeepAliveInfo(cm, appRunner, cfg)
-		waitForInterrupt()
+		interrupts.wait()
 
 		// Cleanup after user interrupts
 		fmt.Println()
@@ -512,11 +518,4 @@ func printKeepAliveInfo(cm *container.Manager, app *apprunner.Runner, cfg *confi
 		fmt.Printf("  curl http://%s:%d/\n", app.GetHost(), app.GetPort())
 	}
 	fmt.Println()
-}
-
-// waitForInterrupt blocks until the user presses Ctrl+C
-func waitForInterrupt() {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	<-sigChan
 }
