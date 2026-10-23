@@ -11,9 +11,7 @@ import { ScenarioCard, BackgroundCard } from './components/ScenarioCard.jsx'
 import { ConfigView } from './components/ConfigView.jsx'
 import { Flow } from './components/Flow.jsx'
 import { Topology } from './components/Topology.jsx'
-import { Runs } from './components/Runs.jsx'
-import { Screenshots } from './components/Screenshots.jsx'
-import { ProfileTimeline } from './components/Profile.jsx'
+import { RunReport } from './components/RunReport.jsx'
 import { Lightbox } from './components/Lightbox.jsx'
 import { Transport } from './components/Transport.jsx'
 import { Console } from './components/Console.jsx'
@@ -30,9 +28,12 @@ const CONSOLE_MIN = 80
 // :root carries, so the attribute only ever has to name the exception.
 const THEMES = ['dark', 'light']
 
-// The inspector's tabs. Flow and Topology look at the selected scenario and
-// share the transport; Runs and Screenshots are lists of what is on disk.
-const SIDE_TABS = { flow: 'Flow', topology: 'Topology', runs: 'Runs', shots: 'Screenshots', profile: 'Profile' }
+// The inspector's tabs: the selected scenario, as a sequence or on the
+// topology, with the transport they share; and a run's report, with its
+// logs, screenshots and profile.
+const SIDE_TABS = { scenario: 'Scenario', report: 'Report' }
+// How the Scenario tab draws the selected scenario.
+const SCENARIO_VIEWS = { sequence: 'Sequence', topology: 'Topology' }
 
 export function App() {
   // server data
@@ -65,12 +66,12 @@ export function App() {
   const [selectedScenario, setSelectedScenario] = useState(0)
   const [filter, setFilter] = useState('')
   const [cfgMode, setCfgMode] = useState('structured')
-  const [sideTab, setSideTab] = useState('flow')
+  const [sideTab, setSideTab] = useLocalEnum('sideTab', Object.keys(SIDE_TABS), 'scenario')
+  const [scenarioView, setScenarioView] = useLocalEnum('scenarioView', Object.keys(SCENARIO_VIEWS), 'sequence')
   const [openDirs, setOpenDirs] = useState({})
   const [collapsed, setCollapsed] = useState({})
   const [treeOpen, setTreeOpen] = useState(true)
   const [sideOpen, setSideOpen] = useState(true)
-  const [openRun, setOpenRun] = useState(null)
   const [logTabs, setLogTabs] = useState([])
   const [activeLog, setActiveLog] = useState(null)
   const [hot, setHot] = useState(null)
@@ -246,7 +247,7 @@ export function App() {
   const lbIndex = lightbox ? sortedShots.findIndex((s) => samePath(s.path, lightbox.path)) : -1
   const lbShots = !lightbox ? [] : lbIndex >= 0 ? sortedShots
     : [{ name: shotName(lightbox.path), path: lightbox.path, url: screenshotURL(lightbox.path) }]
-  const flowTab = sideTab === 'flow' || sideTab === 'topology'
+  const flowTab = sideTab === 'scenario'
 
   const feature = features.find((f) => f.filePath === selectedFile) ?? null
   const shown = feature ? visibleScenarios(feature) : []
@@ -300,10 +301,9 @@ export function App() {
       return next ? { path: next.path } : cur
     })
   }, [sortedShots])
-  // The tab re-reads the list when opened: a run made outside the UI into a
-  // directory nothing watches shows up then.
-  const showShots = useCallback(() => {
-    setSideTab('shots')
+  // The screenshots re-read the list when shown: a run made outside the UI
+  // into a directory nothing watches shows up then.
+  const refreshShots = useCallback(() => {
     fetch('/api/screenshots').then((r) => r.json()).then((list) => { if (Array.isArray(list)) setShots(list) }).catch(() => {})
   }, [])
 
@@ -375,7 +375,8 @@ export function App() {
   // the inspector shows the flow beside it, and picking that tab again
   // brings the topology back to the inspector.
   const toggleCenter = useCallback(() => {
-    if (center === 'topology') { setCenter('doc'); setSideTab('topology') } else { setCenter('topology'); setSideTab('flow') }
+    setSideTab('scenario')
+    if (center === 'topology') { setCenter('doc'); setScenarioView('topology') } else { setCenter('topology'); setScenarioView('sequence') }
     // The pane keeps its scroll position across what it shows; start at the top.
     document.querySelector('.pane--doc')?.scrollTo({ top: 0 })
   }, [center, setCenter])
@@ -670,7 +671,7 @@ export function App() {
             <button
               className="rail-tab" type="button" key={t}
               aria-selected={sideTab === t ? 'true' : undefined}
-              onClick={() => { if (t === 'shots') showShots(); else setSideTab(t); setSideOpen(true) }}
+              onClick={() => { setSideTab(t); setSideOpen(true) }}
             >
               {label}
             </button>
@@ -678,20 +679,11 @@ export function App() {
         </div>
 
         <div className="tabs" role="tablist">
-          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'flow' ? 'true' : undefined} onClick={() => setSideTab('flow')}>
-            Flow <span className="count">{model?.msgs.length ?? 0}</span>
+          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'scenario' ? 'true' : undefined} onClick={() => setSideTab('scenario')}>
+            Scenario <span className="count">{model?.msgs.length ?? 0}</span>
           </button>
-          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'topology' ? 'true' : undefined} onClick={() => { setSideTab('topology'); if (center === 'topology') setCenter('doc') }}>
-            Topology
-          </button>
-          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'runs' ? 'true' : undefined} onClick={() => setSideTab('runs')}>
-            Runs <span className="count">{runs.length}</span>
-          </button>
-          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'shots' ? 'true' : undefined} onClick={showShots}>
-            {SIDE_TABS.shots} <span className="count">{shots.length}</span>
-          </button>
-          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'profile' ? 'true' : undefined} onClick={() => setSideTab('profile')}>
-            {SIDE_TABS.profile}
+          <button className="tab" type="button" role="tab" aria-selected={sideTab === 'report' ? 'true' : undefined} onClick={() => setSideTab('report')}>
+            Report <span className="count">{runs.length}</span>
           </button>
           <span style={{ flex: 1 }} />
           <button
@@ -707,6 +699,24 @@ export function App() {
           </button>
         </div>
 
+        {flowTab && (
+          <div className="side-switch">
+            <div className="seg" role="tablist" aria-label="Draw the scenario as">
+              {Object.entries(SCENARIO_VIEWS).map(([v, label]) => (
+                <button
+                  className="seg-opt" type="button" role="tab" key={v}
+                  aria-pressed={scenarioView === v ? 'true' : undefined}
+                  disabled={v === 'topology' && center === 'topology'}
+                  title={v === 'topology' && center === 'topology' ? 'The topology is in the centre' : undefined}
+                  onClick={() => setScenarioView(v)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {flowTab && model && (
           <Transport
             msgs={model.msgs} cursor={cursor} playing={playing}
@@ -715,18 +725,17 @@ export function App() {
         )}
 
         <div className="pane-body">
-          {sideTab === 'runs' ? (
-            <Runs runs={runs} openRun={openRun} onOpenRun={setOpenRun} onOpenLog={openLog} onWatch={watchRun} />
-          ) : sideTab === 'shots' ? (
-            <Screenshots shots={sortedShots} runState={runState} onOpen={openShot} />
-          ) : sideTab === 'profile' ? (
-            <ProfileTimeline runState={runState} />
+          {sideTab === 'report' ? (
+            <RunReport
+              runs={runs} liveRunId={runId} runState={runState} shots={sortedShots}
+              onOpenShot={openShot} onOpenLog={openLog} onWatch={watchRun} onRefreshShots={refreshShots}
+            />
           ) : !model ? (
             <div className="empty">
               <h3>No scenario selected</h3>
               <p>Pick a scenario to see what it talks to.</p>
             </div>
-          ) : sideTab === 'topology' ? (
+          ) : scenarioView === 'topology' && center !== 'topology' ? (
             <Topology
               model={model} topo={topo} cursor={cursor}
               hot={hot} pinned={pinned} onHot={setHot} onPin={togglePin}

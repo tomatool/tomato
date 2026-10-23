@@ -887,3 +887,23 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .rp-bar[data-status="failed"]{background:var(--fail)}
 .rp-bar-value{color:var(--fg-2);white-space:nowrap;text-align:right}
 .rp-perf .profile-timeline{padding:0}
+
+/* — inspector: the Scenario tab's Sequence | Topology switch, and the Report
+   tab (components/RunReport.jsx): a run picked, exported, and its logs,
+   screenshots and profile — */
+.side-switch{display:flex;align-items:center;padding:var(--s-3) var(--s-5) 0;flex:none}
+.rr{display:flex;flex-direction:column;min-height:0}
+.rr-head{display:flex;flex-direction:column;gap:var(--s-4);padding:var(--s-4) var(--s-5);border-bottom:1px solid var(--line)}
+.rr-pick{display:flex;align-items:center;gap:var(--s-4)}
+.rr-pick select.input{font-family:var(--font-mono);height:26px;padding:0 var(--s-3)}
+.rr-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-3) var(--s-5)}
+.rr-export{display:inline-flex;align-items:center;gap:var(--s-2)}
+.rr-export .label{margin-right:var(--s-2)}
+.rr-export a.btn{text-decoration:none}
+.rr-head .seg{align-self:flex-start}
+.rr-head .seg .count{height:14px;min-width:14px;font-size:10px}
+.rr-logs{display:flex;flex-direction:column;padding:var(--s-3) 0}
+.rr-log{display:flex;align-items:center;justify-content:space-between;gap:var(--s-4);padding:var(--s-3) var(--s-5);border:0;background:none;color:var(--fg-1);font:var(--fs-12) var(--font-mono);text-align:left;cursor:pointer}
+.rr-log:hover{background:var(--bg-2);color:var(--fg-0)}
+.rr-log-size{font-size:var(--fs-11);color:var(--fg-3)}
+.rr-note{padding:var(--s-3) var(--s-5);font-size:var(--fs-11)}

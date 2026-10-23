@@ -70,7 +70,7 @@ feed CI test reports and test-management tools.
 
 ```yaml
 settings:
-  output: "pretty,junit:reports/tomato.xml,cucumber:reports/cucumber.json"
+  output: "pretty,junit:reports/tomato.xml,ctrf:reports/ctrf.json"
 ```
 
 | Format | Writes |
@@ -79,7 +79,25 @@ settings:
 | `progress` | One character per step |
 | `junit` | JUnit XML, one `testsuite` per feature and one `testcase` per scenario |
 | `cucumber` | Cucumber JSON, the input most Cucumber report tools import |
+| `ctrf` | [CTRF](https://ctrf.io) JSON, for the ctrf-io GitHub Actions and reporters: one test per scenario with its steps, the failed step's error, its screenshots as attachments and what it cost the app (the [profile](profile.md)) in `extra`. File only |
 | `tomato` | Structured events used by the GitHub Action's PR comment |
+
+Every run also keeps its events in `.tomato/runs/<run>/events.log`, whatever
+`output` says, so a report can be written for any past run:
+
+```sh
+tomato report                         # the last run, as CTRF JSON on stdout
+tomato report 216b61f6 -f junit -o reports/junit.xml
+```
+
+`tomato report` writes `ctrf` or `junit`. Its JUnit carries more than the
+`junit` output does: the failed step and its error in `<failure>`, the steps
+in `<system-out>` with each screenshot as `[[ATTACHMENT|path]]`, which
+Jenkins and GitLab show, and the scenario's profile as `<properties>`. A run
+that failed before its scenarios — a container that did not start, an app
+that never became ready — is one failed test named after where it failed,
+in both formats, so CI shows the run failed rather than zero tests. `tomato
+ui` exports the same files from its Report tab.
 
 Tomato creates the report directories if they don't exist. When `--format` is
 passed on the command line (the GitHub Action passes `--format tomato` for PR

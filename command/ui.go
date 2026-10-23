@@ -2,6 +2,7 @@ package command
 
 import (
 	"bufio"
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/tomatool/tomato/internal/config"
+	"github.com/tomatool/tomato/internal/report"
 	"github.com/tomatool/tomato/internal/resource"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/version"
@@ -785,6 +787,10 @@ func (s *UIServer) handleRunLog(w http.ResponseWriter, r *http.Request) {
 		s.handleRunEvents(w, runName)
 		return
 	}
+	if runName, ok := strings.CutSuffix(path, "/report"); ok {
+		s.handleRunReport(w, r, runName)
+		return
+	}
 	parts := strings.Split(path, "/logs/")
 	if len(parts) != 2 {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
@@ -808,13 +814,58 @@ func (s *UIServer) handleRunLog(w http.ResponseWriter, r *http.Request) {
 // read back out of its tomato.log: the run's output is teed there, structured
 // events included, so a run can be watched again after the fact.
 func (s *UIServer) handleRunEvents(w http.ResponseWriter, runName string) {
-	content, err := runlog.GetLogContent(runName, "tomato")
+	info, err := runlog.Find(runName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+	// events.log has every run's events; tomato.log only those of a run
+	// started with --format tomato, which is all a run from before had.
+	content, err := runlog.GetLogContent(info.Name, runlog.EventsLog)
+	if err != nil {
+		content, err = runlog.GetLogContent(info.Name, "tomato")
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	// The banner with the run id is in tomato.log, not in the events.
+	if !strings.Contains(content, "run: "+info.ID()) {
+		content = "📋 run: " + info.ID() + "\n" + content
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(replayMessages(content))
+}
+
+// handleRunReport serves a run's report in a standard format, as a download:
+// GET /api/runs/{run}/report?format=ctrf|junit.
+func (s *UIServer) handleRunReport(w http.ResponseWriter, r *http.Request, runName string) {
+	format := r.URL.Query().Get("format")
+	if format == "" {
+		format = "ctrf"
+	}
+	info, err := runlog.Find(runName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	run, err := report.Load(info.Dir, info.ID(), info.Started())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	var buf bytes.Buffer
+	if err := report.Write(&buf, format, run, version.Version); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	contentType := "application/json"
+	if format == "junit" {
+		contentType = "application/xml"
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="tomato-%s-%s%s"`, info.ID(), format, report.Extension(format)))
+	w.Write(buf.Bytes())
 }
 
 // replayMessages is a run's /ws feed rebuilt from its log, from run_started

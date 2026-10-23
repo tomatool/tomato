@@ -25,6 +25,9 @@ type Options struct {
 	Format string // Override output format (e.g., "tomato" for structured events)
 	// Profiler, when set, measures each scenario (see internal/profile).
 	Profiler ScenarioProfiler
+	// Record makes sure a tomato formatter runs, so the run's events reach
+	// its recorder (formatter.Record) even when nothing prints them.
+	Record bool
 }
 
 // ScenarioProfiler opens a window per scenario and closes it when it ends.
@@ -111,7 +114,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		return fmt.Errorf("before_all hooks failed: %w", err)
 	}
 
-	format := resolveFormat(r.config.Settings.Output, r.opts.Format)
+	format := godogFormat(resolveFormat(r.config.Settings.Output, r.opts.Format), r.opts.Record)
 	if err := ensureReportDirs(format); err != nil {
 		return err
 	}
@@ -255,6 +258,47 @@ func resolveFormat(configured, override string) string {
 		}
 	}
 	return strings.Join(formats, ",")
+}
+
+// reportFormats are the outputs tomato writes from the run's events once it
+// has ended, rather than through a godog formatter.
+var reportFormats = map[string]bool{"ctrf": true}
+
+// godogFormat is the format string godog is given: the outputs tomato writes
+// itself left out, and a tomato formatter writing nowhere added when record
+// is set and none would run, so the run's events are recorded anyway.
+func godogFormat(format string, record bool) string {
+	var parts []string
+	hasTomato := false
+	for _, part := range strings.Split(format, ",") {
+		part = strings.TrimSpace(part)
+		name, _, _ := strings.Cut(part, ":")
+		if part == "" || reportFormats[name] {
+			continue
+		}
+		hasTomato = hasTomato || name == "tomato"
+		parts = append(parts, part)
+	}
+	if record && !hasTomato {
+		parts = append(parts, "tomato:"+os.DevNull)
+	}
+	if len(parts) == 0 {
+		return "pretty"
+	}
+	return strings.Join(parts, ",")
+}
+
+// ReportOutputs are the file outputs tomato writes itself from a format
+// string, by format: {"ctrf": ["reports/ctrf.json"]}.
+func ReportOutputs(format string) map[string][]string {
+	out := map[string][]string{}
+	for _, part := range strings.Split(format, ",") {
+		name, path, ok := strings.Cut(strings.TrimSpace(part), ":")
+		if ok && path != "" && reportFormats[name] {
+			out[name] = append(out[name], path)
+		}
+	}
+	return out
 }
 
 // ensureReportDirs creates the parent directory of every file output in a

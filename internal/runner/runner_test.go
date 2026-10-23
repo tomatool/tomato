@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -1007,5 +1008,34 @@ func TestProfilerWindowFollowsTheScenario(t *testing.T) {
 	_, _ = hooks.beforeHook(context.Background(), sc)
 	if len(prof.calls) != 0 {
 		t.Errorf("a failed reset opened a window: %v", prof.calls)
+	}
+}
+
+func TestGodogFormat(t *testing.T) {
+	for _, tt := range []struct {
+		format string
+		record bool
+		want   string
+	}{
+		{"pretty", false, "pretty"},
+		// A run records its events even when it only prints pretty output.
+		{"pretty", true, "pretty,tomato:" + os.DevNull},
+		// One tomato formatter is enough: the first one created records.
+		{"tomato", true, "tomato"},
+		{"pretty,tomato:events.txt", true, "pretty,tomato:events.txt"},
+		// godog does not know ctrf; tomato writes it from the events.
+		{"pretty,ctrf:reports/ctrf.json,junit:reports/j.xml", true, "pretty,junit:reports/j.xml,tomato:" + os.DevNull},
+		{"ctrf:reports/ctrf.json", false, "pretty"},
+	} {
+		if got := godogFormat(tt.format, tt.record); got != tt.want {
+			t.Errorf("godogFormat(%q, %v) = %q, want %q", tt.format, tt.record, got, tt.want)
+		}
+	}
+}
+
+func TestReportOutputs(t *testing.T) {
+	got := ReportOutputs("pretty, ctrf:reports/a.json,junit:j.xml,ctrf:b.json,ctrf")
+	if want := map[string][]string{"ctrf": {"reports/a.json", "b.json"}}; !reflect.DeepEqual(got, want) {
+		t.Errorf("ReportOutputs = %v, want %v", got, want)
 	}
 }

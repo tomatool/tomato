@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -168,4 +169,49 @@ func absolute(path string) string {
 		return path
 	}
 	return abs
+}
+
+// EventsLog is the file in a run directory that keeps the run's events, for
+// reports and replays after the fact.
+const EventsLog = "events"
+
+// Find is the run directory a run is known by: its id (the last part of the
+// directory name), its directory name, or "" for the most recent run. A name
+// with a path separator in it is refused, so a request cannot reach outside
+// .tomato/runs.
+func Find(run string) (RunInfo, error) {
+	if strings.ContainsAny(run, `/\`) || run == "." || run == ".." {
+		return RunInfo{}, fmt.Errorf("no run %q", run)
+	}
+	runs, err := ListRuns()
+	if err != nil {
+		return RunInfo{}, err
+	}
+	for _, r := range runs {
+		if run == "" || r.Name == run || strings.HasSuffix(r.Name, "_"+run) {
+			return r, nil
+		}
+	}
+	if run == "" {
+		return RunInfo{}, fmt.Errorf("no runs in .tomato/runs yet")
+	}
+	return RunInfo{}, fmt.Errorf("no run %q in .tomato/runs", run)
+}
+
+// Started is when a run began, read from its directory name.
+func (r RunInfo) Started() time.Time {
+	parts := strings.SplitN(r.Name, "_", 3)
+	if len(parts) < 2 {
+		return r.Timestamp
+	}
+	t, err := time.ParseInLocation("2006-01-02_150405", parts[0]+"_"+parts[1], time.Local)
+	if err != nil {
+		return r.Timestamp
+	}
+	return t
+}
+
+// ID is the run's id, the last part of its directory name.
+func (r RunInfo) ID() string {
+	return r.Name[strings.LastIndex(r.Name, "_")+1:]
 }
