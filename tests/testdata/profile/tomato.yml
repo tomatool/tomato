@@ -1,0 +1,24 @@
+# Fixture for tests/features/profile.feature: an app whose endpoints cost a
+# known amount of CPU and memory, or log an error, and no containers. The
+# integration suite runs tomato against it and checks the profile.
+version: 2
+
+app:
+  command: go run ./tests/testdata/profile/app
+  port: 18094
+  ready:
+    type: http
+    path: /health
+    timeout: 120s
+  wait: 100ms
+  env:
+    PORT: "18094"
+
+resources:
+  app-client:
+    type: http-client
+    base_url: "http://localhost:18094"
+
+features:
+  paths:
+    - ./tests/testdata/profile/features

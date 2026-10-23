@@ -39,6 +39,7 @@ container to it:
 [AWS](configuration/aws.md) ·
 [Lifecycle](configuration/lifecycle.md) ·
 [Network](configuration/network.md) ·
+[Profile](configuration/profile.md) ·
 [Browser](configuration/browser.md) ·
 [PDF](configuration/pdf.md)
 

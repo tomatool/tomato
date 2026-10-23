@@ -246,6 +246,20 @@ func (r *Registry) AppPorts() map[string]map[string]int {
 	return out
 }
 
+// Meters returns the resources that see the app's traffic to a dependency,
+// by name, for the scenario profile.
+func (r *Registry) Meters() map[string]resource.DependencyMeter {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := map[string]resource.DependencyMeter{}
+	for name, h := range r.handlers {
+		if m, ok := h.(resource.DependencyMeter); ok {
+			out[name] = m
+		}
+	}
+	return out
+}
+
 // Descriptions returns what resources have to say at the start of a run, in
 // resource-name order.
 func (r *Registry) Descriptions() []string {

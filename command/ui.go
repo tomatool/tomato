@@ -158,6 +158,11 @@ type WSMessage struct {
 	// StepNetwork is what network resources did while a step ran and the
 	// faults on when it ended, relayed as the runner sent it on step_end.
 	StepNetwork json.RawMessage `json:"stepNetwork,omitempty"`
+	// Samples are the app's and containers' readings since the last message
+	// that carried them; Profile is a finished scenario's cost, on its
+	// scenario_passed or scenario_failed. Relayed as the runner sent them.
+	Samples json.RawMessage `json:"samples,omitempty"`
+	Profile json.RawMessage `json:"profile,omitempty"`
 }
 
 // TomatoEvent represents a structured event from the tomato formatter
@@ -180,6 +185,8 @@ type TomatoEvent struct {
 	Screenshots []resource.Screenshot `json:"screenshots,omitempty"`
 	// Network is what network resources did while the step ran.
 	Network json.RawMessage `json:"network,omitempty"`
+	Samples json.RawMessage `json:"samples,omitempty"`
+	Profile json.RawMessage `json:"profile,omitempty"`
 }
 
 func runWebUI(c *cli.Context) error {
@@ -878,6 +885,8 @@ func (s *UIServer) runTests(scenarioFilter string) {
 						Status:     "failed",
 						Output:     event.Error,
 						DurationMs: event.DurationMs,
+						Samples:    event.Samples,
+						Profile:    event.Profile,
 					})
 				} else if event.Status == "passed" {
 					s.broadcast(WSMessage{
@@ -885,6 +894,8 @@ func (s *UIServer) runTests(scenarioFilter string) {
 						Scenario:   event.Scenario,
 						Status:     "passed",
 						DurationMs: event.DurationMs,
+						Samples:    event.Samples,
+						Profile:    event.Profile,
 					})
 				}
 
@@ -947,6 +958,7 @@ func stepFinished(event TomatoEvent) WSMessage {
 		Mismatch:        event.Mismatch,
 		StepScreenshots: event.Screenshots,
 		StepNetwork:     event.Network,
+		Samples:         event.Samples,
 	}
 }
 

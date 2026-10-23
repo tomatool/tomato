@@ -282,3 +282,91 @@ func TestValidateOptions(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+// slowEcho answers every line after 100ms, as a dependency doing work does.
+func slowEcho(t *testing.T) string {
+	t.Helper()
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { l.Close() })
+	go func() {
+		for {
+			c, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				defer c.Close()
+				r := bufio.NewReader(c)
+				for {
+					line, err := r.ReadString('\n')
+					if err != nil {
+						return
+					}
+					time.Sleep(100 * time.Millisecond)
+					_, _ = c.Write([]byte(line))
+				}
+			}()
+		}
+	}()
+	return l.Addr().String()
+}
+
+func TestMeterCountsTrafficRoundTripsAndWait(t *testing.T) {
+	n, err := New("db-network", config.Resource{Type: "network", Container: "db"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n.cm = fakeContainers{addr: slowEcho(t)}
+	if err := n.Init(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = n.Cleanup(context.Background()) })
+
+	c, err := net.Dial("tcp", n.appAddr())
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := bufio.NewReader(c)
+	for i := 0; i < 3; i++ {
+		if _, err := c.Write([]byte("hello\n")); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := r.ReadString('\n'); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got := n.MeterDependency()
+	if got.Container != "db" || got.Connections != 1 || got.Open != 1 {
+		t.Errorf("connections: %+v", got)
+	}
+	if got.Sent != 18 || got.Received != 18 {
+		t.Errorf("bytes: sent %d received %d, want 18 each", got.Sent, got.Received)
+	}
+	if got.RoundTrips != 3 || got.WaitMs < 300 || got.WaitMs > 600 {
+		t.Errorf("round trips %d, wait %dms; want 3 and about 300ms", got.RoundTrips, got.WaitMs)
+	}
+
+	c.Close()
+	deadline := time.Now().Add(2 * time.Second)
+	for n.MeterDependency().Open != 0 && time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	if open := n.MeterDependency().Open; open != 0 {
+		t.Errorf("a closed connection still counts as open: %d", open)
+	}
+
+	// Latency a scenario adds is the network's, not the dependency's.
+	if err := n.Reset(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	_ = n.addLatency(context.Background(), "200ms", "", "")
+	if _, err := roundTrip(n.appAddr(), 2*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	if got := n.MeterDependency(); got.WaitMs >= 200 || got.RoundTrips != 1 {
+		t.Errorf("with 200ms of added latency: %+v; want the dependency's own ~100ms", got)
+	}
+}
