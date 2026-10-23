@@ -2670,6 +2670,13 @@ still written.</p>
 with a <code>type</code>: <code>feature_start</code>, <code>scenario_start</code>, <code>step_start</code>, <code>step_end</code>,
 <code>scenario_end</code>, <code>feature_end</code> and <code>summary</code>. A <code>step_end</code> has the step's
 <code>status</code>, <code>stepIndex</code>, <code>durationMs</code> and, when it failed, its <code>error</code> text.</p>
+<p>Before the first scenario the run says how it is coming up: a <code>phase</code> event
+as it enters <code>containers</code>, <code>resources</code>, <code>app</code> and <code>tests</code>; a <code>container</code> event
+with the container's <code>name</code> as it is <code>starting</code>, then <code>ready</code> or <code>failed</code>
+with <code>durationMs</code>; and an <code>app</code> event as the app is <code>starting</code>, <code>listening</code>
+(with its <code>url</code>), <code>ready</code> after its health check, or <code>failed</code>, with
+<code>durationMs</code> from when it was started. <code>tomato ui</code> plays these as the first
+two acts of a run's film.</p>
 <p>A run that fails before its scenarios start writes a <code>run_error</code> instead: its
 <code>phase</code> (<code>config</code>, <code>containers</code>, <code>resources</code> or <code>app</code>), the <code>error</code>, and, when
 the app failed to start or its health check failed, the last lines it logged in
