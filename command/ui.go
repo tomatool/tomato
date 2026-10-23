@@ -17,6 +17,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -140,11 +141,25 @@ type WSMessage struct {
 	// view; nil when tomato.yml can't be read.
 	Topology *TopologyJSON `json:"topology,omitempty"`
 	// Run status fields
+	Feature    string `json:"feature,omitempty"`
+	File       string `json:"file,omitempty"`
 	Scenario   string `json:"scenario,omitempty"`
 	Status     string `json:"status,omitempty"` // "running", "passed", "failed"
 	Output     string `json:"output,omitempty"`
 	StepIndex  *int   `json:"stepIndex,omitempty"`
 	DurationMs *int64 `json:"durationMs,omitempty"`
+	// The run coming up, before its scenarios: the phase it enters on a
+	// run_phase, the container a container_status is about, where the app
+	// answers on an app_status, and the app's last lines on a run_error.
+	Phase string   `json:"phase,omitempty"`
+	Name  string   `json:"name,omitempty"`
+	URL   string   `json:"url,omitempty"`
+	Logs  []string `json:"logs,omitempty"`
+	// The runner's count of scenarios, on run_summary.
+	Total   int `json:"total,omitempty"`
+	Passed  int `json:"passed,omitempty"`
+	Failed  int `json:"failed,omitempty"`
+	Skipped int `json:"skipped,omitempty"`
 	// Mismatch is a failed comparison's both sides, relayed as the runner
 	// sent it on step_end (internal/formatter), for the step's diff.
 	Mismatch json.RawMessage `json:"mismatch,omitempty"`
@@ -187,6 +202,13 @@ type TomatoEvent struct {
 	Network json.RawMessage `json:"network,omitempty"`
 	Samples json.RawMessage `json:"samples,omitempty"`
 	Profile json.RawMessage `json:"profile,omitempty"`
+	// The phase a run_error happened in or a phase event enters, a
+	// container event's container, an app event's address, and a run_error's
+	// last app logs (internal/formatter).
+	Phase string   `json:"phase,omitempty"`
+	Name  string   `json:"name,omitempty"`
+	URL   string   `json:"url,omitempty"`
+	Logs  []string `json:"logs,omitempty"`
 }
 
 func runWebUI(c *cli.Context) error {
@@ -728,18 +750,41 @@ func (s *UIServer) handleStop(w http.ResponseWriter, r *http.Request) {
 	cmd := s.runningCmd
 	s.runningMux.Unlock()
 
-	// Kill the process
+	// Ask the run to stop, so it stops the app and containers it started. A
+	// killed run left its app running, holding the app port for the next one.
 	if cmd.Process != nil {
-		cmd.Process.Kill()
+		if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
+			cmd.Process.Kill()
+		} else {
+			go s.killIfStillRunning(cmd, stopGracePeriod)
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "stopped"})
 }
 
+// stopGracePeriod is how long Stop waits for a run to shut down before
+// killing it: long enough to stop the app and the containers.
+const stopGracePeriod = 45 * time.Second
+
+// killIfStillRunning kills cmd if it is still the running run after grace.
+func (s *UIServer) killIfStillRunning(cmd *exec.Cmd, grace time.Duration) {
+	time.Sleep(grace)
+	s.runningMux.Lock()
+	defer s.runningMux.Unlock()
+	if s.runningCmd == cmd && cmd.Process != nil {
+		cmd.Process.Kill()
+	}
+}
+
 func (s *UIServer) handleRunLog(w http.ResponseWriter, r *http.Request) {
-	// Parse URL: /api/runs/{runName}/logs/{logName}
+	// Parse URL: /api/runs/{runName}/logs/{logName}, or /api/runs/{runName}/events
 	path := strings.TrimPrefix(r.URL.Path, "/api/runs/")
+	if runName, ok := strings.CutSuffix(path, "/events"); ok {
+		s.handleRunEvents(w, runName)
+		return
+	}
 	parts := strings.Split(path, "/logs/")
 	if len(parts) != 2 {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
@@ -757,6 +802,74 @@ func (s *UIServer) handleRunLog(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(content))
+}
+
+// handleRunEvents replays a past run as the /ws messages a live one sends,
+// read back out of its tomato.log: the run's output is teed there, structured
+// events included, so a run can be watched again after the fact.
+func (s *UIServer) handleRunEvents(w http.ResponseWriter, runName string) {
+	content, err := runlog.GetLogContent(runName, "tomato")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(replayMessages(content))
+}
+
+// replayMessages is a run's /ws feed rebuilt from its log, from run_started
+// to run_finished. The run id is read from the banner the way runTests reads
+// it from the live output.
+func replayMessages(log string) []WSMessage {
+	msgs := []WSMessage{{Type: "run_started"}}
+	// A log with neither a summary nor a run_error stops short: the run was
+	// interrupted, or is still going.
+	status := "interrupted"
+	for _, line := range strings.Split(log, "\n") {
+		line = strings.TrimSpace(stripAnsi(line))
+		if id := runIDOf(line); id != "" {
+			msgs = append(msgs, WSMessage{Type: "run_created", RunID: id})
+			continue
+		}
+		event, ok := parseTomatoEvent(line)
+		if !ok {
+			continue
+		}
+		switch {
+		case event.Type == "run_error" || (event.Type == "summary" && event.Failed > 0):
+			status = "failed"
+		case event.Type == "summary":
+			status = "passed"
+		}
+		msgs = append(msgs, wsMessagesFor(event)...)
+	}
+	return append(msgs, WSMessage{Type: "run_finished", Status: status})
+}
+
+const tomatoEventPrefix = "TOMATO_EVENT:"
+
+// parseTomatoEvent reads a TOMATO_EVENT line; ok is false for any other line.
+func parseTomatoEvent(line string) (event TomatoEvent, ok bool) {
+	if !strings.HasPrefix(line, tomatoEventPrefix) {
+		return event, false
+	}
+	if err := json.Unmarshal([]byte(strings.TrimPrefix(line, tomatoEventPrefix)), &event); err != nil {
+		return event, false
+	}
+	return event, true
+}
+
+// runIDOf is the run id on the banner's "📋 run: <id>" line, or "".
+func runIDOf(line string) string {
+	if !strings.Contains(line, "run:") {
+		return ""
+	}
+	parts := strings.Split(line, "run:")
+	runID := strings.TrimSpace(parts[len(parts)-1])
+	if len(runID) != 8 { // UUID short format
+		return ""
+	}
+	return runID
 }
 
 func (s *UIServer) runTests(scenarioFilter string) {
@@ -847,78 +960,30 @@ func (s *UIServer) runTests(scenarioFilter string) {
 		close(lines)
 	}()
 
-	const tomatoEventPrefix = "TOMATO_EVENT:"
-
 	for line := range lines {
 		cleanLine := stripAnsi(line)
 		trimmedLine := strings.TrimSpace(cleanLine)
 
 		// Detect run ID from output (format: "📋 run: <id>")
-		if strings.Contains(cleanLine, "run:") {
-			parts := strings.Split(cleanLine, "run:")
-			if len(parts) > 1 {
-				runID := strings.TrimSpace(parts[1])
-				if len(runID) == 8 { // UUID short format
-					s.broadcastNewRun(runID)
-					go s.broadcastRunsUpdate()
-				}
-			}
+		if runID := runIDOf(cleanLine); runID != "" {
+			s.broadcastNewRun(runID)
+			go s.broadcastRunsUpdate()
 		}
 
 		// Parse TOMATO_EVENT lines for structured status updates
 		if strings.HasPrefix(trimmedLine, tomatoEventPrefix) {
-			jsonData := strings.TrimPrefix(trimmedLine, tomatoEventPrefix)
-			var event TomatoEvent
-			if err := json.Unmarshal([]byte(jsonData), &event); err != nil {
+			event, ok := parseTomatoEvent(trimmedLine)
+			if !ok {
 				continue
 			}
 
-			switch event.Type {
-			case "scenario_start":
-				s.broadcastRunStatus("scenario_running", event.Scenario, "running", "")
-
-			case "scenario_end":
-				if event.Status == "failed" {
-					s.broadcast(WSMessage{
-						Type:       "scenario_failed",
-						Scenario:   event.Scenario,
-						Status:     "failed",
-						Output:     event.Error,
-						DurationMs: event.DurationMs,
-						Samples:    event.Samples,
-						Profile:    event.Profile,
-					})
-				} else if event.Status == "passed" {
-					s.broadcast(WSMessage{
-						Type:       "scenario_passed",
-						Scenario:   event.Scenario,
-						Status:     "passed",
-						DurationMs: event.DurationMs,
-						Samples:    event.Samples,
-						Profile:    event.Profile,
-					})
-				}
-
-			case "step_start":
-				// The UI marks the running step, so it needs the position as
-				// well as the name — step text repeats across scenarios.
-				s.broadcast(WSMessage{
-					Type:      "step_started",
-					Scenario:  event.Scenario,
-					Status:    "running",
-					StepIndex: event.StepIndex,
-				})
-
-			case "step_end":
-				s.broadcast(stepFinished(event))
-				// The step's picture is on disk by now; the list follows the
-				// step so the gallery fills in as the run goes.
-				if len(event.Screenshots) > 0 {
-					s.broadcastScreenshotsUpdate()
-				}
-
-			case "summary":
-				// Summary is handled by run_finished
+			for _, msg := range wsMessagesFor(event) {
+				s.broadcast(msg)
+			}
+			// The step's picture is on disk by now; the list follows the
+			// step so the gallery fills in as the run goes.
+			if event.Type == "step_end" && len(event.Screenshots) > 0 {
+				s.broadcastScreenshotsUpdate()
 			}
 			continue
 		}
@@ -943,6 +1008,53 @@ func (s *UIServer) runTests(scenarioFilter string) {
 	// Broadcast updated runs list after run completes
 	s.broadcastRunsUpdate()
 	s.broadcastScreenshotsUpdate()
+}
+
+// wsMessagesFor is what the /ws feed says about one of the runner's events:
+// nothing for the ones the UI has no use for. It is the one place the
+// runner's vocabulary becomes the UI's, so a run replayed from its log says
+// the same things a live one did.
+func wsMessagesFor(event TomatoEvent) []WSMessage {
+	one := func(m WSMessage) []WSMessage { return []WSMessage{m} }
+	switch event.Type {
+	case "phase":
+		return one(WSMessage{Type: "run_phase", Phase: event.Phase})
+	case "container":
+		return one(WSMessage{Type: "container_status", Name: event.Name, Status: event.Status, DurationMs: event.DurationMs})
+	case "app":
+		return one(WSMessage{Type: "app_status", Name: event.Name, Status: event.Status, URL: event.URL, DurationMs: event.DurationMs})
+	case "feature_start":
+		return one(WSMessage{Type: "feature_started", Feature: event.Feature, File: event.File})
+	case "feature_end":
+		return one(WSMessage{Type: "feature_finished", Feature: event.Feature})
+	case "scenario_start":
+		return one(WSMessage{Type: "scenario_running", Feature: event.Feature, Scenario: event.Scenario, File: event.File, Status: "running"})
+	case "scenario_end":
+		switch event.Status {
+		case "failed":
+			return one(WSMessage{
+				Type: "scenario_failed", Feature: event.Feature, Scenario: event.Scenario, Status: "failed",
+				Output: event.Error, DurationMs: event.DurationMs, Samples: event.Samples, Profile: event.Profile,
+			})
+		case "passed":
+			return one(WSMessage{
+				Type: "scenario_passed", Feature: event.Feature, Scenario: event.Scenario, Status: "passed",
+				DurationMs: event.DurationMs, Samples: event.Samples, Profile: event.Profile,
+			})
+		}
+		return nil
+	case "step_start":
+		// The UI marks the running step, so it needs the position as
+		// well as the name — step text repeats across scenarios.
+		return one(WSMessage{Type: "step_started", Scenario: event.Scenario, Status: "running", StepIndex: event.StepIndex})
+	case "step_end":
+		return one(stepFinished(event))
+	case "run_error":
+		return one(WSMessage{Type: "run_error", Phase: event.Phase, Status: "failed", Output: event.Error, Logs: event.Logs})
+	case "summary":
+		return one(WSMessage{Type: "run_summary", Total: event.Total, Passed: event.Passed, Failed: event.Failed, Skipped: event.Skipped})
+	}
+	return nil
 }
 
 // stepFinished is the /ws message for a step_end event: its status, timing,

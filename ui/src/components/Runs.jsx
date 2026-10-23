@@ -1,6 +1,6 @@
 import { fmtBytes, when } from '../lib/format'
 
-export function Runs({ runs, openRun, onOpenRun, onOpenLog }) {
+export function Runs({ runs, openRun, onOpenRun, onOpenLog, onWatch }) {
   if (!runs.length) {
     return (
       <div className="empty">
@@ -28,6 +28,14 @@ export function Runs({ runs, openRun, onOpenRun, onOpenLog }) {
             <span className="tally" />
             {selected && r.logs?.length > 0 && (
               <div className="run-logs">
+                {onWatch && (
+                  <button
+                    className="log-link" type="button" title="Watch this run again as a film"
+                    onClick={(e) => { e.stopPropagation(); onWatch(r.name) }}
+                  >
+                    <i className="ico-play" />watch
+                  </button>
+                )}
                 {r.logs.map((l) => (
                   <button
                     className="log-link"

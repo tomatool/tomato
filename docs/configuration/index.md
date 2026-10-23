@@ -93,6 +93,14 @@ with a `type`: `feature_start`, `scenario_start`, `step_start`, `step_end`,
 `scenario_end`, `feature_end` and `summary`. A `step_end` has the step's
 `status`, `stepIndex`, `durationMs` and, when it failed, its `error` text.
 
+Before the first scenario the run says how it is coming up: a `phase` event
+as it enters `containers`, `resources`, `app` and `tests`; a `container` event
+with the container's `name` as it is `starting`, then `ready` or `failed`
+with `durationMs`; and an `app` event as the app is `starting`, `listening`
+(with its `url`), `ready` after its health check, or `failed`, with
+`durationMs` from when it was started. `tomato ui` plays these as the first
+two acts of a run's film.
+
 A run that fails before its scenarios start writes a `run_error` instead: its
 `phase` (`config`, `containers`, `resources` or `app`), the `error`, and, when
 the app failed to start or its health check failed, the last lines it logged in

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	messages "github.com/cucumber/messages/go/v21"
 
@@ -195,5 +196,30 @@ func TestEmitRunError(t *testing.T) {
 	}
 	if len(ev.Logs) != 1 || !strings.Contains(ev.Logs[0], "no config") {
 		t.Errorf("logs = %q", ev.Logs)
+	}
+}
+
+// The run coming up is reported the same way its scenarios are, so a viewer
+// has something to show before the first one.
+func TestEmit_WritesTheRunComingUp(t *testing.T) {
+	var out bytes.Buffer
+	Emit(&out, Event{Type: EventPhase, Phase: "containers"})
+	Emit(&out, Event{Type: EventContainer, Name: "kafka", Status: "ready", DurationMs: Millis(2300 * time.Millisecond)})
+	Emit(&out, Event{Type: EventApp, Name: "orderly", Status: "listening", URL: "http://localhost:8099", DurationMs: Millis(time.Second)})
+	evs := events(t, &out)
+	if len(evs) != 3 {
+		t.Fatalf("got %d events, want 3:\n%s", len(evs), out.String())
+	}
+	if evs[0].Type != EventPhase || evs[0].Phase != "containers" {
+		t.Errorf("phase event %+v", evs[0])
+	}
+	if evs[1].Type != EventContainer || evs[1].Name != "kafka" || evs[1].Status != "ready" || evs[1].DurationMs == nil || *evs[1].DurationMs != 2300 {
+		t.Errorf("container event %+v", evs[1])
+	}
+	if evs[2].Type != EventApp || evs[2].Name != "orderly" || evs[2].URL != "http://localhost:8099" || *evs[2].DurationMs != 1000 {
+		t.Errorf("app event %+v", evs[2])
+	}
+	if strings.Contains(out.String(), `"scenario"`) {
+		t.Errorf("empty fields should be left out: %s", out.String())
 	}
 }

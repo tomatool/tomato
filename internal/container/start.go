@@ -88,9 +88,13 @@ func (m *Manager) StartAll(ctx context.Context) error {
 	}
 
 	for _, name := range m.order {
+		m.report(name, "starting", 0)
+		started := time.Now()
 		if err := m.Start(ctx, name); err != nil {
+			m.report(name, "failed", time.Since(started))
 			return fmt.Errorf("starting container %s: %w", name, err)
 		}
+		m.report(name, "ready", time.Since(started))
 	}
 	return nil
 }

@@ -14,10 +14,13 @@ ui/
     ├── styles.css      the "Modernist" design system: tokens + components
     ├── components/     TopBar, Tree, ScenarioCard, StepRow, ConfigView,
     │                   Flow, Topology, Runs, Screenshots, Lightbox,
-    │                   Transport, Peek, Console
+    │                   Transport, Peek, Console, Profile, and the film a
+    │                   run plays as: Movie (the stage, acts and narration)
+    │                   and Report (how it ended, and what it cost)
     ├── hooks/          useSocket (the /ws feed), useLocalNumber / useLocalEnum
     │                   (remembered pane sizes and theme)
-    ├── lib/            run state keyed on the pickle index, step tokenising,
+    ├── lib/            run state keyed on the pickle index, the reel (a
+    │                   run's messages folded into scenes), step tokenising,
     │                   ANSI → nodes, flow model, the screenshots a step took,
     │                   formatting, icons
     └── fonts/          Geist and Geist Mono, vendored so the UI works offline
