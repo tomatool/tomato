@@ -3,6 +3,7 @@ import { StepRow } from './StepRow.jsx'
 import { fmtDur, plural } from '../lib/format'
 import { backgroundStatus, failedBackgroundSteps, pickleIndex } from '../lib/run.js'
 import { stepKind } from '../lib/kind'
+import { ProfileStrip } from './Profile.jsx'
 
 function Head({ collapsed, onToggle, children }) {
   return (
@@ -97,6 +98,7 @@ export function ScenarioCard({
 
       {!collapsed && (
         <>
+          <ProfileStrip profile={runState.scProfile?.[scenario.name]} samples={runState.samples} />
           {scenario.tags?.length > 0 && (
             <div className="scenario-tags">
               {scenario.tags.map((t) => {

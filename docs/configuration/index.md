@@ -60,6 +60,7 @@ features:               # Feature file settings
 | `timeout` | duration | `5m` | Global test timeout |
 | `fail_fast` | bool | `false` | Stop on first failure |
 | `output` | string | `pretty` | Output formats, comma-separated; see [Reports](#reports) |
+| `profile` | bool | `true` | Measure the app and its containers per scenario; see [Profile](profile.md). Off when `parallel` is above 1 |
 
 ### Reports
 
@@ -131,6 +132,14 @@ In the `tomato` format, a `step_end` event carries `screenshots` when the step
 left images behind, as a list of `{"resource": "alice-browser", "path": "…/after-apply.png"}`:
 the [browser resource](browser.md)'s `saves screenshot`, and the page when a
 step failed. `tomato ui` reads it to put the picture on the step.
+
+When the run is [profiled](profile.md), a `step_end` carries `samples`, the
+app's and its containers' readings since the last event that carried them
+(`{"at", "app": {"cpu", "rss", "threads", "fds"}, "containers": {"postgres": {"cpu", "memory"}}}`),
+and a `scenario_end` carries `profile`, what the scenario cost: its `start`,
+`end` and `durationMs`, the `app`'s `cpuMs`, `peakRss`, `rssStart` and
+`rssEnd`, each container's `cpuMs` and `peakMemory`, the traffic each
+`network` resource saw, and the errors and warnings the app logged.
 
 ## App configuration
 

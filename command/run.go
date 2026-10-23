@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
 	"github.com/tomatool/tomato/internal/formatter"
+	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/registry"
 	"github.com/tomatool/tomato/internal/runlog"
 	"github.com/tomatool/tomato/internal/runner"
@@ -224,6 +226,7 @@ func runTests(c *cli.Context) (err error) {
 
 	// Step 2: Start the application under test
 	var appRunner *apprunner.Runner
+	var prof *profile.Profiler
 	if cfg.App.IsConfigured() {
 		phase = "app"
 		fmt.Println()
@@ -258,6 +261,15 @@ func runTests(c *cli.Context) (err error) {
 			fmt.Printf("  %s running app in container mode\n", helpStyle.Render("🐳"))
 		} else {
 			fmt.Printf("  %s running app as local process\n", helpStyle.Render("⚡"))
+		}
+
+		// The profile measures the app from its first log line, so it is
+		// created before the app starts; scenarios open its windows.
+		if cfg.Settings.Profiling() {
+			prof = newProfiler(cfg, cm, registry, appRunner)
+			appRunner.SetLogObserver(prof.ObserveLog)
+			prof.Start()
+			defer prof.Stop()
 		}
 
 		if err := appRunner.Start(c.Context); err != nil {
@@ -326,9 +338,11 @@ func runTests(c *cli.Context) (err error) {
 	fmt.Println()
 	fmt.Println(subtitleStyle.Render("Initializing resources..."))
 
-	r, err := runner.NewWithRegistry(cfg, cm, registry, runner.Options{
-		Format: c.String("format"),
-	})
+	opts := runner.Options{Format: c.String("format")}
+	if prof != nil {
+		opts.Profiler = prof
+	}
+	r, err := runner.NewWithRegistry(cfg, cm, registry, opts)
 	if err != nil {
 		return fmt.Errorf("failed to initialize runner: %w", err)
 	}
@@ -345,6 +359,16 @@ func runTests(c *cli.Context) (err error) {
 
 	testsStarted = true
 	testErr := r.Run(c.Context)
+
+	if prof != nil {
+		prof.Stop()
+		path := filepath.Join(runCtx.Dir, "profile.json")
+		if err := writeProfile(path, prof.Result()); err != nil {
+			fmt.Printf("  %s %v\n", warnStyle.Render("could not write the profile:"), err)
+		} else if c.String("format") != "tomato" {
+			printProfileReport(os.Stdout, prof.Result(), path)
+		}
+	}
 
 	// Handle keep-alive mode
 	if keepAlive {

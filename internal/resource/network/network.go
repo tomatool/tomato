@@ -53,6 +53,7 @@ type Network struct {
 	initialized bool
 	links       []*link
 	gate        *gate
+	meter       *meter
 	faults      map[string]*fault
 	order       []string // fault keys in the order they were applied
 	scenario    string
@@ -183,6 +184,7 @@ func (n *Network) Init(ctx context.Context) error {
 	server := toxiproxy.NewServer(toxiproxy.NewMetricsContainer(prometheus.NewRegistry()), zerolog.Nop())
 	n.gate = newGate(n.seed)
 	n.gate.onFail = n.connectionFailed
+	n.meter = &meter{}
 
 	for _, port := range ports {
 		mapped, err := n.cm.GetPort(ctx, n.container, port)
@@ -199,6 +201,16 @@ func (n *Network) Init(ctx context.Context) error {
 			return fmt.Errorf("network %s: installing the gate: %w", n.name, err)
 		}
 		w.Toxic.(*gateToxic).gate.Store(n.gate)
+		up, err := p.Toxics.AddToxicJson(strings.NewReader(toxicJSON("meter-upstream", meterUpType, "upstream", nil)))
+		if err != nil {
+			return fmt.Errorf("network %s: installing the meter: %w", n.name, err)
+		}
+		up.Toxic.(*upstreamMeter).meter.Store(n.meter)
+		down, err := p.Toxics.AddToxicJson(strings.NewReader(toxicJSON("meter-downstream", meterDownType, "downstream", nil)))
+		if err != nil {
+			return fmt.Errorf("network %s: installing the meter: %w", n.name, err)
+		}
+		down.Toxic.(*downstreamMeter).meter.Store(n.meter)
 		n.links = append(n.links, &link{port: port, upstream: upstream, proxy: p})
 	}
 	resource.RegisterNetworkFaults(n.name, n.activeLines)
@@ -255,8 +267,27 @@ func (n *Network) Reset(ctx context.Context) error {
 	if n.gate != nil {
 		n.gate.reset()
 	}
+	if n.meter != nil {
+		n.meter.reset()
+	}
 	n.changedAt = 0
 	return nil
+}
+
+// MeterDependency is the traffic between the app and the container since
+// the scenario started, for the scenario profile.
+func (n *Network) MeterDependency() resource.DependencyTraffic {
+	t := resource.DependencyTraffic{Container: n.container}
+	if n.gate == nil || n.meter == nil {
+		return t
+	}
+	t.Connections, _ = n.gate.counts()
+	t.Open = int(n.meter.open.Load())
+	t.Sent = n.meter.sent.Load()
+	t.Received = n.meter.received.Load()
+	t.RoundTrips = int(n.meter.roundTrips.Load())
+	t.WaitMs = time.Duration(n.meter.waitNs.Load()).Milliseconds()
+	return t
 }
 
 func (n *Network) Cleanup(ctx context.Context) error {
