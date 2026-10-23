@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { iconId } from '../lib/icons'
+import { fmtDur } from '../lib/format'
 
 // Roles when the server sent no topology (an invalid config): derived from
 // the step types the flow model saw, the way the server would classify them.
@@ -34,7 +35,9 @@ function Marker({ id, cls }) {
   )
 }
 
-function Node({ box, kind, name, sub, icon, active, status, used, mock }) {
+// `badge` is a word over the node's corner — how long it took to come up —
+// and `status` what it is doing while the run starts: starting, ready, failed.
+function Node({ box, kind, name, sub, icon, active, status, used, mock, badge }) {
   const { x, y, w, h } = box
   const nameT = fit(name, w - 38, CH_NAME)
   const subT = fit(sub, w - 38, CH_SUB)
@@ -52,6 +55,7 @@ function Node({ box, kind, name, sub, icon, active, status, used, mock }) {
       <use href={`#ri-${icon}`} x={x + 10} y={y + h / 2 - 7} width="14" height="14" />
       <text className="tnode-name" x={x + 31} y={y + h / 2 - 2}>{nameT}</text>
       {subT && <text className="tnode-type" x={x + 31} y={y + h / 2 + 10}>{subT}</text>}
+      {badge && <text className="tbadge" data-status={status || undefined} x={x + w} y={y - 5} textAnchor="end">{badge}</text>}
     </g>
   )
 }
@@ -59,15 +63,17 @@ function Node({ box, kind, name, sub, icon, active, status, used, mock }) {
 // A group is a container tomato starts, with the resources it backs inside,
 // or one of the standing groups: what tomato serves itself, what lives
 // outside tomato's control, and the host.
-function Group({ g, box }) {
+function Group({ g, box, status, badge }) {
   const { x, y, w, h } = box
+  const textW = w - GROUP_PAD * 2 - 18 - (badge ? 48 : 0)
   return (
-    <g className="tgroup" data-kind={g.kind} data-used={g.used ? undefined : 'false'}>
+    <g className="tgroup" data-kind={g.kind} data-used={g.used ? undefined : 'false'} data-status={status || undefined}>
       <title>{g.sub ? `${g.title} · ${g.sub}` : g.title}</title>
       <rect x={x} y={y} width={w} height={h} rx="8" />
       <use href={`#ri-${g.icon}`} x={x + GROUP_PAD + 1} y={y + 8} width="12" height="12" />
-      <text className="tgroup-title" x={x + GROUP_PAD + 18} y={y + 18}>{fit(g.title, w - GROUP_PAD * 2 - 18, CH_NAME)}</text>
-      {g.sub && <text className="tgroup-sub" x={x + GROUP_PAD + 18} y={y + 29}>{fit(g.sub, w - GROUP_PAD * 2 - 18, CH_SUB)}</text>}
+      <text className="tgroup-title" x={x + GROUP_PAD + 18} y={y + 18}>{fit(g.title, textW, CH_NAME)}</text>
+      {g.sub && <text className="tgroup-sub" x={x + GROUP_PAD + 18} y={y + 29}>{fit(g.sub, textW, CH_SUB)}</text>}
+      {badge && <text className="tbadge" data-status={status || undefined} x={x + w - GROUP_PAD} y={y + 18} textAnchor="end">{badge}</text>}
     </g>
   )
 }
@@ -236,9 +242,32 @@ function layoutStack({ clients, app, externals, services }, paneW) {
 // configuration declares (a client's base_url, the app's env templates); the
 // solid and dashed lines are the scenario's traffic, one per route. By default only what the scenario touches is drawn;
 // the rest is listed underneath, or drawn dimmed with "show all".
-export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
+//
+// As the stage of the film (components/Movie.jsx) it draws `everything`,
+// shows the `status` of the containers and the app as they come up — by
+// node key: c:<container>, app — and sends `packets` along the route of
+// the step the cursor is on; with `fit` the columns are scaled to the pane
+// rather than stacked or scrolled.
+export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin, status, everything, packets, fit }) {
   const { msgs } = model
-  const [showAll, setShowAll] = useState(false)
+  const [showAllState, setShowAll] = useState(false)
+  const showAll = everything || showAllState
+  const uid = useId().replace(/[^A-Za-z0-9]/g, '')
+  const stateOf = (key) => status?.[key]?.state || ''
+  const badgeOf = (key) => {
+    const s = status?.[key]
+    if (!s) return ''
+    if (s.state === 'ready') return `${fmtDur(s.ms)} ✓`
+    if (s.state === 'failed') return '✗'
+    if (s.state === 'listening') return 'listening…'
+    if (s.state === 'starting') return '…'
+    return ''
+  }
+  // What is inside a container shares its wait: dim until it is ready.
+  const insideOf = (container) => {
+    const cs = stateOf(`c:${container}`)
+    return !cs || cs === 'ready' ? '' : cs === 'failed' ? 'failed' : 'waiting'
+  }
   const paneRef = useRef(null)
   const [paneW, setPaneW] = useState(0)
   useEffect(() => {
@@ -316,8 +345,8 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
   // nearly does — and the stack otherwise.
   const shape = { clients, app, externals, services }
   let L = layoutColumns(shape)
-  if (paneW > 0 && paneW < L.route([]).width) L = layoutColumns(shape, COL_GAP_TIGHT)
-  const stacked = paneW > 0 && paneW < L.route([]).width
+  if (!fit && paneW > 0 && paneW < L.route([]).width) L = layoutColumns(shape, COL_GAP_TIGHT)
+  const stacked = !fit && paneW > 0 && paneW < L.route([]).width
   if (stacked) L = layoutStack(shape, Math.max(paneW, 240))
   const { boxes } = L
 
@@ -368,7 +397,7 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
   }
   const failedFor = (name) => msgs.some((m) => m.status === 'failed' && m.resource === name)
 
-  const edges = all.filter((e) => e.steps).map((e) => {
+  const edges = all.filter((e) => e.steps).map((e, i) => {
     const onRoute = cur ? e.steps.some((m) => m.idx === cur.idx) : false
     const reached = e.steps.some((m) => cursor < 0 || m.idx <= cursor)
     const failed = e.steps.some((m) => m.status === 'failed')
@@ -377,6 +406,7 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
     const subject = cur && onRoute ? cur : e.steps[0]
     const isHot = (hot != null && e.steps.some((m) => m.idx === hot)) || (pinned != null && e.steps.some((m) => m.idx === pinned))
     const isPinned = pinned != null && e.steps.some((m) => m.idx === pinned)
+    const pathId = `tp${uid}-${i}`
     return (
       <g
         className="tedge"
@@ -392,7 +422,12 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
       >
         <title>{`${e.steps.length === 1 ? 'step' : 'steps'} ${e.steps.map((m) => m.n).join(', ')} on this hop`}</title>
         <path className="tedge-hit" d={e.d} />
-        <path className="tedge-line" pathLength="1" d={e.d} />
+        <path className="tedge-line" id={pathId} pathLength="1" d={e.d} />
+        {packets && onRoute && (
+          <circle className="tpk" r="3.5" data-status={cur?.status || undefined}>
+            <animateMotion dur="1.1s" repeatCount="indefinite"><mpath href={`#${pathId}`} /></animateMotion>
+          </circle>
+        )}
       </g>
     )
   })
@@ -405,7 +440,9 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
     <div className="tp" ref={paneRef} data-layout={stacked ? 'stack' : 'columns'} data-all={showAll ? 'true' : undefined}>
       <div className="tp-scroll">
         <svg
-          className="tsvg" width={width} height={height - top} viewBox={`0 ${top} ${width} ${height - top}`}
+          className="tsvg" viewBox={`0 ${top} ${width} ${height - top}`}
+          width={fit ? '100%' : width} height={fit ? undefined : height - top}
+          style={fit ? { maxWidth: width, height: 'auto' } : undefined}
           role="img" aria-label="What this scenario talks to"
         >
           <defs>
@@ -420,32 +457,39 @@ export function Topology({ model, topo, cursor, hot, pinned, onHot, onPin }) {
               : <text key={l.text} className="tcol" x={l.x} y={L.labelY()}>{l.text}</text>
           ))}
 
-          {services.map((g, i) => <Group key={g.key} g={g} box={L.groupBoxes[i]} />)}
+          {services.map((g, i) => <Group key={g.key} g={g} box={L.groupBoxes[i]} status={stateOf(g.key)} badge={badgeOf(g.key)} />)}
           {wireEls}
           {edges}
 
           {nodeEl('tomato', { kind: 'runner', name: 'tomato', sub: 'runner', icon: 'tomato', active: live.has('tomato') })}
-          {app && nodeEl('app', { kind: 'app', name: app.name, sub: appSub, icon: 'app', active: live.has('app'), used: isUsed('app') })}
+          {app && nodeEl('app', { kind: 'app', name: app.name, sub: appSub, icon: 'app', active: live.has('app'), used: isUsed('app'), status: stateOf('app'), badge: badgeOf('app') })}
           {externals.map((a) => nodeEl(`x:${a}`, { kind: 'external', name: a, sub: 'not under tomato', icon: 'app', active: live.has(`x:${a}`), used: isUsed(`x:${a}`) }))}
-          {clients.map((r) => nodeEl(r.name, {
+          {clients.map((r, i) => nodeEl(r.name, {
             kind: 'client', name: r.name, sub: r.type, icon: iconId(r.type),
-            active: live.has(r.name), status: failedFor(r.name) ? 'failed' : '', used: isUsed(r.name),
+            active: live.has(r.name), used: isUsed(r.name),
+            // A client's container (the chromium behind a browser) is not
+            // drawn, so the client shows it coming up, the first of them
+            // with its time.
+            status: failedFor(r.name) ? 'failed' : r.container ? stateOf(`c:${r.container}`) : '',
+            badge: r.container && clients.findIndex((c) => c.container === r.container) === i ? badgeOf(`c:${r.container}`) : '',
           }))}
           {services.flatMap((g) => g.rows.map((r) => nodeEl(r.name, {
             kind: r.role, name: r.name, sub: r.role === 'mock' && r.port ? `${r.type} :${r.port}` : r.type, icon: iconId(r.type),
-            active: live.has(r.name), status: failedFor(r.name) ? 'failed' : '', used: isUsed(r.name), mock: r.role === 'mock',
+            active: live.has(r.name), status: failedFor(r.name) ? 'failed' : insideOf(r.container), used: isUsed(r.name), mock: r.role === 'mock',
           })))}
         </svg>
       </div>
 
-      <div className="tp-legend">
-        <span className="tp-key">traffic tomato sends</span>
-        <span className="tp-key" data-inferred="true">traffic the app sends</span>
-        <span className="tp-key" data-wire="true">wired by tomato.yml</span>
-        <span className="muted">hover a hop for the steps on it; the Flow tab has their order</span>
-      </div>
+      {!everything && (
+        <div className="tp-legend">
+          <span className="tp-key">traffic tomato sends</span>
+          <span className="tp-key" data-inferred="true">traffic the app sends</span>
+          <span className="tp-key" data-wire="true">wired by tomato.yml</span>
+          <span className="muted">hover a hop for the steps on it; the Flow tab has their order</span>
+        </div>
+      )}
 
-      {notInvolved.length > 0 && (
+      {!everything && notInvolved.length > 0 && (
         <div className="tp-unused" data-shown={showAll ? 'true' : undefined}>
           <span className="tp-unused-label">not involved in this scenario</span>
           <span className="tp-unused-list">{notInvolved.join(', ')}</span>

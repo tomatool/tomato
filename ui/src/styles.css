@@ -773,3 +773,117 @@ button.tag:hover,a.tag:hover{border-color:var(--line-strong);color:var(--fg-1)}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none}
 .pt-table td{white-space:nowrap}
+/* — the film: a run watched as it happens (components/Movie.jsx), and the
+   report it ends on (components/Report.jsx). The stage is the topology; the
+   act pills, the numbered sequence box and the caption under it follow the
+   explainers on the tomato blog. — */
+.ico-film{position:relative;width:12px;height:9px;border:1.5px solid currentColor;border-radius:2px;box-shadow:inset 0 2.5px 0 currentColor;flex:none}
+.reel{display:flex;flex-direction:column;gap:var(--s-5)}
+.reel-head{display:flex;align-items:center;gap:var(--s-4);flex-wrap:wrap;min-height:26px}
+.reel-acts{display:flex;flex-wrap:wrap;gap:var(--s-3)}
+.reel-act{font:var(--fs-11) var(--font-mono);color:var(--fg-2);padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg-2);cursor:pointer;transition:border-color var(--dur),color var(--dur)}
+.reel-act:hover{color:var(--fg-0);border-color:var(--line-strong)}
+.reel-act[aria-selected="true"]{color:var(--fail-ink);border-color:var(--fail);background:var(--fail-bg)}
+.reel-live{display:inline-flex;align-items:center;gap:var(--s-3);font:500 var(--fs-11) var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
+.reel-live[data-on="true"]{color:var(--fail-ink)}
+.reel-live[data-on="true"]::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fail);animation:tm-pulse 1.2s ease-in-out infinite}
+.reel-stage{position:relative;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--bg-1),var(--bg-0));padding:var(--s-5);min-height:240px;overflow:hidden}
+.reel-stage .tp{padding:0}
+.reel-stage .tp-scroll{display:flex;justify-content:center;overflow:visible}
+/* The drawing is scaled to the stage, never scrolled: wide panes get it at
+   its natural size, short ones get it letterboxed. */
+.reel-stage .tsvg{width:100%;height:auto;max-height:min(50vh,520px)}
+.reel-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s-3);padding:var(--s-7);text-align:center;background:color-mix(in oklch,var(--bg-0) 80%,transparent);backdrop-filter:blur(2px);animation:reel-in .5s ease-out both}
+.reel-card-kicker{font:500 var(--fs-11) var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fail-ink)}
+.reel-card h2{font-size:var(--fs-22);max-width:40ch;text-wrap:balance}
+.reel-card-sub{font:var(--fs-12) var(--font-mono);color:var(--fg-2)}
+@keyframes reel-in{from{opacity:0;transform:translateY(6px)}}
+.reel-below{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:var(--s-5);align-items:stretch}
+.reel-seq{border:1px solid var(--line);border-radius:var(--r-3);background:var(--bg-1);padding:var(--s-4) var(--s-5);display:flex;flex-direction:column;gap:2px;font:var(--fs-12)/1.5 var(--font-mono);min-width:0}
+.reel-seq-title{font:500 var(--fs-12) var(--font-ui);color:var(--fg-0);margin-bottom:var(--s-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reel-row{display:grid;grid-template-columns:18px 10px minmax(0,1fr) auto;column-gap:var(--s-3);align-items:center;padding:2px var(--s-2);border-radius:var(--r-1);min-width:0;transition:background var(--dur)}
+.reel-row .pip{top:0}
+.reel-row[data-current="true"]{background:var(--bg-3)}
+.reel-row[data-status="queued"] .reel-label{color:var(--fg-3)}
+.reel-row[data-status="passed"] .reel-note{color:var(--pass-ink)}
+.reel-row[data-status="failed"] .reel-note,.reel-row[data-status="failed"] .reel-label{color:var(--fail-ink)}
+.reel-n{color:var(--fg-3);text-align:right}
+.reel-label{color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reel-label .step-kw{font-weight:500;color:var(--fg-2)}
+.reel-note{color:var(--fg-3);white-space:nowrap;font-size:var(--fs-11)}
+.reel-err{grid-column:3 / 5;color:var(--fail-ink);font-size:var(--fs-11);line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;max-height:2.8em;overflow:hidden}
+.reel-caption{display:flex;flex-direction:column;gap:var(--s-3);min-width:0}
+.reel-kicker{font:500 var(--fs-11) var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.reel-title{font-size:var(--fs-18);font-weight:600;color:var(--fg-0);line-height:1.25;text-wrap:balance;overflow-wrap:anywhere}
+.reel-text{font-size:var(--fs-13);color:var(--fg-1);line-height:1.5;max-width:60ch;overflow-wrap:anywhere}
+.reel-text[data-status="failed"]{color:var(--fail-ink)}
+.reel-nav{display:flex;align-items:center;gap:var(--s-3);flex-wrap:wrap}
+.reel-pos,.reel-clock{font:var(--fs-11) var(--font-mono);color:var(--fg-3);white-space:nowrap}
+.reel-clock{color:var(--fg-2)}
+@media (max-width:1100px){.reel-below{grid-template-columns:minmax(0,1fr)}}
+/* On stage, a container or the app pulses until it is ready, then holds
+   green; what is inside a container waits with it. */
+.tgroup[data-status="starting"] rect,.tnode[data-status="starting"] rect,.tnode[data-status="listening"] rect{stroke:var(--given);stroke-width:1.5;stroke-dasharray:5 4;animation:reel-pulse 1.1s ease-in-out infinite}
+.tgroup[data-status="ready"] rect,.tnode[data-status="ready"] rect{stroke:var(--pass);stroke-width:1.5;fill:var(--pass-bg);stroke-dasharray:none}
+.tgroup[data-status="failed"] rect{stroke:var(--fail);fill:var(--fail-bg)}
+.tnode[data-status="waiting"],.tgroup[data-status="waiting"]{opacity:.45}
+.tnode[data-status="waiting"] rect{stroke-dasharray:3 3}
+@keyframes reel-pulse{50%{stroke-opacity:.15}}
+.tbadge{font-size:9.5px;fill:var(--fg-3);font-weight:500}
+.tbadge[data-status="ready"]{fill:var(--pass-ink)}
+.tbadge[data-status="failed"]{fill:var(--fail-ink)}
+.tbadge[data-status="starting"],.tbadge[data-status="listening"]{fill:var(--given)}
+/* The packet on the route of the step that is running. */
+.tpk{fill:var(--when);stroke:var(--bg-0);stroke-width:1}
+.tpk[data-status="failed"]{fill:var(--fail)}
+.tpk[data-status="passed"]{fill:var(--pass)}
+.tpk[data-status="skipped"],.tpk[data-status="undefined"]{display:none}
+@media (prefers-reduced-motion:reduce){.tgroup rect,.tnode rect{animation:none!important}.tpk{display:none}.reel-card{animation:none}}
+
+/* the report */
+.rp{display:flex;flex-direction:column;gap:var(--s-7)}
+.rp-hero{display:flex;flex-direction:column;gap:var(--s-3)}
+.rp-verdict{font-size:var(--fs-22);font-weight:600;color:var(--fg-0);letter-spacing:-0.01em}
+.rp-verdict[data-status="failed"]{color:var(--fail-ink)}
+.rp-verdict[data-status="passed"]{color:var(--pass-ink)}
+.rp-sub{font:var(--fs-12) var(--font-mono);color:var(--fg-2)}
+.rp-error{padding:var(--s-4) var(--s-5);border-radius:var(--r-2);background:var(--fail-bg);color:var(--fail-ink);font:var(--fs-12)/1.5 var(--font-mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.rp-logs{margin:var(--s-3) 0 0;padding:0;list-style:none;color:var(--fg-2);font-size:var(--fs-11)}
+.rp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--s-4)}
+.rp-tile{display:flex;flex-direction:column;gap:2px;padding:var(--s-4) var(--s-5);border:1px solid var(--line);border-radius:var(--r-3);background:var(--bg-1);min-width:0}
+.rp-tile-label{font:500 var(--fs-11) var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-3)}
+.rp-tile-value{display:flex;align-items:center;gap:var(--s-3);font:600 var(--fs-22)/1.15 var(--font-mono);color:var(--fg-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-tile-value[data-status="failed"]{color:var(--fail-ink)}
+.rp-tile-value .pip{width:12px;height:12px}
+.rp-tile-note{font:var(--fs-11)/1.4 var(--font-mono);color:var(--fg-3);overflow-wrap:anywhere}
+.rp-section{display:flex;flex-direction:column;gap:var(--s-4)}
+.rp-section>h3{display:flex;align-items:baseline;gap:var(--s-4);flex-wrap:wrap}
+.rp-section>h3 small,.rp-section>h4{font:var(--fs-11) var(--font-mono);color:var(--fg-3);font-weight:400}
+.rp-section>h4{color:var(--fg-2)}
+/* One hue, dark for the scenarios and lighter for what came before them. */
+.rp-anatomy{display:flex;gap:2px;height:14px;border-radius:var(--r-1);overflow:hidden}
+.rp-anatomy>span{min-width:3px;background:var(--line-strong)}
+.rp-anatomy>span[data-part="deps"],.rp-key[data-part="deps"]::before{background:var(--bg-3)}
+.rp-anatomy>span[data-part="app"],.rp-key[data-part="app"]::before{background:var(--line-strong)}
+.rp-anatomy>span[data-part="scenarios"],.rp-key[data-part="scenarios"]::before{background:var(--fg-3)}
+.rp-anatomy-keys{display:flex;flex-wrap:wrap;gap:var(--s-3) var(--s-6);font:var(--fs-11) var(--font-mono);color:var(--fg-2)}
+.rp-key::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.rp-feature{border:1px solid var(--line);border-radius:var(--r-3);background:var(--bg-1);overflow:hidden}
+.rp-feature-head{display:flex;align-items:center;gap:var(--s-5);padding:var(--s-3) var(--s-5);border-bottom:1px solid var(--line)}
+.rp-feature-name{flex:1;min-width:0;font-weight:500;color:var(--fg-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-feature-head .runbar{width:120px;flex:none}
+.rp-feature-meta{font:var(--fs-11) var(--font-mono);color:var(--fg-2);white-space:nowrap}
+.rp-sc{display:grid;grid-template-columns:10px minmax(0,1fr) auto;column-gap:var(--s-4);align-items:center;padding:3px var(--s-5);font:var(--fs-12) var(--font-mono)}
+.rp-sc:hover{background:var(--bg-2)}
+.rp-sc-name{color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-sc-time{color:var(--fg-3);font-size:var(--fs-11);white-space:nowrap}
+.rp-sc-fail{grid-column:2 / 4;padding:0 0 var(--s-2);font-size:var(--fs-11);line-height:1.4;color:var(--fail-ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.rp-sc-fail b{color:var(--fg-1);font-weight:500}
+.rp-bars{display:flex;flex-direction:column;gap:var(--s-2);font:var(--fs-11) var(--font-mono)}
+.rp-bar-row{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr) 4.5rem;column-gap:var(--s-4);align-items:center}
+.rp-bar-name{display:flex;align-items:center;gap:var(--s-3);color:var(--fg-1);overflow:hidden;white-space:nowrap}
+.rp-bar-track{display:block;min-width:0}
+.rp-bar{display:block;height:8px;border-radius:0 4px 4px 0;background:var(--fg-3);min-width:2px;transition:width .4s ease-out}
+.rp-bar[data-status="failed"]{background:var(--fail)}
+.rp-bar-value{color:var(--fg-2);white-space:nowrap;text-align:right}
+.rp-perf .profile-timeline{padding:0}

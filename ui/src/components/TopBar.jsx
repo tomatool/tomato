@@ -6,7 +6,7 @@ const THEME_LABEL = { dark: 'Switch to the light theme', light: 'Switch to the d
 export function TopBar({
   theme, onToggleTheme, tomato,
   crumb, live, liveText, scenarios, scStatus, scDur, running,
-  onRunAll, onRunFailed, onStop,
+  onRunAll, onRunFailed, onStop, watchable, watching, onWatch,
 }) {
   const version = describeVersion(tomato)
   let passed = 0; let failed = 0; let undef = 0; let reported = 0
@@ -54,6 +54,14 @@ export function TopBar({
         {reported === 0 && <span className="tally-item muted">{scenarios.length} scenarios</span>}
         {elapsed > 0 && <span>{fmtDur(elapsed)}</span>}
       </span>
+      {watchable && (
+        <button
+          className="btn btn--ghost" type="button" title="Watch the run as a film  m"
+          aria-pressed={watching ? 'true' : undefined} onClick={onWatch}
+        >
+          <i className="ico-film" />Watch <span className="kbd">m</span>
+        </button>
+      )}
       {!running && failed > 0 && (
         <button className="btn" type="button" onClick={onRunFailed}>Run failed</button>
       )}

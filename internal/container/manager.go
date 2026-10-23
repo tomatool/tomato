@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/testcontainers/testcontainers-go"
@@ -34,6 +35,22 @@ type Manager struct {
 	runID        string
 	settings     config.ContainerSettings
 	networkReady bool
+
+	// progress is told of each container StartAll starts, if set.
+	progress Progress
+}
+
+// Progress is told of a container starting, and then ready or failed with
+// how long that took, as StartAll goes through them.
+type Progress func(name, status string, took time.Duration)
+
+// OnProgress sets what StartAll reports each container's progress to.
+func (m *Manager) OnProgress(fn Progress) { m.progress = fn }
+
+func (m *Manager) report(name, status string, took time.Duration) {
+	if m.progress != nil {
+		m.progress(name, status, took)
+	}
 }
 
 // NewManager creates a new container manager.

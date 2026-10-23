@@ -83,11 +83,24 @@ func runTests(c *cli.Context) (err error) {
 	phase := "config"
 	testsStarted := false
 	var appLogs []string
+	structured := c.String("format") == "tomato"
 	defer func() {
-		if err != nil && !testsStarted && c.String("format") == "tomato" {
+		if err != nil && !testsStarted && structured {
 			formatter.EmitRunError(os.Stdout, phase, err, appLogs)
 		}
 	}()
+	// The structured output carries the run coming up as well as its
+	// scenarios: each phase it enters, and the containers and the app in
+	// them, so `tomato ui` can show the wait before the first scenario.
+	emit := func(ev formatter.Event) {
+		if structured {
+			formatter.Emit(os.Stdout, ev)
+		}
+	}
+	enter := func(p string) {
+		phase = p
+		emit(formatter.Event{Type: formatter.EventPhase, Phase: p})
+	}
 
 	// Check for updates (non-blocking, skipped for RC versions)
 	checkForUpdate()
@@ -164,7 +177,7 @@ func runTests(c *cli.Context) (err error) {
 	fmt.Println()
 
 	// Check if Docker is needed and available
-	phase = "containers"
+	enter("containers")
 	needsDocker := len(cfg.Containers) > 0 || cfg.App.UseContainer() || c.Bool("container")
 	if needsDocker {
 		if err := container.CheckDockerAvailable(); err != nil {
@@ -187,6 +200,14 @@ func runTests(c *cli.Context) (err error) {
 		return fmt.Errorf("failed to initialize container manager: %w", err)
 	}
 	cm.SetRunContext(runCtx)
+	// Each container is reported as it comes up, with how long it took: a
+	// slow image pull or wait_for is then visible as it happens.
+	cm.OnProgress(func(name, status string, took time.Duration) {
+		emit(formatter.Event{Type: formatter.EventContainer, Name: name, Status: status, DurationMs: formatter.Millis(took)})
+		if status == "ready" {
+			fmt.Printf("  %s %s %s\n", checkStyle.Render("✓"), name, mutedStyle.Render(took.Round(100*time.Millisecond).String()))
+		}
+	})
 
 	// Only auto-cleanup if not in keep-alive mode
 	keepAlive := c.Bool("keep-alive")
@@ -198,15 +219,10 @@ func runTests(c *cli.Context) (err error) {
 		return fmt.Errorf("failed to start containers: %w", err)
 	}
 
-	// Show container status
-	for name := range cfg.Containers {
-		fmt.Printf("  %s %s\n", checkStyle.Render("✓"), name)
-	}
-
 	// Resources the app depends on while it starts (the aws resource's STS)
 	// are initialized before it, so its environment can point at them. The same
 	// registry then serves the tests.
-	phase = "resources"
+	enter("resources")
 	registry, err := registry.New(cfg.Resources, cm)
 	if err != nil {
 		return fmt.Errorf("failed to initialize resources: %w", err)
@@ -228,7 +244,7 @@ func runTests(c *cli.Context) (err error) {
 	var appRunner *apprunner.Runner
 	var prof *profile.Profiler
 	if cfg.App.IsConfigured() {
-		phase = "app"
+		enter("app")
 		fmt.Println()
 		fmt.Println(subtitleStyle.Render("Starting application..."))
 		if !c.Bool("quiet") {
@@ -272,7 +288,10 @@ func runTests(c *cli.Context) (err error) {
 			defer prof.Stop()
 		}
 
+		appStarted := time.Now()
+		emit(formatter.Event{Type: formatter.EventApp, Name: cfg.App.GetName(), Status: "starting"})
 		if err := appRunner.Start(c.Context); err != nil {
+			emit(formatter.Event{Type: formatter.EventApp, Name: cfg.App.GetName(), Status: "failed", DurationMs: formatter.Millis(time.Since(appStarted))})
 			// Show recent logs on failure (even in quiet mode)
 			fmt.Println()
 			fmt.Println(errorStyle.Render("Application failed to start!"))
@@ -305,6 +324,7 @@ func runTests(c *cli.Context) (err error) {
 			fmt.Println()
 		}
 		fmt.Printf("  %s app ready at %s\n", checkStyle.Render("✓"), appRunner.GetBaseURL())
+		emit(formatter.Event{Type: formatter.EventApp, Name: cfg.App.GetName(), Status: "listening", URL: appRunner.GetBaseURL(), DurationMs: formatter.Millis(time.Since(appStarted))})
 
 		// Give app time to fully stabilize
 		waitTime := cfg.App.Wait
@@ -320,9 +340,11 @@ func runTests(c *cli.Context) (err error) {
 		// Final health check before running tests
 		if err := appRunner.VerifyHealthy(c.Context); err != nil {
 			appLogs = appRunner.GetRecentLogs(20)
+			emit(formatter.Event{Type: formatter.EventApp, Name: cfg.App.GetName(), Status: "failed", DurationMs: formatter.Millis(time.Since(appStarted))})
 			return fmt.Errorf("app health check failed: %w", err)
 		}
 		fmt.Printf("  %s health check passed\n", checkStyle.Render("✓"))
+		emit(formatter.Event{Type: formatter.EventApp, Name: cfg.App.GetName(), Status: "ready", URL: appRunner.GetBaseURL(), DurationMs: formatter.Millis(time.Since(appStarted))})
 
 		// The lifecycle resource stops and starts the app mid-scenario.
 		registry.SetAppControl(appRunner)
@@ -334,7 +356,7 @@ func runTests(c *cli.Context) (err error) {
 	}
 
 	// Step 3: Initialize test resources
-	phase = "resources"
+	enter("resources")
 	fmt.Println()
 	fmt.Println(subtitleStyle.Render("Initializing resources..."))
 
@@ -357,6 +379,7 @@ func runTests(c *cli.Context) (err error) {
 	fmt.Println(subtitleStyle.Render("Running tests..."))
 	fmt.Println()
 
+	enter("tests")
 	testsStarted = true
 	testErr := r.Run(c.Context)
 

@@ -29,6 +29,14 @@ const (
 	// that didn't start, a resource that couldn't connect, an app that never
 	// became ready. Without it a report sees no scenarios and nothing failed.
 	EventRunError = "run_error"
+	// EventPhase is the run entering a phase: containers, resources, app or
+	// tests. EventContainer is a dependency starting, ready or failed, and
+	// EventApp the app starting, listening and ready, each with how long it
+	// took, so whoever watches the run sees it come up before the first
+	// scenario rather than a silent minute.
+	EventPhase     = "phase"
+	EventContainer = "container"
+	EventApp       = "app"
 )
 
 // Event represents a structured test event
@@ -63,8 +71,13 @@ type Event struct {
 	// ran on a bad network. On a scenario_end, the events after its last step.
 	Network *Network `json:"network,omitempty"`
 
-	// Phase is where a run_error happened: containers, resources or app.
+	// Phase is where a run_error happened: containers, resources or app; on
+	// a phase event, the phase the run is entering.
 	Phase string `json:"phase,omitempty"`
+	// Name is the container a container event is about.
+	Name string `json:"name,omitempty"`
+	// URL is where the app answers, on an app event once it listens.
+	URL string `json:"url,omitempty"`
 	// Logs are the app's last log lines, on a run_error in the app phase.
 	Logs []string `json:"logs,omitempty"`
 	// Samples are the app's and its containers' readings since the last
@@ -182,7 +195,19 @@ func TomatoFormatterFunc(suite string, out io.Writer) formatters.Formatter {
 // EmitRunError writes a run_error event: the run failed in phase before or
 // outside the scenarios, with err, and logs the app wrote last when there are any.
 func EmitRunError(out io.Writer, phase string, err error, logs []string) {
-	(&TomatoFormatter{out: out}).emit(Event{Type: EventRunError, Phase: phase, Status: "failed", Error: err.Error(), Logs: logs})
+	Emit(out, Event{Type: EventRunError, Phase: phase, Status: "failed", Error: err.Error(), Logs: logs})
+}
+
+// Emit writes one event, for what happens outside godog: the phases of a run
+// before its scenarios, and the containers and app coming up in them.
+func Emit(out io.Writer, event Event) {
+	(&TomatoFormatter{out: out}).emit(event)
+}
+
+// Millis is a duration as an event carries it.
+func Millis(d time.Duration) *int64 {
+	ms := d.Milliseconds()
+	return &ms
 }
 
 func (f *TomatoFormatter) emit(event Event) {
@@ -192,10 +217,7 @@ func (f *TomatoFormatter) emit(event Event) {
 
 func intp(i int) *int { return &i }
 
-func msp(d time.Duration) *int64 {
-	ms := d.Milliseconds()
-	return &ms
-}
+func msp(d time.Duration) *int64 { return Millis(d) }
 
 // stepIdx returns the step's 0-based position within its pickle.
 func (f *TomatoFormatter) stepIdx(pickle *messages.Pickle, step *messages.PickleStep) *int {

@@ -8,6 +8,9 @@ Entries up to v2.1.1 were backfilled from the GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+- `tomato ui` plays a run as a film. Starting a run from the UI folds the tree, the inspector and the console away and puts the run on the whole window, in four acts: the dependencies on the topology, each pulsing until its `wait_for` check answers and then holding green with the time it took; the app coming up the same way; then every scenario, with its traffic travelling over the topology step by step and a numbered box ticking the steps off beside the narration; and at the end a report — the verdict, scenarios and steps, where the time went, each feature's scenarios with the failed step and its error, the slowest scenarios, and what the app cost (its CPU time, peak memory and growth, and the time it spent waiting on each dependency, from the profile). The film follows the run a beat behind so every moment is seen, catches up when it falls far behind, and can be paused, stepped (`←`/`→`, `space`) and replayed; `m` brings it back, `esc` or Close leaves it. A past run can be watched again from the Runs tab (`GET /api/runs/{run}/events` rebuilds its feed from `tomato.log`), and `?watch=<run>&beat=<n>` opens one at a given moment. Behind it the `tomato` event format now says how the run comes up: `phase` (`containers`, `resources`, `app`, `tests`), `container` (`starting`, `ready`, `failed`, with `name` and `durationMs`) and `app` (`starting`, `listening`, `ready`, `failed`, with `url` and `durationMs`), and the console prints each container's ✓ as it comes up, with how long it took.
+
 ### Changed
 - Building tomato needs Go 1.27, which the embedded Toxiproxy v2.13.0 requires. Go 1.27's `compress/zlib` writes different bytes, so the committed PDF fixtures were regenerated.
 

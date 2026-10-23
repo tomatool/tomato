@@ -18,6 +18,8 @@ import { Lightbox } from './components/Lightbox.jsx'
 import { Transport } from './components/Transport.jsx'
 import { Console } from './components/Console.jsx'
 import { Peek } from './components/Peek.jsx'
+import { Movie } from './components/Movie.jsx'
+import { REEL_EVENTS, emptyReel, fromLog, record, reelRunId } from './lib/reel.js'
 import { SourcePath } from './components/SourcePath.jsx'
 
 const SIDE_MIN = 240
@@ -47,6 +49,15 @@ export function App() {
   const [runId, setRunId] = useState(null)
   const [lines, setLines] = useState([])
   const runStartedAt = useRef(0)
+  // The run as a film (lib/reel.js): every message that moves the stage,
+  // live from the socket, or a past run's from its log.
+  const [reel, setReel] = useState(emptyReel)
+  // ?watch=<run>&beat=<n> opens a past run's film, paused at a beat: a
+  // link to a moment of a run.
+  const [startAt, setStartAt] = useState(() => {
+    const beat = new URLSearchParams(location.search).get('beat')
+    return beat != null && /^\d+$/.test(beat) ? Number(beat) : null
+  })
 
   // view state
   const [view, setView] = useState('feature')
@@ -80,15 +91,36 @@ export function App() {
   // Bumped when the selected scenario should be brought into view.
   const [follow, setFollow] = useState(0)
   const [consoleHeight, setConsoleHeight] = useLocalNumber('consoleHeight', 220)
-  // The output can be minimised to its tab bar; a run starting brings it back.
+  // The output can be minimised to its tab bar; a run starting brings it
+  // back — unless the film has the window, where the output is the film.
   const [consoleOpen, setConsoleOpen] = useLocalEnum('console', ['open', 'closed'], 'open')
-  useEffect(() => { if (running) setConsoleOpen('open') }, [running, setConsoleOpen])
+  useEffect(() => { if (running && view !== 'run') setConsoleOpen('open') }, [running, view, setConsoleOpen])
+
+  // Starting or watching a run puts the film on the whole window: the tree,
+  // the inspector and the console fold away, and come back as they were
+  // when the film is left.
+  const panesBefore = useRef(null)
+  const enterFilm = useCallback(() => {
+    if (!panesBefore.current) panesBefore.current = { tree: treeOpen, side: sideOpen, console: consoleOpen }
+    setTreeOpen(false); setSideOpen(false); setConsoleOpen('closed')
+    setView('run')
+    document.querySelector('.pane--doc')?.scrollTo({ top: 0 })
+  }, [treeOpen, sideOpen, consoleOpen, setConsoleOpen])
+  const enterFilmRef = useRef(enterFilm)
+  enterFilmRef.current = enterFilm
+  useEffect(() => {
+    if (view === 'run' || !panesBefore.current) return
+    const p = panesBefore.current
+    panesBefore.current = null
+    setTreeOpen(p.tree); setSideOpen(p.side); setConsoleOpen(p.console)
+  }, [view, setConsoleOpen])
 
   // ——— server messages ———
   const onMessage = useCallback((m) => {
     // Scenario and step status go through one reducer, keyed the way the
     // runner reports them (lib/run.js); the rest is the page's own state.
     if (RUN_EVENTS.has(m.type)) setRunState((p) => reduceRun(p, m))
+    if (REEL_EVENTS.has(m.type)) setReel((r) => record(r, m))
     switch (m.type) {
       case 'init':
       case 'update': {
@@ -116,6 +148,8 @@ export function App() {
         runStartedAt.current = Date.now()
         setRunning(true)
         setLines([])
+        // A run is watched as it happens: the window becomes the film.
+        enterFilmRef.current()
         break
       case 'run_output':
         setLines((p) => {
@@ -188,6 +222,24 @@ export function App() {
     return any && all ? 'passed' : ''
   }, [runState.scStatus])
 
+  // While the film plays, the tree follows it: the scenario on stage is the
+  // one selected, so the inspector shows its flow and leaving the film lands
+  // on it. A scenario the filter hides is left alone.
+  const liveScenario = useMemo(() => {
+    for (let i = reel.events.length - 1; i >= 0; i -= 1) {
+      if (reel.events[i].type === 'scenario_running') return reel.events[i].scenario
+    }
+    return null
+  }, [reel.events])
+  useEffect(() => {
+    if (view !== 'run' || !liveScenario) return
+    const f = features.find((x) => x.scenarios?.some((s) => s.name === liveScenario))
+    if (!f) return
+    const i = visibleScenarios(f).findIndex((s) => s.name === liveScenario)
+    if (i < 0) return
+    setSelectedFile(f.filePath); setSelectedScenario(i); setCursor(-1); setPinned(null)
+  }, [liveScenario, view, features, visibleScenarios])
+
   const sortedShots = useMemo(() => newestFirst(shots), [shots])
   // The list may still be catching up with a step that just took a picture,
   // so a path it lacks yet is shown on its own rather than not at all.
@@ -223,6 +275,20 @@ export function App() {
     if (names.length === 1) runScenario(names[0])
     else if (names.length) runAll()
   }, [runState.scStatus, runAll, runScenario])
+
+  // A past run, watched again from its log.
+  const watchRun = useCallback((name) => {
+    fetch(`/api/runs/${encodeURIComponent(name)}/events`).then((r) => r.json()).then((msgs) => {
+      if (!Array.isArray(msgs)) return
+      setReel(fromLog(msgs)); enterFilmRef.current()
+    }).catch(() => {})
+  }, [])
+  const watch = useCallback(() => { if (reel.events.length) enterFilm() }, [reel.events.length, enterFilm])
+  useEffect(() => {
+    const run = new URLSearchParams(location.search).get('watch')
+    if (run) watchRun(run)
+  }, [watchRun])
+  const leaveFilm = useCallback(() => setView('feature'), [])
 
   const openShot = useCallback((path) => setLightbox({ path }), [])
   const closeShot = useCallback(() => setLightbox(null), [])
@@ -332,6 +398,7 @@ export function App() {
         if (pinned != null) setPinned(null)
         else if (filter) setFilter('')
         else if (running) stopRun()
+        else if (view === 'run') leaveFilm()
         return
       }
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return
@@ -342,19 +409,21 @@ export function App() {
         case 'k': moveScenario(-1); break
         case 'r': if (scenario) runScenario(scenario.name); break
         case 'R': runAll(); break
+        case 'm': watch(); break
         case '[': setTreeOpen((v) => !v); break
         case ']': setSideOpen((v) => !v); break
         case '\\': toggleCenter(); break
         case '-': setConsoleOpen(consoleOpen === 'open' ? 'closed' : 'open'); break
-        case 'ArrowRight': if (flowTab) { e.preventDefault(); seek(cursor + 1) } break
-        case 'ArrowLeft': if (flowTab) { e.preventDefault(); seek(cursor - 1) } break
-        case ' ': if (flowTab) { e.preventDefault(); togglePlay() } break
+        // The film takes the arrows and space while it is in the centre.
+        case 'ArrowRight': if (flowTab && view !== 'run') { e.preventDefault(); seek(cursor + 1) } break
+        case 'ArrowLeft': if (flowTab && view !== 'run') { e.preventDefault(); seek(cursor - 1) } break
+        case ' ': if (flowTab && view !== 'run') { e.preventDefault(); togglePlay() } break
         default: break
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, flowTab, cursor, seek, togglePlay, pinned, toggleCenter, consoleOpen, setConsoleOpen, lightbox, closeShot, moveShot])
+  }, [filter, running, stopRun, moveScenario, scenario, runScenario, runAll, flowTab, cursor, seek, togglePlay, pinned, toggleCenter, consoleOpen, setConsoleOpen, lightbox, closeShot, moveShot, view, watch, leaveFilm])
 
   // ——— pane dragging ———
   const [resizing, setResizing] = useState(null)
@@ -381,7 +450,9 @@ export function App() {
 
   const crumb = view === 'config'
     ? <b>{config?.path ?? 'tomato.yml'}</b>
-    : feature
+    : view === 'run'
+      ? <>{reel.source === 'log' ? 'replay' : 'run'} <b>{reelRunId(reel) ?? runId ?? ''}</b></>
+      : feature
       ? (() => {
         const parts = feature.filePath.split('/')
         const base = parts.pop()
@@ -413,6 +484,9 @@ export function App() {
         onRunAll={runAll}
         onRunFailed={runFailed}
         onStop={stopRun}
+        watchable={reel.events.length > 0}
+        watching={view === 'run'}
+        onWatch={watch}
       />
 
       <aside className="pane pane--tree">
@@ -471,6 +545,10 @@ export function App() {
             config={config} mode={cfgMode} onMode={setCfgMode}
             featureCount={features.length} scenarioCount={allScenarios.length}
           />
+        ) : view === 'run' ? (
+          <div className="doc doc--wide">
+            <Movie reel={reel} features={features} topo={topo} running={running} onClose={leaveFilm} startAt={startAt} onStarted={() => setStartAt(null)} />
+          </div>
         ) : center === 'topology' ? (
           <div className="doc doc--wide">
             <div className="feature-head">
@@ -638,7 +716,7 @@ export function App() {
 
         <div className="pane-body">
           {sideTab === 'runs' ? (
-            <Runs runs={runs} openRun={openRun} onOpenRun={setOpenRun} onOpenLog={openLog} />
+            <Runs runs={runs} openRun={openRun} onOpenRun={setOpenRun} onOpenLog={openLog} onWatch={watchRun} />
           ) : sideTab === 'shots' ? (
             <Screenshots shots={sortedShots} runState={runState} onOpen={openShot} />
           ) : sideTab === 'profile' ? (

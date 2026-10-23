@@ -26,7 +26,7 @@ Tomato is a language-agnostic behavioral testing framework that manages your tes
 - **Presets** - `preset: kafka` instead of a page of listener config, with MSK-style `AWS_MSK_IAM` authentication on the stock apache/kafka image
 - **AWS identity** - an `aws` resource gives the app IRSA against an STS tomato serves
 - **Avro + Schema Registry** - Publish and assert Kafka Avro messages as plain JSON
-- **Web UI** - `tomato ui` browses the suite, draws each scenario's flow and the topology of what it touches, and runs scenarios from the browser
+- **Web UI** - `tomato ui` browses the suite, draws each scenario's flow and the topology of what it touches, runs scenarios from the browser and plays a run as a film: the dependencies and the app coming up, every scenario over the topology, then the report
 - **CI Reports** - JUnit XML and Cucumber JSON alongside console output
 - **Step Coverage** - `tomato coverage` reports which resource steps your features use, with `--min` to gate CI
 - **Auto-generated Documentation** - Keep step docs in sync with code
