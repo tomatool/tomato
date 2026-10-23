@@ -209,7 +209,16 @@ func (r *Runner) startCommand(ctx context.Context) error {
 	// other process (a developer's `make run`, a leftover run), and the suite
 	// tests the wrong app against the wrong database.
 	if err := checkPortFree("localhost", r.config.Port); err != nil {
-		return err
+		// An app an earlier run left running is tomato's to stop, not the
+		// user's to hunt down.
+		stopped := r.stopLeftoverApps()
+		if len(stopped) == 0 {
+			return err
+		}
+		fmt.Printf("    stopped the app left running by run %s\n", strings.Join(stopped, ", "))
+		if err := waitForPortFree("localhost", r.config.Port, 5*time.Second); err != nil {
+			return err
+		}
 	}
 
 	if err := r.startProcess(ctx); err != nil {
@@ -288,6 +297,7 @@ func (r *Runner) startProcess(ctx context.Context) error {
 	if err := r.cmd.Start(); err != nil {
 		return fmt.Errorf("starting app: %w", err)
 	}
+	r.writePidFile()
 
 	// Stream logs
 	r.logStreams.Add(2)
@@ -473,6 +483,19 @@ func checkPortFree(host string, port int) error {
 	}
 	conn.Close()
 	return fmt.Errorf("app port %d is already in use by another process; stop it or change app.port (and the matching base_url)", port)
+}
+
+// waitForPortFree waits up to timeout for host:port to stop accepting
+// connections, and returns checkPortFree's error if it does not.
+func waitForPortFree(host string, port int, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for {
+		err := checkPortFree(host, port)
+		if err == nil || time.Now().After(deadline) {
+			return err
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 // waitForReady waits for the app to be ready (command mode)
@@ -982,6 +1005,7 @@ func (r *Runner) stopCommand() error {
 	}
 
 	r.cmd, r.exited = nil, nil
+	r.removePidFile()
 	return nil
 }
 
