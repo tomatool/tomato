@@ -1285,6 +1285,34 @@
   
   
     <li class="md-nav__item">
+      <a href="profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profile
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="browser/" class="md-nav__link">
         
   
@@ -2588,6 +2616,12 @@
 <td><code>pretty</code></td>
 <td>Output formats, comma-separated; see <a href="#reports">Reports</a></td>
 </tr>
+<tr>
+<td><code>profile</code></td>
+<td>bool</td>
+<td><code>true</code></td>
+<td>Measure the app and its containers per scenario; see <a href="profile/">Profile</a>. Off when <code>parallel</code> is above 1</td>
+</tr>
 </tbody>
 </table>
 <h3 id="reports">Reports<a class="headerlink" href="#reports" title="Permanent link">&para;</a></h3>
@@ -2687,6 +2721,13 @@ of the <a href="../stability/">stable surface</a>.</p>
 left images behind, as a list of <code>{"resource": "alice-browser", "path": "…/after-apply.png"}</code>:
 the <a href="browser/">browser resource</a>'s <code>saves screenshot</code>, and the page when a
 step failed. <code>tomato ui</code> reads it to put the picture on the step.</p>
+<p>When the run is <a href="profile/">profiled</a>, a <code>step_end</code> carries <code>samples</code>, the
+app's and its containers' readings since the last event that carried them
+(<code>{"at", "app": {"cpu", "rss", "threads", "fds"}, "containers": {"postgres": {"cpu", "memory"}}}</code>),
+and a <code>scenario_end</code> carries <code>profile</code>, what the scenario cost: its <code>start</code>,
+<code>end</code> and <code>durationMs</code>, the <code>app</code>'s <code>cpuMs</code>, <code>peakRss</code>, <code>rssStart</code> and
+<code>rssEnd</code>, each container's <code>cpuMs</code> and <code>peakMemory</code>, the traffic each
+<code>network</code> resource saw, and the errors and warnings the app logged.</p>
 <h2 id="app-configuration">App configuration<a class="headerlink" href="#app-configuration" title="Permanent link">&para;</a></h2>
 <p>Configure your application under test to run with test containers.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">app</span><span class="p">:</span>
