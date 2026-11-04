@@ -148,3 +148,13 @@ Feature: Browser resource
       """
     And "shell" stderr contains "screenshot of the page when the step failed"
     And "shell" file ".tomato/browser-fixture/failed-The-order-is-cancelled-visitor-browser.png" exists
+
+  Scenario: A named dialog scopes text assertions and exposes its dismissal
+    Given "alice-browser" opens "/ui/master"
+    And "alice-browser" types " x" at the end of "7.2"
+    When "alice-browser" clicks "Apply"
+    Then "alice-browser" sees a "dialog" named "Apply change to countries" within "3s"
+    And "alice-browser" sees "Selected countries" in the "dialog" named "Apply change to countries" within "3s"
+    And "alice-browser" does not see "7 Zinsen" in the "dialog" named "Apply change to countries"
+    When "alice-browser" presses "Escape"
+    Then "alice-browser" no longer sees a "dialog" named "Apply change to countries" within "3s"

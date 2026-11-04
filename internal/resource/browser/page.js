@@ -43,7 +43,7 @@ function (op, ...args) {
 	};
 	const KINDS = {
 		click: (el) => el,
-		any: (el) => el.closest(INTERACTIVE) || el,
+		any: (el) => (el.tagName === 'LABEL' && el.control) || el.closest(INTERACTIVE) || el,
 		field: (el) => control(el, editable),
 		checkbox: (el) => control(el, isCheckbox),
 		choice: (el) => control(el, isChoice),
@@ -149,10 +149,20 @@ function (op, ...args) {
 			return found.length + ' elements match "' + target + '": ' + found.slice(0, 5).map(describe).join(', ');
 		},
 
-		// text(): everything the page shows, as one string.
+		namedRole(role, name, ...candidates) {
+			const found = [...new Set(candidates)].filter(visible);
+			if (found.length === 0) return 'absent';
+			if (found.length === 1) return found[0];
+			return found.length + ' visible ' + role + ' elements are named "' + name + '": ' + found.slice(0, 5).map(describe).join(', ');
+		},
+
+		// text(): everything this document or named region shows, as one string.
 		text() {
-			const parts = [document.body ? document.body.innerText : ''];
-			for (const el of document.querySelectorAll('input, textarea')) {
+			const root = this.nodeType === Node.DOCUMENT_NODE ? this.body : this;
+			const parts = [root ? root.innerText : ''];
+			const fields = root ? [...root.querySelectorAll('input, textarea')] : [];
+			if (root && root.matches && root.matches('input, textarea')) fields.unshift(root);
+			for (const el of fields) {
 				if (['hidden', 'password', 'checkbox', 'radio', 'file', 'image'].includes(el.type)) continue;
 				if (visible(el) && el.value) parts.push(el.value);
 			}

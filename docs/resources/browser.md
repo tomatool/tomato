@@ -38,9 +38,13 @@ Steps for using a web UI in a real Chromium, the way a person does: by what the 
 | `"bob-browser" sees "Neuer Satz." within "3s"` | Wait until the page shows this text, for at most the duration |
 | `"alice-browser" does not see "clause_id"` | Assert the page does not show this text now |
 | `"alice-browser" no longer sees "Saving…" within "5s"` | Wait until the page stops showing this text, for at most the duration |
-| `"alice-browser" sees "Apply" is disabled` | Assert a button, field or other control is disabled |
-| `"alice-browser" sees "Apply" is enabled` | Assert a button, field or other control is enabled |
+| `"alice-browser" sees "Apply" is disabled` | Wait for a button, field or other control to be disabled |
+| `"alice-browser" sees "Apply" is enabled` | Wait for a button, field or other control to be enabled |
 | `"alice-browser" url is "/master/7.2"` | Assert the page's address: the path with its query and fragment, or the whole URL when one is given |
+| `"alice-browser" sees a "dialog" named "Review" within "3s"` | Wait for exactly one visible element with this computed role and accessible name |
+| `"alice-browser" no longer sees a "dialog" named "Review" within "3s"` | Wait for the element with this role and accessible name to disappear; ambiguous matches fail |
+| `"alice-browser" sees "Ready" in the "dialog" named "Review" within "3s"` | Wait for rendered text or a visible field value inside one uniquely named role |
+| `"alice-browser" does not see "Saving…" in the "dialog" named "Review"` | Assert a uniquely named role exists and does not show this text now |
 
 
 

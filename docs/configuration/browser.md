@@ -69,7 +69,7 @@ When nothing has that name, the element whose **visible text** is exactly
   `Apply`, the button wins: a person clicking `Apply` means the control. Two
   buttons called `Delete` fail the step and list both, rather than clicking
   whichever came first.
-- **Every step waits** up to `timeout` for the element to be there, enabled
+- **Actions wait** up to `timeout` for the element to be there, enabled
   and not covered by something else (a modal's backdrop, a toast). After a
   click everything is asynchronous, so a step that fails on the first look
   would be a flaky step.
@@ -96,6 +96,50 @@ proves a structure the user must not see stays out of view.
 `sees` and `does not see` assert the page **now**. After an action, wait for
 its outcome with `sees "…" within "5s"`, or for something to go away with
 `no longer sees "…" within "5s"`.
+
+## Assertion intent and named regions
+
+Use control names for actions and state, and rendered text for content. An icon with
+`aria-label="Close review"` can be clicked or checked for enabled state by that name;
+`sees "Close review"` requires the words to be rendered on the page. Changing a content
+assertion into an enabled assertion changes what the scenario proves.
+
+`clicks` already waits for its target to be enabled and uncovered. A preceding enabled
+assertion is useful when availability itself is a requirement; otherwise it repeats the
+lookup. Enabled and disabled assertions wait for the complete state condition, reacquiring
+controls when rendering replaces them. Successful conditions return immediately.
+
+For a dialog, table, region or other named element, assert its computed role and accessible
+name. A heading with the same text cannot stand in for a dialog, and repeated visible names
+fail instead of silently choosing the first match. Hidden duplicates do not count.
+
+```gherkin
+Scenario: A reviewer inspects the selected answer
+  When "alice-browser" clicks "Open review"
+  Then "alice-browser" sees a "dialog" named "Review" within "3s"
+  And "alice-browser" sees "Selected question" in the "dialog" named "Review" within "3s"
+  And "alice-browser" does not see "Saving…" in the "dialog" named "Review"
+  When "alice-browser" clicks "Close review"
+  Then "alice-browser" no longer sees a "dialog" named "Review" within "3s"
+```
+
+A scoped content assertion reads only that element's rendered text and visible field values.
+Matching text in the background cannot satisfy it. The negative content assertion requires
+the named element to exist; use `no longer sees a ... named ... within ...` to assert that
+the element has disappeared. Role lookups use the accessibility tree, including implicit
+HTML roles, without a visible-text fallback. These assertions do not change how existing
+page-wide `sees` steps work.
+
+Prefer bounded outcome waits after an asynchronous action. They finish as soon as the
+condition holds, whereas a fixed sleep spends its whole duration. A longer timeout does
+not make a successful assertion slower. Use `fills` to replace a field's value and `types`
+when individual key events are the behavior under test. `presses` sends one physical
+keydown/keyup pair, allowing Chromium to honor `preventDefault()` before text insertion
+or activation, even if the keydown handler moves focus.
+
+When tuning a suite, measure container/application setup, fixture reset and scenario work
+separately. Use the same selected scenarios for before/after comparisons. Accessible-name
+and scoped lookups improve precision; they do not promise faster execution than a text check.
 
 ## The chromium preset
 
@@ -184,6 +228,6 @@ logs the dialog's message.
   does not look inside shadow roots (the accessibility tree does).
 - A link that opens a new tab or window is not followed into it.
 - File uploads, downloads and drag and drop have no steps yet.
-- There is no step to narrow a lookup to part of the page ("Delete" in the
-  row of order 42); give controls distinct accessible names, which helps
-  screen-reader users as well.
+- Actions still need a unique control name across the page. Named-role scopes currently
+  apply to assertions; give repeated action controls distinct accessible names, which
+  helps screen-reader users as well.

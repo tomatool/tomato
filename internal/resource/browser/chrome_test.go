@@ -288,7 +288,7 @@ func TestEnabledAndDisabled(t *testing.T) {
 			<div role="button" aria-disabled="true">Archive</div>
 			<fieldset disabled><label>Name <input></label></fieldset>`,
 	})
-	r := person(t, srv, nil)
+	r := person(t, srv, map[string]any{"timeout": "100ms"})
 	must(t, r.open("/"))
 	must(t, r.seesDisabled("Apply"))
 	must(t, r.seesEnabled("Publish"))

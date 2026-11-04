@@ -131,14 +131,14 @@ func (r *Browser) Steps() resource.StepCategory {
 			{
 				Group:       "What the Page Shows",
 				Pattern:     `^"{resource}" sees "([^"]*)" is disabled$`,
-				Description: "Assert a button, field or other control is disabled",
+				Description: "Wait for a button, field or other control to be disabled",
 				Example:     `"alice-browser" sees "Apply" is disabled`,
 				Handler:     r.seesDisabled,
 			},
 			{
 				Group:       "What the Page Shows",
 				Pattern:     `^"{resource}" sees "([^"]*)" is enabled$`,
-				Description: "Assert a button, field or other control is enabled",
+				Description: "Wait for a button, field or other control to be enabled",
 				Example:     `"alice-browser" sees "Apply" is enabled`,
 				Handler:     r.seesEnabled,
 			},
@@ -148,6 +148,35 @@ func (r *Browser) Steps() resource.StepCategory {
 				Description: "Assert the page's address: the path with its query and fragment, or the whole URL when one is given",
 				Example:     `"alice-browser" url is "/master/7.2"`,
 				Handler:     r.urlIs,
+			},
+
+			{
+				Group:       "What the Page Shows",
+				Pattern:     `^"{resource}" sees a "([^"]*)" named "([^"]*)" within "([^"]*)"$`,
+				Description: "Wait for exactly one visible element with this computed role and accessible name",
+				Example:     `"alice-browser" sees a "dialog" named "Review" within "3s"`,
+				Handler:     r.seesRoleWithin,
+			},
+			{
+				Group:       "What the Page Shows",
+				Pattern:     `^"{resource}" no longer sees a "([^"]*)" named "([^"]*)" within "([^"]*)"$`,
+				Description: "Wait for the element with this role and accessible name to disappear; ambiguous matches fail",
+				Example:     `"alice-browser" no longer sees a "dialog" named "Review" within "3s"`,
+				Handler:     r.noLongerSeesRole,
+			},
+			{
+				Group:       "What the Page Shows",
+				Pattern:     `^"{resource}" sees "([^"]*)" in the "([^"]*)" named "([^"]*)" within "([^"]*)"$`,
+				Description: "Wait for rendered text or a visible field value inside one uniquely named role",
+				Example:     `"alice-browser" sees "Ready" in the "dialog" named "Review" within "3s"`,
+				Handler:     r.seesInRoleWithin,
+			},
+			{
+				Group:       "What the Page Shows",
+				Pattern:     `^"{resource}" does not see "([^"]*)" in the "([^"]*)" named "([^"]*)"$`,
+				Description: "Assert a uniquely named role exists and does not show this text now",
+				Example:     `"alice-browser" does not see "Saving…" in the "dialog" named "Review"`,
+				Handler:     r.doesNotSeeInRole,
 			},
 
 			// Screenshots
@@ -532,7 +561,22 @@ func (r *Browser) press(keys string) error {
 		return err
 	}
 	defer cancel()
-	return chromedp.Do(ctx, chromedp.KeyEvent(string(key), chromedp.KeyModifiers(mods...)))
+	// Dispatch one physical keydown/keyup pair. A separate char event bypasses a
+	// prevented keydown and can type into, or click, a control focused by that handler.
+	events := kb.Encode(key)
+	down, up := *events[0], *events[len(events)-1]
+	applyModifiers := chromedp.KeyModifiers(mods...)
+	applyModifiers(&down)
+	applyModifiers(&up)
+	if len(events) == 3 && down.Modifiers & ^int64(chromedp.ModifierShift) == 0 {
+		down.Text = events[1].Text
+		down.UnmodifiedText = events[1].UnmodifiedText
+	}
+	if _, err := chromedp.Call(ctx, input.DispatchKeyEvent, down); err != nil {
+		return err
+	}
+	_, err = chromedp.Call(ctx, input.DispatchKeyEvent, up)
+	return err
 }
 
 // keyNames are the names "presses" accepts besides those in chromedp's key
@@ -858,28 +902,25 @@ func (r *Browser) seesState(target string, wantDisabled bool) error {
 		return err
 	}
 	defer cancel()
-	var id runtime.RemoteObjectID
-	err = retry(ctx, r.timeout, func() error {
-		var err error
-		id, err = locate(ctx, target, "any")
-		return err
-	})
-	if err != nil {
-		return fmt.Errorf("%q does not see %q: %w", r.name, target, err)
-	}
-	disabled, err := call[bool](ctx, id, "disabled")
-	if err != nil {
-		return err
-	}
-	if disabled != wantDisabled {
+	return retry(ctx, r.timeout, func() error {
+		id, err := locate(ctx, target, "any")
+		if err != nil {
+			return fmt.Errorf("%q does not see %q: %w", r.name, target, err)
+		}
+		disabled, err := call[bool](ctx, id, "disabled")
+		if err != nil {
+			return err
+		}
+		if disabled == wantDisabled {
+			return nil
+		}
 		state, want := "enabled", "disabled"
 		if disabled {
 			state, want = want, state
 		}
 		desc, _ := call[string](ctx, id, "describe")
 		return fmt.Errorf("%q sees %q is %s, expected %s (%s)", r.name, target, state, want, desc)
-	}
-	return nil
+	})
 }
 
 // --- screenshots --------------------------------------------------------------
