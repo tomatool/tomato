@@ -48,6 +48,45 @@ type AppConfig struct {
 	Wait time.Duration `yaml:"wait,omitempty"`
 	// Environment variables (supports {{.container.host}}, {{.container.port}} templates)
 	Env map[string]string `yaml:"env,omitempty"`
+	// Coverage measures which of the app's code the scenarios ran
+	Coverage *AppCoverage `yaml:"coverage,omitempty"`
+}
+
+// AppCoverage measures the code coverage of the app under the suite: what
+// the scenarios made it run, through its interfaces only.
+type AppCoverage struct {
+	// Type is the coverage tool: jacoco, for an app on the JVM.
+	Type string `yaml:"type"`
+	// Includes are the app's own classes, as JaCoCo patterns of class names
+	// (com.example.*). Required: without it every library class the JVM
+	// loads is measured, and the figure says nothing about the app.
+	Includes []string `yaml:"includes"`
+	// Excludes are classes to leave out, such as generated code.
+	Excludes []string `yaml:"excludes,omitempty"`
+	// Classes are the jars or directories holding the classes that ran,
+	// searched for the included ones, nested jars too. Defaults to the jar
+	// of a `java -jar` command.
+	Classes []string `yaml:"classes,omitempty"`
+	// Sources are source directories, for the lines in the HTML report.
+	Sources []string `yaml:"sources,omitempty"`
+}
+
+// CoverageClasses are the jars and directories the coverage report reads the
+// classes from: the configured ones, or the jar a `java -jar` command runs.
+func (a *AppConfig) CoverageClasses() []string {
+	if a.Coverage == nil {
+		return nil
+	}
+	if len(a.Coverage.Classes) > 0 {
+		return a.Coverage.Classes
+	}
+	fields := strings.Fields(a.Command)
+	for i, f := range fields {
+		if f == "-jar" && i+1 < len(fields) {
+			return []string{fields[i+1]}
+		}
+	}
+	return nil
 }
 
 type AppBuild struct {
@@ -66,6 +105,26 @@ type ReadyCheck struct {
 	Timeout time.Duration `yaml:"timeout,omitempty"`
 	// For exec: command to run
 	Command string `yaml:"command,omitempty"`
+}
+
+func (a *AppConfig) validateCoverage() error {
+	cov := a.Coverage
+	if cov == nil {
+		return nil
+	}
+	if cov.Type != "jacoco" {
+		return fmt.Errorf("app.coverage.type is %q; the coverage tomato measures is jacoco, for an app on the JVM", cov.Type)
+	}
+	if a.Command == "" {
+		return fmt.Errorf("app.coverage needs app.command: the JaCoCo agent is attached to an app tomato runs as a local process, not yet to one in a container")
+	}
+	if len(cov.Includes) == 0 {
+		return fmt.Errorf("app.coverage.includes is empty: name the app's own classes, such as com.example.*, or every library class the JVM loads is measured too")
+	}
+	if len(a.CoverageClasses()) == 0 {
+		return fmt.Errorf("app.coverage.classes is empty, and app.command is not `java -jar <jar>`: name the jars or directories that hold the app's classes")
+	}
+	return nil
 }
 
 // IsConfigured returns true if the app section has any configuration
@@ -492,6 +551,9 @@ func (c *Config) validate() error {
 	}
 	if modes > 1 {
 		return fmt.Errorf("app config can only have one of: 'command', 'image', or 'build'")
+	}
+	if err := c.App.validateCoverage(); err != nil {
+		return err
 	}
 
 	// A stateful resource with no container is a system tomato did not start,

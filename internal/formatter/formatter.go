@@ -12,6 +12,7 @@ import (
 	"github.com/cucumber/godog/formatters"
 	messages "github.com/cucumber/messages/go/v21"
 
+	"github.com/tomatool/tomato/internal/coverage"
 	"github.com/tomatool/tomato/internal/jsonmatch"
 	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/resource"
@@ -38,6 +39,9 @@ const (
 	EventPhase     = "phase"
 	EventContainer = "container"
 	EventApp       = "app"
+	// EventCoverage is the app's code coverage under the suite, after the
+	// app stopped (app.coverage); Error says why there is none.
+	EventCoverage = "coverage"
 )
 
 // Event represents a structured test event
@@ -88,6 +92,8 @@ type Event struct {
 	// cost, on its scenario_end. Only when the run is profiled.
 	Samples []profile.Sample `json:"samples,omitempty"`
 	Profile *profile.Summary `json:"profile,omitempty"`
+	// Coverage is the app's code coverage, on a coverage event.
+	Coverage *coverage.Summary `json:"coverage,omitempty"`
 
 	// Summary fields
 	Total   int `json:"total,omitempty"`

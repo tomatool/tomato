@@ -514,6 +514,58 @@ func TestValidate(t *testing.T) {
 			wantErr:     true,
 			errContains: "depends on unknown container",
 		},
+		{
+			name: "coverage of a java -jar app",
+			config: Config{
+				Version: 2,
+				App: AppConfig{Command: "java -jar build/app.jar", Coverage: &AppCoverage{
+					Type: "jacoco", Includes: []string{"com.example.*"},
+				}},
+			},
+			wantErr: false,
+		},
+		{
+			name: "coverage with a tool other than jacoco",
+			config: Config{
+				Version: 2,
+				App: AppConfig{Command: "java -jar build/app.jar", Coverage: &AppCoverage{
+					Type: "cobertura", Includes: []string{"com.example.*"},
+				}},
+			},
+			wantErr:     true,
+			errContains: "jacoco",
+		},
+		{
+			name: "coverage of an app in a container",
+			config: Config{
+				Version: 2,
+				App: AppConfig{Image: "app:latest", Coverage: &AppCoverage{
+					Type: "jacoco", Includes: []string{"com.example.*"}, Classes: []string{"build/app.jar"},
+				}},
+			},
+			wantErr:     true,
+			errContains: "needs app.command",
+		},
+		{
+			name: "coverage without includes",
+			config: Config{
+				Version: 2,
+				App:     AppConfig{Command: "java -jar build/app.jar", Coverage: &AppCoverage{Type: "jacoco"}},
+			},
+			wantErr:     true,
+			errContains: "includes is empty",
+		},
+		{
+			name: "coverage of a start script without classes",
+			config: Config{
+				Version: 2,
+				App: AppConfig{Command: "./build/install/app/bin/app", Coverage: &AppCoverage{
+					Type: "jacoco", Includes: []string{"com.example.*"},
+				}},
+			},
+			wantErr:     true,
+			errContains: "classes is empty",
+		},
 	}
 
 	for _, tt := range tests {
@@ -1271,5 +1323,26 @@ func TestLoad_DoesNotInventTemplateAdviceForOtherErrors(t *testing.T) {
 	}
 	if !strings.Contains(msg, "output: pretty") {
 		t.Errorf("the error should still show the offending line.\ngot:\n%s", msg)
+	}
+}
+
+func TestCoverageClasses(t *testing.T) {
+	tests := []struct {
+		name string
+		app  AppConfig
+		want []string
+	}{
+		{"no coverage", AppConfig{Command: "java -jar app.jar"}, nil},
+		{"the jar java -jar runs", AppConfig{Command: "java -Xmx1g -jar build/libs/app.jar --server.port=8080", Coverage: &AppCoverage{}}, []string{"build/libs/app.jar"}},
+		{"configured classes win", AppConfig{Command: "java -jar app.jar", Coverage: &AppCoverage{Classes: []string{"build/classes"}}}, []string{"build/classes"}},
+		{"a start script names none", AppConfig{Command: "./bin/app", Coverage: &AppCoverage{}}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.app.CoverageClasses()
+			if strings.Join(got, ",") != strings.Join(tt.want, ",") {
+				t.Errorf("CoverageClasses() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

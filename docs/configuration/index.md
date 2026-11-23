@@ -167,6 +167,16 @@ and a `scenario_end` carries `profile`, what the scenario cost: its `start`,
 `rssEnd`, each container's `cpuMs` and `peakMemory`, the traffic each
 `network` resource saw, and the errors and warnings the app logged.
 
+With [`app.coverage`](#code-coverage), the run ends with a `coverage` event once
+the app stopped: the `lines` and `branches` that ran out of all, the number of
+`classes` and the HTML `report`, or an `error` saying why there is none.
+
+```json
+{"type": "coverage", "coverage": {"lines": {"covered": 812, "total": 1240},
+ "branches": {"covered": 214, "total": 402}, "classes": 57,
+ "report": "/repo/.tomato/runs/2026-01-15_101500_ab12cd34/coverage/html/index.html"}}
+```
+
 ## App configuration
 
 Configure your application under test to run with test containers.
@@ -214,6 +224,54 @@ app's own `env` still wins over anything a resource sets.
 The app runs in its own process group, and stopping it stops the whole group,
 so `command: go run ./cmd/server` (where `go` does not pass signals on) does not
 leave the server running and holding the port.
+
+### Code coverage
+
+`coverage` measures which of the app's code the scenarios ran, through its
+interfaces only. For an app on the JVM, tomato attaches the
+[JaCoCo](https://www.jacoco.org/jacoco/) agent it carries in its binary, the
+agent writes what ran when the app exits on tomato's SIGTERM, and tomato
+reports it against the app's own classes.
+
+```yaml
+app:
+  command: java -jar build/libs/orders.jar
+  coverage:
+    type: jacoco
+    includes:
+      - com.example.orders.*      # the app's own classes
+    excludes:
+      - "*.generated.*"           # generated code, such as jOOQ's
+    sources:                      # optional: the lines in the HTML report
+      - src/main/kotlin
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `type` | — | `jacoco` |
+| `includes` | — | The app's classes, as JaCoCo patterns of class names: `*` is any run of characters, `?` one. Required: without it every library class the JVM loads would count |
+| `excludes` | *(none)* | Classes to leave out |
+| `classes` | the jar of a `java -jar` command | Jars or directories holding the classes that ran. Jars nested in them count too, so a Spring Boot jar's modules under `BOOT-INF/lib` are found |
+| `sources` | *(none)* | Source directories, for the lines in the HTML report |
+
+After the scenarios, tomato stops the app and prints the line and branch
+coverage. The run's directory gets `coverage/` with the HTML report
+(`coverage/html/index.html`), `jacoco.xml` for tools such as Sonar, `jacoco.csv`
+and the agent's `jacoco.exec`; the `tomato` event format carries the totals on a
+`coverage` event, and the [GitHub Action](../getting-started/github-action.md) adds them
+to its pull request comment.
+
+The agent is attached through `JAVA_TOOL_OPTIONS`, after what `env` or tomato's
+own environment put there, so it reaches `java -jar` and start scripts alike.
+An app stopped and started again mid-run adds to the same data. Building the
+report needs `java` on the PATH.
+
+Coverage that cannot be reported is a warning, never a failed run. The usual
+cause is an app that did not exit within 5 seconds of SIGTERM: the agent writes
+in a shutdown hook, so keep the app's own shutdown short. With `--keep-alive`
+the app keeps running and there is no coverage.
+
+Command mode only; the agent cannot be attached to an app in a container yet.
 
 ### Template variables
 

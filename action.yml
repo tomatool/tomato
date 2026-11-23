@@ -220,6 +220,8 @@ runs:
         RUN_ERROR=""
         RUN_PHASE=""
         RUN_LOGS=""
+        COVERAGE=""
+        COVERAGE_ERROR=""
 
         if [ -f .tomato-output.log ]; then
           while IFS= read -r line; do
@@ -231,6 +233,10 @@ runs:
                 RUN_ERROR=$(echo "$json" | jq -r '.error // empty')
                 RUN_PHASE=$(echo "$json" | jq -r '.phase // empty')
                 RUN_LOGS=$(echo "$json" | jq -r '.logs // [] | join("\n")')
+                ;;
+              coverage)
+                COVERAGE=$(echo "$json" | jq -c '.coverage // empty')
+                COVERAGE_ERROR=$(echo "$json" | jq -r '.error // empty')
                 ;;
               summary)
                 TOTAL=$(echo "$json" | jq -r '.total // 0')
@@ -300,6 +306,7 @@ runs:
         echo "steps_failed=$STEPS_FAILED" >> "$GITHUB_OUTPUT"
         echo "steps_skipped=$STEPS_SKIPPED" >> "$GITHUB_OUTPUT"
         echo "duration=$DURATION" >> "$GITHUB_OUTPUT"
+        echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
 
         # Use delimiters for multi-line outputs
         EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
@@ -321,6 +328,9 @@ runs:
           echo "$EOF3"
           echo "run_logs<<$EOF3"
           printf '%s\n' "$RUN_LOGS"
+          echo "$EOF3"
+          echo "coverage_error<<$EOF3"
+          printf '%s\n' "$COVERAGE_ERROR"
           echo "$EOF3"
         } >> "$GITHUB_OUTPUT"
 
@@ -347,6 +357,8 @@ runs:
         TOMATO_RUN_ERROR: ${{ steps.parse-results.outputs.run_error }}
         TOMATO_RUN_PHASE: ${{ steps.parse-results.outputs.run_phase }}
         TOMATO_RUN_LOGS: ${{ steps.parse-results.outputs.run_logs }}
+        TOMATO_COVERAGE: ${{ steps.parse-results.outputs.coverage }}
+        TOMATO_COVERAGE_ERROR: ${{ steps.parse-results.outputs.coverage_error }}
       with:
         script: |
           const env = process.env;
@@ -400,6 +412,19 @@ runs:
           }
           if (skipped > 0 || stepsSkipped > 0) {
             body += `| ⏭️ ${skipped} skipped | ⏭️ ${stepsSkipped} skipped |\n`;
+          }
+
+          // app.coverage: what of the app's code the scenarios ran
+          const coverageError = (env.TOMATO_COVERAGE_ERROR || '').trim();
+          let coverage = null;
+          try { coverage = env.TOMATO_COVERAGE ? JSON.parse(env.TOMATO_COVERAGE) : null; } catch (e) {}
+          if (coverage) {
+            const pct = (c) => c && c.total ? `${(100 * c.covered / c.total).toFixed(1)}% (${c.covered} / ${c.total})` : '—';
+            body += `\n**Coverage** of the app's code\n\n`;
+            body += `| Lines | Branches |\n|-------|----------|\n`;
+            body += `| ${pct(coverage.lines)} | ${pct(coverage.branches)} |\n`;
+          } else if (coverageError) {
+            body += `\n⚠️ **No coverage:** ${coverageError}\n`;
           }
 
           if (details) {

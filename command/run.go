@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/tomatool/tomato/internal/apprunner"
 	"github.com/tomatool/tomato/internal/config"
 	"github.com/tomatool/tomato/internal/container"
+	"github.com/tomatool/tomato/internal/coverage"
 	"github.com/tomatool/tomato/internal/formatter"
 	"github.com/tomatool/tomato/internal/profile"
 	"github.com/tomatool/tomato/internal/registry"
@@ -271,6 +273,7 @@ func runTests(c *cli.Context) (err error) {
 	// Step 2: Start the application under test
 	var appRunner *apprunner.Runner
 	var prof *profile.Profiler
+	var cov *coverage.Coverage
 	if cfg.App.IsConfigured() {
 		enter("app")
 		fmt.Println()
@@ -307,6 +310,22 @@ func runTests(c *cli.Context) (err error) {
 			fmt.Printf("  %s running app in container mode\n", helpStyle.Render("🐳"))
 		} else {
 			fmt.Printf("  %s running app as local process\n", helpStyle.Render("⚡"))
+		}
+
+		// app.coverage: the JaCoCo agent rides along in JAVA_TOOL_OPTIONS
+		// and writes what ran when the app exits.
+		if cfg.App.Coverage != nil {
+			if appRunner.GetMode() == apprunner.ModeContainer {
+				return fmt.Errorf("app.coverage needs the app to run as a local process (app.command); container mode is not supported yet")
+			}
+			if cov, err = coverage.New(&cfg.App, filepath.Join(runCtx.Dir, "coverage")); err != nil {
+				return fmt.Errorf("preparing app.coverage: %w", err)
+			}
+			agent, err := cov.JavaAgent()
+			if err != nil {
+				return fmt.Errorf("preparing app.coverage: %w", err)
+			}
+			appRunner.SetJavaAgent(agent)
 		}
 
 		// The profile measures the app from its first log line, so it is
@@ -423,6 +442,14 @@ func runTests(c *cli.Context) (err error) {
 		}
 	}
 
+	// The agent writes the coverage data when the app exits, so the app
+	// stops here rather than when the run returns. With --keep-alive it keeps
+	// running, and there is no coverage.
+	if cov != nil && !keepAlive {
+		appRunner.Stop()
+		reportCoverage(c.Context, cov, emit)
+	}
+
 	// Handle keep-alive mode
 	if keepAlive {
 		printKeepAliveInfo(cm, appRunner, cfg)
@@ -439,6 +466,30 @@ func runTests(c *cli.Context) (err error) {
 	}
 
 	return testErr
+}
+
+// reportCoverage reports the app's coverage, prints it and emits it. A
+// coverage that cannot be reported is a warning, not a failed run: the
+// scenarios' verdict stands either way.
+func reportCoverage(ctx context.Context, cov *coverage.Coverage, emit func(formatter.Event)) {
+	fmt.Println()
+	fmt.Println(subtitleStyle.Render("Coverage"))
+	java, err := exec.LookPath("java")
+	var sum *coverage.Summary
+	if err == nil {
+		sum, err = cov.Report(ctx, java)
+	} else {
+		err = fmt.Errorf("JaCoCo's report needs java on the PATH: %w", err)
+	}
+	if err != nil {
+		fmt.Printf("  %s %v\n", warnStyle.Render("no coverage:"), err)
+		emit(formatter.Event{Type: formatter.EventCoverage, Error: err.Error()})
+		return
+	}
+	fmt.Printf("  lines     %s\n", sum.Lines)
+	fmt.Printf("  branches  %s\n", sum.Branches)
+	fmt.Printf("  %s\n", helpStyle.Render("report: "+sum.Report))
+	emit(formatter.Event{Type: formatter.EventCoverage, Coverage: sum})
 }
 
 // teeStdout sends what is written to os.Stdout to the console and to log,
