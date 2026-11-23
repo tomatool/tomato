@@ -86,6 +86,9 @@ type Runner struct {
 	// portOverrides points {{.<container>.port.<port>}} somewhere other than
 	// the container: at a network resource's proxy (see SetPortOverrides).
 	portOverrides map[string]map[string]int
+
+	// javaAgent is added to the app's JAVA_TOOL_OPTIONS (see SetJavaAgent).
+	javaAgent string
 }
 
 // NewRunner creates a new app runner
@@ -140,6 +143,14 @@ func (r *Runner) SetProvidedEnv(set map[string]string, unset []string) {
 	}
 }
 
+// SetJavaAgent attaches a Java agent to the app, such as JaCoCo's for
+// app.coverage: the option is added to JAVA_TOOL_OPTIONS, after whatever the
+// app's env or tomato's environment already put there, since every JVM reads
+// that variable, `java -jar` and start scripts alike. Command mode only.
+func (r *Runner) SetJavaAgent(option string) {
+	r.javaAgent = option
+}
+
 // commandEnv is the app process's environment: tomato's own minus what
 // resources asked to remove, then what they provide, then the app's env, which
 // wins because the last value of a duplicated key is the one a process sees.
@@ -158,7 +169,28 @@ func (r *Runner) commandEnv(appEnv map[string]string) []string {
 	for _, key := range sortedKeys(appEnv) {
 		env = append(env, key+"="+appEnv[key])
 	}
+	if r.javaAgent != "" {
+		env = withJavaToolOption(env, r.javaAgent)
+	}
 	return env
+}
+
+// withJavaToolOption adds option to the JAVA_TOOL_OPTIONS the process would
+// see, the last one in env, and leaves that one alone otherwise.
+func withJavaToolOption(env []string, option string) []string {
+	const key = "JAVA_TOOL_OPTIONS"
+	value := option
+	out := env[:0:0]
+	for _, kv := range env {
+		if k, v, _ := strings.Cut(kv, "="); k == key {
+			if v != "" {
+				value = v + " " + option
+			}
+			continue
+		}
+		out = append(out, kv)
+	}
+	return append(out, key+"="+value)
 }
 
 func sortedKeys(m map[string]string) []string {

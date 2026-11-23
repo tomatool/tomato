@@ -1,22 +1,27 @@
 # Test coverage
 
 The coverage worth tracking is **which lines of your service ran while the
-scenarios ran**. tomato can't see that: it only talks to your service over the
-network. Your service can. Every mainstream language can measure a running
+scenarios ran**. tomato only talks to your service over the network, but your
+service can measure itself: every mainstream language can measure a running
 process and write the result when it exits, and tomato starts your service
 with its environment and stops it cleanly, so turning that on is all it takes.
+
+For a service on the JVM, tomato does it for you: `app.coverage` with
+`type: jacoco` attaches the JaCoCo agent it carries, reports after the run, and
+puts the totals in the GitHub Action's comment. See
+[Code coverage](../configuration/index.md#code-coverage).
 
 | Language | Turn it on | Read it |
 |---|---|---|
 | Go | build with `go build -cover`, set `GOCOVERDIR` | `go tool covdata percent` |
 | Rust | build with `RUSTFLAGS="-C instrument-coverage"`, set `LLVM_PROFILE_FILE` | `llvm-profdata`, `llvm-cov` |
-| Java, Kotlin, Scala | the JaCoCo agent, through `JAVA_OPTS` or `JAVA_TOOL_OPTIONS` | `jacococli report` |
+| Java, Kotlin, Scala | built in: `app.coverage` with `type: jacoco` | the run's `coverage/` directory |
 | Python | coverage.py, started by `COVERAGE_PROCESS_START` | `coverage combine`, `coverage report` |
 | Node.js | set `NODE_V8_COVERAGE` | `c8 report` |
 
-Set the variable on the `tomato run` step, or in your shell: tomato passes its
-environment to the service, so `tomato.yml` stays the same with or without
-coverage.
+For the other languages, set the variable on the `tomato run` step, or in your
+shell: tomato passes its environment to the service, so `tomato.yml` stays the
+same with or without coverage.
 
 The one requirement: **your service exits cleanly on SIGTERM, within five
 seconds.** That is how tomato stops it, and coverage is written on exit. A
