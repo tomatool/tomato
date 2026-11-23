@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
     
     
       
@@ -31,10 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -1827,10 +1827,14 @@
 
 <h1 id="test-coverage">Test coverage<a class="headerlink" href="#test-coverage" title="Permanent link">&para;</a></h1>
 <p>The coverage worth tracking is <strong>which lines of your service ran while the
-scenarios ran</strong>. tomato can't see that: it only talks to your service over the
-network. Your service can. Every mainstream language can measure a running
+scenarios ran</strong>. tomato only talks to your service over the network, but your
+service can measure itself: every mainstream language can measure a running
 process and write the result when it exits, and tomato starts your service
 with its environment and stops it cleanly, so turning that on is all it takes.</p>
+<p>For a service on the JVM, tomato does it for you: <code>app.coverage</code> with
+<code>type: jacoco</code> attaches the JaCoCo agent it carries, reports after the run, and
+puts the totals in the GitHub Action's comment. See
+<a href="../../configuration/#code-coverage">Code coverage</a>.</p>
 <table>
 <thead>
 <tr>
@@ -1852,8 +1856,8 @@ with its environment and stops it cleanly, so turning that on is all it takes.</
 </tr>
 <tr>
 <td>Java, Kotlin, Scala</td>
-<td>the JaCoCo agent, through <code>JAVA_OPTS</code> or <code>JAVA_TOOL_OPTIONS</code></td>
-<td><code>jacococli report</code></td>
+<td>built in: <code>app.coverage</code> with <code>type: jacoco</code></td>
+<td>the run's <code>coverage/</code> directory</td>
 </tr>
 <tr>
 <td>Python</td>
@@ -1867,9 +1871,9 @@ with its environment and stops it cleanly, so turning that on is all it takes.</
 </tr>
 </tbody>
 </table>
-<p>Set the variable on the <code>tomato run</code> step, or in your shell: tomato passes its
-environment to the service, so <code>tomato.yml</code> stays the same with or without
-coverage.</p>
+<p>For the other languages, set the variable on the <code>tomato run</code> step, or in your
+shell: tomato passes its environment to the service, so <code>tomato.yml</code> stays the
+same with or without coverage.</p>
 <p>The one requirement: <strong>your service exits cleanly on SIGTERM, within five
 seconds.</strong> That is how tomato stops it, and coverage is written on exit. A
 service killed instead writes nothing.</p>
@@ -1983,10 +1987,10 @@ steps.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "content.code.copy", "content.code.annotate", "search.suggest", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.top", "navigation.instant", "navigation.tracking", "content.code.copy", "content.code.annotate", "search.suggest", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
         <script src="../../javascripts/split-flow.js"></script>
       
